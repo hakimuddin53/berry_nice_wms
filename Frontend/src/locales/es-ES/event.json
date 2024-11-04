@@ -1,0 +1,15 @@
+{
+  "all-open-events-had-marked-as-finished": "",
+  "category-type": "Category Type",
+  "event": "Event",
+  "event-0-deleted-successfully": "Event {0} deleted successfully.",
+  "event-had-marked-as-finished": "",
+  "event-marked-as-finished": "Event marked as finished.",
+  "events": "Events",
+  "events-marked-as-finished": "Events marked as finished.",
+  "identifier": "",
+  "mark-all-as-finished": "Mark all as finished",
+  "mark-as-finished": "Mark as finished",
+  "message": "Message",
+  "title": "Title"
+}

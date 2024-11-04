@@ -1,0 +1,14 @@
+{
+  "behavior-in-case-role-exists": "Verhalten bei existierender Rolle",
+  "business-partner-number": "Geschäftspartner",
+  "create-partner-determination": "Partnerfindung erstellen",
+  "new-partner-determination": "Neuer Partnerfindung",
+  "new-partner-determination-access-sequence": "Neuer Partnerfindung Zugriffsfolge",
+  "new-partner-determination-mapping": "Neuer Partnerfindung Mapping",
+  "outbound-delivery-partner-role": "Rolle",
+  "partner-determination": "Partnerfindung",
+  "partner-determination-created-successfully": "Partnerfindung {0} erfolgreich erstellt.",
+  "partner-determination-deleted-successfully": "Partnerfindung {0} erfolgreich gelöscht.",
+  "partner-determination-updated-successfully": "Partnerfindung {0} erfolgreich aktualisiert.",
+  "partner-determinations": "Partnerfindungen"
+}

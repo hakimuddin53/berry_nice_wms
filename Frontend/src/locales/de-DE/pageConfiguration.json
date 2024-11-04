@@ -1,0 +1,15 @@
+{
+  "complaints": "Reklamationen",
+  "create-page-configuration": "Seitenkonfiguration erstellen",
+  "customization-json-string": "CustomizationJsonString",
+  "identifier": "Identifier",
+  "inbound": "Anlieferungsdetails",
+  "new-page-configuration": "Neuer Seitenkonfiguration",
+  "outbound": "Auslieferdetails",
+  "page-configuration": "Seitenkonfiguration",
+  "page-configuration-created-successfully": "Seitenkonfiguration erfolgreich erstellt.",
+  "page-configuration-deleted-successfully": "Seitenkonfiguration erfolgreich gelöscht.",
+  "page-configuration-updated-successfully": "Seitenkonfiguration erfolgreich aktualisiert.",
+  "page-configurations": "Seitenkonfigurationen",
+  "parameters-json-string": "ParametersJsonString"
+}

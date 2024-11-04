@@ -1,0 +1,11 @@
+{
+	"account": "Account",
+	"account-history": "Account History",
+	"account-quantity-export": "Account Quantity Export",
+	"calculation-end-date": "Calculation End Date",
+	"calculation-start-date": "Calculation Start Date",
+	"container-type": "Container Type",
+	"export": "Export",
+	"export-will-be-executed-in-the-background-file-will-be-available-in-event-once-ready": "Export will be executed in the background. File will be available in Event once ready.",
+	"please-fix-the-errors-and-try-again": "Please fix the errors and try again."
+}

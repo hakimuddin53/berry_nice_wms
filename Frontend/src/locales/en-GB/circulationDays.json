@@ -1,0 +1,13 @@
+{
+  "circulation-days": "Circulation Days",
+  "container-type": "Container Type",
+  "dst-location": "Dest. Location",
+  "Export": "Export",
+  "gi-date": "GI Date (Source Location)",
+  "gr-date": "GR Date (Source Location)",
+  "hutype-not-relevant": "The entered container type is not serialized",
+  "no-working-day": "No working days are set for this location relationship",
+  "serial-numbers": "Serial Numbers",
+  "serialnumber": "Serial Number",
+  "source-location": "Source Location"
+}

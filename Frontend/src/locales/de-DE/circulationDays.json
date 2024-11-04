@@ -1,0 +1,14 @@
+{
+  "circulation-days": "Umlauftage",
+  "container-type": "Behältertyp",
+  "destination-location": "Destination Location",
+  "dst-location": "Nach-Standort",
+  "Export": "Exportieren",
+  "gi-date": "WA-Datum (Von-Standort)",
+  "gr-date": "WE-Datum (Von-Standort)",
+  "hutype-not-relevant": "Der eingegebene Behältertyp ist nicht serialisiert",
+  "no-working-day": "Es sind keine Arbeitstage für diese Standortbeziehung gepflegt",
+  "serial-numbers": "Seriennummern",
+  "serialnumber": "Seriennummer",
+  "source-location": "Von-Standort"
+}

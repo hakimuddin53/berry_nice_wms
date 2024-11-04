@@ -1,0 +1,21 @@
+{
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "explicit",
+    "source.sort.json": "explicit"
+  },
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnPaste": true,
+  "editor.formatOnSave": true,
+  "editor.formatOnType": true,
+  "i18n-ally.defaultNamespace": "common",
+  "i18n-ally.displayLanguage": "en-US",
+  "i18n-ally.keystyle": "flat",
+  "i18n-ally.localesPaths": ["src/locales"],
+  "i18n-ally.namespace": true,
+  "i18n-ally.pathMatcher": "{locale}/{namespace}.{ext}",
+  "i18n-ally.sortCompare": "locale",
+  "i18n-ally.sortKeys": true,
+  "i18n-ally.sortLocale": "en",
+  "i18n-ally.sourceLanguage": "en-US"
+}

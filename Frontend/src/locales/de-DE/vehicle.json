@@ -1,0 +1,15 @@
+{
+  "new-vehicle": "Neues Fahrzeug",
+  "plate": "Kennzeichen",
+  "vehicle": "Fahrzeug",
+  "vehicle-0-created-successfully": "Fahrzeug {0} erfolgreich erstellt.",
+  "vehicle-0-deleted-successfully": "Fahrzeug {0} erfolgreich gelöscht.",
+  "vehicle-0-updated-successfully": "Fahrzeug {0} erfolgreich aktualisiert.",
+  "vehicle-create": "Fahrzeug erstellen",
+  "vehicle-group": "Fahrzeuggruppe",
+  "vehicle-group-assignment": "Fahrzeuggruppenzuordnunge",
+  "vehicle-group-assignments": "Fahrzeuggruppenzuordnungen",
+  "vehicle-identification-number": "Fahrzeugidentifizierungsnummer",
+  "vehicle-type": "Fahrzeugtyp",
+  "vehicles": "Fahrzeuge"
+}

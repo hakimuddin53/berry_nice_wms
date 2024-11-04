@@ -1,0 +1,13 @@
+{
+  "complaint-reason": "Complaint Reason",
+  "complaint-reason-0-created-successfully": "Complaint Reason {0} created successfully.",
+  "complaint-reason-0-deleted-successfully": "Complaint Reason {0} deleted successfully.",
+  "complaint-reason-0-updated-successfully": "Complaint Reason {0} updated successfully.",
+  "complaint-reason-long-name-is-required": "Complaint reason long name is required",
+  "complaint-reason-short-name-is-required": "Complaint reason short name is required",
+  "complaint-reasons": "Complaint Reasons",
+  "create-complaint-reason": "Create Complaint Reason",
+  "long-name": "Long Name",
+  "new-complaint-reason": "New Complaint Reason",
+  "short-name": "Short Name"
+}

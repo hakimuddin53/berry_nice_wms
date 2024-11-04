@@ -1,0 +1,10 @@
+{
+  "create-outbound-packing-profile-determination-mapping": "Warenausgang Packprofilfindung Mapping erstellen",
+  "outbound-packing-profile-determination": "Warenausgang Packprofilfindung",
+  "outbound-packing-profile-determination-mapping": "Warenausgang Packprofilfindung Mapping",
+  "outbound-packing-profile-determination-mapping-created-successfully": "Warenausgang Packprofilfindung Mapping erfolgreich erstellt.",
+  "outbound-packing-profile-determination-mapping-deleted-successfully": "Warenausgang Packprofilfindung Mapping erfolgreich gelöscht.",
+  "outbound-packing-profile-determination-mapping-updated-successfully": "Warenausgang Packprofilfindung Mapping erfolgreich aktualisiert.",
+  "outbound-packing-profile-determination-mappings": "Warenausgang Packprofilfindung Mappings",
+  "outbound-packing-profile-determinations": "Warenausgang Packprofilfindungen"
+}

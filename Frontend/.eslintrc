@@ -1,0 +1,41 @@
+{
+  "extends": ["react-app", "prettier"],
+  "overrides": [
+    {
+      "files": [
+        "src/services/NotificationService.tsx",
+        "src/utils/SnackBarUtils.ts"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "importNames": [],
+                "message": "Importing useSnackbar from notistack is only allowed in this file.",
+                "name": "notistack"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "plugins": ["prettier"],
+  "rules": {
+    "no-restricted-imports": [
+      "error",
+      {
+        "paths": [
+          {
+            "importNames": ["useSnackbar"],
+            "message": "Importing useSnackbar from notistack is not allowed. Instead, Import useNotification from NotificationService.tsx",
+            "name": "notistack"
+          }
+        ]
+      }
+    ],
+    "prettier/prettier": "error"
+  }
+}

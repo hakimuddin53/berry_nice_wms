@@ -1,0 +1,71 @@
+export const WmsMaterialIdentifierEnum = {
+  UNSPECIFIED: "UNSPECIFIED",
+  MATERIAL_EXTERNAL: "MATERIAL_EXTERNAL",
+  MATERIAL_GUID: "MATERIAL_GUID",
+  MATERIAL_LONG: "MATERIAL_LONG",
+  MATERIAL_DESC_1: "MATERIAL_DESC_1",
+  MATERIAL_DESC_2: "MATERIAL_DESC_2",
+  MINUTES_UNTIL_CHECKOUT: "MINUTES_UNTIL_CHECKOUT",
+  GTIN: "GTIN",
+  PICKING_TYPE: "PICKING_TYPE",
+  CONVEYABLE: "CONVEYABLE",
+  WHOLESALE_THRESHOLD: "WHOLESALE_THRESHOLD",
+  MATERIAL_INDICATOR: "MATERIAL_INDICATOR",
+  MODEL_NUMBER: "MODEL_NUMBER",
+  DANG_CD: "DANG_CD",
+  RID_CD: "RID_CD",
+  CUSTOMS_TARRIFF_NUMBER: "CUSTOMS_TARRIFF_NUMBER",
+  MATERIAL_CODE: "MATERIAL_CODE",
+  HAZMAT_PACK_TYPE: "HAZMAT_PACK_TYPE",
+  OLD_MATERIAL_NUMBER: "OLD_MATERIAL_NUMBER",
+  EAN: "EAN",
+  VERSION_CONTROL: "VERSION_CONTROL",
+  DEFAULT_UOM_GR: "DEFAULT_UOM_GR",
+  VEND_MAT: "VEND_MAT",
+  INFO: "INFO",
+  PCE_PER_PALLET_MIN: "PCE_PER_PALLET_MIN",
+  PCE_PER_PALLET_MAX: "PCE_PER_PALLET_MAX",
+  UNDERPACKED_QTY_MIN: "UNDERPACKED_QTY_MIN",
+  UNDERPACKED_QTY_MAX: "UNDERPACKED_QTY_MAX",
+  LOAD_CARRIER: "LOAD_CARRIER",
+  MATERIAL_IS_NEW: "MATERIAL_IS_NEW",
+  BOM_MATERIAL: "BOM_MATERIAL",
+  TRANSPORT_PACKAGING: "TRANSPORT_PACKAGING",
+  CELLAR_SUITABILITY: "CELLAR_SUITABILITY",
+  COMPOSITION: "COMPOSITION",
+  WASHING_INSTRUCTIONS: "WASHING_INSTRUCTIONS",
+  FSC_COC: "FSC_COC",
+  FSC_ClAIM: "FSC_ClAIM",
+  STABILITY_FACTOR: "STABILITY_FACTOR",
+  WEIGHING_FACTOR: "WEIGHING_FACTOR",
+  QM_RELEVANZ: "QM_RELEVANZ",
+};
+
+export const MaterialBusinessPartnerRelationshipTypeEnum = {
+  NONE: "NONE",
+  DEFAULT_SUPPLIER: "DEFAULT_SUPPLIER",
+};
+
+export const BillOfMaterialsReferenceEnum = {
+  UNSPECIFIED: "UNSPECIFIED",
+};
+
+export const UnitDecimalDigitsEnum = {
+  DECIMAL_NOT_ALLOWED: "DECIMAL_NOT_ALLOWED",
+  UP_TO_ONE_DECIMAL: "UP_TO_ONE_DECIMAL",
+  UP_TO_TWO_DECIMAL: "UP_TO_TWO_DECIMAL",
+  UP_TO_THREE_DECIMAL: "UP_TO_THREE_DECIMAL",
+};
+/* eslint-disable @typescript-eslint/no-redeclare */
+export type WmsMaterialIdentifierEnum =
+  typeof WmsMaterialIdentifierEnum[keyof typeof WmsMaterialIdentifierEnum];
+
+export type MaterialBusinessPartnerRelationshipTypeEnum =
+  typeof MaterialBusinessPartnerRelationshipTypeEnum[keyof typeof MaterialBusinessPartnerRelationshipTypeEnum];
+
+export type BillOfMaterialsReferenceEnum =
+  typeof BillOfMaterialsReferenceEnum[keyof typeof BillOfMaterialsReferenceEnum];
+
+export type UnitDecimalDigitsEnum =
+  typeof UnitDecimalDigitsEnum[keyof typeof UnitDecimalDigitsEnum];
+/* eslint-enable */

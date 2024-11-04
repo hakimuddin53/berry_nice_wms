@@ -1,0 +1,25 @@
+{
+  "short_name": "Material App",
+  "name": "Material App",
+  "icons": [
+    {
+      "src": "Favicon_platbricks_48x48px.png",
+      "sizes": "48x48",
+      "type": "image/png"
+    },
+    {
+      "src": "Favicon_platbricks_32x32px.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "Favicon_platbricks_16x16px.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#1976d2",
+  "background_color": "#ffffff"
+}

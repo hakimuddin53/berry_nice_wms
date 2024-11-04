@@ -1,0 +1,12 @@
+{
+  "create-yard-resource-link": "Create Yard Resource Link",
+  "link-type": "Link Type",
+  "new-yard-resource-link": "New Yard Resource Link",
+  "yard-resource-1": "Yard Resource Id 1",
+  "yard-resource-2": "Yard Resource Id 2",
+  "yard-resource-link": "Yard Resource Link",
+  "yard-resource-link-created-successfully": "Yard resource link created successfully",
+  "yard-resource-link-deleted-successfully": "Yard resource link deleted successfully",
+  "yard-resource-link-updated-successfully": "Yard resource link updated successfully",
+  "yard-resource-links": "Yard Resource Links"
+}

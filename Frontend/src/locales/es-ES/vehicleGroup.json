@@ -1,0 +1,12 @@
+{
+  "create-vehicle-group": "Create Vehicle Group",
+  "new-vehicle-group": "New Vehicle Group",
+  "vehicle-group": "Vehicle Group",
+  "vehicle-group-0-created-successfully": "Vehicle Group {0} created successfully.",
+  "vehicle-group-0-deleted-successfully": "Vehicle Group {0} deleted successfully.",
+  "vehicle-group-0-updated-successfully": "Vehicle Group {0} updated successfully.",
+  "vehicle-group-created-successfully": "Vehicle Group created successfully.",
+  "vehicle-group-deleted-successfully": "Vehicle Group deleted successfully.",
+  "vehicle-group-updated-successfully": "Vehicle Group updated successfully.",
+  "vehicle-groups": "Vehicle Groups"
+}

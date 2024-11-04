@@ -1,0 +1,9 @@
+{
+  "create-partner-determination-mapping": "Create Partner Determination Mapping",
+  "partner-determination-mapping": "Partner Determination Mapping",
+  "partner-determination-mapping-created-successfully": "Partner Determination Mapping {0} created successfully.",
+  "partner-determination-mapping-deleted-successfully": "Partner Determination Mapping {0} deleted successfully.",
+  "partner-determination-mapping-updated-successfully": "Partner Determination Mapping {0} updated successfully.",
+  "partner-determination-mappings": "Partner Determination Mappings",
+  "partner-determinations": "Partner Determinations"
+}

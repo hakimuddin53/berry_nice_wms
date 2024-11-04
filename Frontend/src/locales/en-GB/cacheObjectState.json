@@ -1,0 +1,10 @@
+{
+  "ERROR": "Error",
+  "LOADING": "...",
+  "NOTFOUND": "N/A",
+  "UNKNOWN": "Unknown",
+  "state-error-tooltip": "Failed to load this information due to an unknown error",
+  "state-loading-tooltip": "Loading...",
+  "state-notfound-tooltip": "Not Available / Found",
+  "state-unknown-tooltip": "Missing permission to show this information"
+}

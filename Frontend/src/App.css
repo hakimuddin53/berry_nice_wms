@@ -1,0 +1,12 @@
+.MuiAutocomplete-popper .MuiAutocomplete-option[aria-selected='true'] {
+    background: dodgerblue;
+    color: white;
+}
+
+.MuiAutocomplete-popper .MuiAutocomplete-option[role='option'][aria-selected='false']:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+ul[role='list-box'] {
+    max-height: 200px;
+}

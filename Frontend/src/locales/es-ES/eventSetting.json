@@ -1,0 +1,16 @@
+{
+  "action": "Action",
+  "business-logic": "",
+  "business-logic-helper-text": "If Business Logic is set, this Business Logic will be executed instead of the default action behaviour",
+  "callback-url": "Callback URL",
+  "create-event-setting": "Create Event Setting",
+  "email-language": "Email Language",
+  "event-setting": "Event Setting",
+  "event-setting-created-successfully": "Event Setting created successfully.",
+  "event-setting-deleted-successfully": "Event Setting deleted successfully.",
+  "event-setting-updated-successfully": "Event Setting updated successfully.",
+  "event-settings": "Event Settings",
+  "new-event-setting": "New Event Setting",
+  "parameter-1": "",
+  "sequence": "Sequence"
+}

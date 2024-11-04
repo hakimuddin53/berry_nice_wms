@@ -1,0 +1,12 @@
+{
+  "create-vehicle-group": "Fahrzeuggruppe erstellen",
+  "new-vehicle-group": "Neuer Fahrzeuggruppe",
+  "vehicle-group": "Fahrzeuggruppe",
+  "vehicle-group-0-created-successfully": "Fahrzeuggruppe {0} erfolgreich erstellt.",
+  "vehicle-group-0-deleted-successfully": "Fahrzeuggruppe {0} erfolgreich gelöscht.",
+  "vehicle-group-0-updated-successfully": "Fahrzeuggruppe {0} erfolgreich aktualisiert.",
+  "vehicle-group-created-successfully": "Fahrzeuggruppe erfolgreich erstellt.",
+  "vehicle-group-deleted-successfully": "Fahrzeuggruppe erfolgreich gelöscht.",
+  "vehicle-group-updated-successfully": "Fahrzeuggruppe erfolgreich aktualisiert.",
+  "vehicle-groups": "Fahrzeuggruppen"
+}

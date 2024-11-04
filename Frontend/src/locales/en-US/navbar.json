@@ -1,0 +1,18 @@
+{
+  "0-new-messages": "0 New Messages",
+  "activate-focus-mode": "Activate Focusmode",
+  "imprint": "Imprint",
+  "in-location": " in location...",
+  "logout": "Logout",
+  "messages": "Messages",
+  "notifications": "Notifications",
+  "open-events-one": "{{count}} open event",
+  "open-events-other": "{{count}} open events",
+  "reload-page": "Reload Page",
+  "search-ctrl-k": "Search (Ctrl+K)",
+  "select-a-location": "Select a Location",
+  "show-all-events": "Show all events",
+  "sign-out": "Sign out",
+  "tasks-in-progress": "Tasks In Progress",
+  "terms-of-usage": "Terms of usage"
+}

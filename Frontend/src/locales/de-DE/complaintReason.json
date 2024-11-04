@@ -1,0 +1,13 @@
+{
+  "complaint-reason": "Reklamationsgrund",
+  "complaint-reason-0-created-successfully": "Reklamationsgrund {0} erfolgreich erstellt.",
+  "complaint-reason-0-deleted-successfully": "Reklamationsgrund {0} erfolgreich gelöscht.",
+  "complaint-reason-0-updated-successfully": "Reklamationsgrund {0} erfolgreich aktualisiert.",
+  "complaint-reason-long-name-is-required": "Langer Name des Reklamationsgrund ist erforderlich",
+  "complaint-reason-short-name-is-required": "Kurzname des Reklamationsgrund ist erforderlich",
+  "complaint-reasons": "Reklamationsgründe",
+  "create-complaint-reason": "Reklamationsgrund erstellen",
+  "long-name": "Langer Name",
+  "new-complaint-reason": "Neuer Reklamationsgrund",
+  "short-name": "Kurzname"
+}

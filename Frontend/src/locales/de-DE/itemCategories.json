@@ -1,0 +1,9 @@
+{
+  "create-item-category": "Artikelkategorie erstellen",
+  "item-categories": "Artikelkategorie",
+  "item-category": "Artikelkategorie",
+  "item-category-0-created-successfully": "Artikelkategorie {0} erfolgreich erstellt.",
+  "item-category-0-deleted-successfully": "Artikelkategorie {0} erfolgreich gelöscht.",
+  "item-category-0-updated-successfully": "Artikelkategorie {0} erfolgreich aktualisiert.",
+  "new-item-category": "Neuer Artikelkategorie"
+}

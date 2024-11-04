@@ -1,0 +1,9 @@
+{
+  "create-yard-action-type": "Create Yard Action Type",
+  "new-yard-action-type": "New Yard Action Type",
+  "yard-action-type": "Yard Action Type",
+  "yard-action-type-0-created-successfully": "Yard Action Type {0} created successfully.",
+  "yard-action-type-0-deleted-successfully": "Yard Action Type {0} deleted successfully.",
+  "yard-action-type-0-updated-successfully": "Yard Action Type {0} updated successfully.",
+  "yard-action-types": "Yard Action Types"
+}

@@ -1,0 +1,20 @@
+{
+  "activate-profile-determination": "Activate Profile Determination",
+  "create-outbound-packing-station": "Create Outbound Packing Station",
+  "dynamic-left-storage-bin": "Dynamic Left Storage Bin",
+  "external-printer-code": "External Printer Code",
+  "left-storage-bin": "Left Storage Bin",
+  "name": "Name",
+  "new-outbound-packing-profile": "New Outbound Packing Profile",
+  "NO": "NO",
+  "outbound-packing-profile": "Outbound Packing Profile",
+  "outbound-packing-profiles": "Outbound Packing Profiles",
+  "outbound-packing-station": "Outbound Packing Station",
+  "outbound-packing-stations": "Outbound Packing Stations",
+  "print-hu-labels-automatically": "Print Hu Labels Automatically",
+  "printer": "Printer",
+  "printer-server": "Printer Server",
+  "profile-determination-scan-mode": "Profile Determination Scan Mode",
+  "right-storage-bin": "Right Storage Bin",
+  "YES": "YES"
+}
