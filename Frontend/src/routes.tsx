@@ -76,7 +76,6 @@ import Theming from "./examples/docs/Theming";
 import Welcome from "./examples/docs/Welcome";
 
 // Protected routes
-import ExternalSignIn from "components/auth/ExternalSignIn";
 import GuestGuard from "components/guards/GuestGuard";
 import { HomePageNavigator } from "components/platbricks/shared/HomePageNavigator";
 import ProtectedPage from "examples/protected/ProtectedPage";
@@ -231,10 +230,7 @@ const routes = [
         path: "reset-password",
         element: <ResetPassword />,
       },
-      {
-        path: "sign-in/external",
-        element: <ExternalSignIn />,
-      },
+
       /*{
         path: "sign-up",
         element: <SignUp />,

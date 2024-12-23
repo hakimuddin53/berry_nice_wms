@@ -1,7 +1,7 @@
 import styled from "@emotion/styled";
 import { InputBase } from "@mui/material";
 import useAuth from "hooks/useAuth";
-import useCompanyMenu from "hooks/useCompanyMenu";
+import { dashboardItems } from "layouts/Dashboard";
 import { darken } from "polished";
 import { useEffect, useRef, useState } from "react";
 import { Search as SearchIcon } from "react-feather";
@@ -146,8 +146,6 @@ var useSearchOptions = () => {
 
   const navigate = useNavigate();
   const user = useAuth()?.user;
-  const menuId = user?.menuId;
-  const dashboardItems = useCompanyMenu(menuId);
 
   var addItems = (items: SidebarItemsType[], locationName?: string) => {
     items.forEach((item) => {

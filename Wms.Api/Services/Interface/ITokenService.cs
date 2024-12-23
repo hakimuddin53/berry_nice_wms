@@ -1,7 +1,7 @@
 ﻿ namespace Wms.Api.Services
 {
     public interface ITokenService
-    { 
-        string GenerateJwtToken();  
+    {
+        string GenerateJwtToken(string userName);
     }
 }

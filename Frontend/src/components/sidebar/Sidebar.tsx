@@ -71,10 +71,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       <Brand component={NavLink as any} to="/">
         <BrandIcon src={logo} /> <Box ml={1}>platbricks</Box>
       </Brand>
-      <img
-        src="https://aslphsdevstorage.blob.core.windows.net/customerlogo/5a4ca446-afe7-4e9d-ad05-08d6b33b6178.jpg"
-        alt="Customer logo"
-      />
+      <img src="" alt="Customer logo" />
       <SidebarNav items={items} />
       {!!showFooter && <Footer />}
     </Drawer>

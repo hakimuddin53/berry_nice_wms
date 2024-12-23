@@ -7,10 +7,12 @@ import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { spacing } from "@mui/system";
 
-import useAuth from "hooks/useAuth";
-import useCompanyMenu from "hooks/useCompanyMenu";
+import BarChartIcon from "@mui/icons-material/BarChart";
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import SettingsIcon from "@mui/icons-material/Settings";
 import useAppTheme from "hooks/useTheme";
 import { useSearchParams } from "react-router-dom";
+import { SidebarItemsType } from "types/sidebar";
 import Footer from "../components/Footer";
 import GlobalStyle from "../components/GlobalStyle";
 import Settings from "../components/Settings";
@@ -64,6 +66,7 @@ const Dashboard: React.FC<DashboardType> = ({ children }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [params] = useSearchParams();
 
+  console.log("djhfjfd");
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
@@ -71,9 +74,9 @@ const Dashboard: React.FC<DashboardType> = ({ children }) => {
   const { fixedLayout } = useAppTheme();
   const theme = useTheme();
   const isLgUp = useMediaQuery(theme.breakpoints.up("lg"));
-  const user = useAuth()?.user;
-  const menuId = user?.menuId;
-  const dashboardItems = useCompanyMenu(menuId);
+  // const user = useAuth()?.user;
+  // const menuId = user?.menuId;
+  // const dashboardItems = useCompanyMenu(menuId);
   const focusMode = params.get("focusmode") === "true";
 
   return (
@@ -113,5 +116,36 @@ const Dashboard: React.FC<DashboardType> = ({ children }) => {
     </Root>
   );
 };
+
+export const dashboardItems: SidebarItemsType[] = [
+  {
+    id: 1,
+    href: "/dashboard",
+    itemType: "link",
+    title: "Dashboard",
+    icon: <DashboardIcon />, // Replace with your actual icon component
+    type: "single",
+    children: [],
+  },
+  {
+    id: 2,
+    href: "/settings",
+    itemType: "link",
+    title: "Settings",
+    icon: <SettingsIcon />, // Replace with your actual icon component
+    type: "single",
+    children: [],
+  },
+  {
+    id: 3,
+    href: "/reports",
+    itemType: "link",
+    title: "Reports",
+    icon: <BarChartIcon />, // Replace with your actual icon component
+    badge: "NEW",
+    type: "single",
+    children: [],
+  },
+];
 
 export default Dashboard;

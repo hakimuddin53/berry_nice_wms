@@ -8,7 +8,6 @@ import {
   IconButton as MuiIconButton,
   Tooltip,
 } from "@mui/material";
-import useAuth from "hooks/useAuth";
 import { useUserService } from "services/UserService";
 
 const IconButton = styled(MuiIconButton)`
@@ -54,7 +53,6 @@ function NavbarLanguagesDropdown() {
   const { i18n, t } = useTranslation("auth");
   const [anchorMenu, setAnchorMenu] = React.useState<any>(null);
   const UserService = useUserService();
-  const { updateLocale } = useAuth();
 
   const selectedLanguage = languageOptions[i18n.language];
 
@@ -69,7 +67,6 @@ function NavbarLanguagesDropdown() {
   const handleLanguageChange = (language: string) => {
     i18n.changeLanguage(language);
     closeMenu();
-    updateLocale(language);
     UserService.updateUserLocale({ locale: language });
   };
 

@@ -1,26 +1,14 @@
 import { createContext, ReactNode, useEffect, useReducer } from "react";
 
-import {
-  ActionMap,
-  AuthExternalUser,
-  AuthState,
-  AuthUser,
-  JWTContextType,
-} from "../types/auth";
+import { ActionMap, AuthState, AuthUser, JWTContextType } from "../types/auth";
 
-import { useTranslation } from "react-i18next";
-import { useUserService } from "services/UserService";
-import { guid } from "types/guid";
 import axios from "../utils/axios";
-
-// Note: If you're trying to connect JWT to your own backend, don't forget
-// to remove the Axios mocks in the `/src/index.tsx` file.
+import { isValidToken, setSession } from "../utils/jwt";
 
 const INITIALIZE = "INITIALIZE";
 const SIGN_IN = "SIGN_IN";
 const SIGN_OUT = "SIGN_OUT";
 const SIGN_UP = "SIGN_UP";
-const UPDATE_LOCALE = "UPDATE_LOCALE";
 
 type AuthActionTypes = {
   [INITIALIZE]: {
@@ -33,9 +21,6 @@ type AuthActionTypes = {
   [SIGN_OUT]: undefined;
   [SIGN_UP]: {
     user: AuthUser;
-  };
-  [UPDATE_LOCALE]: {
-    locale: string;
   };
 };
 
@@ -76,12 +61,6 @@ const JWTReducer = (
         user: action.payload.user,
       };
 
-    case UPDATE_LOCALE:
-      return {
-        ...state,
-        user: { ...state.user, locale: action.payload.locale },
-      };
-
     default:
       return state;
   }
@@ -90,26 +69,18 @@ const JWTReducer = (
 const AuthContext = createContext<JWTContextType | null>(null);
 
 function AuthProvider({ children }: { children: ReactNode }) {
-  const { i18n } = useTranslation();
   const [state, dispatch] = useReducer(JWTReducer, initialState);
 
-  const UserService = useUserService();
-
-  /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
     const initialize = async () => {
       try {
-        let isAuthenticated = false;
-        const response = await axios.get("/v12/auth/is-authenticated", {
-          withCredentials: true,
-        });
-        if (response.data) {
-          isAuthenticated = true;
-        }
+        const accessToken = window.localStorage.getItem("accessToken");
 
-        if (isAuthenticated) {
-          const user = await UserService.getCurrentUserDetails();
-          i18n.changeLanguage(user.locale);
+        if (accessToken && isValidToken(accessToken)) {
+          setSession(accessToken);
+
+          const response = await axios.get("/v12/auth/account");
+          const user = response.data;
 
           dispatch({
             type: INITIALIZE,
@@ -140,34 +111,27 @@ function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     initialize();
-  }, [i18n]);
-  /* eslint-enable */
+  }, []);
+
   const signIn = async (email: string, password: string) => {
-    await axios.post("/v12/auth/sign-in", {
-      email,
-      password,
+    console.log("try log in");
+    const response = await axios.post("/v12/auth/sign-in", {
+      username: email,
+      password: password,
     });
-    const user = await UserService.getCurrentUserDetails();
-    i18n.changeLanguage(user.locale);
+    var accessToken = response.data.jwt;
+    setSession(accessToken);
+
     dispatch({
       type: SIGN_IN,
       payload: {
-        user,
-      },
-    });
-  };
-
-  const updateLocale = (locale: string) => {
-    dispatch({
-      type: UPDATE_LOCALE,
-      payload: {
-        locale,
+        user: null,
       },
     });
   };
 
   const signOut = async () => {
-    await axios.post("/v12/auth/sign-out");
+    setSession(null);
     dispatch({ type: SIGN_OUT });
   };
 
@@ -183,7 +147,9 @@ function AuthProvider({ children }: { children: ReactNode }) {
       firstName,
       lastName,
     });
-    const { user } = response.data;
+    const { accessToken, user } = response.data;
+
+    window.localStorage.setItem("accessToken", accessToken);
     dispatch({
       type: SIGN_UP,
       payload: {
@@ -194,57 +160,6 @@ function AuthProvider({ children }: { children: ReactNode }) {
 
   const resetPassword = (email: string) => console.log(email);
 
-  const tokenLogin = async (token: string, email: string) => {
-    await axios.post("/v12/auth/token-login", {
-      LoginEmail: email,
-      LoginToken: token,
-    });
-
-    const user = await UserService.getCurrentUserDetails();
-    i18n.changeLanguage(user.locale);
-    dispatch({
-      type: SIGN_IN,
-      payload: {
-        user,
-      },
-    });
-  };
-
-  const externalEmailSignIn = async (
-    companyId: guid,
-    email: string,
-    locationId: guid
-  ) => {
-    await axios.post("/v12/auth/external-email-login", {
-      companyId,
-      email,
-      locationId,
-    });
-
-    return;
-  };
-
-  const externalJwtSignIn = async (jwt: string) => {
-    let response = await axios.post("/v12/auth/external-jwt-login", {
-      jwt,
-    });
-
-    if (response.data) {
-      return response.data as AuthExternalUser;
-    } else {
-      const user = await UserService.getCurrentUserDetails();
-      i18n.changeLanguage(user.locale);
-      dispatch({
-        type: SIGN_IN,
-        payload: {
-          user,
-        },
-      });
-
-      return null;
-    }
-  };
-
   return (
     <AuthContext.Provider
       value={{
@@ -254,10 +169,6 @@ function AuthProvider({ children }: { children: ReactNode }) {
         signOut,
         signUp,
         resetPassword,
-        tokenLogin,
-        externalEmailSignIn,
-        externalJwtSignIn,
-        updateLocale,
       }}
     >
       {children}

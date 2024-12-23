@@ -1,13 +1,13 @@
-import { createContext, ReactNode, useEffect, useReducer } from "react";
 import { Auth0Client } from "@auth0/auth0-spa-js";
+import { createContext, ReactNode, useEffect, useReducer } from "react";
 
+import { auth0Config } from "../config";
 import {
-  Auth0ContextType,
   ActionMap,
+  Auth0ContextType,
   AuthState,
   AuthUser,
 } from "../types/auth";
-import { auth0Config } from "../config";
 
 const INITIALIZE = "INITIALIZE";
 const SIGN_IN = "SIGN_IN";

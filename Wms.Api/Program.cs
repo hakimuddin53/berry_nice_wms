@@ -1,8 +1,12 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
+using Microsoft.IdentityModel.Tokens; 
 using System.Text;
 using Wms.Api.Model;
+using Wms.Api.Repositories.Interface;
+using Wms.Api.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Wms.Api.Services;
+using Wms.Api.Context;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,10 +37,29 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReactApp", policy =>
+    {
+        policy.WithOrigins("http://localhost:3005") // React app's URL
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
 
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+builder.Services.AddScoped(typeof(IService<>), typeof(Service<>));
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 
 var app = builder.Build();
+
+
+app.UseCors("AllowReactApp"); // Apply the CORS policy
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

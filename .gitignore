@@ -1,0 +1,103 @@
+﻿# Ignore build outputs
+bin/
+obj/
+**/bin/Debug/
+**/bin/Release/
+**/bin/Debug/net8.0/
+**/bin/Release/net8.0/
+**/obj/Debug/net8.0/
+**/obj/Release/net8.0/
+
+# Ignore Visual Studio and other IDE-related cache or indexing files
+.vs/
+.vs/*/v17/
+
+# Ignore FileContentIndex generated files (common in some Visual Studio versions)
+**/FileContentIndex/
+
+
+/.vs
+
+
+# Ignore user-specific files
+*.user
+*.vs
+.vscode/
+*.suo
+*.userosscache
+*.userprefs
+
+# Ignore dotnet-specific files
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Ignore logs, databases, and application insights
+*.log
+*.nlog
+*.db
+*.pdb
+*.mdb
+
+# Ignore temp files
+*.tmp
+*.temp
+*.cache
+*.svclog
+
+# Ignore configuration and secrets
+appsettings.Development.json
+appsettings.Local.json
+appsettings.Staging.json
+appsettings.Production.json
+appsettings.*.json
+secrets.json
+
+# Ignore testing-related files
+TestResults/
+*.Coverage
+*.coverage
+
+# Ignore packages and dependency caches
+packages/
+*.nupkg
+*.snupkg
+
+# Ignore resharper files
+_ReSharper/
+*.DotSettings.user
+
+# Ignore Rider IDE files
+.idea/
+
+# Ignore JetBrains Rider-specific cache files
+.idea/
+
+# Ignore dependency injection and EF Core cache files
+*.sln.docstates
+Migrations/
+
+# Ignore Visual Studio Code workspace files
+.vscode/
+
+# Ignore tools directories
+tools/
+
+# Ignore stylecop, analyzers, or editor config files
+.stylecop
+.editorconfig
+
+# Ignore publish outputs
+publish/
+wwwroot/
+static/
+
+# Ignore environment-related configurations (optional)
+.env
+.env.*
+
+# Ignore .NET-specific temporary files and cache
+/.vs/
+/Wms.Api/obj/Debug/net8.0/Wms.Api.AssemblyInfo.cs
+/Wms.Api/obj/Debug/net8.0/Wms.Api.AssemblyInfoInputs.cache
+/Wms.Api/.vs/ProjectEvaluation/wms.api.metadata.v8.bin

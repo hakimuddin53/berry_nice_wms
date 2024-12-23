@@ -22,9 +22,6 @@ function AuthGuard({ children }: AuthGuardType) {
       return <Navigate to="/auth/sign-in" />;
     }
 
-    var autoLogin = searchParams.get("autologin");
-    searchParams.delete("autologin");
-
     return (
       <Navigate
         to={
@@ -32,7 +29,7 @@ function AuthGuard({ children }: AuthGuardType) {
           pathname +
           "&searchQuery=" +
           encodeURIComponent(searchParams.toString()) +
-          (autoLogin === "true" ? "&autologin=true" : "")
+          ""
         }
       />
     );

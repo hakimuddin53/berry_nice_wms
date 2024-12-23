@@ -1,5 +1,4 @@
 import firebase from "firebase/app";
-import { guid } from "./guid";
 
 export type ActionMap<M extends { [index: string]: any }> = {
   [Key in keyof M]: M[Key] extends undefined
@@ -13,12 +12,6 @@ export type ActionMap<M extends { [index: string]: any }> = {
 };
 
 export type AuthUser = null | Record<string, any>;
-
-export type AuthExternalUser = {
-  companyId: string;
-  locationId: string;
-  email: string;
-};
 
 export type AuthState = {
   isAuthenticated: boolean;
@@ -40,14 +33,6 @@ export type JWTContextType = {
     lastName: string
   ) => Promise<void>;
   resetPassword: (email: string) => void;
-  tokenLogin: (token: string, email: string) => Promise<void>;
-  externalEmailSignIn: (
-    companyId: guid,
-    email: string,
-    locationId: guid
-  ) => Promise<void>;
-  externalJwtSignIn: (jwt: string) => Promise<AuthExternalUser | null>;
-  updateLocale: (locale: string) => void;
 };
 
 export type FirebaseAuthContextType = {
