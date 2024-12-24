@@ -1,109 +1,135 @@
-﻿# Ignore build outputs
+﻿# Visual Studio.gitignore
+# Get the latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
+
+####################
+# OS-generated files
+####################
+.DS_Store
+Thumbs.db
+
+######################
+# User-specific files
+######################
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+##########################
+# Workspace and IDE files
+##########################
+*.ide
+.idea/
+.vscode/
+
+###################
+# Build and output
+###################
 bin/
 obj/
-**/bin/Debug/
-**/bin/Release/
-**/bin/Debug/net8.0/
-**/bin/Release/net8.0/
-**/obj/Debug/net8.0/
-**/obj/Release/net8.0/
+out/
+*.exe
+*.dll
+*.pdb
+*.cache
+*.ilk
+*.log
+*.map
+*.obj
+*.sbr
+*.tlb
+*.tli
+*.tmp
+*.tmp_proj
+*.log
+*.vspscc
+*.vssscc
 
-# Ignore Visual Studio and other IDE-related cache or indexing files
-.vs/
-.vs/*/v17/
-
-# Ignore FileContentIndex generated files (common in some Visual Studio versions)
-**/FileContentIndex/
-
-
-/.vs
-
-
-# Ignore user-specific files
-*.user
-*.vs
-.vscode/
-*.suo
-*.userosscache
+###################
+# Generated files
+###################
+*.class
+*.csscomb.json
+*.json.schemastore.json
+*.publishsettings
+*.sqlproj.user
 *.userprefs
 
-# Ignore dotnet-specific files
-project.lock.json
-project.fragment.lock.json
-artifacts/
-
-# Ignore logs, databases, and application insights
+###################
+# Dependency files
+###################
+*.deps.json
+*.js.map
 *.log
-*.nlog
-*.db
-*.pdb
-*.mdb
+*.vsconfig
 
-# Ignore temp files
-*.tmp
-*.temp
-*.cache
-*.svclog
-
-# Ignore configuration and secrets
-appsettings.Development.json
-appsettings.Local.json
-appsettings.Staging.json
-appsettings.Production.json
-appsettings.*.json
-secrets.json
-
-# Ignore testing-related files
-TestResults/
-*.Coverage
-*.coverage
-
-# Ignore packages and dependency caches
-packages/
+####################
+# NuGet Packages
+####################
 *.nupkg
 *.snupkg
+# Include if using the NuGet source cache:
+packages/
 
-# Ignore resharper files
-_ReSharper/
-*.DotSettings.user
+####################
+# npm packages
+####################
+node_modules/
+npm-debug.log
+yarn-error.log
 
-# Ignore Rider IDE files
-.idea/
-
-# Ignore JetBrains Rider-specific cache files
-.idea/
-
-# Ignore dependency injection and EF Core cache files
-*.sln.docstates
-Migrations/
-
-# Ignore Visual Studio Code workspace files
-.vscode/
-
-# Ignore tools directories
-tools/
-
-# Ignore stylecop, analyzers, or editor config files
-.stylecop
-.editorconfig
-
-# Ignore publish outputs
-publish/
-wwwroot/
-static/
-
-# Ignore environment-related configurations (optional)
+####################
+# Environment files
+####################
 .env
 .env.*
+local.settings.json
 
-# Ignore .NET-specific temporary files and cache
-/.vs/
-/Wms.Api/obj/Debug/net8.0/Wms.Api.AssemblyInfo.cs
-/Wms.Api/obj/Debug/net8.0/Wms.Api.AssemblyInfoInputs.cache
-/Wms.Api/.vs/ProjectEvaluation/wms.api.metadata.v8.bin
+######################
+# ASP.NET Scaffolding
+######################
+ScaffoldingReadMe.txt
+
+#####################
+# Azure Pipelines
+#####################
+project.lock.json
+project.fragment.lock.json
+
+###############
+# Visual Studio
+###############
+.vs/
+*.ncrunch*
+.nCrunchTemp/
+~$*
+
+########################
+# Entity Framework Migrations
+########################
+Migrations/
+
+# Uncomment if using Rider IDE:
+# .idea/
+
+########################
+# Resharper and IDE Tools
+########################
+_ReSharper/
+*.DotSettings.user
+resharper/annotations.xml
+
+####################
+# Windows specific
+####################
+*.bat
+*.cmd
+*.ps1
 /Wms.Api/.vs/Wms.Api/v17/
-/Wms.Api/obj/Debug/net8.0/
-/Wms.Api/.vs/Wms.Api/v17/.suo
-/Wms.Api/.vs/Wms.Api/v17/DocumentLayout.json
-/Wms.Api/obj/Debug/net8.0/Wms.Api.AssemblyInfo.cs
-/Wms.Api/obj/Debug/net8.0/Wms.Api.AssemblyInfoInputs.cache
+/Wms.Api/.vs/Wms.Api/DesignTimeBuild 
+/Wms.Api/.vs/ProjectEvaluation/
+/Wms.Api/.vs/ProjectEvaluation/wms.api.strings.v8.bin
+/Wms.Api/.vs/ProjectEvaluation/wms.api.strings.v8.bin
+/Wms.Api/.vs/Wms.Api/DesignTimeBuild/.dtbcache.v2
+/Wms.Api/.vs/Wms.Api/v17/.futdcache.v2
