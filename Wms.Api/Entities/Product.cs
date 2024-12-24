@@ -26,7 +26,13 @@ namespace Wms.Api.Entities
         public string ItemType { get; set; } = string.Empty; // e.g., Long Sleeve, Short Sleeve
         public string ProductPhotoUrl { get; set; } = string.Empty;
 
+
+        public Guid? LocationId { get; set; } // Nullable if not all products have a location assigned
+
+        public Location? Location { get; set; }
+
         // Navigation Property
         public ICollection<ProductUom> ProductUoms { get; set; }
     }
 }
+
