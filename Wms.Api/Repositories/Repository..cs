@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
+using System.Linq.Expressions;
 using Wms.Api.Context;
 using Wms.Api.Repositories.Interface;
 
@@ -16,7 +17,14 @@ namespace Wms.Api.Repositories
             _dbSet = _context.Set<T>();
         }
 
-        public async Task<IEnumerable<T>> GetAllAsync() => await _dbSet.ToListAsync();
+        public async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>>? predicate = null)
+        {
+            if (predicate != null)
+            {
+                return await _dbSet.Where(predicate).ToListAsync();
+            }
+            return await _dbSet.ToListAsync();
+        }
 
         public async Task<T> GetByIdAsync(Guid id) => await _dbSet.FindAsync(id);
 

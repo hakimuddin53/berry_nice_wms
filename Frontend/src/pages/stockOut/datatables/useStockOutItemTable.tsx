@@ -1,0 +1,43 @@
+import { DataTableHeaderCell } from "components/platbricks/shared/dataTable/DataTable";
+import { useCreatedChangeDate } from "hooks/useCreatedChangeDate";
+import { StockOutItemDetailsDto } from "interfaces/v12/stockout/stockOutDetails/stockOutDetailsDto";
+import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
+
+const hidden = true;
+
+export const useStockOutItemTable = () => {
+  const { t } = useTranslation();
+
+  const stockOutItemData = useMemo<
+    DataTableHeaderCell<StockOutItemDetailsDto>[]
+  >(
+    () => [
+      {
+        id: "id",
+        label: t("common:id"),
+        hidden,
+      },
+      {
+        id: "stockOutItemNumber",
+        label: t("common:item"),
+      },
+      {
+        id: "quantity",
+        label: t("quantity"),
+        render: (row) => {
+          return row.quantity ? row.quantity.toString() : <span />;
+        },
+      },
+      {
+        id: "listPrice",
+        label: t("common:listPrice"),
+      },
+    ],
+    [t]
+  );
+
+  useCreatedChangeDate(stockOutItemData, hidden);
+
+  return [stockOutItemData];
+};

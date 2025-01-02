@@ -81,7 +81,7 @@ export const FileExportDialog = (props: FileExportProps) => {
                   return t(selected, { ns: "enumerables" });
                 }}
               >
-                {Object.values(["en-US", "en-GB", "de-DE"]).map((p) => (
+                {Object.values(["en-US", "en-GB"]).map((p) => (
                   <MenuItem value={p} key={p}>
                     {t(p, { ns: "enumerables" })}
                   </MenuItem>

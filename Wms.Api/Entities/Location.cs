@@ -2,7 +2,7 @@
 
 namespace Wms.Api.Entities
 {
-    public class Location
+    public class Location : CreatedChangedEntity
     {
         [Key]
         public Guid Id { get; set; }

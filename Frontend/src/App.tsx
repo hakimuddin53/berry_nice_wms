@@ -16,7 +16,7 @@ import createEmotionCache from "./utils/createEmotionCache";
 
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { DeleteConfirmationDialogProvider } from "contexts/DeleteConfirmationDialogContext";
-import { de, enGB, enUS, es } from "date-fns/locale";
+import { de, enGB, enUS } from "date-fns/locale";
 import { useTranslation } from "react-i18next";
 import { NotificationServiceProvider } from "services/NotificationService";
 import { ServicesProvider } from "services/ServicesProvider";
@@ -38,8 +38,6 @@ function App({ emotionCache = clientSideEmotionCache }) {
         return enGB;
       case "en-US":
         return enUS;
-      case "es-ES":
-        return es;
 
       default:
         return de;

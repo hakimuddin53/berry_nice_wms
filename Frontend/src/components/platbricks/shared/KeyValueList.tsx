@@ -8,7 +8,6 @@ import {
 } from "@mui/material";
 import { PbBaseTheme } from "interfaces/general/theme/pbBaseTheme";
 import React, { Fragment } from "react";
-import { PageConfigurationIdentifier } from "types/pageConfigurationIdentifier";
 
 export interface KeyValueListProps {
   children: React.ReactNode;
@@ -141,7 +140,6 @@ export interface KeyValuePairProps {
   textAlignValue?: textAlign;
   textAlignLabel?: textAlign;
   verticalAlign?: alignSelf;
-  pageConfigIdentifier?: PageConfigurationIdentifier;
 }
 const KeyValuePair = (props: KeyValuePairProps) => {
   return (

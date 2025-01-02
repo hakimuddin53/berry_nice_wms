@@ -2,7 +2,7 @@
 
 namespace Wms.Api.Entities
 {
-    public class Product
+    public class Product : CreatedChangedEntity
     {
         [Key]
         public Guid Id { get; set; }
@@ -17,7 +17,7 @@ namespace Wms.Api.Entities
         public required string ClientCode { get; set; }
 
         [Required]
-        public required string WarehouseCode { get; set; }
+        public required Guid WarehouseId { get; set; }
 
         public string Category { get; set; } = string.Empty;
         public string SubCategory { get; set; } = string.Empty;
@@ -25,8 +25,7 @@ namespace Wms.Api.Entities
         public string Colour { get; set; } = string.Empty;
         public string ItemType { get; set; } = string.Empty; // e.g., Long Sleeve, Short Sleeve
         public string ProductPhotoUrl { get; set; } = string.Empty;
-
-
+         
         public Guid? LocationId { get; set; } // Nullable if not all products have a location assigned
 
         public Location? Location { get; set; }

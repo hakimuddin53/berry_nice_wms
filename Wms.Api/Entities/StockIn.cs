@@ -2,21 +2,18 @@
 
 namespace Wms.Api.Entities
 {
-    public class StockIn
+    public class StockIn : CreatedChangedEntity
     {
         [Key]
         public Guid Id { get; set; }
 
         [Required]
-        public required string RunningDocumentNumber { get; set; } 
+        public required string Number { get; set; }          
 
         [Required]
-        public DateTime Date { get; set; }
-
-        [Required]
-        public string Warehouse { get; set; } = string.Empty;
+        public Guid WarehouseId { get; set; } 
 
         // Navigation Property
-        public ICollection<StockInDetail>? StockInDetails { get; set; }
+        public ICollection<StockInItem>? StockInItems { get; set; }
     }
 }

@@ -1,9 +1,0 @@
-{
-  "create-yard-action-type": "Yard Aktionstyp erstellen",
-  "new-yard-action-type": "Neuer Yard Aktionstyp",
-  "yard-action-type": "Yard Aktionstyp",
-  "yard-action-type-0-created-successfully": "Yard Aktionstyp {0} erfolgreich erstellt.",
-  "yard-action-type-0-deleted-successfully": "Yard Aktionstyp {0} erfolgreich gelöscht.",
-  "yard-action-type-0-updated-successfully": "Yard Aktionstyp {0} erfolgreich aktualisiert.",
-  "yard-action-types": "Yard Aktionstypen"
-}

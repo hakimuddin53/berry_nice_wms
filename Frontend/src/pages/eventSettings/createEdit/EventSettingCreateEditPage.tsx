@@ -538,9 +538,6 @@ const EventSettingCreateEditPage: React.FC = () => {
                                   onChange={formik.handleChange}
                                   onBlur={formik.handleBlur}
                                 >
-                                  <MenuItem value="de-DE" key="de-DE">
-                                    {t("german", { ns: "auth" })}
-                                  </MenuItem>
                                   <MenuItem value="en-GB" key="en-GB">
                                     {t("english-gb", { ns: "auth" })}
                                   </MenuItem>
@@ -747,9 +744,6 @@ const EventSettingCreateEditPage: React.FC = () => {
                                     onChange={formik.handleChange}
                                     onBlur={formik.handleBlur}
                                   >
-                                    <MenuItem value="de-DE" key="de-DE">
-                                      {t("german", { ns: "auth" })}
-                                    </MenuItem>
                                     <MenuItem value="en-GB" key="en-GB">
                                       {t("english-gb", { ns: "auth" })}
                                     </MenuItem>

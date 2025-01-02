@@ -4,7 +4,7 @@ using Wms.Api.Services;
 namespace Wms.Api.Controllers
 {
     [ApiController] 
-    [Route("api/v12/auth")]
+    [Route("api/auth")]
     public class AuthController : ControllerBase
     {
         private readonly ITokenService _tokenService;

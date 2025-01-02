@@ -2,7 +2,7 @@
 
 namespace Wms.Api.Entities
 {
-    public class ProductUom
+    public class ProductUom : CreatedChangedEntity
     {
         [Key]
         public Guid Id { get; set; }
@@ -12,6 +12,6 @@ namespace Wms.Api.Entities
 
         [Required]
         public Guid UomId { get; set; }
-         
+
     }
 }

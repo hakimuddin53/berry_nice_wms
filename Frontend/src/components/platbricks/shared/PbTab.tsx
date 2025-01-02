@@ -1,10 +1,8 @@
 import styled from "@emotion/styled";
 import { Box, Tab, TabProps, Tabs } from "@mui/material";
-import { PageConfigurationIdentifier } from "types/pageConfigurationIdentifier";
 
 interface PbTabProps extends TabProps {
   haserror?: boolean;
-  pageconfigidentifier?: PageConfigurationIdentifier; //change to small caps to remove the warning for doms element
 }
 
 export const PbTab = styled((props: PbTabProps) => {

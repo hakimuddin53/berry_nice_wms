@@ -31,10 +31,6 @@ type languageOptionsType = {
 };
 
 const languageOptions: languageOptionsType = {
-  "de-DE": {
-    icon: "/static/img/flags/de.png",
-    name: "german",
-  },
   "en-US": {
     icon: "/static/img/flags/us.png",
     name: "english-us",
@@ -42,10 +38,6 @@ const languageOptions: languageOptionsType = {
   "en-GB": {
     icon: "/static/img/flags/gb.png",
     name: "english-gb",
-  },
-  "es-ES": {
-    icon: "/static/img/flags/es.png",
-    name: "spain",
   },
 };
 

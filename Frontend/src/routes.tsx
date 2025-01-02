@@ -81,7 +81,7 @@ import { HomePageNavigator } from "components/platbricks/shared/HomePageNavigato
 import ProtectedPage from "examples/protected/ProtectedPage";
 import EventSettingCreateEditPage from "pages/eventSettings/createEdit/EventSettingCreateEditPage";
 import EventSettingDetailsPage from "pages/eventSettings/details/EventSettingDetailsPage";
-import EventSettingListPage from "pages/eventSettings/index/EventSettingListPage";
+import StockInListPage from "pages/stockIn/index/StockInListPage";
 
 // Dashboard components
 const Analytics = async(() => import("./examples/dashboards/Analytics"));
@@ -192,11 +192,11 @@ const routes = [
         ],
       },
       {
-        path: "event-settings",
+        path: "stock-in",
         children: [
           {
             path: "",
-            element: <EventSettingListPage />,
+            element: <StockInListPage />,
           },
           {
             path: "new",

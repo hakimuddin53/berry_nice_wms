@@ -1,4 +1,6 @@
-﻿using Wms.Api.Repositories.Interface; 
+﻿using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
+using Wms.Api.Repositories.Interface; 
 
 namespace Wms.Api.Services
 {
@@ -11,7 +13,11 @@ namespace Wms.Api.Services
             _repository = repository;
         }
 
-        public async Task<IEnumerable<T>> GetAllAsync() => await _repository.GetAllAsync();
+        public async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>>? predicate = null)
+        {
+            return await _repository.GetAllAsync(predicate);
+        }
+
 
         public async Task<T> GetByIdAsync(Guid id) => await _repository.GetByIdAsync(id);
 
