@@ -41,6 +41,7 @@ const useSelectAsync2 = (
       setLoading(true);
       setInitialSelection([]);
       let newOptions = await asyncFunc(label, 1, pageSize, ids);
+      console.log(newOptions);
       if (newOptions) {
         setOptions([...newOptions]);
       }

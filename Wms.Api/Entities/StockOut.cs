@@ -11,10 +11,7 @@ namespace Wms.Api.Entities
         public required string Number { get; set; }
 
         [Required]
-        public DateTime Date { get; set; }
-
-        [Required]
-        public Guid WarehouseId { get; set; }
+        public required string DONumber { get; set; }
 
         // Navigation Property
         public ICollection<StockOutItem>? StockOutItems { get; set; }

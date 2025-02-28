@@ -37,6 +37,8 @@ function StockInDetailsPage() {
 
   const [stockInItemTable] = useStockInItemTable();
 
+  console.log(stockIn);
+
   const { OpenDeleteConfirmationDialog } = useDeleteConfirmationDialog();
 
   const notificationService = useNotificationService();
@@ -83,30 +85,6 @@ function StockInDetailsPage() {
           label: stockIn.number,
         },
       ]}
-      actions={[
-        {
-          title: t("edit"),
-          to: "edit",
-          icon: "Edit",
-          pageConfigIdentifier: "edit",
-        },
-        {
-          title: t("delete"),
-          icon: "Delete",
-          onclick: () => {
-            OpenDeleteConfirmationDialog({
-              onConfirmDeletion: async () => {
-                await StockInService.deleteStockIn(stockIn.id);
-              },
-              setPageBlocker: setPageBlocker,
-              entity: "stock-in",
-              translationNamespace: "common",
-              deleteDataName: stockIn.number,
-              redirectLink: `/stock-in`,
-            });
-          },
-        },
-      ]}
     >
       <PbCard px={2} pt={2}>
         <PbTabs
@@ -119,7 +97,7 @@ function StockInDetailsPage() {
           <PbTab
             label={
               <BadgeText
-                number={stockIn?.stockInItemDetails?.length ?? 0}
+                number={stockIn?.stockInItems?.length ?? 0}
                 label={t("items")}
               />
             }
@@ -130,12 +108,20 @@ function StockInDetailsPage() {
             <Grid container rowSpacing={100}>
               <Grid item xs={6}>
                 <KeyValueList gridTemplateColumns="2fr 4fr">
-                  <KeyValuePair label={t("delivery")}>
+                  <KeyValuePair label={t("number")}>
                     <EasyCopy clipboard={stockIn.number}>
                       {stockIn.number}
                     </EasyCopy>
                   </KeyValuePair>
-
+                  <KeyValuePair label={t("po-number")}>
+                    {stockIn.poNumber}
+                  </KeyValuePair>
+                  <KeyValuePair label={t("warehouse")}>
+                    {stockIn.warehouse}
+                  </KeyValuePair>
+                  <KeyValuePair label={t("rack")}>
+                    {stockIn.location}
+                  </KeyValuePair>
                   <KeyValuePair label={t("created-at")}>
                     <UserDateTime date={stockIn.createdAt} />
                   </KeyValuePair>
@@ -158,8 +144,8 @@ function StockInDetailsPage() {
               title={t("items")}
               tableKey="StockInDetailsPage-Items"
               headerCells={stockInItemTable}
-              data={stockIn.stockInItemDetails}
-              dataKey="stockInItemId"
+              data={stockIn.stockInItems}
+              dataKey="id"
               onSelectionChanged={(x: StockInItemDetailsDto[]) =>
                 setSelectedStockInItem(x[0])
               }

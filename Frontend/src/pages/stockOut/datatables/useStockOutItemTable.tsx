@@ -29,10 +29,6 @@ export const useStockOutItemTable = () => {
           return row.quantity ? row.quantity.toString() : <span />;
         },
       },
-      {
-        id: "listPrice",
-        label: t("common:listPrice"),
-      },
     ],
     [t]
   );

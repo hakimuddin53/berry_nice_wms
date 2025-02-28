@@ -1,16 +1,8 @@
-import useAuth from "hooks/useAuth";
-import { Navigate, useNavigate } from "react-router-dom";
-import { useCatalogMenuItemService } from "services/CatalogMenuItemService";
-import { useUserService } from "services/UserService";
+import { Navigate } from "react-router-dom";
 
-export const HOMEPAGE_DEFAULT: string = "/pages";
+export const HOMEPAGE_DEFAULT: string = "/dashboard";
 
 const HomePageNavigator = () => {
-  const catalogmenuItemService = useCatalogMenuItemService();
-  const userService = useUserService();
-  const navigate = useNavigate();
-  const { user } = useAuth();
-
   return <Navigate to={HOMEPAGE_DEFAULT} />;
 };
 

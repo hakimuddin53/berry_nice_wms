@@ -1,4 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Wms.Api.Model;
 
 namespace Wms.Api.Entities
 {
@@ -6,32 +8,30 @@ namespace Wms.Api.Entities
     {
         [Key]
         public Guid Id { get; set; }
-
+        [Required]
+        public required string SerialNumber { get; set; }
         [Required]
         public required string Name { get; set; }
+        [Required]
+        public required string ItemCode { get; set; }         
 
         [Required]
-        public required string ItemCode { get; set; }
+        public ClientCodeEnum ClientCode { get; set; }
 
         [Required]
-        public required string ClientCode { get; set; }
+        public int QuantityPerCarton { get; set; }  
+        public Guid CategoryId { get; set; }   
+        public Guid SizeId { get; set; }  
+        public Guid ColourId { get; set; }  
+        public Guid DesignId { get; set; } 
+        public Guid CartonSizeId { get; set; }
+        public string? ProductPhotoUrl { get; set; }
 
         [Required]
-        public required Guid WarehouseId { get; set; }
+        [Column(TypeName = "decimal(18,5)")]
+        public decimal ListPrice { get; set; }
+        public int Threshold { get; set; }
 
-        public string Category { get; set; } = string.Empty;
-        public string SubCategory { get; set; } = string.Empty;
-        public string Size { get; set; } = string.Empty;
-        public string Colour { get; set; } = string.Empty;
-        public string ItemType { get; set; } = string.Empty; // e.g., Long Sleeve, Short Sleeve
-        public string ProductPhotoUrl { get; set; } = string.Empty;
-         
-        public Guid? LocationId { get; set; } // Nullable if not all products have a location assigned
-
-        public Location? Location { get; set; }
-
-        // Navigation Property
-        public ICollection<ProductUom> ProductUoms { get; set; }
     }
 }
 

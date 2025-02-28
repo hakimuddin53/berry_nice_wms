@@ -2,20 +2,23 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Wms.Api.Entities;
 using static Wms.Api.Model.Constants;
 
 namespace Wms.Api.Services
 {
     public class TokenService : ITokenService
     { 
-        public string GenerateJwtToken(string userName)
+        public string GenerateJwtToken(ApplicationUser? user)
         {
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(TokenConstant.SecretKey));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256); 
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, userName),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                new Claim(JwtRegisteredClaimNames.Sub, user?.Email ?? ""),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim(ClaimTypes.NameIdentifier, user?.Id.ToString() ?? ""),
+                new Claim(ClaimTypes.Email,user?.Email ?? ""),
             };
 
             var token = new JwtSecurityToken(

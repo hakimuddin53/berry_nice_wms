@@ -8,12 +8,17 @@ namespace Wms.Api.Entities
         public Guid Id { get; set; }
 
         [Required]
-        public required string Number { get; set; }          
+        public required string Number { get; set; }
 
         [Required]
-        public Guid WarehouseId { get; set; } 
+        public required string PONumber { get; set; }
 
-        // Navigation Property
+        [Required]
+        public Guid WarehouseId { get; set; }
+
+        [Required]
+        public Guid LocationId { get; set; }
+
         public ICollection<StockInItem>? StockInItems { get; set; }
     }
 }

@@ -1,14 +1,12 @@
 import { guid } from "types/guid";
 
 export interface StockOutCreateUpdateDto {
-  number: string;
-  warehouseId: guid;
+  number?: string | null;
+  doNumber: string;
   stockOutItems: StockOutItemCreateUpdate[];
 }
 export interface StockOutItemCreateUpdate {
-  stockOutItemNumber: string;
+  stockOutItemNumber?: string | null;
   productId: guid;
   quantity: number;
-  productUomId: guid;
-  listPrice: number;
 }

@@ -1,7 +1,9 @@
-﻿ namespace Wms.Api.Services
+﻿using Wms.Api.Entities;
+
+namespace Wms.Api.Services
 {
     public interface ITokenService
     {
-        string GenerateJwtToken(string userName);
+        string GenerateJwtToken(ApplicationUser? user);
     }
 }

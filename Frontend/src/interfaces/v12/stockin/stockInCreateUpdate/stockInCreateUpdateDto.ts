@@ -1,14 +1,14 @@
 import { guid } from "types/guid";
 
 export interface StockInCreateUpdateDto {
-  number: string;
+  number?: string | null;
+  poNumber: string;
   warehouseId: guid;
+  locationId: guid;
   stockInItems: StockInItemCreateUpdate[] | null;
 }
 export interface StockInItemCreateUpdate {
-  stockInItemNumber: string;
+  stockInItemNumber?: string | null;
   productId: guid;
   quantity: number;
-  productUomId: guid;
-  listPrice: number;
 }

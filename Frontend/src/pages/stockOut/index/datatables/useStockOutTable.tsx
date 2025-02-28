@@ -21,7 +21,7 @@ export const useStockOutTable = () => {
         hidden,
       },
       {
-        id: "delivery",
+        id: "number",
         label: t("common:number"),
         render: (row) => (
           <EasyCopy clipboard={row.number}>
@@ -30,6 +30,10 @@ export const useStockOutTable = () => {
             </Link>
           </EasyCopy>
         ),
+      },
+      {
+        id: "doNumber",
+        label: t("doNumber"),
       },
     ],
     [t]

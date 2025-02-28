@@ -40,7 +40,9 @@ const StockInCreateEditPage: React.FC = () => {
 
   const [stockIn, setStockIn] = useState<YupStockInCreateEdit>({
     number: "",
+    poNumber: "",
     warehouseId: EMPTY_GUID as guid,
+    locationId: EMPTY_GUID as guid,
     stockInItems: [],
   });
 
@@ -84,6 +86,8 @@ const StockInCreateEditPage: React.FC = () => {
     validationSchema: StockInCreateEditSchema,
     onSubmit: (values, { resetForm }) => {
       setPageBlocker(true);
+
+      console.log(values);
 
       if (!id) {
         stockInService
@@ -137,6 +141,7 @@ const StockInCreateEditPage: React.FC = () => {
       stockInService
         .getStockInById(id as guid)
         .then((stockIn: any) => {
+          console.log(stockIn);
           stockIn.stockInItems.forEach((x: any, i: any) => (x.key = i));
           setStockIn(stockIn);
 
@@ -212,9 +217,7 @@ const StockInCreateEditPage: React.FC = () => {
         key,
         stockInItemNumber: "",
         productId: EMPTY_GUID as guid,
-        productUomId: EMPTY_GUID as guid,
         quantity: 0,
-        listPrice: 0,
       };
     }
   );

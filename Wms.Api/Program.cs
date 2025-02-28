@@ -7,12 +7,33 @@ using Wms.Api.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Wms.Api.Services;
 using Wms.Api.Context;
+using Wms.Api.Entities;
+using Wms.Api.Profiles;
+using Leitstand.Mapping.Profiles.v12_0;
+using Microsoft.AspNetCore.Identity;
+using System;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
 builder.Services.AddControllers();
+
+
+builder.Services.AddAutoMapper(typeof(StockInProfile));
+builder.Services.AddAutoMapper(typeof(StockOutProfile));
+builder.Services.AddAutoMapper(typeof(ProductProfile));
+builder.Services.AddAutoMapper(typeof(CategoryProfile));
+builder.Services.AddAutoMapper(typeof(ColourProfile));
+builder.Services.AddAutoMapper(typeof(DesignProfile));
+builder.Services.AddAutoMapper(typeof(LocationProfile));
+builder.Services.AddAutoMapper(typeof(SizeProfile));
+builder.Services.AddAutoMapper(typeof(StockReservationProfile));
+builder.Services.AddAutoMapper(typeof(CartonSizeProfile));
+builder.Services.AddAutoMapper(typeof(WarehouseProfile));
+builder.Services.AddAutoMapper(typeof(StockTransferProfile));
+builder.Services.AddAutoMapper(typeof(GeneralProfile));
+
 
 builder.Services.AddAuthentication(options =>
 {
@@ -49,11 +70,49 @@ builder.Services.AddCors(options =>
 });
 
 
+builder.Services.AddLogging(loggingBuilder =>
+{
+    loggingBuilder.AddConfiguration(builder.Configuration.GetSection("Logging"));
+    loggingBuilder.AddConsole();
+    loggingBuilder.AddDebug();
+});
+
+// Register IHttpContextAccessor
+builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddAuthorization();
+
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<IInventoryService, InventoryService>();
+builder.Services.AddScoped<IRunningNumberService, RunningNumberService>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped(typeof(IService<>), typeof(Service<>));
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Add Identity services
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders();
+
+// Configure Identity options (optional)
+builder.Services.Configure<IdentityOptions>(options =>
+{
+    // Password settings
+    options.Password.RequireDigit = true;
+    options.Password.RequiredLength = 6;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireLowercase = true;
+
+    // Lockout settings
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+    options.Lockout.MaxFailedAccessAttempts = 5;
+
+    // User settings
+    options.User.RequireUniqueEmail = true;
+});
 
 
 var app = builder.Build();

@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using Wms.Api.Dto;
 using Wms.Api.Repositories.Interface; 
 
 namespace Wms.Api.Services
@@ -13,11 +14,10 @@ namespace Wms.Api.Services
             _repository = repository;
         }
 
-        public async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>>? predicate = null)
+        public async Task<IQueryable<T>> GetAllAsync(Expression<Func<T, bool>>? predicate = null)
         {
             return await _repository.GetAllAsync(predicate);
-        }
-
+        } 
 
         public async Task<T> GetByIdAsync(Guid id) => await _repository.GetByIdAsync(id);
 
@@ -26,6 +26,23 @@ namespace Wms.Api.Services
         public async Task UpdateAsync(T entity) => await _repository.UpdateAsync(entity);
 
         public async Task DeleteAsync(Guid id) => await _repository.DeleteAsync(id);
-    }
 
+        public async Task<IQueryable<T>> GetPaginatedAsync(
+                     Expression<Func<T, bool>>? predicate = null,
+                     Paginator paginator = null)
+        {
+            // Get the base query from the repository
+            var query = await _repository.GetAllAsync(predicate);
+
+            // Apply pagination
+            if (paginator != null)
+            {
+                query = query
+                    .Skip((paginator.Page - 1) * paginator.PageSize)
+                    .Take(paginator.PageSize);
+            }
+
+            return query;
+        } 
+    }
 }

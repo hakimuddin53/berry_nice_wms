@@ -17,13 +17,13 @@ namespace Wms.Api.Repositories
             _dbSet = _context.Set<T>();
         }
 
-        public async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>>? predicate = null)
+        public async Task<IQueryable<T>> GetAllAsync(Expression<Func<T, bool>>? predicate = null)
         {
             if (predicate != null)
             {
-                return await _dbSet.Where(predicate).ToListAsync();
+                return  _dbSet.Where(predicate);
             }
-            return await _dbSet.ToListAsync();
+            return  _dbSet;
         }
 
         public async Task<T> GetByIdAsync(Guid id) => await _dbSet.FindAsync(id);

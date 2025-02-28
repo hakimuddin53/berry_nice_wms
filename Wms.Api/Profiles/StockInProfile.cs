@@ -2,7 +2,7 @@
 using Wms.Api.Dto.StockIn.StockInCreateUpdate;
 using Wms.Api.Entities;
 
-namespace Leitstand.Mapping.Profiles.v12_0;
+namespace Wms.Api.Profiles;
 
 public class StockInProfile : Profile
 {

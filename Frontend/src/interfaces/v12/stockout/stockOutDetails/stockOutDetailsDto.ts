@@ -4,15 +4,14 @@ import { guid } from "types/guid";
 export interface StockOutDetailsDto extends CreatedChangedEntity {
   id: guid;
   number: string;
-  warehouseId: guid;
-  stockOutItemDetails: StockOutItemDetailsDto[];
+  doNumber: string;
+  stockOutItems: StockOutItemDetailsDto[];
 }
 export interface StockOutItemDetailsDto extends CreatedChangedEntity {
   id: guid;
   stockOutId: guid;
   stockOutItemNumber: string;
   productId: guid;
+  product: string;
   quantity: number;
-  productUomId: guid;
-  listPrice: number;
 }

@@ -18,13 +18,6 @@ namespace Wms.Api.Entities
         public Guid ProductId { get; set; }
 
         [Required]
-        public int Quantity { get; set; }
-
-        [Required]
-        public Guid ProductUomId { get; set; }
-
-        [Required]
-        [Column(TypeName = "decimal(18,5)")]
-        public decimal ListPrice { get; set; }
+        public int Quantity { get; set; } 
     }
 }

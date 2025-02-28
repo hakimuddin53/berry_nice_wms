@@ -17,5 +17,16 @@
   "i18n-ally.sortCompare": "locale",
   "i18n-ally.sortKeys": true,
   "i18n-ally.sortLocale": "en",
-  "i18n-ally.sourceLanguage": "en-US"
+  "i18n-ally.sourceLanguage": "en-US",
+  "i18n-ally.extract.ignored": [
+    "StockInListPage-Inbound Deliveries",
+    "Delete",
+    "Edit",
+    "Add"
+  ],
+  "i18n-ally.extract.ignoredByFiles": {
+    "src\\pages\\stockIn\\index\\StockInListPage.tsx": [
+      "StockInListPage-Inbound Deliveries"
+    ]
+  }
 }

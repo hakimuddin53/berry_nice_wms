@@ -8,10 +8,7 @@ namespace Wms.Api.Entities
         public Guid Id { get; set; }
 
         [Required]
-        public required string Name { get; set; } // e.g., Bin A, Rack 1
-
-        // Navigation Property
-        public ICollection<Product>? Products { get; set; }
+        public required string Name { get; set; } // e.g., Bin A, Rack 1         
 
     }
 }

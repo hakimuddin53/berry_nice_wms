@@ -69,9 +69,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   return (
     <Drawer variant="permanent" {...rest}>
       <Brand component={NavLink as any} to="/">
-        <BrandIcon src={logo} /> <Box ml={1}>platbricks</Box>
+        <BrandIcon src={logo} /> <Box ml={1}>wms system</Box>
       </Brand>
-      <img src="" alt="Customer logo" />
       <SidebarNav items={items} />
       {!!showFooter && <Footer />}
     </Drawer>

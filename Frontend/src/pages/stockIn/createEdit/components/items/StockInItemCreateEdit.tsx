@@ -22,6 +22,7 @@ import {
   isRequiredField,
 } from "utils/formikHelpers";
 
+import { useCartonSizeService } from "services/CartonSizeService";
 import { useProductService } from "services/ProductService";
 import {
   StockInCreateEditSchema,
@@ -31,15 +32,16 @@ import {
 const StockInItemCreateEdit: React.FC<
   EntityCreateEditChildComponentProps<YupStockInItemsCreateEdit>
 > = (props) => {
-  const { t } = useTranslation("stockIn");
+  const { t } = useTranslation();
   const [tab, setTab] = useState(0);
 
   const ProductService = useProductService();
+  const CartonSizeService = useCartonSizeService();
 
   return (
     <PageSection
       title={t("common:items")}
-      subtitle={props.values.stockInItemNumber}
+      subtitle={props.values.stockInItemNumber ?? ""}
     >
       <PbCard px={2} pt={2}>
         <PbTabs
@@ -61,94 +63,6 @@ const StockInItemCreateEdit: React.FC<
             <DataList
               hideDevider={true}
               data={[
-                {
-                  label: t("common:item"),
-                  required: isRequiredField(
-                    StockInCreateEditSchema,
-                    "stockInItems[].stockInItemNumber"
-                  ),
-                  value: (
-                    <TextField
-                      fullWidth
-                      id={`stockInItems.${props.elementKey}.stockInItemNumber`}
-                      name={`stockInItems.${props.elementKey}.stockInItemNumber`}
-                      size="small"
-                      value={props.values.stockInItemNumber}
-                      onChange={props.handleChange}
-                      onBlur={props.handleBlur}
-                      error={
-                        props.touched.stockInItemNumber &&
-                        Boolean(props.errors.stockInItemNumber)
-                      }
-                      helperText={
-                        <FormikErrorMessage
-                          touched={props.touched.stockInItemNumber}
-                          error={props.errors.stockInItemNumber}
-                          translatedFieldName={t("common:item")}
-                        />
-                      }
-                    />
-                  ),
-                },
-
-                {
-                  label: t("quantity"),
-                  required: isRequiredField(
-                    StockInCreateEditSchema,
-                    "stockInItems[].quantity"
-                  ),
-                  value: (
-                    <TextField
-                      fullWidth
-                      id={`stockInItems.${props.elementKey}.quantity`}
-                      name={`stockInItems.${props.elementKey}.quantity`}
-                      size="small"
-                      value={props.values.quantity}
-                      onChange={props.handleChange}
-                      onBlur={props.handleBlur}
-                      error={
-                        props.touched.quantity && Boolean(props.errors.quantity)
-                      }
-                      helperText={
-                        <FormikErrorMessage
-                          touched={props.touched.quantity}
-                          error={props.errors.quantity}
-                          translatedFieldName={t("quantity")}
-                        />
-                      }
-                    />
-                  ),
-                },
-                {
-                  label: t("list-price"),
-                  required: isRequiredField(
-                    StockInCreateEditSchema,
-                    "stockInItems[].listPrice"
-                  ),
-                  value: (
-                    <TextField
-                      fullWidth
-                      id={`stockInItems.${props.elementKey}.listPrice`}
-                      name={`stockInItems.${props.elementKey}.listPrice`}
-                      size="small"
-                      value={props.values.listPrice}
-                      onChange={props.handleChange}
-                      onBlur={props.handleBlur}
-                      error={
-                        props.touched.listPrice &&
-                        Boolean(props.errors.listPrice)
-                      }
-                      helperText={
-                        <FormikErrorMessage
-                          touched={props.touched.listPrice}
-                          error={props.errors.listPrice}
-                          translatedFieldName={t("list-price")}
-                        />
-                      }
-                    />
-                  ),
-                },
-
                 {
                   label: t("product"),
                   required: isRequiredField(
@@ -205,6 +119,35 @@ const StockInItemCreateEdit: React.FC<
                         />
                       </FormHelperText>
                     </FormControl>
+                  ),
+                },
+                {
+                  label: t("quantity"),
+                  required: isRequiredField(
+                    StockInCreateEditSchema,
+                    "stockInItems[].quantity"
+                  ),
+                  value: (
+                    <TextField
+                      fullWidth
+                      id={`stockInItems.${props.elementKey}.quantity`}
+                      name={`stockInItems.${props.elementKey}.quantity`}
+                      size="small"
+                      type="number"
+                      value={props.values.quantity}
+                      onChange={props.handleChange}
+                      onBlur={props.handleBlur}
+                      error={
+                        props.touched.quantity && Boolean(props.errors.quantity)
+                      }
+                      helperText={
+                        <FormikErrorMessage
+                          touched={props.touched.quantity}
+                          error={props.errors.quantity}
+                          translatedFieldName={t("quantity")}
+                        />
+                      }
+                    />
                   ),
                 },
               ]}

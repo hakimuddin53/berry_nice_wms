@@ -45,14 +45,6 @@ const Auth: React.FC<AuthType> = ({ children }) => {
         <Outlet />
         <Settings />
       </Root>
-      <SideBrandBox
-        component="div"
-        sx={{
-          display: { xs: "none", md: "block" },
-        }}
-      >
-        <img alt="" src="/static/img/logo/arvato.png"></img>
-      </SideBrandBox>
     </PageWrapper>
   );
 };

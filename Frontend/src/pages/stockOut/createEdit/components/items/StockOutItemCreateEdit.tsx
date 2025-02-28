@@ -31,7 +31,7 @@ import {
 const StockOutItemCreateEdit: React.FC<
   EntityCreateEditChildComponentProps<YupStockOutItemsCreateEdit>
 > = (props) => {
-  const { t } = useTranslation("stockOut");
+  const { t } = useTranslation();
   const [tab, setTab] = useState(0);
 
   const ProductService = useProductService();
@@ -39,7 +39,7 @@ const StockOutItemCreateEdit: React.FC<
   return (
     <PageSection
       title={t("common:items")}
-      subtitle={props.values.stockOutItemNumber}
+      subtitle={props.values.stockOutItemNumber ?? ""}
     >
       <PbCard px={2} pt={2}>
         <PbTabs
@@ -61,94 +61,6 @@ const StockOutItemCreateEdit: React.FC<
             <DataList
               hideDevider={true}
               data={[
-                {
-                  label: t("common:item"),
-                  required: isRequiredField(
-                    StockOutCreateEditSchema,
-                    "stockOutItems[].stockOutItemNumber"
-                  ),
-                  value: (
-                    <TextField
-                      fullWidth
-                      id={`stockOutItems.${props.elementKey}.stockOutItemNumber`}
-                      name={`stockOutItems.${props.elementKey}.stockOutItemNumber`}
-                      size="small"
-                      value={props.values.stockOutItemNumber}
-                      onChange={props.handleChange}
-                      onBlur={props.handleBlur}
-                      error={
-                        props.touched.stockOutItemNumber &&
-                        Boolean(props.errors.stockOutItemNumber)
-                      }
-                      helperText={
-                        <FormikErrorMessage
-                          touched={props.touched.stockOutItemNumber}
-                          error={props.errors.stockOutItemNumber}
-                          translatedFieldName={t("common:item")}
-                        />
-                      }
-                    />
-                  ),
-                },
-
-                {
-                  label: t("quantity"),
-                  required: isRequiredField(
-                    StockOutCreateEditSchema,
-                    "stockOutItems[].quantity"
-                  ),
-                  value: (
-                    <TextField
-                      fullWidth
-                      id={`stockOutItems.${props.elementKey}.quantity`}
-                      name={`stockOutItems.${props.elementKey}.quantity`}
-                      size="small"
-                      value={props.values.quantity}
-                      onChange={props.handleChange}
-                      onBlur={props.handleBlur}
-                      error={
-                        props.touched.quantity && Boolean(props.errors.quantity)
-                      }
-                      helperText={
-                        <FormikErrorMessage
-                          touched={props.touched.quantity}
-                          error={props.errors.quantity}
-                          translatedFieldName={t("quantity")}
-                        />
-                      }
-                    />
-                  ),
-                },
-                {
-                  label: t("list-price"),
-                  required: isRequiredField(
-                    StockOutCreateEditSchema,
-                    "stockOutItems[].listPrice"
-                  ),
-                  value: (
-                    <TextField
-                      fullWidth
-                      id={`stockOutItems.${props.elementKey}.listPrice`}
-                      name={`stockOutItems.${props.elementKey}.listPrice`}
-                      size="small"
-                      value={props.values.listPrice}
-                      onChange={props.handleChange}
-                      onBlur={props.handleBlur}
-                      error={
-                        props.touched.listPrice &&
-                        Boolean(props.errors.listPrice)
-                      }
-                      helperText={
-                        <FormikErrorMessage
-                          touched={props.touched.listPrice}
-                          error={props.errors.listPrice}
-                          translatedFieldName={t("list-price")}
-                        />
-                      }
-                    />
-                  ),
-                },
-
                 {
                   label: t("product"),
                   required: isRequiredField(
@@ -205,6 +117,34 @@ const StockOutItemCreateEdit: React.FC<
                         />
                       </FormHelperText>
                     </FormControl>
+                  ),
+                },
+                {
+                  label: t("quantity"),
+                  required: isRequiredField(
+                    StockOutCreateEditSchema,
+                    "stockOutItems[].quantity"
+                  ),
+                  value: (
+                    <TextField
+                      fullWidth
+                      id={`stockOutItems.${props.elementKey}.quantity`}
+                      name={`stockOutItems.${props.elementKey}.quantity`}
+                      size="small"
+                      value={props.values.quantity}
+                      onChange={props.handleChange}
+                      onBlur={props.handleBlur}
+                      error={
+                        props.touched.quantity && Boolean(props.errors.quantity)
+                      }
+                      helperText={
+                        <FormikErrorMessage
+                          touched={props.touched.quantity}
+                          error={props.errors.quantity}
+                          translatedFieldName={t("quantity")}
+                        />
+                      }
+                    />
                   ),
                 },
               ]}

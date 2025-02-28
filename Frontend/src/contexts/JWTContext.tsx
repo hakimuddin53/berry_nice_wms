@@ -76,17 +76,19 @@ function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const accessToken = window.localStorage.getItem("accessToken");
 
+        console.log(accessToken);
+
         if (accessToken && isValidToken(accessToken)) {
           setSession(accessToken);
 
-          const response = await axios.get("/v12/auth/account");
-          const user = response.data;
+          // const response = await axios.get("/auth/account");
+          // const user = response.data;
 
           dispatch({
             type: INITIALIZE,
             payload: {
               isAuthenticated: true,
-              user,
+              user: null,
             },
           });
         } else {
@@ -115,11 +117,13 @@ function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     console.log("try log in");
-    const response = await axios.post("/v12/auth/sign-in", {
-      username: email,
+    const response = await axios.post("/auth/sign-in", {
+      email: email,
       password: password,
     });
     var accessToken = response.data.jwt;
+    console.log(accessToken);
+    console.log(response);
     setSession(accessToken);
 
     dispatch({

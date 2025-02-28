@@ -16,7 +16,7 @@ import { useTranslation } from "react-i18next";
 const StockInItemDetails: React.FC<{
   stockInItem: StockInItemDetailsDto;
 }> = (props) => {
-  const { t } = useTranslation("stockIn");
+  const { t } = useTranslation();
   const { stockInItem } = props;
   const [tab, setTab] = useState(0);
 
@@ -42,14 +42,12 @@ const StockInItemDetails: React.FC<{
               <KeyValuePair label={t("common:item")}>
                 {stockInItem.stockInItemNumber}
               </KeyValuePair>
-
               <KeyValuePair label={t("quantity")}>
                 {stockInItem.quantity}
               </KeyValuePair>
-              <KeyValuePair label={t("list-price")}>
-                {stockInItem.listPrice}
+              <KeyValuePair label={t("product")}>
+                {stockInItem.product}
               </KeyValuePair>
-
               <KeyValuePair label={t("common:created-at")}>
                 <UserDateTime date={stockInItem.createdAt} />
               </KeyValuePair>

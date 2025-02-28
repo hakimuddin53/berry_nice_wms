@@ -28,8 +28,8 @@ export const useStockInItemTable = () => {
         },
       },
       {
-        id: "listPrice",
-        label: t("common:listPrice"),
+        id: "product",
+        label: t("product"),
       },
     ],
     [t]

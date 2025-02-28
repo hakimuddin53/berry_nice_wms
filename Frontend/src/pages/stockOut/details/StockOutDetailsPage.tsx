@@ -45,6 +45,8 @@ function StockOutDetailsPage() {
   const [selectedStockOutItem, setSelectedStockOutItem] =
     useState<StockOutItemDetailsDto | null>(null);
 
+  console.log(selectedStockOutItem);
+
   const loadStockOut = useCallback(() => {
     StockOutService.getStockOutById(id as guid)
       .then((stockOut) => setStockOut(stockOut))
@@ -119,7 +121,7 @@ function StockOutDetailsPage() {
           <PbTab
             label={
               <BadgeText
-                number={stockOut?.stockOutItemDetails?.length ?? 0}
+                number={stockOut?.stockOutItems?.length ?? 0}
                 label={t("items")}
               />
             }
@@ -130,12 +132,14 @@ function StockOutDetailsPage() {
             <Grid container rowSpacing={100}>
               <Grid item xs={6}>
                 <KeyValueList gridTemplateColumns="2fr 4fr">
-                  <KeyValuePair label={t("delivery")}>
+                  <KeyValuePair label={t("number")}>
                     <EasyCopy clipboard={stockOut.number}>
                       {stockOut.number}
                     </EasyCopy>
                   </KeyValuePair>
-
+                  <KeyValuePair label={t("doNumber")}>
+                    {stockOut.doNumber}
+                  </KeyValuePair>
                   <KeyValuePair label={t("created-at")}>
                     <UserDateTime date={stockOut.createdAt} />
                   </KeyValuePair>
@@ -158,8 +162,8 @@ function StockOutDetailsPage() {
               title={t("items")}
               tableKey="StockOutDetailsPage-Items"
               headerCells={stockOutItemTable}
-              data={stockOut.stockOutItemDetails}
-              dataKey="stockOutItemId"
+              data={stockOut.stockOutItems}
+              dataKey="id"
               onSelectionChanged={(x: StockOutItemDetailsDto[]) =>
                 setSelectedStockOutItem(x[0])
               }

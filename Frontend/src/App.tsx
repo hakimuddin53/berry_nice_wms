@@ -47,7 +47,10 @@ function App({ emotionCache = clientSideEmotionCache }) {
   return (
     <CacheProvider value={emotionCache}>
       <HelmetProvider>
-        <Helmet titleTemplate="%s | platbricks" defaultTitle="platbricks" />
+        <Helmet
+          titleTemplate="%s | warehouse management"
+          defaultTitle="warehouse management"
+        />
         <Provider store={store}>
           <LocalizationProvider
             // @ts-ignore

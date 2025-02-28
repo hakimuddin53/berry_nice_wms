@@ -2,18 +2,16 @@ import { guid } from "types/guid";
 import * as yup from "yup";
 
 export const StockOutCreateEditSchema = yup.object({
-  number: yup.string().required(),
-  warehouseId: yup.mixed<guid>().required(),
+  number: yup.string().nullable(),
+  doNumber: yup.string().required(),
   stockOutItems: yup
     .array()
     .of(
       yup.object().shape({
         key: yup.string(),
-        stockOutItemNumber: yup.string().required().max(32),
+        stockOutItemNumber: yup.string().nullable(),
         productId: yup.mixed<guid>().required(),
-        productUomId: yup.mixed<guid>().required(),
         quantity: yup.number().required(),
-        listPrice: yup.number().required(),
       })
     )
     .required(),

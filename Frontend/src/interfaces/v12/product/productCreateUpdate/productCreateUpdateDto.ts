@@ -1,16 +1,17 @@
+import { ClientCodeEnum } from "interfaces/enums/GlobalEnums";
 import { guid } from "types/guid";
 
 export interface ProductCreateUpdateDto {
-  id: guid;
   name: string;
   itemCode: string;
-  clientCode: string;
-  warehouseCode: string;
-  category: string;
-  subCategory: string;
-  size: string;
-  colour: string;
-  itemType: string;
-  productPhotoUrl: string;
-  locationId?: guid | null;
+  clientCode: ClientCodeEnum;
+  quantityPerCarton?: number | null;
+  categoryId: guid;
+  sizeId: guid;
+  colourId: guid;
+  designId: guid;
+  cartonSizeId: guid;
+  productPhotoUrl?: string | null;
+  listPrice: number;
+  threshold?: number | null;
 }

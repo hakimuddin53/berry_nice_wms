@@ -10,18 +10,18 @@ import { DataTableHeaderCell } from "../../../../components/platbricks/shared/da
 const hidden = true;
 
 export const useStockInTable = () => {
-  const { t } = useTranslation("stockIn");
+  const { t } = useTranslation();
 
   /* eslint-disable react-hooks/exhaustive-deps */
   const stockInData = useMemo<DataTableHeaderCell<StockInDetailsDto>[]>(
     () => [
       {
-        id: "stockInId",
+        id: "id",
         label: t("stock-in-id"),
         hidden,
       },
       {
-        id: "delivery",
+        id: "number",
         label: t("common:number"),
         render: (row) => (
           <EasyCopy clipboard={row.number}>
@@ -31,11 +31,22 @@ export const useStockInTable = () => {
           </EasyCopy>
         ),
       },
+      {
+        id: "poNumber",
+        label: t("po-number"),
+      },
+      {
+        id: "warehouse",
+        label: t("warehouse"),
+      },
+      {
+        id: "location",
+        label: t("rack"),
+      },
     ],
     [t]
   );
   /* eslint-enable */
   useCreatedChangeDate(stockInData);
-
   return [stockInData];
 };

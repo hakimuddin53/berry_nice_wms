@@ -6,13 +6,11 @@ import { StockInDetailsDto } from "interfaces/v12/stockin/stockInDetails/stockIn
 import { StockInSearchDto } from "interfaces/v12/stockin/stockInSearch/stockInSearchDto";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useParams } from "react-router-dom";
 import { useStockInService } from "services/StockInService";
 import { useStockInTable } from "./datatables/useStockInTable";
 
 function StockInListPage() {
   const { t } = useTranslation();
-  const { locationId } = useParams();
 
   const [stockInTable] = useStockInTable();
   const StockInService = useStockInService();
@@ -26,6 +24,8 @@ function StockInListPage() {
   ) => {
     const searchOptions: StockInSearchDto = {
       search: searchValue,
+      page: page + 1,
+      pageSize,
     };
 
     return searchOptions;
@@ -104,7 +104,7 @@ function StockInListPage() {
         tableKey="StockInListPage-Inbound Deliveries"
         headerCells={stockInTable}
         data={tableProps}
-        dataKey="stockInId"
+        dataKey="id"
         showSearch={true}
       />
     </Page>

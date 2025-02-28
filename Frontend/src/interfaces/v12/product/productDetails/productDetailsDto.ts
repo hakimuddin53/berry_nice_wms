@@ -1,24 +1,28 @@
+import { ClientCodeEnum } from "interfaces/enums/GlobalEnums";
 import { CreatedChangedEntity } from "interfaces/v12/CreatedChangedEntity";
 import { guid } from "types/guid";
 
 export interface ProductDetailsDto extends CreatedChangedEntity {
   id: guid;
+  serialNumber: string;
   name: string;
   itemCode: string;
-  clientCode: string;
-  warehouseCode: string;
+  clientCode: ClientCodeEnum;
+  clientCodeString: string;
+  quantityPerCarton: number;
   category: string;
-  subCategory: string;
   size: string;
   colour: string;
-  itemType: string;
-  productPhotoUrl: string;
-  locationId?: guid | null;
-  productUoms: ProductUom[];
-}
+  design: string;
+  cartonSize: string;
 
-export interface ProductUom extends CreatedChangedEntity {
-  id: guid;
-  productId: guid;
-  uomId: guid;
+  categoryId: guid;
+  sizeId: guid;
+  colourId: guid;
+  designId: guid;
+  cartonSizeId: guid;
+
+  productPhotoUrl: string | null;
+  listPrice: number;
+  threshold: number;
 }

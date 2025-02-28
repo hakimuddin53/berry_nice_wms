@@ -2,14 +2,14 @@ import styled from "@emotion/styled";
 import React, { useState } from "react";
 import { Outlet } from "react-router-dom";
 
+import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
+import RemoveShoppingCartIcon from "@mui/icons-material/RemoveShoppingCart";
 import { Box, CssBaseline, Hidden, Paper as MuiPaper } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { spacing } from "@mui/system";
 
-import BarChartIcon from "@mui/icons-material/BarChart";
 import DashboardIcon from "@mui/icons-material/Dashboard";
-import SettingsIcon from "@mui/icons-material/Settings";
 import useAppTheme from "hooks/useTheme";
 import { useSearchParams } from "react-router-dom";
 import { SidebarItemsType } from "types/sidebar";
@@ -123,26 +123,124 @@ export const dashboardItems: SidebarItemsType[] = [
     href: "/dashboard",
     itemType: "link",
     title: "Dashboard",
-    icon: <DashboardIcon />, // Replace with your actual icon component
+    icon: <DashboardIcon />,
     type: "single",
     children: [],
   },
   {
     id: 2,
-    href: "/settings",
+    href: "/product",
     itemType: "link",
-    title: "Settings",
-    icon: <SettingsIcon />, // Replace with your actual icon component
+    title: "Product",
+    icon: <RemoveShoppingCartIcon />,
     type: "single",
     children: [],
   },
   {
     id: 3,
-    href: "/reports",
+    href: "/stock-in",
     itemType: "link",
-    title: "Reports",
-    icon: <BarChartIcon />, // Replace with your actual icon component
-    badge: "NEW",
+    title: "Stock In",
+    icon: <AddShoppingCartIcon />,
+    type: "single",
+    children: [],
+  },
+  {
+    id: 4,
+    href: "/stock-out",
+    itemType: "link",
+    title: "Stock Out",
+    icon: <RemoveShoppingCartIcon />,
+    type: "single",
+    children: [],
+  },
+  {
+    id: 5,
+    href: "/stock-transfer",
+    itemType: "link",
+    title: "Stock Transfer",
+    icon: <AddShoppingCartIcon />,
+    type: "single",
+    children: [],
+  },
+  {
+    id: 6,
+    href: "/stock-reservation",
+    itemType: "link",
+    title: "Stock Reservation",
+    icon: <RemoveShoppingCartIcon />,
+    type: "single",
+    children: [],
+  },
+  {
+    id: 7,
+    href: "/inventory",
+    itemType: "link",
+    title: "Inventory",
+    icon: <RemoveShoppingCartIcon />,
+    type: "single",
+    children: [],
+  },
+  {
+    id: 8,
+    href: "/category",
+    itemType: "link",
+    title: "Category",
+    icon: <RemoveShoppingCartIcon />,
+    type: "single",
+    children: [],
+  },
+  {
+    id: 9,
+    href: "/colour",
+    itemType: "link",
+    title: "Colour",
+    icon: <RemoveShoppingCartIcon />,
+    type: "single",
+    children: [],
+  },
+  {
+    id: 10,
+    href: "/design",
+    itemType: "link",
+    title: "Design",
+    icon: <RemoveShoppingCartIcon />,
+    type: "single",
+    children: [],
+  },
+  {
+    id: 11,
+    href: "/location",
+    itemType: "link",
+    title: "Rack",
+    icon: <RemoveShoppingCartIcon />,
+    type: "single",
+    children: [],
+  },
+  {
+    id: 12,
+    href: "/size",
+    itemType: "link",
+    title: "Size",
+    icon: <RemoveShoppingCartIcon />,
+    type: "single",
+    children: [],
+  },
+  {
+    id: 13,
+    href: "/cartonSize",
+    itemType: "link",
+    title: "Carton Size",
+    icon: <RemoveShoppingCartIcon />,
+    type: "single",
+    children: [],
+  },
+  {
+    id: 14,
+    href: "/warehouse",
+    itemType: "link",
+    title: "Warehouse",
+    icon: <RemoveShoppingCartIcon />,
     type: "single",
     children: [],
   },

@@ -5,6 +5,7 @@ import SelectAsync2 from "components/platbricks/shared/SelectAsync2";
 import { FormikProps } from "formik";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { useLocationService } from "services/LocationService";
 import { useWarehouseService } from "services/WarehouseService";
 import { guid } from "types/guid";
 import { isRequiredField } from "utils/formikHelpers";
@@ -20,29 +21,30 @@ const StockInHeadCreateEdit = (props: {
   const formik = props.formik;
 
   const WarehouseService = useWarehouseService();
+  const LocationService = useLocationService();
 
   return (
     <DataList
       hideDevider={true}
       data={[
         {
-          label: t("number"),
-          required: isRequiredField(StockInCreateEditSchema, "number"),
+          label: t("po-number"),
+          required: isRequiredField(StockInCreateEditSchema, "poNumber"),
           value: (
             <TextField
               fullWidth
-              id="number"
-              name="number"
+              id="poNumber"
+              name="poNumber"
               size="small"
-              value={formik.values.number}
+              value={formik.values.poNumber}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              error={formik.touched.number && Boolean(formik.errors.number)}
+              error={formik.touched.poNumber && Boolean(formik.errors.poNumber)}
               helperText={
                 <FormikErrorMessage
-                  touched={formik.touched.number}
-                  error={formik.errors.number}
-                  translatedFieldName={t("number")}
+                  touched={formik.touched.poNumber}
+                  error={formik.errors.poNumber}
+                  translatedFieldName={t("po-number")}
                 />
               }
             />
@@ -93,6 +95,53 @@ const StockInHeadCreateEdit = (props: {
                   touched={formik.touched.warehouseId}
                   error={formik.errors.warehouseId}
                   translatedFieldName={t("warehouse")}
+                />
+              </FormHelperText>
+            </FormControl>
+          ),
+        },
+        {
+          label: t("rack"),
+          required: isRequiredField(
+            StockInCreateEditSchema,
+            "locationId",
+            formik.values
+          ),
+          value: (
+            <FormControl
+              fullWidth
+              error={
+                formik.touched.locationId && Boolean(formik.errors.locationId)
+              }
+            >
+              <SelectAsync2
+                name="locationId"
+                error={
+                  formik.touched.locationId && Boolean(formik.errors.locationId)
+                }
+                onBlur={() => formik.setFieldTouched("locationId")}
+                ids={useMemo(
+                  () =>
+                    formik.values.locationId ? [formik.values.locationId] : [],
+                  [formik.values.locationId]
+                )}
+                onSelectionChange={async (newOption) => {
+                  formik.setFieldValue("locationId", newOption?.value || null);
+                }}
+                asyncFunc={(
+                  input: string,
+                  page: number,
+                  pageSize: number,
+                  ids?: guid[]
+                ) =>
+                  LocationService.getSelectOptions(input, page, pageSize, ids)
+                }
+              />
+              <FormHelperText sx={{ color: "#d32f2f" }}>
+                <FormikErrorMessage
+                  touched={formik.touched.locationId}
+                  error={formik.errors.locationId}
+                  translatedFieldName={t("rack")}
                 />
               </FormHelperText>
             </FormControl>

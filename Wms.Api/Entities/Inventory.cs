@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Wms.Api.Model;
 
 namespace Wms.Api.Entities
 {
@@ -8,13 +9,19 @@ namespace Wms.Api.Entities
         public Guid Id { get; set; }
 
         [Required]
-        public Guid ProductId { get; set; }
+        public TransactionTypeEnum TransactionType { get; set; }
 
         [Required]
-        public Guid ProductUomId { get; set; } // Unit of Measurement reference
-
+        public Guid ProductId { get; set; }
+         
         [Required]
         public Guid WarehouseId { get; set; }
+
+        public Guid CurrentLocationId { get; set; }
+
+        public Guid StockInId { get; set; }
+        public Guid StockOutId { get; set; }
+        public Guid StockTransferId { get; set; }
 
         [Required]
         public int QuantityIn { get; set; } // Quantity added in the transaction
@@ -26,8 +33,6 @@ namespace Wms.Api.Entities
         public int OldBalance { get; set; } // Balance before the transaction
 
         [Required]
-        public int NewBalance { get; set; } // Balance after the transaction 
-        [Required]
-        public string RecStatus { get; set; } // Status of the record (e.g., Active/Inactive)
+        public int NewBalance { get; set; } // Balance after the transaction  
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Wms.Api.Model;
 
 namespace Wms.Api.Entities
 {
@@ -8,25 +9,9 @@ namespace Wms.Api.Entities
         public Guid Id { get; set; }
 
         [Required]
-        public Guid ProductId { get; set; }
+        public required string Number { get; set; }
 
-        [Required]
-        public int Quantity { get; set; }
-
-        [Required]
-        public string? SalesPicName { get; set; }
-
-        [Required]
-        public string? ClientCustomerName { get; set; }
-
-        // Navigation Properties
-        public Product Product { get; set; }
-
-        [Required]
-        public DateTime ReservationDate { get; set; } // Date when the reservation was made
-
-        [Required]
-        public DateTime ExpirationDate { get; set; } // Date when the reservation expires
-
+        // Navigation Property
+        public ICollection<StockReservationItem>? StockReservationItems { get; set; }
     }
 }

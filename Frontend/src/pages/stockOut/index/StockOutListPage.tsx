@@ -24,6 +24,8 @@ function StockOutListPage() {
   ) => {
     const searchOptions: StockOutSearchDto = {
       search: searchValue,
+      page: page + 1,
+      pageSize,
     };
 
     return searchOptions;
