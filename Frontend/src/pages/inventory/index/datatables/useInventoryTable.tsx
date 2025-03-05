@@ -1,4 +1,4 @@
-import { useCreatedChangeDate } from "hooks/useCreatedChangeDate";
+import UserDateTime from "components/platbricks/shared/UserDateTime";
 import { InventoryDetailsDto } from "interfaces/v12/inventory/inventory";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -11,23 +11,15 @@ export const useInventoryTable = () => {
   const warehouseData = useMemo<DataTableHeaderCell<InventoryDetailsDto>[]>(
     () => [
       {
-        id: "id",
-        label: t("id"),
-      },
-      {
-        id: "productId",
+        id: "product",
         label: t("product"),
       },
       {
-        id: "productCartonSizeId",
-        label: t("uom"),
-      },
-      {
-        id: "warehouseId",
+        id: "warehouse",
         label: t("warehouse"),
       },
       {
-        id: "currentLocationId",
+        id: "currentLocation",
         label: t("location"),
       },
       {
@@ -46,11 +38,15 @@ export const useInventoryTable = () => {
         id: "newBalance",
         label: t("new-balance"),
       },
+      {
+        id: "createdAt",
+        label: t("common:created-at"),
+        render: (row) => <UserDateTime date={row.createdAt} />,
+      },
     ],
     [t]
   );
   /* eslint-enable */
-  useCreatedChangeDate(warehouseData);
 
   return [warehouseData];
 };

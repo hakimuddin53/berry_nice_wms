@@ -228,9 +228,9 @@ export const dashboardItems: SidebarItemsType[] = [
   },
   {
     id: 13,
-    href: "/cartonSize",
+    href: "/stock-group",
     itemType: "link",
-    title: "Carton Size",
+    title: "Stock Group",
     icon: <RemoveShoppingCartIcon />,
     type: "single",
     children: [],

@@ -7,24 +7,24 @@ import { FormikProvider, setNestedObjectValues, useFormik } from "formik";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
-import { useCartonSizeService } from "services/CartonSizeService";
 import { useNotificationService } from "services/NotificationService";
+import { useUserRoleService } from "services/UserRoleService";
 import { guid } from "types/guid";
 import { formikObjectHasHeadTouchedErrors } from "utils/formikHelpers";
-import CartonSizeCreateEdit from "./components/CartonSizeCreateEdit";
+import UserRoleCreateEdit from "./components/UserRoleCreateEdit";
 import {
-  CartonSizeCreateEditSchema,
-  YupCartonSizeCreateEdit,
-} from "./yup/CartonSizeCreateEditSchema";
+  UserRoleCreateEditSchema,
+  YupUserRoleCreateEdit,
+} from "./yup/UserRoleCreateEditSchema";
 
-const CartonSizeCreateEditPage: React.FC = () => {
+const UserRoleCreateEditPage: React.FC = () => {
   const { t } = useTranslation();
   const { id } = useParams();
   const [tab, setTab] = useState(0);
 
-  const CartonSizeService = useCartonSizeService();
+  const UserRoleService = useUserRoleService();
 
-  const [CartonSize, setCartonSize] = useState<YupCartonSizeCreateEdit>({
+  const [UserRole, setUserRole] = useState<YupUserRoleCreateEdit>({
     name: "",
   });
 
@@ -33,43 +33,43 @@ const CartonSizeCreateEditPage: React.FC = () => {
   const navigate = useNavigate();
   const [pageReady, setPageReady] = useState<boolean>(false);
 
-  let title = t("create-cartonSize");
+  let title = t("create-userRole");
 
   let breadcrumbs = [
     { label: t("common:dashboard"), to: "/" },
     {
-      label: t("cartonSize"),
-      to: "/stock-group",
+      label: t("userRole"),
+      to: "/userRole",
     },
     { label: t("common:create") },
   ];
 
   if (id) {
-    title = t("cartonSize");
+    title = t("userRole");
 
     breadcrumbs = [
       { label: t("common:dashboard"), to: "/" },
       {
-        label: CartonSize.name as string,
-        to: "/stock-group",
+        label: UserRole.name as string,
+        to: "/userRole",
       },
       { label: t("common:edit") },
     ];
   }
 
   const formik = useFormik({
-    initialValues: CartonSize,
-    validationSchema: CartonSizeCreateEditSchema,
+    initialValues: UserRole,
+    validationSchema: UserRoleCreateEditSchema,
     onSubmit: (values, { resetForm }) => {
       setPageBlocker(true);
       if (!id) {
-        CartonSizeService.createCartonSize(values)
+        UserRoleService.createUserRole(values)
           .then((createdResult) => {
             resetForm({ values });
             setPageBlocker(false);
 
             notificationService.handleApiSuccessMessage(
-              "stockGroup",
+              "userRole",
               "created",
               "common"
             );
@@ -81,13 +81,13 @@ const CartonSizeCreateEditPage: React.FC = () => {
             notificationService.handleApiErrorMessage(err.data, "common");
           });
       } else {
-        CartonSizeService.updateCartonSize(id as guid, values as any)
+        UserRoleService.updateUserRole(id as guid, values as any)
           .then((result) => {
             resetForm({ values });
             setPageBlocker(false);
 
             notificationService.handleApiSuccessMessage(
-              "stockGroup",
+              "userRole",
               "updated",
               "common"
             );
@@ -106,16 +106,16 @@ const CartonSizeCreateEditPage: React.FC = () => {
 
   useEffect(() => {
     if (id) {
-      CartonSizeService.getCartonSizeById(id as guid)
+      UserRoleService.getUserRoleById(id as guid)
         .then((YardResource: any) => {
-          setCartonSize(YardResource);
+          setUserRole(YardResource);
           setPageReady(true);
         })
         .catch((err) => {});
     } else {
       setPageReady(true);
     }
-  }, [id, CartonSizeService]);
+  }, [id, UserRoleService]);
 
   useEffect(() => {
     if (formik.submitCount > 0 && !formik.isSubmitting && !formik.isValid) {
@@ -144,7 +144,7 @@ const CartonSizeCreateEditPage: React.FC = () => {
   const navigateToDetails = (id: string | undefined) => {
     if (id) {
       setTimeout(() => {
-        navigate(`/stock-group/${id}`);
+        navigate(`/userRole/${id}`);
       }, 100);
     }
   };
@@ -153,7 +153,7 @@ const CartonSizeCreateEditPage: React.FC = () => {
     <Page
       breadcrumbs={breadcrumbs}
       title={title}
-      subtitle={id ? CartonSize.name : ""}
+      subtitle={id ? UserRole.name : ""}
       showLoading={!pageReady}
       showBackdrop={pageBlocker}
       actions={[
@@ -185,7 +185,7 @@ const CartonSizeCreateEditPage: React.FC = () => {
             </PbTabs>
             <CardContent>
               <PbTabPanel value={tab} index={0}>
-                <CartonSizeCreateEdit formik={formik}></CartonSizeCreateEdit>
+                <UserRoleCreateEdit formik={formik}></UserRoleCreateEdit>
               </PbTabPanel>
             </CardContent>
           </PbCard>
@@ -195,4 +195,4 @@ const CartonSizeCreateEditPage: React.FC = () => {
   );
 };
 
-export default CartonSizeCreateEditPage;
+export default UserRoleCreateEditPage;

@@ -298,7 +298,7 @@ const routes = [
         ],
       },
       {
-        path: "cartonSize",
+        path: "stock-group",
         children: [
           {
             path: "",

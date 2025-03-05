@@ -7,24 +7,24 @@ import { FormikProvider, setNestedObjectValues, useFormik } from "formik";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
-import { useCartonSizeService } from "services/CartonSizeService";
 import { useNotificationService } from "services/NotificationService";
+import { useUserService } from "services/UserService";
 import { guid } from "types/guid";
 import { formikObjectHasHeadTouchedErrors } from "utils/formikHelpers";
-import CartonSizeCreateEdit from "./components/CartonSizeCreateEdit";
+import UserCreateEdit from "./components/UserCreateEdit";
 import {
-  CartonSizeCreateEditSchema,
-  YupCartonSizeCreateEdit,
-} from "./yup/CartonSizeCreateEditSchema";
+  UserCreateEditSchema,
+  YupUserCreateEdit,
+} from "./yup/UserCreateEditSchema";
 
-const CartonSizeCreateEditPage: React.FC = () => {
+const UserCreateEditPage: React.FC = () => {
   const { t } = useTranslation();
   const { id } = useParams();
   const [tab, setTab] = useState(0);
 
-  const CartonSizeService = useCartonSizeService();
+  const UserService = useUserService();
 
-  const [CartonSize, setCartonSize] = useState<YupCartonSizeCreateEdit>({
+  const [User, setUser] = useState<YupUserCreateEdit>({
     name: "",
   });
 
@@ -33,43 +33,43 @@ const CartonSizeCreateEditPage: React.FC = () => {
   const navigate = useNavigate();
   const [pageReady, setPageReady] = useState<boolean>(false);
 
-  let title = t("create-cartonSize");
+  let title = t("create-user");
 
   let breadcrumbs = [
     { label: t("common:dashboard"), to: "/" },
     {
-      label: t("cartonSize"),
-      to: "/stock-group",
+      label: t("user"),
+      to: "/user",
     },
     { label: t("common:create") },
   ];
 
   if (id) {
-    title = t("cartonSize");
+    title = t("user");
 
     breadcrumbs = [
       { label: t("common:dashboard"), to: "/" },
       {
-        label: CartonSize.name as string,
-        to: "/stock-group",
+        label: User.name as string,
+        to: "/user",
       },
       { label: t("common:edit") },
     ];
   }
 
   const formik = useFormik({
-    initialValues: CartonSize,
-    validationSchema: CartonSizeCreateEditSchema,
+    initialValues: User,
+    validationSchema: UserCreateEditSchema,
     onSubmit: (values, { resetForm }) => {
       setPageBlocker(true);
       if (!id) {
-        CartonSizeService.createCartonSize(values)
+        UserService.createUser(values)
           .then((createdResult) => {
             resetForm({ values });
             setPageBlocker(false);
 
             notificationService.handleApiSuccessMessage(
-              "stockGroup",
+              "user",
               "created",
               "common"
             );
@@ -81,13 +81,13 @@ const CartonSizeCreateEditPage: React.FC = () => {
             notificationService.handleApiErrorMessage(err.data, "common");
           });
       } else {
-        CartonSizeService.updateCartonSize(id as guid, values as any)
+        UserService.updateUser(id as guid, values as any)
           .then((result) => {
             resetForm({ values });
             setPageBlocker(false);
 
             notificationService.handleApiSuccessMessage(
-              "stockGroup",
+              "user",
               "updated",
               "common"
             );
@@ -106,16 +106,16 @@ const CartonSizeCreateEditPage: React.FC = () => {
 
   useEffect(() => {
     if (id) {
-      CartonSizeService.getCartonSizeById(id as guid)
+      UserService.getUserById(id as guid)
         .then((YardResource: any) => {
-          setCartonSize(YardResource);
+          setUser(YardResource);
           setPageReady(true);
         })
         .catch((err) => {});
     } else {
       setPageReady(true);
     }
-  }, [id, CartonSizeService]);
+  }, [id, UserService]);
 
   useEffect(() => {
     if (formik.submitCount > 0 && !formik.isSubmitting && !formik.isValid) {
@@ -144,7 +144,7 @@ const CartonSizeCreateEditPage: React.FC = () => {
   const navigateToDetails = (id: string | undefined) => {
     if (id) {
       setTimeout(() => {
-        navigate(`/stock-group/${id}`);
+        navigate(`/user/${id}`);
       }, 100);
     }
   };
@@ -153,7 +153,7 @@ const CartonSizeCreateEditPage: React.FC = () => {
     <Page
       breadcrumbs={breadcrumbs}
       title={title}
-      subtitle={id ? CartonSize.name : ""}
+      subtitle={id ? User.name : ""}
       showLoading={!pageReady}
       showBackdrop={pageBlocker}
       actions={[
@@ -185,7 +185,7 @@ const CartonSizeCreateEditPage: React.FC = () => {
             </PbTabs>
             <CardContent>
               <PbTabPanel value={tab} index={0}>
-                <CartonSizeCreateEdit formik={formik}></CartonSizeCreateEdit>
+                <UserCreateEdit formik={formik}></UserCreateEdit>
               </PbTabPanel>
             </CardContent>
           </PbCard>
@@ -195,4 +195,4 @@ const CartonSizeCreateEditPage: React.FC = () => {
   );
 };
 
-export default CartonSizeCreateEditPage;
+export default UserCreateEditPage;

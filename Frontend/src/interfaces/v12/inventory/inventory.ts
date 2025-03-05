@@ -12,6 +12,9 @@ export interface InventoryDetailsDto extends CreatedChangedEntity {
   quantityOut: number;
   oldBalance: number;
   newBalance: number;
+  product: string;
+  warehouse: string;
+  currentLocation: string;
 }
 
 export interface InventorySearchDto extends PagedRequestAbstractDto {

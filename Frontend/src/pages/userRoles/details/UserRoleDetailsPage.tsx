@@ -12,38 +12,36 @@ import {
 } from "components/platbricks/shared";
 import UserDateTime from "components/platbricks/shared/UserDateTime";
 import useDeleteConfirmationDialog from "hooks/useDeleteConfimationDialog";
-import { CartonSizeDetailsDto } from "interfaces/v12/cartonSize/cartonSize";
+import { UserRoleDetailsDto } from "interfaces/v12/userRole/userRole";
 
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
-import { useCartonSizeService } from "services/CartonSizeService";
+import { useUserRoleService } from "services/UserRoleService";
 import { guid } from "types/guid";
 
-function CartonSizeDetailsPage() {
+function UserRoleDetailsPage() {
   const { t } = useTranslation();
   const [tab, setTab] = useState(0);
   const { id } = useParams();
 
-  const CartonSizeService = useCartonSizeService();
-  const [cartonSize, setCartonSize] = useState<CartonSizeDetailsDto | null>(
-    null
-  );
+  const UserRoleService = useUserRoleService();
+  const [userRole, setUserRole] = useState<UserRoleDetailsDto | null>(null);
 
   const { OpenDeleteConfirmationDialog } = useDeleteConfirmationDialog();
 
   const [pageBlocker, setPageBlocker] = useState(false);
 
   useEffect(() => {
-    CartonSizeService.getCartonSizeById(id as guid)
-      .then((cartonSize) => setCartonSize(cartonSize))
+    UserRoleService.getUserRoleById(id as guid)
+      .then((userRole) => setUserRole(userRole))
       .catch((err) => {});
-  }, [CartonSizeService, id]);
+  }, [UserRoleService, id]);
 
-  if (!cartonSize) {
+  if (!userRole) {
     return (
       <Page
-        pagename={t("cartonSize")}
+        pagename={t("userRole")}
         breadcrumbs={[]}
         title={"Not Found"}
       ></Page>
@@ -52,8 +50,8 @@ function CartonSizeDetailsPage() {
 
   return (
     <Page
-      title={t("cartonSize")}
-      subtitle={cartonSize.id}
+      title={t("userRole")}
+      subtitle={userRole.id}
       showBackdrop={pageBlocker}
       breadcrumbs={[
         {
@@ -61,11 +59,11 @@ function CartonSizeDetailsPage() {
           to: "/",
         },
         {
-          label: t("cartonSize"),
-          to: `/stock-group`,
+          label: t("userRoles"),
+          to: `/userRole`,
         },
         {
-          label: cartonSize.id,
+          label: userRole.id,
         },
       ]}
       actions={[
@@ -80,12 +78,12 @@ function CartonSizeDetailsPage() {
           onclick: () => {
             OpenDeleteConfirmationDialog({
               onConfirmDeletion: async () => {
-                await CartonSizeService.deleteCartonSize(cartonSize.id as guid);
+                await UserRoleService.deleteUserRole(userRole.id as guid);
               },
               setPageBlocker: setPageBlocker,
-              entity: "cartonSize",
+              entity: "userRole",
               translationNamespace: "common",
-              redirectLink: `/stock-group`,
+              redirectLink: `/userRole`,
             });
           },
         },
@@ -104,22 +102,20 @@ function CartonSizeDetailsPage() {
           <PbTabPanel value={tab} index={0}>
             <KeyValueList gridTemplateColumns="2fr 4fr">
               <KeyValuePair label={t("name")}>
-                <EasyCopy clipboard={cartonSize.name}>
-                  {cartonSize.name}
-                </EasyCopy>
+                <EasyCopy clipboard={userRole.name}>{userRole.name}</EasyCopy>
               </KeyValuePair>
 
               <KeyValuePair label={t("created-at")}>
-                <UserDateTime date={cartonSize.createdAt} />
+                <UserDateTime date={userRole.createdAt} />
               </KeyValuePair>
               <KeyValuePair label={t("changed-at")}>
-                <UserDateTime date={cartonSize.changedAt} />
+                <UserDateTime date={userRole.changedAt} />
               </KeyValuePair>
               <KeyValuePair label={t("created-by")}>
-                <UserName userId={cartonSize.createdById} placeholder="-" />
+                <UserName userId={userRole.createdById} placeholder="-" />
               </KeyValuePair>
               <KeyValuePair label={t("changed-by")}>
-                <UserName userId={cartonSize.changedById} placeholder="-" />
+                <UserName userId={userRole.changedById} placeholder="-" />
               </KeyValuePair>
             </KeyValueList>
           </PbTabPanel>
@@ -129,4 +125,4 @@ function CartonSizeDetailsPage() {
   );
 }
 
-export default CartonSizeDetailsPage;
+export default UserRoleDetailsPage;

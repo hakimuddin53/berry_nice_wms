@@ -80,7 +80,7 @@ namespace Wms.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] StockTransferCreateUpdateDto stockTransferCreateUpdateDto)
         {   
-            string stockTransferNumber = await _runningNumberService.GenerateRunningNumberAsync(OperationTypeEnum.STOCKIN);
+            string stockTransferNumber = await _runningNumberService.GenerateRunningNumberAsync(OperationTypeEnum.STOCKTRANSFER);
         
             stockTransferCreateUpdateDto.Number = stockTransferNumber;
             var stockTransferDtos = _autoMapperService.Map<StockTransfer>(stockTransferCreateUpdateDto); 

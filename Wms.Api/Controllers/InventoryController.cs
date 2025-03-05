@@ -7,6 +7,8 @@ using Wms.Api.Services;
 using Wms.Api.Dto.Inventory;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
+using Wms.Api.Context;
 
 namespace Wms.Api.Controllers
 {
@@ -17,11 +19,13 @@ namespace Wms.Api.Controllers
     {
         private readonly IService<Inventory> _service;
         private readonly IMapper _autoMapperService;
+        private readonly ApplicationDbContext _context;
 
-        public InventoryController(IService<Inventory> service, IMapper autoMapperService)
+        public InventoryController(IService<Inventory> service, ApplicationDbContext context, IMapper autoMapperService)
         {
             _service = service;
             _autoMapperService = autoMapperService;
+            _context = context;
         }
          
 
@@ -34,6 +38,14 @@ namespace Wms.Api.Controllers
             PagedList<Inventory> pagedResult = new PagedList<Inventory>(result, inventorySearch.Page, inventorySearch.PageSize);
 
             var inventoryDtos = _autoMapperService.Map<PagedListDto<InventoryDetailsDto>>(pagedResult);
+
+            foreach (var inventory in inventoryDtos.Data)
+            {
+                inventory.Product = _context.Products?.Where(x => x.Id == inventory.ProductId)?.FirstOrDefault()?.Name ?? "";
+                inventory.Warehouse = _context.Warehouses?.Where(x => x.Id == inventory.WarehouseId)?.FirstOrDefault()?.Name ?? "";
+                inventory.CurrentLocation = _context.Locations?.Where(x => x.Id == inventory.CurrentLocationId)?.FirstOrDefault()?.Name ?? "";                
+            } 
+
             return Ok(inventoryDtos);
         }
 

@@ -4,6 +4,23 @@ export const ClientCodeEnum = {
   UTP: "UTP",
   MXD: "MXD",
 };
+
+export const ModuleEnum = {
+  STOCKIN: "STOCKIN",
+  STOCKOUT: "STOCKOUT",
+  STOCKTRANSFER: "STOCKTRANSFER",
+  STOCKRESERVATION: "STOCKRESERVATION",
+  CATEGORY: "CATEGORY",
+  COLOUR: "COLOUR",
+  DESIGN: "DESIGN",
+  LOCATION: "LOCATION",
+  PRODUCT: "PRODUCT",
+  INVENTORY: "INVENTORY",
+  SIZE: "SIZE",
+  STOCKGROUP: "STOCKGROUP",
+  WAREHOUSE: "WAREHOUSE",
+};
+
 export const MonthEnum = {
   JANUARY: "JANUARY",
   FEBRUARY: "FEBRUARY",
@@ -32,6 +49,7 @@ export const MenuItemTypeEnum = {
 
 /* eslint-disable @typescript-eslint/no-redeclare */
 export type ClientCodeEnum = typeof ClientCodeEnum[keyof typeof ClientCodeEnum];
+export type ModuleEnum = typeof ModuleEnum[keyof typeof ModuleEnum];
 export type MonthEnum = typeof MonthEnum[keyof typeof MonthEnum];
 export type MenuItemTypeEnum =
   typeof MenuItemTypeEnum[keyof typeof MenuItemTypeEnum];

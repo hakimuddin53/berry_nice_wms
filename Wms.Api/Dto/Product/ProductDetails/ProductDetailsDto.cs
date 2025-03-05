@@ -17,6 +17,8 @@ namespace Wms.Api.Dto.Product.ProductDetails
         public string Size { get; set; }
         public string Colour { get; set; }
         public string Design { get; set; } 
+
+        // change to stock group
         public string CartonSize { get; set; }
 
         public Guid CategoryId { get; set; }
