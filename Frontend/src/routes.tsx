@@ -35,6 +35,7 @@ import InventoryListPage from "pages/inventory/index/InventoryListPage";
 import LocationCreateEditPage from "pages/location/createEdit/LocationCreateEditPage";
 import LocationDetailsPage from "pages/location/details/LocationDetailsPage";
 import LocationListPage from "pages/location/index/LocationListPage";
+import ProductBulkUploadPage from "pages/products/bulkUpload/ProductBulkUploadPage";
 import ProductCreateEditPage from "pages/products/createEdit/ProductCreateEditPage";
 import ProductDetailsPage from "pages/products/details/ProductDetailsPage";
 import ProductListPage from "pages/products/index/ProductListPage";
@@ -53,6 +54,12 @@ import StockReservationListPage from "pages/stockReservation/index/StockReservat
 import StockTransferCreateEditPage from "pages/stockTransfer/createEdit/StockTransferCreateEditPage";
 import StockTransferDetailsPage from "pages/stockTransfer/details/StockTransferDetailsPage";
 import StockTransferListPage from "pages/stockTransfer/index/StockTransferListPage";
+import UserCreateEditPage from "pages/user/createEdit/UserCreateEditPage";
+import UserDetailsPage from "pages/user/details/UserDetailsPage";
+import UserListPage from "pages/user/index/UserListPage";
+import UserRoleCreateEditPage from "pages/userRoles/createEdit/UserRoleCreateEditPage";
+import UserRoleDetailsPage from "pages/userRoles/details/UserRoleDetailsPage";
+import UserRoleListPage from "pages/userRoles/index/UserRoleListPage";
 import WarehouseCreateEditPage from "pages/warehouse/createEdit/WarehouseCreateEditPage";
 import WarehouseDetailsPage from "pages/warehouse/details/WarehouseDetailsPage";
 import WarehouseListPage from "pages/warehouse/index/WarehouseListPage";
@@ -73,6 +80,48 @@ const routes = [
       {
         path: "dashboard",
         element: <DashboardPage />,
+      },
+      {
+        path: "user",
+        children: [
+          {
+            path: "",
+            element: <UserListPage />,
+          },
+          {
+            path: "new",
+            element: <UserCreateEditPage />,
+          },
+          {
+            path: ":id",
+            element: <UserDetailsPage />,
+          },
+          {
+            path: ":id/edit",
+            element: <UserCreateEditPage />,
+          },
+        ],
+      },
+      {
+        path: "user-role",
+        children: [
+          {
+            path: "",
+            element: <UserRoleListPage />,
+          },
+          {
+            path: "new",
+            element: <UserRoleCreateEditPage />,
+          },
+          {
+            path: ":id",
+            element: <UserRoleDetailsPage />,
+          },
+          {
+            path: ":id/edit",
+            element: <UserRoleCreateEditPage />,
+          },
+        ],
       },
       {
         path: "stock-in",
@@ -260,6 +309,10 @@ const routes = [
           {
             path: ":id/edit",
             element: <ProductCreateEditPage />,
+          },
+          {
+            path: "bulk-upload",
+            element: <ProductBulkUploadPage />,
           },
         ],
       },

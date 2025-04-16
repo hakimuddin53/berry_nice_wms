@@ -4,26 +4,34 @@ using Microsoft.EntityFrameworkCore;
 using Wms.Api.Dto;
 using Wms.Api.Dto.PagedList; 
 using Wms.Api.Entities;
-using Wms.Api.Services;
-using Wms.Api.Dto.Warehouse;
+using Wms.Api.Services; 
 using LinqKit;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Authentication.JwtBearer; 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Wms.Api.Dto.Usere;
+using System;
+using System.Linq;
+using Microsoft.AspNetCore.Identity;
+using Wms.Api.Dto.UserRole;
 
 namespace Wms.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    public class WarehouseController : ControllerBase
+    public class UserController : ControllerBase
     {
-        private readonly IService<Warehouse> _service;
+        private readonly IService<ApplicationUser> _service;
         private readonly IMapper _autoMapperService;
+        protected readonly UserManager<ApplicationUser> _userManager;
+        protected readonly RoleManager<ApplicationRole> _roleManager;
 
-        public WarehouseController(IService<Warehouse> service, IMapper autoMapperService)
+        public UserController(IService<ApplicationUser> service, IMapper autoMapperService, UserManager<ApplicationUser> userManager, RoleManager<ApplicationRole> roleManager)
         {
             _service = service;
             _autoMapperService = autoMapperService;
+            _userManager = userManager;
+            _roleManager = roleManager;
         }
 
 
@@ -31,17 +39,17 @@ namespace Wms.Api.Controllers
         [ProducesResponseType(typeof(PagedListDto<SelectOptionV12Dto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetSelectOptionsAsync([FromQuery] GlobalSelectFilterV12Dto selectFilterV12Dto)
         {
-            var predicate = PredicateBuilder.New<Warehouse>(true);
+            var predicate = PredicateBuilder.New<ApplicationUser>(true);
 
             if (selectFilterV12Dto.Ids != null)
             {
-                predicate = predicate.And(product => selectFilterV12Dto.Ids.Contains(product.Id));
+                predicate = predicate.And(user => selectFilterV12Dto.Ids.Contains(Guid.Parse(user.Id)));
             }
 
             if (selectFilterV12Dto.SearchString != null)
             {
-                predicate = predicate.And(product =>
-                    product.Name.Contains(selectFilterV12Dto.SearchString));
+                predicate = predicate.And(user =>
+                    user.Name.Contains(selectFilterV12Dto.SearchString));
             }
 
             // Use the reusable pagination method
@@ -53,62 +61,92 @@ namespace Wms.Api.Controllers
 
             var resultToList = await paginatedResult.ToListAsync();
 
-            PagedList<Warehouse> pagedResult = new PagedList<Warehouse>(resultToList, selectFilterV12Dto.Page, selectFilterV12Dto.PageSize);
+            PagedList<ApplicationUser> pagedResult = new PagedList<ApplicationUser>(resultToList, selectFilterV12Dto.Page, selectFilterV12Dto.PageSize);
 
             var warehouseDtos = _autoMapperService.Map<PagedListDto<SelectOptionV12Dto>>(pagedResult);
             return Ok(warehouseDtos);
         }
 
-        [HttpPost("search", Name = "SearchWarehousesAsync")]
-        public async Task<IActionResult> SearchWarehousesAsync([FromBody] WarehouseSearchDto warehouseSearch)
+        [HttpPost("search", Name = "SearchUsersAsync")]
+        public async Task<IActionResult> SearchUsersAsync([FromBody] UserSearchDto warehouseSearch)
         {
             var warehouses = await _service.GetAllAsync(e => e.Name.Contains(warehouseSearch.Search));
 
             var result = warehouses.Skip((warehouseSearch.Page - 1) * warehouseSearch.PageSize).Take(warehouseSearch.PageSize).ToList();
-            PagedList<Warehouse> pagedResult = new PagedList<Warehouse>(result, warehouseSearch.Page, warehouseSearch.PageSize);
+            PagedList<ApplicationUser> pagedResult = new PagedList<ApplicationUser>(result, warehouseSearch.Page, warehouseSearch.PageSize);
 
-            var warehouseDtos = _autoMapperService.Map<PagedListDto<WarehouseDetailsDto>>(pagedResult);         
+            var warehouseDtos = _autoMapperService.Map<PagedListDto<UserDetailsDto>>(pagedResult);         
              
             return Ok(warehouseDtos);  
         }
 
-        [HttpPost("count", Name = "CountWarehousesAsync")]
-        public async Task<IActionResult> CountWarehousesAsync([FromBody] WarehouseSearchDto warehouseSearch)
+        [HttpPost("count", Name = "CountUsersAsync")]
+        public async Task<IActionResult> CountUsersAsync([FromBody] UserSearchDto warehouseSearch)
         {
             var warehouses = await _service.GetAllAsync(e => e.Name.Contains(warehouseSearch.Search));
 
-            var warehouseDtos = _autoMapperService.Map<List<WarehouseDetailsDto>>(warehouses);
+            var warehouseDtos = _autoMapperService.Map<List<UserDetailsDto>>(warehouses);
             return Ok(warehouseDtos.Count);
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
-            var product = await _service.GetByIdAsync(id);
-            if (product == null)
+            var user = await _userManager.FindByIdAsync(id.ToString());
+            if (user == null)
                 return NotFound();
 
-            return Ok(product);
+            var userDtos = _autoMapperService.Map<UserDetailsDto>(user);  
+            var role = await _roleManager.FindByIdAsync(userDtos.UserRoleId.ToString());
+            userDtos.UserRoleName = role?.Name ?? "";
+            return Ok(userDtos); 
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] Warehouse product)
+        public async Task<IActionResult> Create([FromBody] UserCreateUpdateDto model)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            await _service.AddAsync(product);
-            return CreatedAtAction(nameof(GetById), new { id = product.Id }, product);
+            var user = new ApplicationUser { UserName = model.Email, Email = model.Email, Name = model.Name , UserRoleId = model.UserRoleId };
+             
+            var result = await _userManager.CreateAsync(user, model.Password);
+
+            // Check if the user creation failed
+            if (!result.Succeeded)
+            { 
+                var errorDescriptions = string.Join("; ", result.Errors.Select(e => e.Description)); 
+                throw new Exception($"Failed to create user '{model.Email}'. Errors: {errorDescriptions}"); 
+            }
+
+            return CreatedAtAction(nameof(GetById), new { id = user.Id }, user);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id, [FromBody] Warehouse product)
+        public async Task<IActionResult> Update(Guid id, [FromBody] ApplicationUser model)
         {
-            if (!ModelState.IsValid || id != product.Id)
+            if (!ModelState.IsValid || id != Guid.Parse(model.Id))
                 return BadRequest();
+              
+            var user = await _userManager.FindByIdAsync(id.ToString());
+            if (user == null)
+            {
+                return NotFound($"User with ID '{id}' not found.");
+            }
+             
+            user.UserRoleId = model.UserRoleId;
+             
+            var result = await _userManager.UpdateAsync(user);
 
-            await _service.UpdateAsync(product);
+            // 4. Check if the update operation succeeded
+            if (!result.Succeeded)
+            { 
+                var errorDescriptions = string.Join("; ", result.Errors.Select(e => e.Description)); 
+                return BadRequest($"Failed to update user role. Errors: {errorDescriptions}"); // Or a generic message
+            }
+             
             return NoContent();
+
         }
 
         [HttpDelete("{id}")]

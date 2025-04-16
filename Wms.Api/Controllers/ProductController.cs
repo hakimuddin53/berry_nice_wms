@@ -5,8 +5,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel;
-using System.Drawing;
-using System.Linq.Expressions;
 using Wms.Api.Context;
 using Wms.Api.Dto;
 using Wms.Api.Dto.PagedList;
@@ -29,12 +27,15 @@ namespace Wms.Api.Controllers
         private readonly IMapper _autoMapperService;
         private readonly ApplicationDbContext _context;
 
-        public ProductController(IService<Product> service, IMapper autoMapperService, ApplicationDbContext context, IRunningNumberService runningNumberService)
+        private readonly IProductService _productService;
+
+        public ProductController(IService<Product> service, IMapper autoMapperService, ApplicationDbContext context, IRunningNumberService runningNumberService, IProductService productService)
         {
             _service = service;
             _autoMapperService = autoMapperService;
             _context = context;
             _runningNumberService = runningNumberService;
+            _productService = productService;
         }
 
 
@@ -125,6 +126,24 @@ namespace Wms.Api.Controllers
             productDetails.ClientCodeString = GetEnumDescription(productDetails.ClientCode);
 
             return Ok(productDetails);
+        }
+
+        [HttpPost("bulk-upload")]
+        public async Task<IActionResult> BulkUploadProducts(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest("Please upload a valid file.");
+            }
+
+            var result = await _productService.BulkUploadProducts(file);
+
+            if (result.IsSuccess)
+            {
+                return Ok(new { message = "Products uploaded successfully." });
+            }
+
+            return BadRequest(result.ErrorMessage);
         }
 
         [HttpPost]

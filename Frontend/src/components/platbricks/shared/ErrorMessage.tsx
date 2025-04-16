@@ -46,9 +46,7 @@ const FormikErrorMessage = (props: ErrorMessageProps) => {
     var options = { ...error.options };
     if ("enumValues" in options && typeof options.enumValues === "string") {
       var valueList = options.enumValues.split(",");
-      var translatedValueList = valueList.map((v: string) =>
-        t(v.trim(), { ns: "enumerables" })
-      );
+      var translatedValueList = valueList.map((v: string) => t(v.trim()));
       options.enumValues = translatedValueList.join(", ");
     }
     if ("max" in options && options.max instanceof Date) {

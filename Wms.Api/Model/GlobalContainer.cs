@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using Wms.Api.Entities;
 
 namespace Wms.Api.Model
 {
@@ -36,5 +37,22 @@ namespace Wms.Api.Model
         STOCKOUT = 1,
         STOCKTRANSFERIN = 2,
         STOCKTRANSFEROUT = 3,
+    }
+
+    public enum ModuleEnum
+    {
+        STOCKIN = 0,
+        STOCKOUT = 1,
+        STOCKTRANSFER = 2,
+        STOCKRESERVATION = 3,
+        CATEGORY = 4,
+        COLOUR = 5,
+        DESIGN = 6,
+        LOCATION = 7,
+        PRODUCT = 8,
+        INVENTORY = 9,
+        SIZE = 10,
+        STOCKGROUP = 11,
+        WAREHOUSE = 12,
     }
 }

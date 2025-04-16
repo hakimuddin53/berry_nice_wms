@@ -58,6 +58,7 @@ function ProductDetailsPage() {
       title={t("product")}
       subtitle={product.name}
       showBackdrop={pageBlocker}
+      hasSingleActionButton
       breadcrumbs={[
         {
           label: t("dashboard"),
@@ -77,22 +78,22 @@ function ProductDetailsPage() {
           to: "edit",
           icon: "Edit",
         },
-        {
-          title: t("delete"),
-          icon: "Delete",
-          onclick: () => {
-            OpenDeleteConfirmationDialog({
-              onConfirmDeletion: async () => {
-                await ProductService.deleteProduct(product.id);
-              },
-              setPageBlocker: setPageBlocker,
-              entity: "product",
-              translationNamespace: "common",
-              deleteDataName: product.name,
-              redirectLink: `/product`,
-            });
-          },
-        },
+        // {
+        //   title: t("delete"),
+        //   icon: "Delete",
+        //   onclick: () => {
+        //     OpenDeleteConfirmationDialog({
+        //       onConfirmDeletion: async () => {
+        //         await ProductService.deleteProduct(product.id);
+        //       },
+        //       setPageBlocker: setPageBlocker,
+        //       entity: "product",
+        //       translationNamespace: "common",
+        //       deleteDataName: product.name,
+        //       redirectLink: `/product`,
+        //     });
+        //   },
+        // },
       ]}
     >
       <PbCard px={2} pt={2}>

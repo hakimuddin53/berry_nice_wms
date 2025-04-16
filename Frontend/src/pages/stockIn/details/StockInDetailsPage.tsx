@@ -13,7 +13,6 @@ import {
 } from "components/platbricks/shared";
 import UserDateTime from "components/platbricks/shared/UserDateTime";
 import SimpleDataTable from "components/platbricks/shared/dataTable/SimpleDataTable";
-import useDeleteConfirmationDialog from "hooks/useDeleteConfimationDialog";
 import {
   StockInDetailsDto,
   StockInItemDetailsDto,
@@ -21,7 +20,6 @@ import {
 import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
-import { useNotificationService } from "services/NotificationService";
 import { useStockInService } from "services/StockInService";
 import { guid } from "types/guid";
 import { useStockInItemTable } from "../datatables/useStockInItemTable";
@@ -39,9 +37,6 @@ function StockInDetailsPage() {
 
   console.log(stockIn);
 
-  const { OpenDeleteConfirmationDialog } = useDeleteConfirmationDialog();
-
-  const notificationService = useNotificationService();
   const [pageBlocker, setPageBlocker] = useState(false);
 
   const [selectedStockInItem, setSelectedStockInItem] =

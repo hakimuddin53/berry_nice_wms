@@ -4,8 +4,8 @@ namespace Wms.Api.Entities
 {
     public class ApplicationUser : IdentityUser
     {
-        // Add additional properties here if needed
-        // Example:
-        // public string FullName { get; set; }
+  
+        public required string Name { get; set; } 
+        public Guid UserRoleId { get; set; }
     }
 }

@@ -29,7 +29,7 @@ namespace Wms.Api.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto model)
         { 
-            var user = new ApplicationUser { UserName = model.Email, Email = model.Email };
+            var user = new ApplicationUser { UserName = model.Email, Email = model.Email , Name = model.Name };
             var result = await _userManager.CreateAsync(user, model.Password);
 
             if (result.Succeeded)
@@ -70,6 +70,9 @@ namespace Wms.Api.Controllers
 
     public class RegisterDto
     {
+        [Required] 
+        public string Name { get; set; }
+
         [Required]
         [EmailAddress]
         public string Email { get; set; }

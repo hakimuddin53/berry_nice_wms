@@ -70,6 +70,7 @@ namespace Wms.Api.Controllers
              
             foreach (var stockTransferItem in stockTransferDtos.StockTransferItems!)
             {
+                stockTransferItem.Product = _context.Products?.Where(x => x.Id == stockTransferItem.ProductId)?.FirstOrDefault()?.Name ?? "";
                 stockTransferItem.FromWarehouse = _context.Warehouses?.Where(x => x.Id == stockTransferItem.FromWarehouseId)?.FirstOrDefault()?.Name ?? "";
                 stockTransferItem.ToWarehouse = _context.Warehouses?.Where(x => x.Id == stockTransferItem.ToWarehouseId)?.FirstOrDefault()?.Name ?? "";
             }
@@ -87,7 +88,7 @@ namespace Wms.Api.Controllers
              
             foreach (var item in stockTransferDtos?.StockTransferItems ?? [])
             {
-                item.StockTransferItemNumber = await _runningNumberService.GenerateRunningNumberAsync(OperationTypeEnum.STOCKINITEM);
+                item.StockTransferItemNumber = await _runningNumberService.GenerateRunningNumberAsync(OperationTypeEnum.STOCKTRANSFERITEM);
                 item.FromWarehouse = "";
                 item.ToWarehouse = "";
                 item.Product = "";

@@ -1,17 +1,17 @@
+import { CreatedChangedEntity } from "interfaces/v12/CreatedChangedEntity";
+import { PagedRequestAbstractDto } from "interfaces/v12/pagedRequest/pagedRequestAbstractDto";
 import { guid } from "../../../../types/guid";
 
-export interface UserDetailsV12Dto {
+export interface UserDetailsV12Dto extends CreatedChangedEntity {
   id: guid;
-  forename: string;
-  surname: string;
-  locale: string;
-  userName: string;
-  emailAlternate: string;
+  name: string;
   email: string;
-  menuId: guid;
-  reactHomeMenuItemId: guid | null;
-  reactHomeMenuItemLocationId: guid | null;
-  phoneNumber: string;
-  timeZoneInfoId: string;
-  userType: string;
+  password: string;
+  confirmPassword: string;
+  userRoleId: string;
+  userRoleName: string;
+}
+
+export interface UserSearchDto extends PagedRequestAbstractDto {
+  search: string;
 }

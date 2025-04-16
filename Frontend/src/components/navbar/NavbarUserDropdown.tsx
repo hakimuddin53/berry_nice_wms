@@ -20,7 +20,7 @@ function NavbarUserDropdown() {
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
 
-  const { t } = useTranslation("navbar");
+  const { t } = useTranslation();
 
   const toggleMenu = (event: React.SyntheticEvent) => {
     setAnchorMenu(event.currentTarget);

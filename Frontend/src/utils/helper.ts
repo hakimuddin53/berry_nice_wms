@@ -1,4 +1,5 @@
 import { SortableDataTableHeaderCell } from "components/platbricks/shared/dataTable/DataTable";
+import { ClientCodeEnum, ModuleEnum } from "interfaces/enums/GlobalEnums";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { baseURL } from "./axios";
 
@@ -160,4 +161,22 @@ export const getBatches = <T>(array: T[], batchSize: number): T[][] => {
     batches.push(batch);
   }
   return batches;
+};
+
+export const getModuleName = (moduleNumber: any) => {
+  // Find the key in ModuleEnum whose value matches the moduleNumber (index + 1)
+  const moduleKey = Object.keys(ModuleEnum).find((key) => {
+    // Assuming the enum values are assigned sequentially starting from 1
+    return Object.keys(ModuleEnum).indexOf(key) === moduleNumber;
+  });
+  return moduleKey || moduleNumber;
+};
+
+export const getClientCodeName = (clientCode: any) => {
+  // Find the key in ClientCodeEnum whose value matches the clientCode (index + 1)
+  const moduleKey = Object.keys(ClientCodeEnum).find((key) => {
+    // Assuming the enum values are assigned sequentially starting from 1
+    return Object.keys(ClientCodeEnum).indexOf(key) === clientCode;
+  });
+  return moduleKey || clientCode;
 };

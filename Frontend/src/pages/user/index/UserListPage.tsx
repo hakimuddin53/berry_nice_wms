@@ -1,7 +1,10 @@
 import { DataTable } from "components/platbricks/shared";
 import Page from "components/platbricks/shared/Page";
 import { useDatatableControls } from "hooks/useDatatableControls";
-import { UserDetailsDto, UserSearchDto } from "interfaces/v12/user/user";
+import {
+  UserDetailsV12Dto,
+  UserSearchDto,
+} from "interfaces/v12/user/userDetails/UserDetailsV12Dto";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useUserService } from "services/UserService";
@@ -78,7 +81,7 @@ function UserListPage() {
   };
 
   const { tableProps, reloadData } = useDatatableControls({
-    initialData: [] as UserDetailsDto[],
+    initialData: [] as UserDetailsV12Dto[],
     loadData,
     loadDataCount,
   });

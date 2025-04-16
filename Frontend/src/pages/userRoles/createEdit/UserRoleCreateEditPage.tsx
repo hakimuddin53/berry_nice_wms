@@ -26,6 +26,8 @@ const UserRoleCreateEditPage: React.FC = () => {
 
   const [UserRole, setUserRole] = useState<YupUserRoleCreateEdit>({
     name: "",
+    module: [],
+    cartonSizeId: [],
   });
 
   const notificationService = useNotificationService();
@@ -39,7 +41,7 @@ const UserRoleCreateEditPage: React.FC = () => {
     { label: t("common:dashboard"), to: "/" },
     {
       label: t("userRole"),
-      to: "/userRole",
+      to: "/user-role",
     },
     { label: t("common:create") },
   ];
@@ -51,7 +53,7 @@ const UserRoleCreateEditPage: React.FC = () => {
       { label: t("common:dashboard"), to: "/" },
       {
         label: UserRole.name as string,
-        to: "/userRole",
+        to: "/user-role",
       },
       { label: t("common:edit") },
     ];
@@ -62,8 +64,21 @@ const UserRoleCreateEditPage: React.FC = () => {
     validationSchema: UserRoleCreateEditSchema,
     onSubmit: (values, { resetForm }) => {
       setPageBlocker(true);
+
+      const transformedValues = {
+        ...values,
+        displayName: values.name,
+        module: Array.isArray(values.module)
+          ? values.module.join(",")
+          : values.module,
+        // Assuming CartonSizeId might also be a multi-select, handle it similarly
+        cartonSizeId: Array.isArray(values.cartonSizeId)
+          ? values.cartonSizeId.join(",")
+          : values.cartonSizeId,
+      };
+
       if (!id) {
-        UserRoleService.createUserRole(values)
+        UserRoleService.createUserRole(transformedValues)
           .then((createdResult) => {
             resetForm({ values });
             setPageBlocker(false);
@@ -74,14 +89,14 @@ const UserRoleCreateEditPage: React.FC = () => {
               "common"
             );
 
-            navigateToDetails(createdResult);
+            navigateToDetails(createdResult.id);
           })
           .catch((err) => {
             setPageBlocker(false);
             notificationService.handleApiErrorMessage(err.data, "common");
           });
       } else {
-        UserRoleService.updateUserRole(id as guid, values as any)
+        UserRoleService.updateUserRole(id as guid, transformedValues as any)
           .then((result) => {
             resetForm({ values });
             setPageBlocker(false);
@@ -144,7 +159,7 @@ const UserRoleCreateEditPage: React.FC = () => {
   const navigateToDetails = (id: string | undefined) => {
     if (id) {
       setTimeout(() => {
-        navigate(`/userRole/${id}`);
+        navigate(`/user-role/${id}`);
       }, 100);
     }
   };

@@ -7,8 +7,6 @@ import { useTranslation } from "react-i18next";
 import { NavLink } from "react-router-dom";
 import { DataTableHeaderCell } from "../../../../components/platbricks/shared/dataTable/DataTable";
 
-const hidden = true;
-
 export const useCategoryTable = () => {
   const { t } = useTranslation();
 

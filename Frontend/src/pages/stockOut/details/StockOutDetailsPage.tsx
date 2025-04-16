@@ -21,7 +21,6 @@ import {
 import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
-import { useNotificationService } from "services/NotificationService";
 import { useStockOutService } from "services/StockOutService";
 import { guid } from "types/guid";
 import { useStockOutItemTable } from "../datatables/useStockOutItemTable";
@@ -39,7 +38,6 @@ function StockOutDetailsPage() {
 
   const { OpenDeleteConfirmationDialog } = useDeleteConfirmationDialog();
 
-  const notificationService = useNotificationService();
   const [pageBlocker, setPageBlocker] = useState(false);
 
   const [selectedStockOutItem, setSelectedStockOutItem] =

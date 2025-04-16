@@ -9,8 +9,6 @@ import {
 } from "@mui/material";
 import React from "react";
 import NavbarLanguagesDropdown from "./NavbarLanguagesDropdown";
-import NavbarMessagesDropdown from "./NavbarMessagesDropdown";
-import NavbarNotificationsDropdown from "./NavbarNotificationsDropdown";
 import NavbarSearch from "./NavbarSearch";
 import NavbarUserDropdown from "./NavbarUserDropdown";
 
@@ -96,8 +94,8 @@ const Navbar: React.FC<NavbarProps> = ({ onDrawerToggle }) => {
             </Grid>
             <Grid item xs />
             <Grid item>
-              <NavbarMessagesDropdown />
-              <NavbarNotificationsDropdown />
+              {/* <NavbarMessagesDropdown />
+              <NavbarNotificationsDropdown /> */}
               <NavbarLanguagesDropdown />
               <NavbarUserDropdown />
             </Grid>

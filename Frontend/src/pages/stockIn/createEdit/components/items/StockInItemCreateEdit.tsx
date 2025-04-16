@@ -22,7 +22,6 @@ import {
   isRequiredField,
 } from "utils/formikHelpers";
 
-import { useCartonSizeService } from "services/CartonSizeService";
 import { useProductService } from "services/ProductService";
 import {
   StockInCreateEditSchema,
@@ -36,7 +35,6 @@ const StockInItemCreateEdit: React.FC<
   const [tab, setTab] = useState(0);
 
   const ProductService = useProductService();
-  const CartonSizeService = useCartonSizeService();
 
   return (
     <PageSection

@@ -21,6 +21,7 @@ interface IProductService {
     resultSize: number,
     ids?: string[]
   ) => Promise<SelectAsyncOption[]>;
+  bulkUploadProducts: (formData: FormData) => Promise<void>;
 }
 
 const ProductServiceContext = createContext({} as IProductService);
@@ -34,6 +35,7 @@ export type ProductServiceProviderProps = {
   createProduct?: any;
   deleteProduct?: any;
   getSelectOptions?: any;
+  bulkUploadProducts?: any;
 };
 export const ProductServiceProvider: React.FC<ProductServiceProviderProps> = (
   props
@@ -95,6 +97,14 @@ export const ProductServiceProvider: React.FC<ProductServiceProviderProps> = (
     });
   };
 
+  const bulkUploadProducts = async (formData: FormData): Promise<void> => {
+    await axios.post("/product/bulk-upload", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  };
+
   const value = {
     searchProducts: props.searchProducts || searchProducts,
     countProducts: props.countProducts || countProducts,
@@ -103,6 +113,7 @@ export const ProductServiceProvider: React.FC<ProductServiceProviderProps> = (
     createProduct: props.createProduct || createProduct,
     deleteProduct: props.deleteProduct || deleteProduct,
     getSelectOptions: props.getSelectOptions || getSelectOptions,
+    bulkUploadProducts: props.bulkUploadProducts || bulkUploadProducts,
   };
 
   return (

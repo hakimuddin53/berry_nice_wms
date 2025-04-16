@@ -23,6 +23,8 @@ namespace Wms.Api.Entities
         public Guid StockOutId { get; set; }
         public Guid StockTransferId { get; set; }
 
+        public string? Remark { get; set; }
+
         [Required]
         public int QuantityIn { get; set; } // Quantity added in the transaction
 

@@ -129,6 +129,24 @@ export const dashboardItems: SidebarItemsType[] = [
   },
   {
     id: 2,
+    href: "/user",
+    itemType: "link",
+    title: "User",
+    icon: <RemoveShoppingCartIcon />,
+    type: "single",
+    children: [],
+  },
+  {
+    id: 3,
+    href: "/user-role",
+    itemType: "link",
+    title: "User Role",
+    icon: <RemoveShoppingCartIcon />,
+    type: "single",
+    children: [],
+  },
+  {
+    id: 4,
     href: "/product",
     itemType: "link",
     title: "Product",
@@ -137,7 +155,7 @@ export const dashboardItems: SidebarItemsType[] = [
     children: [],
   },
   {
-    id: 3,
+    id: 5,
     href: "/stock-in",
     itemType: "link",
     title: "Stock In",
@@ -146,7 +164,7 @@ export const dashboardItems: SidebarItemsType[] = [
     children: [],
   },
   {
-    id: 4,
+    id: 6,
     href: "/stock-out",
     itemType: "link",
     title: "Stock Out",
@@ -155,7 +173,7 @@ export const dashboardItems: SidebarItemsType[] = [
     children: [],
   },
   {
-    id: 5,
+    id: 7,
     href: "/stock-transfer",
     itemType: "link",
     title: "Stock Transfer",
@@ -164,7 +182,7 @@ export const dashboardItems: SidebarItemsType[] = [
     children: [],
   },
   {
-    id: 6,
+    id: 8,
     href: "/stock-reservation",
     itemType: "link",
     title: "Stock Reservation",
@@ -173,7 +191,7 @@ export const dashboardItems: SidebarItemsType[] = [
     children: [],
   },
   {
-    id: 7,
+    id: 9,
     href: "/inventory",
     itemType: "link",
     title: "Inventory",
@@ -182,7 +200,7 @@ export const dashboardItems: SidebarItemsType[] = [
     children: [],
   },
   {
-    id: 8,
+    id: 10,
     href: "/category",
     itemType: "link",
     title: "Category",
@@ -191,7 +209,7 @@ export const dashboardItems: SidebarItemsType[] = [
     children: [],
   },
   {
-    id: 9,
+    id: 11,
     href: "/colour",
     itemType: "link",
     title: "Colour",
@@ -200,7 +218,7 @@ export const dashboardItems: SidebarItemsType[] = [
     children: [],
   },
   {
-    id: 10,
+    id: 12,
     href: "/design",
     itemType: "link",
     title: "Design",
@@ -209,7 +227,7 @@ export const dashboardItems: SidebarItemsType[] = [
     children: [],
   },
   {
-    id: 11,
+    id: 13,
     href: "/location",
     itemType: "link",
     title: "Rack",
@@ -218,7 +236,7 @@ export const dashboardItems: SidebarItemsType[] = [
     children: [],
   },
   {
-    id: 12,
+    id: 14,
     href: "/size",
     itemType: "link",
     title: "Size",
@@ -227,7 +245,7 @@ export const dashboardItems: SidebarItemsType[] = [
     children: [],
   },
   {
-    id: 13,
+    id: 15,
     href: "/stock-group",
     itemType: "link",
     title: "Stock Group",
@@ -236,7 +254,7 @@ export const dashboardItems: SidebarItemsType[] = [
     children: [],
   },
   {
-    id: 14,
+    id: 16,
     href: "/warehouse",
     itemType: "link",
     title: "Warehouse",

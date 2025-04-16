@@ -78,12 +78,12 @@ export const FileExportDialog = (props: FileExportProps) => {
                     return <em>{t("common:please-select")}</em>;
                   }
 
-                  return t(selected, { ns: "enumerables" });
+                  return t(selected);
                 }}
               >
                 {Object.values(["en-US", "en-GB"]).map((p) => (
                   <MenuItem value={p} key={p}>
-                    {t(p, { ns: "enumerables" })}
+                    {t(p)}
                   </MenuItem>
                 ))}
               </Select>

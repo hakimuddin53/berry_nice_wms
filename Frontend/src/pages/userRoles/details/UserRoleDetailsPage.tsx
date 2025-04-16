@@ -1,5 +1,4 @@
-import { CardContent } from "@mui/material";
-import UserName from "components/platbricks/entities/UserName";
+import { CardContent, Chip } from "@mui/material";
 import {
   EasyCopy,
   KeyValueList,
@@ -10,8 +9,6 @@ import {
   PbTabPanel,
   PbTabs,
 } from "components/platbricks/shared";
-import UserDateTime from "components/platbricks/shared/UserDateTime";
-import useDeleteConfirmationDialog from "hooks/useDeleteConfimationDialog";
 import { UserRoleDetailsDto } from "interfaces/v12/userRole/userRole";
 
 import React, { useEffect, useState } from "react";
@@ -19,6 +16,7 @@ import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { useUserRoleService } from "services/UserRoleService";
 import { guid } from "types/guid";
+import { getModuleName } from "utils/helper";
 
 function UserRoleDetailsPage() {
   const { t } = useTranslation();
@@ -27,8 +25,6 @@ function UserRoleDetailsPage() {
 
   const UserRoleService = useUserRoleService();
   const [userRole, setUserRole] = useState<UserRoleDetailsDto | null>(null);
-
-  const { OpenDeleteConfirmationDialog } = useDeleteConfirmationDialog();
 
   const [pageBlocker, setPageBlocker] = useState(false);
 
@@ -51,7 +47,7 @@ function UserRoleDetailsPage() {
   return (
     <Page
       title={t("userRole")}
-      subtitle={userRole.id}
+      subtitle={userRole.displayName}
       showBackdrop={pageBlocker}
       breadcrumbs={[
         {
@@ -60,10 +56,10 @@ function UserRoleDetailsPage() {
         },
         {
           label: t("userRoles"),
-          to: `/userRole`,
+          to: `/user-role`,
         },
         {
-          label: userRole.id,
+          label: userRole.displayName,
         },
       ]}
       actions={[
@@ -71,21 +67,6 @@ function UserRoleDetailsPage() {
           title: t("common:edit"),
           to: "edit",
           icon: "Edit",
-        },
-        {
-          title: t("common:delete"),
-          icon: "Delete",
-          onclick: () => {
-            OpenDeleteConfirmationDialog({
-              onConfirmDeletion: async () => {
-                await UserRoleService.deleteUserRole(userRole.id as guid);
-              },
-              setPageBlocker: setPageBlocker,
-              entity: "userRole",
-              translationNamespace: "common",
-              redirectLink: `/userRole`,
-            });
-          },
         },
       ]}
     >
@@ -102,20 +83,23 @@ function UserRoleDetailsPage() {
           <PbTabPanel value={tab} index={0}>
             <KeyValueList gridTemplateColumns="2fr 4fr">
               <KeyValuePair label={t("name")}>
-                <EasyCopy clipboard={userRole.name}>{userRole.name}</EasyCopy>
+                <EasyCopy clipboard={userRole.displayName}>
+                  {userRole.displayName}
+                </EasyCopy>
               </KeyValuePair>
-
-              <KeyValuePair label={t("created-at")}>
-                <UserDateTime date={userRole.createdAt} />
+              <KeyValuePair label={t("module")}>
+                <>
+                  {userRole.module.map((moduleNumber) => (
+                    <Chip
+                      key={moduleNumber}
+                      label={t(getModuleName(moduleNumber))}
+                      sx={{ margin: "4px" }}
+                    />
+                  ))}
+                </>
               </KeyValuePair>
-              <KeyValuePair label={t("changed-at")}>
-                <UserDateTime date={userRole.changedAt} />
-              </KeyValuePair>
-              <KeyValuePair label={t("created-by")}>
-                <UserName userId={userRole.createdById} placeholder="-" />
-              </KeyValuePair>
-              <KeyValuePair label={t("changed-by")}>
-                <UserName userId={userRole.changedById} placeholder="-" />
+              <KeyValuePair label={t("carton-size")}>
+                {userRole.cartonSizeName}
               </KeyValuePair>
             </KeyValueList>
           </PbTabPanel>

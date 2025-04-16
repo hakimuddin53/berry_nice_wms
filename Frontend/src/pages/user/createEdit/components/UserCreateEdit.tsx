@@ -5,17 +5,28 @@ import SelectAsync2 from "components/platbricks/shared/SelectAsync2";
 import { FormikProps } from "formik";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { useUserRoleService } from "services/UserRoleService";
+import { guid } from "types/guid";
 import { isRequiredField } from "utils/formikHelpers";
 import {
   UserCreateEditSchema,
   YupUserCreateEdit,
 } from "../yup/UserCreateEditSchema";
 
-const UserCreateEdit = (props: { formik: FormikProps<YupUserCreateEdit> }) => {
+const UserCreateEdit = (props: {
+  formik: FormikProps<YupUserCreateEdit>;
+  id?: string;
+}) => {
   const { t } = useTranslation();
+
+  const UserRoleService = useUserRoleService();
 
   const formik = props.formik;
 
+  if (!!props.id) {
+    formik.values.password = "123456";
+    formik.values.confirmPassword = "123456";
+  }
   return (
     <DataList
       hideDevider={true}
@@ -26,6 +37,7 @@ const UserCreateEdit = (props: { formik: FormikProps<YupUserCreateEdit> }) => {
           value: (
             <TextField
               fullWidth
+              disabled={!!props.id}
               id="name"
               name="name"
               size="small"
@@ -49,6 +61,7 @@ const UserCreateEdit = (props: { formik: FormikProps<YupUserCreateEdit> }) => {
           value: (
             <TextField
               fullWidth
+              disabled={!!props.id}
               id="email"
               name="email"
               size="small"
@@ -72,11 +85,12 @@ const UserCreateEdit = (props: { formik: FormikProps<YupUserCreateEdit> }) => {
           value: (
             <TextField
               fullWidth
+              disabled={!!props.id}
               id="password"
               name="password"
               type="password"
-              size="small"
               value={formik.values.password}
+              size="small"
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
               error={formik.touched.password && Boolean(formik.errors.password)}
@@ -96,9 +110,10 @@ const UserCreateEdit = (props: { formik: FormikProps<YupUserCreateEdit> }) => {
           value: (
             <TextField
               fullWidth
+              disabled={!!props.id}
               id="confirmPassword"
               name="confirmPassword"
-              type="confirmPassword"
+              type="password"
               size="small"
               value={formik.values.confirmPassword}
               onChange={formik.handleChange}
@@ -135,7 +150,7 @@ const UserCreateEdit = (props: { formik: FormikProps<YupUserCreateEdit> }) => {
                 page: number,
                 pageSize: number,
                 ids?: guid[]
-              ) => CategoryService.getSelectOptions(input, page, pageSize, ids)}
+              ) => UserRoleService.getSelectOptions(input, page, pageSize, ids)}
             />
           ),
         },

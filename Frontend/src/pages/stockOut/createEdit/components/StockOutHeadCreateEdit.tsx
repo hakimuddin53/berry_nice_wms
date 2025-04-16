@@ -3,7 +3,6 @@ import DataList from "components/platbricks/shared/DataList";
 import FormikErrorMessage from "components/platbricks/shared/ErrorMessage";
 import { FormikProps } from "formik";
 import { useTranslation } from "react-i18next";
-import { useWarehouseService } from "services/WarehouseService";
 import { isRequiredField } from "utils/formikHelpers";
 import {
   StockOutCreateEditSchema,
@@ -15,8 +14,6 @@ const StockOutHeadCreateEdit = (props: {
 }) => {
   const { t } = useTranslation();
   const formik = props.formik;
-
-  const WarehouseService = useWarehouseService();
 
   return (
     <DataList

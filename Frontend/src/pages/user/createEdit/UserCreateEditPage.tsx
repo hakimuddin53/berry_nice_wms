@@ -9,7 +9,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { useNotificationService } from "services/NotificationService";
 import { useUserService } from "services/UserService";
-import { guid } from "types/guid";
+import { EMPTY_GUID, guid } from "types/guid";
 import { formikObjectHasHeadTouchedErrors } from "utils/formikHelpers";
 import UserCreateEdit from "./components/UserCreateEdit";
 import {
@@ -26,6 +26,10 @@ const UserCreateEditPage: React.FC = () => {
 
   const [User, setUser] = useState<YupUserCreateEdit>({
     name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    userRoleId: EMPTY_GUID as guid,
   });
 
   const notificationService = useNotificationService();
@@ -62,6 +66,8 @@ const UserCreateEditPage: React.FC = () => {
     validationSchema: UserCreateEditSchema,
     onSubmit: (values, { resetForm }) => {
       setPageBlocker(true);
+
+      console.log(formik.errors);
       if (!id) {
         UserService.createUser(values)
           .then((createdResult) => {
@@ -74,7 +80,7 @@ const UserCreateEditPage: React.FC = () => {
               "common"
             );
 
-            navigateToDetails(createdResult);
+            navigateToDetails(createdResult.id);
           })
           .catch((err) => {
             setPageBlocker(false);
@@ -119,6 +125,7 @@ const UserCreateEditPage: React.FC = () => {
 
   useEffect(() => {
     if (formik.submitCount > 0 && !formik.isSubmitting && !formik.isValid) {
+      console.log(formik.errors);
       notificationService.handleErrorMessage(
         t("common:please-fix-the-errors-and-try-again")
       );
@@ -185,7 +192,7 @@ const UserCreateEditPage: React.FC = () => {
             </PbTabs>
             <CardContent>
               <PbTabPanel value={tab} index={0}>
-                <UserCreateEdit formik={formik}></UserCreateEdit>
+                <UserCreateEdit formik={formik} id={id}></UserCreateEdit>
               </PbTabPanel>
             </CardContent>
           </PbCard>

@@ -1,5 +1,4 @@
 import { CardContent } from "@mui/material";
-import UserName from "components/platbricks/entities/UserName";
 import {
   EasyCopy,
   KeyValueList,
@@ -10,10 +9,8 @@ import {
   PbTabPanel,
   PbTabs,
 } from "components/platbricks/shared";
-import UserDateTime from "components/platbricks/shared/UserDateTime";
 import useDeleteConfirmationDialog from "hooks/useDeleteConfimationDialog";
-import { UserDetailsDto } from "interfaces/v12/user/user";
-
+import { UserDetailsV12Dto } from "interfaces/v12/user/userDetails/UserDetailsV12Dto";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
@@ -26,7 +23,7 @@ function UserDetailsPage() {
   const { id } = useParams();
 
   const UserService = useUserService();
-  const [user, setUser] = useState<UserDetailsDto | null>(null);
+  const [user, setUser] = useState<UserDetailsV12Dto | null>(null);
 
   const { OpenDeleteConfirmationDialog } = useDeleteConfirmationDialog();
 
@@ -47,7 +44,7 @@ function UserDetailsPage() {
   return (
     <Page
       title={t("user")}
-      subtitle={user.id}
+      subtitle={user.email}
       showBackdrop={pageBlocker}
       breadcrumbs={[
         {
@@ -59,7 +56,7 @@ function UserDetailsPage() {
           to: `/user`,
         },
         {
-          label: user.id,
+          label: user.email,
         },
       ]}
       actions={[
@@ -97,21 +94,12 @@ function UserDetailsPage() {
         <CardContent>
           <PbTabPanel value={tab} index={0}>
             <KeyValueList gridTemplateColumns="2fr 4fr">
-              <KeyValuePair label={t("name")}>
-                <EasyCopy clipboard={user.name}>{user.name}</EasyCopy>
+              <KeyValuePair label={t("email")}>
+                <EasyCopy clipboard={user.email}>{user.email}</EasyCopy>
               </KeyValuePair>
-
-              <KeyValuePair label={t("created-at")}>
-                <UserDateTime date={user.createdAt} />
-              </KeyValuePair>
-              <KeyValuePair label={t("changed-at")}>
-                <UserDateTime date={user.changedAt} />
-              </KeyValuePair>
-              <KeyValuePair label={t("created-by")}>
-                <UserName userId={user.createdById} placeholder="-" />
-              </KeyValuePair>
-              <KeyValuePair label={t("changed-by")}>
-                <UserName userId={user.changedById} placeholder="-" />
+              <KeyValuePair label={t("name")}>{user.name}</KeyValuePair>
+              <KeyValuePair label={t("userRole")}>
+                {user.userRoleName}
               </KeyValuePair>
             </KeyValueList>
           </PbTabPanel>

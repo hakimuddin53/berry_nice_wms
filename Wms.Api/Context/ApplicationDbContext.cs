@@ -6,7 +6,7 @@ using Wms.Api.Services;
 
 namespace Wms.Api.Context
 {
-    public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityRole, string>
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, string>
     {
         private readonly ICurrentUserService _currentUserService;
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, ICurrentUserService currentUserService) : base(options)
@@ -68,6 +68,7 @@ namespace Wms.Api.Context
         public DbSet<Design> Designs { get; set; }
         public DbSet<Colour> Colours { get; set; }
         public DbSet<Size> Sizes { get; set; }
-        public DbSet<Location> Locations { get; set; }
+        public DbSet<Location> Locations { get; set; } 
+
     }
 }

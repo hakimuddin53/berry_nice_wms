@@ -29,9 +29,9 @@ import { useDesignService } from "services/DesignService";
 import { useNotificationService } from "services/NotificationService";
 import { useProductService } from "services/ProductService";
 import { useSizeService } from "services/SizeService";
-import { useWarehouseService } from "services/WarehouseService";
 import { EMPTY_GUID, guid } from "types/guid";
 import { isRequiredField } from "utils/formikHelpers";
+import { getClientCodeName } from "utils/helper";
 import {
   productCreateEditShema,
   YupProductCreateEdit,
@@ -42,7 +42,6 @@ const ProductCreateEditPage: React.FC = () => {
   const { id } = useParams();
   const [tab, setTab] = useState(0);
 
-  const WarehouseService = useWarehouseService();
   const CategoryService = useCategoryService();
   const SizeService = useSizeService();
   const ColourService = useColourService();
@@ -290,13 +289,17 @@ const ProductCreateEditPage: React.FC = () => {
                           id="clientCode"
                           name="clientCode"
                           size="small"
-                          value={formik.values.clientCode}
+                          value={
+                            getClientCodeName(
+                              formik.values.clientCode
+                            ) as keyof typeof ClientCodeEnum
+                          }
                           onChange={formik.handleChange}
                           onBlur={formik.handleBlur}
                         >
                           {Object.values(ClientCodeEnum).map((p) => (
                             <MenuItem value={p} key={p}>
-                              {t(p, { ns: "enumerables" })}
+                              {t(p)}
                             </MenuItem>
                           ))}
                         </Select>
@@ -312,6 +315,10 @@ const ProductCreateEditPage: React.FC = () => {
                   },
                   {
                     label: t("category"),
+                    required: isRequiredField(
+                      productCreateEditShema,
+                      "categoryId"
+                    ),
                     value: (
                       <SelectAsync2
                         name="categoryId"
@@ -341,11 +348,19 @@ const ProductCreateEditPage: React.FC = () => {
                             ids
                           )
                         }
+                        helperText={
+                          <FormikErrorMessage
+                            touched={formik.touched.categoryId}
+                            error={formik.errors.categoryId}
+                            translatedFieldName={t("category")}
+                          />
+                        }
                       />
                     ),
                   },
                   {
                     label: t("size"),
+                    required: isRequiredField(productCreateEditShema, "sizeId"),
                     value: (
                       <SelectAsync2
                         name="sizeId"
@@ -373,11 +388,22 @@ const ProductCreateEditPage: React.FC = () => {
                             ids
                           )
                         }
+                        helperText={
+                          <FormikErrorMessage
+                            touched={formik.touched.sizeId}
+                            error={formik.errors.sizeId}
+                            translatedFieldName={t("size")}
+                          />
+                        }
                       />
                     ),
                   },
                   {
                     label: t("colour"),
+                    required: isRequiredField(
+                      productCreateEditShema,
+                      "colourId"
+                    ),
                     value: (
                       <SelectAsync2
                         name="colourId"
@@ -407,11 +433,22 @@ const ProductCreateEditPage: React.FC = () => {
                             ids
                           )
                         }
+                        helperText={
+                          <FormikErrorMessage
+                            touched={formik.touched.colourId}
+                            error={formik.errors.colourId}
+                            translatedFieldName={t("colour")}
+                          />
+                        }
                       />
                     ),
                   },
                   {
                     label: t("design"),
+                    required: isRequiredField(
+                      productCreateEditShema,
+                      "designId"
+                    ),
                     value: (
                       <SelectAsync2
                         name="designId"
@@ -441,11 +478,22 @@ const ProductCreateEditPage: React.FC = () => {
                             ids
                           )
                         }
+                        helperText={
+                          <FormikErrorMessage
+                            touched={formik.touched.designId}
+                            error={formik.errors.designId}
+                            translatedFieldName={t("design")}
+                          />
+                        }
                       />
                     ),
                   },
                   {
                     label: t("cartonSize"),
+                    required: isRequiredField(
+                      productCreateEditShema,
+                      "cartonSizeId"
+                    ),
                     value: (
                       <SelectAsync2
                         name="cartonSizeId"
@@ -474,6 +522,13 @@ const ProductCreateEditPage: React.FC = () => {
                             pageSize,
                             ids
                           )
+                        }
+                        helperText={
+                          <FormikErrorMessage
+                            touched={formik.touched.cartonSizeId}
+                            error={formik.errors.cartonSizeId}
+                            translatedFieldName={t("cartonSize")}
+                          />
                         }
                       />
                     ),

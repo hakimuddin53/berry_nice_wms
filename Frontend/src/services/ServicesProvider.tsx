@@ -10,6 +10,8 @@ import { StockInServiceProvider } from "./StockInService";
 import { StockOutServiceProvider } from "./StockOutService";
 import { StockReservationServiceProvider } from "./StockReservationService";
 import { StockTransferServiceProvider } from "./StockTransferService";
+import { UserRoleServiceProvider } from "./UserRoleService";
+import { UserServiceProvider } from "./UserService";
 import { WarehouseServiceProvider } from "./WarehouseService";
 
 const serviceProviders = [
@@ -26,6 +28,8 @@ const serviceProviders = [
   StockReservationServiceProvider,
   InventoryServiceProvider,
   StockTransferServiceProvider,
+  UserServiceProvider,
+  UserRoleServiceProvider,
 ];
 export type ServicesProviderProps = {
   children?: React.ReactNode;

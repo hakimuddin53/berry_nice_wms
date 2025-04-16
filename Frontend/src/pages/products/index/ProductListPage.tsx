@@ -6,6 +6,7 @@ import { ProductDetailsDto } from "interfaces/v12/product/productDetails/product
 import { ProductSearchDto } from "interfaces/v12/product/productSearch/productSearchDto";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { useProductService } from "services/ProductService";
 import { useProductTable } from "./datatables/useProductTable";
 
@@ -14,6 +15,7 @@ function ProductListPage() {
 
   const [productTable] = useProductTable();
   const ProductService = useProductService();
+  const navigate = useNavigate();
 
   const getSearchOptions = (
     page: number,
@@ -96,8 +98,14 @@ function ProductListPage() {
         { label: t("common:dashboard"), to: "/" },
         { label: t("product") },
       ]}
-      hasSingleActionButton
-      actions={[{ title: t("new-product"), icon: "Add", to: "new" }]}
+      actions={[
+        { title: t("new-product"), icon: "Add", to: "new" },
+        {
+          title: t("bulk-upload"),
+          icon: "Upload",
+          onclick: () => navigate("/product/bulk-upload"),
+        },
+      ]}
     >
       <DataTable
         title={t("product")}
