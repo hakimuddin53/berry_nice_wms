@@ -2,6 +2,7 @@ import { createContext, ReactNode, useEffect, useReducer } from "react";
 
 import { ActionMap, AuthState, AuthUser, JWTContextType } from "../types/auth";
 
+import jwtDecode from "jwt-decode";
 import axios from "../utils/axios";
 import { isValidToken, setSession } from "../utils/jwt";
 
@@ -78,11 +79,11 @@ function AuthProvider({ children }: { children: ReactNode }) {
 
         console.log(accessToken);
 
+        const decoded = accessToken ? jwtDecode(accessToken) : (null as any);
+        console.log(decoded);
+
         if (accessToken && isValidToken(accessToken)) {
           setSession(accessToken);
-
-          // const response = await axios.get("/auth/account");
-          // const user = response.data;
 
           dispatch({
             type: INITIALIZE,

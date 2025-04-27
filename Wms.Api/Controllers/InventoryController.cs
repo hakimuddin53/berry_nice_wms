@@ -57,7 +57,11 @@ namespace Wms.Api.Controllers
             if (user == null)
             {
                 return BadRequest("User not found.");
-            }
+            } 
+
+            // Check if the user is admin
+            bool isAdmin = email.Equals("admin@mhglobal.com", StringComparison.OrdinalIgnoreCase);
+         
 
             var userRole = await _roleManager.FindByIdAsync(user.UserRoleId.ToString());
             if (userRole != null)
@@ -66,7 +70,7 @@ namespace Wms.Api.Controllers
             }
 
             // 1. Get the base filtered query
-            var filteredQuery = GetFilteredInventoryQuery(stockGroupId);
+            var filteredQuery = GetFilteredInventoryQuery(stockGroupId, isAdmin);
 
             // --- Apply sorting if needed ---
             filteredQuery = filteredQuery.OrderByDescending(i => i.CreatedAt); 
@@ -137,15 +141,20 @@ namespace Wms.Api.Controllers
 
 
         // Helper method to get the filtered inventory query
-        private IQueryable<Inventory> GetFilteredInventoryQuery(string? stockGroupIdCsv)
+        private IQueryable<Inventory> GetFilteredInventoryQuery(string? stockGroupIds, bool isAdmin = false)
         {
             var query = _context.Inventories.AsQueryable(); // Start with IQueryable
 
+            if (isAdmin)
+            {
+                return query;
+            }
+
             List<Guid>? allowedCartonSizeIds = null;
 
-            if (!string.IsNullOrWhiteSpace(stockGroupIdCsv))
+            if (!string.IsNullOrWhiteSpace(stockGroupIds))
             {
-                allowedCartonSizeIds = stockGroupIdCsv
+                allowedCartonSizeIds = stockGroupIds
                     .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                     .Select(idStr => Guid.TryParse(idStr, out var guid) ? guid : Guid.Empty)
                     .Where(guid => guid != Guid.Empty)
@@ -153,7 +162,7 @@ namespace Wms.Api.Controllers
             }
 
             // Apply filter ONLY if allowedCartonSizeIds were found and are not empty
-            if (allowedCartonSizeIds != null && allowedCartonSizeIds.Any())
+            if (allowedCartonSizeIds != null && allowedCartonSizeIds.Count != 0)
             {
                 // Efficiently filter by joining Inventory with Product
                 // Only include Inventories where the linked Product's CartonSizeId is in the allowed list

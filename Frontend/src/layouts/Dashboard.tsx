@@ -67,7 +67,6 @@ const Dashboard: React.FC<DashboardType> = ({ children }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [params] = useSearchParams();
 
-  console.log("djhfjfd");
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
@@ -189,16 +188,16 @@ export const dashboardItems: SidebarItemsType[] = [
     children: [],
     requiredModule: ModuleEnum.STOCKTRANSFER, // <--- Link to STOCKTRANSFER module
   },
-  {
-    id: 8,
-    href: "/stock-reservation",
-    itemType: "link",
-    title: "Stock Reservation",
-    icon: <RemoveShoppingCartIcon />,
-    type: "single",
-    children: [],
-    requiredModule: ModuleEnum.STOCKRESERVATION, // <--- Link to STOCKRESERVATION module
-  },
+  // {
+  //   id: 8,
+  //   href: "/stock-reservation",
+  //   itemType: "link",
+  //   title: "Stock Reservation",
+  //   icon: <RemoveShoppingCartIcon />,
+  //   type: "single",
+  //   children: [],
+  //   requiredModule: ModuleEnum.STOCKRESERVATION, // <--- Link to STOCKRESERVATION module
+  // },
   {
     id: 9,
     href: "/inventory",
@@ -278,6 +277,13 @@ export const dashboardItems: SidebarItemsType[] = [
     type: "single",
     children: [],
     requiredModule: ModuleEnum.WAREHOUSE, // <--- Link to WAREHOUSE module
+  },
+];
+
+const navItems = [
+  {
+    title: "Pages",
+    pages: dashboardItems,
   },
 ];
 

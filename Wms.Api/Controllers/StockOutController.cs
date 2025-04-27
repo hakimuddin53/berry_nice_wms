@@ -2,12 +2,9 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
 using Wms.Api.Context;
 using Wms.Api.Dto;
 using Wms.Api.Dto.PagedList;
-using Wms.Api.Dto.StockIn.StockInCreateUpdate;
 using Wms.Api.Dto.StockOut.StockOutCreateUpdate; 
 using Wms.Api.Dto.StockOut.StockOutCreateUpdateDto;
 using Wms.Api.Dto.StockOut.StockOutSearch;
@@ -51,6 +48,15 @@ namespace Wms.Api.Controllers
              
 
             return Ok(stockOutDtos);
+        }
+
+        [HttpPost("count", Name = "CountStockOutsAsync")]
+        public async Task<IActionResult> CountStockInsAsync([FromBody] StockOutSearchDto stockOutSearch)
+        {
+            var stockOuts = await _service.GetAllAsync(e => e.Number.Contains(stockOutSearch.search));
+
+            var stockOutDtos = _autoMapperService.Map<List<StockOutDetailsDto>>(stockOuts);
+            return Ok(stockOutDtos.Count);
         }
 
         [HttpGet("{id}")]

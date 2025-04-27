@@ -22,16 +22,22 @@ export const useFilteredSidebarItems = (
   // Add proper error handling for jwtDecode in a real app if needed
   const decoded = accessToken ? jwtDecode(accessToken) : (null as any);
 
+  const userEmail = decoded?.sub ?? "";
+
   const userModulesString = decoded?.Modules ?? "";
   const allowedModules = userModulesString
     .split(",")
     .map((module: string) => module.trim().toUpperCase())
     .filter((module: any) => module); // Filter out empty strings
 
+  const isAdmin = userEmail.toLowerCase() === "admin@mhglobal.com";
+
   // Filter the items based on required modules
   const filteredItems = allMenuItems.filter((item) => {
-    // If an item doesn't require a module, always include it
-    // OR if it requires a module AND the user's allowed modules include it (case-insensitive check)
+    // If user is admin, allow all
+    if (isAdmin) {
+      return true;
+    }
     return (
       !item.requiredModule ||
       allowedModules.includes(item.requiredModule.toUpperCase())

@@ -14,6 +14,7 @@ using System.Linq;
 using Microsoft.AspNetCore.Identity;
 using Wms.Api.Dto.UserRole;
 using DocumentFormat.OpenXml.InkML;
+using System.Security.Claims;
 
 namespace Wms.Api.Controllers
 {
@@ -71,6 +72,17 @@ namespace Wms.Api.Controllers
         [HttpPost("search", Name = "SearchUsersAsync")]
         public async Task<IActionResult> SearchUsersAsync([FromBody] UserSearchDto userSearch)
         {
+            // Get the current user's email 
+
+            var userEmail = User.FindFirst(ClaimTypes.Email)?.Value ?? "";
+
+            // If admin, return empty results
+            if (userEmail.Equals("admin@mhglobal.com", StringComparison.OrdinalIgnoreCase))
+            {
+                PagedList<UserDetailsDto> emptyPagedList = new PagedList<UserDetailsDto>(new List<UserDetailsDto>(), userSearch.Page, userSearch.PageSize);
+                return Ok(emptyPagedList);
+            }
+
             var users = await _service.GetAllAsync(e => e.Name.Contains(userSearch.Search));
 
             var result = users.Skip((userSearch.Page - 1) * userSearch.PageSize).Take(userSearch.PageSize).ToList();
@@ -90,6 +102,15 @@ namespace Wms.Api.Controllers
         [HttpPost("count", Name = "CountUsersAsync")]
         public async Task<IActionResult> CountUsersAsync([FromBody] UserSearchDto userSearch)
         {
+            // Get the current user's email
+            var userEmail = User.FindFirst(ClaimTypes.Email)?.Value ?? "";
+
+            // If admin, return count = 0
+            if (userEmail.Equals("admin@mhglobal.com", StringComparison.OrdinalIgnoreCase))
+            {
+                return Ok(0);
+            }
+
             var users = await _service.GetAllAsync(e => e.Name.Contains(userSearch.Search));
 
             var userDtos = _autoMapperService.Map<List<UserDetailsDto>>(users);

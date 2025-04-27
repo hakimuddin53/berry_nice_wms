@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\hkanchwala\\repos\\MH_WMS\\MH_WMS\\Wms.Api\\Wms.Api.csproj": {}
+    "E:\\MH_WMS\\Wms.Api\\Wms.Api.csproj": {}
   },
   "projects": {
-    "C:\\Users\\hkanchwala\\repos\\MH_WMS\\MH_WMS\\Wms.Api\\Wms.Api.csproj": {
+    "E:\\MH_WMS\\Wms.Api\\Wms.Api.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\hkanchwala\\repos\\MH_WMS\\MH_WMS\\Wms.Api\\Wms.Api.csproj",
+        "projectUniqueName": "E:\\MH_WMS\\Wms.Api\\Wms.Api.csproj",
         "projectName": "Wms.Api",
-        "projectPath": "C:\\Users\\hkanchwala\\repos\\MH_WMS\\MH_WMS\\Wms.Api\\Wms.Api.csproj",
-        "packagesPath": "C:\\Users\\hkanchwala\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\hkanchwala\\repos\\MH_WMS\\MH_WMS\\Wms.Api\\obj\\",
+        "projectPath": "E:\\MH_WMS\\Wms.Api\\Wms.Api.csproj",
+        "packagesPath": "C:\\Users\\Hakim\\.nuget\\packages\\",
+        "outputPath": "E:\\MH_WMS\\Wms.Api\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\hkanchwala\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\Hakim\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -44,7 +44,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.200"
+        "SdkAnalysisLevel": "9.0.100"
       },
       "frameworks": {
         "net8.0": {
@@ -114,7 +114,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.203/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.102/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
