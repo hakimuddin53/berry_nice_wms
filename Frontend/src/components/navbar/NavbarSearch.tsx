@@ -1,6 +1,7 @@
 import styled from "@emotion/styled";
 import { InputBase } from "@mui/material";
 import useAuth from "hooks/useAuth";
+import { useFilteredSidebarItems } from "hooks/useFilteredSidebarItems";
 import { dashboardItems } from "layouts/Dashboard";
 import { darken } from "polished";
 import { useEffect, useRef, useState } from "react";
@@ -75,7 +76,7 @@ const Input = styled(InputBase)`
   }
 `;
 
-var useSearchOptions = () => {
+var useSearchOptions = (items: SidebarItemsType[]) => {
   const { t } = useTranslation("navbar");
   const [params, setParams] = useSearchParams();
   var { signOut } = useAuth();
@@ -182,7 +183,7 @@ var useSearchOptions = () => {
       }
     });
   };
-  addItems(dashboardItems);
+  addItems(items);
 
   return options;
 };
@@ -198,7 +199,9 @@ const NavbarSearch = () => {
   const inputContainerRef = useRef<any>();
   const inputRef = useRef<any>();
 
-  var options = useSearchOptions();
+  const filteredDashboardItems = useFilteredSidebarItems(dashboardItems);
+
+  var options = useSearchOptions(filteredDashboardItems);
 
   useEffect(() => {
     const handler = (e: any) => {

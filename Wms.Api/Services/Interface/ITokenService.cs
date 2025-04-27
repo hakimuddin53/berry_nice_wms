@@ -4,6 +4,6 @@ namespace Wms.Api.Services
 {
     public interface ITokenService
     {
-        string GenerateJwtToken(ApplicationUser? user);
+        Task<string> GenerateJwtTokenAsync(ApplicationUser? user);
     }
 }

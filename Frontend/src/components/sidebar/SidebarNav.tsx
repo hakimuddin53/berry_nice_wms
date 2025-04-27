@@ -1,6 +1,6 @@
 import { css } from "@emotion/react";
 import styled from "@emotion/styled";
-import { Grid, IconButton, List, Tooltip } from "@mui/material";
+import { Grid, List } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import React, { useState } from "react";
@@ -9,7 +9,7 @@ import ReactPerfectScrollbar from "react-perfect-scrollbar";
 import { SidebarItemsType } from "../../types/sidebar";
 import SidebarNavSection from "./SidebarNavSection";
 
-import { IndeterminateCheckBoxOutlined } from "@mui/icons-material";
+import { useFilteredSidebarItems } from "hooks/useFilteredSidebarItems";
 import { useTranslation } from "react-i18next";
 import "../../vendor/perfect-scrollbar.css";
 
@@ -48,28 +48,18 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ items }) => {
     setMinimize(minimize + 1);
   };
 
+  const filteredDashboardItems = useFilteredSidebarItems(items);
+
   return (
     <ScrollbarComponent>
       <List disablePadding>
         <Items>
           <Grid container alignItems="center">
             <Grid item xs={10} />
-            <Grid item>
-              <Tooltip title={t("common:collapse-all")}>
-                <IconButton
-                  aria-haspopup="true"
-                  size="medium"
-                  style={{ color: "white" }}
-                  onClick={minimizeMenuItems}
-                >
-                  <IndeterminateCheckBoxOutlined />
-                </IconButton>
-              </Tooltip>
-            </Grid>
           </Grid>
           <SidebarNavSection
             component="div"
-            pages={items}
+            pages={filteredDashboardItems}
             minimize={minimize}
           />
         </Items>

@@ -5,14 +5,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Wms.Api.Repositories
 {
-    public class ProductRepository : IProductRepository
+    public class ProductRepository(ApplicationDbContext dbContext) : IProductRepository
     {
-        private readonly ApplicationDbContext _dbContext;
-
-        public ProductRepository(ApplicationDbContext dbContext)
-        {
-            _dbContext = dbContext;
-        }
+        private readonly ApplicationDbContext _dbContext = dbContext;
 
         public async Task AddProductAsync(Product product, bool saveChanges = false)
         {

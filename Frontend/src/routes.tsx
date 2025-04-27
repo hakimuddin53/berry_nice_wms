@@ -15,8 +15,11 @@ import ResetPassword from "./pages/auth/ResetPassword";
 import SignIn from "./pages/auth/SignIn";
 
 // Protected routes
+import UnauthorizedPage from "components/auth/UnauthorizedPage";
 import GuestGuard from "components/guards/GuestGuard";
+import ModuleGuard from "components/guards/ModuleGuard";
 import { HomePageNavigator } from "components/platbricks/shared/HomePageNavigator";
+import { ModuleEnum } from "interfaces/enums/GlobalEnums";
 import CartonSizeCreateEditPage from "pages/cartonSize/createEdit/CartonSizeCreateEditPage";
 import CartonSizeDetailsPage from "pages/cartonSize/details/CartonSizeDetailsPage";
 import CartonSizeListPage from "pages/cartonSize/index/CartonSizeListPage";
@@ -63,42 +66,63 @@ import UserRoleListPage from "pages/userRoles/index/UserRoleListPage";
 import WarehouseCreateEditPage from "pages/warehouse/createEdit/WarehouseCreateEditPage";
 import WarehouseDetailsPage from "pages/warehouse/details/WarehouseDetailsPage";
 import WarehouseListPage from "pages/warehouse/index/WarehouseListPage";
+import { Navigate } from "react-router-dom";
 
+// --- Routes Definition ---
 const routes = [
+  // --- Authenticated Routes ---
   {
     path: "/",
     element: (
       <AuthGuard>
-        <DashboardLayout />
+        <DashboardLayout /> {/* 2. Render main layout */}
       </AuthGuard>
     ),
+    // Children are rendered inside DashboardLayout's <Outlet />
+    // ModuleGuard is applied to each specific child element
     children: [
       {
-        path: "",
-        element: <HomePageNavigator />,
+        index: true, // Matches "/" path inside the layout
+        element: <HomePageNavigator />, // No specific module needed? Or apply one if required.
       },
       {
         path: "dashboard",
-        element: <DashboardPage />,
+        element: <DashboardPage />, // Assuming dashboard needs no specific module beyond login
       },
       {
         path: "user",
         children: [
           {
-            path: "",
-            element: <UserListPage />,
+            index: true,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.USER}>
+                <UserListPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: "new",
-            element: <UserCreateEditPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.USER}>
+                <UserCreateEditPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: ":id",
-            element: <UserDetailsPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.USER}>
+                <UserDetailsPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: ":id/edit",
-            element: <UserCreateEditPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.USER}>
+                <UserCreateEditPage />
+              </ModuleGuard>
+            ),
           },
         ],
       },
@@ -106,20 +130,36 @@ const routes = [
         path: "user-role",
         children: [
           {
-            path: "",
-            element: <UserRoleListPage />,
+            index: true,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.USERROLE}>
+                <UserRoleListPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: "new",
-            element: <UserRoleCreateEditPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.USERROLE}>
+                <UserRoleCreateEditPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: ":id",
-            element: <UserRoleDetailsPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.USERROLE}>
+                <UserRoleDetailsPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: ":id/edit",
-            element: <UserRoleCreateEditPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.USERROLE}>
+                <UserRoleCreateEditPage />
+              </ModuleGuard>
+            ),
           },
         ],
       },
@@ -127,20 +167,36 @@ const routes = [
         path: "stock-in",
         children: [
           {
-            path: "",
-            element: <StockInListPage />,
+            index: true,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.STOCKIN}>
+                <StockInListPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: "new",
-            element: <StockInCreateEditPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.STOCKIN}>
+                <StockInCreateEditPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: ":id",
-            element: <StockInDetailsPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.STOCKIN}>
+                <StockInDetailsPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: ":id/edit",
-            element: <StockInCreateEditPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.STOCKIN}>
+                <StockInCreateEditPage />
+              </ModuleGuard>
+            ),
           },
         ],
       },
@@ -148,20 +204,36 @@ const routes = [
         path: "stock-out",
         children: [
           {
-            path: "",
-            element: <StockOutListPage />,
+            index: true,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.STOCKOUT}>
+                <StockOutListPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: "new",
-            element: <StockOutCreateEditPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.STOCKOUT}>
+                <StockOutCreateEditPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: ":id",
-            element: <StockOutDetailsPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.STOCKOUT}>
+                <StockOutDetailsPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: ":id/edit",
-            element: <StockOutCreateEditPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.STOCKOUT}>
+                <StockOutCreateEditPage />
+              </ModuleGuard>
+            ),
           },
         ],
       },
@@ -169,20 +241,36 @@ const routes = [
         path: "stock-transfer",
         children: [
           {
-            path: "",
-            element: <StockTransferListPage />,
+            index: true,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.STOCKTRANSFER}>
+                <StockTransferListPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: "new",
-            element: <StockTransferCreateEditPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.STOCKTRANSFER}>
+                <StockTransferCreateEditPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: ":id",
-            element: <StockTransferDetailsPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.STOCKTRANSFER}>
+                <StockTransferDetailsPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: ":id/edit",
-            element: <StockTransferCreateEditPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.STOCKTRANSFER}>
+                <StockTransferCreateEditPage />
+              </ModuleGuard>
+            ),
           },
         ],
       },
@@ -190,20 +278,36 @@ const routes = [
         path: "stock-reservation",
         children: [
           {
-            path: "",
-            element: <StockReservationListPage />,
+            index: true,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.STOCKRESERVATION}>
+                <StockReservationListPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: "new",
-            element: <StockReservationCreateEditPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.STOCKRESERVATION}>
+                <StockReservationCreateEditPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: ":id",
-            element: <StockReservationDetailsPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.STOCKRESERVATION}>
+                <StockReservationDetailsPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: ":id/edit",
-            element: <StockReservationCreateEditPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.STOCKRESERVATION}>
+                <StockReservationCreateEditPage />
+              </ModuleGuard>
+            ),
           },
         ],
       },
@@ -211,20 +315,36 @@ const routes = [
         path: "category",
         children: [
           {
-            path: "",
-            element: <CategoryListPage />,
+            index: true,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.CATEGORY}>
+                <CategoryListPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: "new",
-            element: <CategoryCreateEditPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.CATEGORY}>
+                <CategoryCreateEditPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: ":id",
-            element: <CategoryDetailsPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.CATEGORY}>
+                <CategoryDetailsPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: ":id/edit",
-            element: <CategoryCreateEditPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.CATEGORY}>
+                <CategoryCreateEditPage />
+              </ModuleGuard>
+            ),
           },
         ],
       },
@@ -232,20 +352,36 @@ const routes = [
         path: "colour",
         children: [
           {
-            path: "",
-            element: <ColourListPage />,
+            index: true,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.COLOUR}>
+                <ColourListPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: "new",
-            element: <ColourCreateEditPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.COLOUR}>
+                <ColourCreateEditPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: ":id",
-            element: <ColourDetailsPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.COLOUR}>
+                <ColourDetailsPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: ":id/edit",
-            element: <ColourCreateEditPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.COLOUR}>
+                <ColourCreateEditPage />
+              </ModuleGuard>
+            ),
           },
         ],
       },
@@ -253,20 +389,36 @@ const routes = [
         path: "design",
         children: [
           {
-            path: "",
-            element: <DesignListPage />,
+            index: true,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.DESIGN}>
+                <DesignListPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: "new",
-            element: <DesignCreateEditPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.DESIGN}>
+                <DesignCreateEditPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: ":id",
-            element: <DesignDetailsPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.DESIGN}>
+                <DesignDetailsPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: ":id/edit",
-            element: <DesignCreateEditPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.DESIGN}>
+                <DesignCreateEditPage />
+              </ModuleGuard>
+            ),
           },
         ],
       },
@@ -274,20 +426,36 @@ const routes = [
         path: "location",
         children: [
           {
-            path: "",
-            element: <LocationListPage />,
+            index: true,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.LOCATION}>
+                <LocationListPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: "new",
-            element: <LocationCreateEditPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.LOCATION}>
+                <LocationCreateEditPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: ":id",
-            element: <LocationDetailsPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.LOCATION}>
+                <LocationDetailsPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: ":id/edit",
-            element: <LocationCreateEditPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.LOCATION}>
+                <LocationCreateEditPage />
+              </ModuleGuard>
+            ),
           },
         ],
       },
@@ -295,24 +463,44 @@ const routes = [
         path: "product",
         children: [
           {
-            path: "",
-            element: <ProductListPage />,
+            index: true,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.PRODUCT}>
+                <ProductListPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: "new",
-            element: <ProductCreateEditPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.PRODUCT}>
+                <ProductCreateEditPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: ":id",
-            element: <ProductDetailsPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.PRODUCT}>
+                <ProductDetailsPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: ":id/edit",
-            element: <ProductCreateEditPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.PRODUCT}>
+                <ProductCreateEditPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: "bulk-upload",
-            element: <ProductBulkUploadPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.PRODUCT}>
+                <ProductBulkUploadPage />
+              </ModuleGuard>
+            ),
           },
         ],
       },
@@ -320,12 +508,20 @@ const routes = [
         path: "inventory",
         children: [
           {
-            path: "",
-            element: <InventoryListPage />,
+            index: true,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.INVENTORY}>
+                <InventoryListPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: ":id",
-            element: <InventoryDetailsPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.INVENTORY}>
+                <InventoryDetailsPage />
+              </ModuleGuard>
+            ),
           },
         ],
       },
@@ -333,41 +529,73 @@ const routes = [
         path: "size",
         children: [
           {
-            path: "",
-            element: <SizeListPage />,
+            index: true,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.SIZE}>
+                <SizeListPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: "new",
-            element: <SizeCreateEditPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.SIZE}>
+                <SizeCreateEditPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: ":id",
-            element: <SizeDetailsPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.SIZE}>
+                <SizeDetailsPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: ":id/edit",
-            element: <SizeCreateEditPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.SIZE}>
+                <SizeCreateEditPage />
+              </ModuleGuard>
+            ),
           },
         ],
       },
       {
-        path: "stock-group",
+        path: "stock-group", // Note: Maps to CartonSize components
         children: [
           {
-            path: "",
-            element: <CartonSizeListPage />,
+            index: true,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.STOCKGROUP}>
+                <CartonSizeListPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: "new",
-            element: <CartonSizeCreateEditPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.STOCKGROUP}>
+                <CartonSizeCreateEditPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: ":id",
-            element: <CartonSizeDetailsPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.STOCKGROUP}>
+                <CartonSizeDetailsPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: ":id/edit",
-            element: <CartonSizeCreateEditPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.STOCKGROUP}>
+                <CartonSizeCreateEditPage />
+              </ModuleGuard>
+            ),
           },
         ],
       },
@@ -375,29 +603,48 @@ const routes = [
         path: "warehouse",
         children: [
           {
-            path: "",
-            element: <WarehouseListPage />,
+            index: true,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.WAREHOUSE}>
+                <WarehouseListPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: "new",
-            element: <WarehouseCreateEditPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.WAREHOUSE}>
+                <WarehouseCreateEditPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: ":id",
-            element: <WarehouseDetailsPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.WAREHOUSE}>
+                <WarehouseDetailsPage />
+              </ModuleGuard>
+            ),
           },
           {
             path: ":id/edit",
-            element: <WarehouseCreateEditPage />,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.WAREHOUSE}>
+                <WarehouseCreateEditPage />
+              </ModuleGuard>
+            ),
           },
         ],
       },
     ],
   },
+
+  // --- Authentication Routes (for Guests) ---
   {
     path: "auth",
     element: (
       <GuestGuard>
+        {/* Prevents logged-in users from seeing these */}
         <AuthLayout />
       </GuestGuard>
     ),
@@ -410,12 +657,19 @@ const routes = [
         path: "reset-password",
         element: <ResetPassword />,
       },
-
-      /*{
+      /*  
+      {
         path: "sign-up",
-        element: <SignUp />,
-      },*/
+        element: <SignUp />, // Assuming SignUp component exists if uncommented
+      },
+      */
     ],
+  },
+
+  // --- Utility Routes ---
+  {
+    path: "unauthorized", // Page shown by ModuleGuard redirect
+    element: <UnauthorizedPage />,
   },
   {
     path: "404",
@@ -424,6 +678,13 @@ const routes = [
   {
     path: "500",
     element: <Page500 />,
+  },
+
+  // --- Catch-all Route ---
+  // Redirects any unmatched path to the 404 page
+  {
+    path: "*",
+    element: <Navigate to="/404" replace />,
   },
 ];
 

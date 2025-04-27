@@ -147,6 +147,12 @@ const ProductCreateEditPage: React.FC = () => {
     if (id) {
       ProductService.getProductById(id as guid)
         .then((product: any) => {
+          console.log(product);
+
+          product.clientCode = getClientCodeName(
+            product.clientCode
+          ) as keyof typeof ClientCodeEnum;
+          console.log(product);
           setProduct(product);
 
           setPageReady(true);
@@ -289,11 +295,7 @@ const ProductCreateEditPage: React.FC = () => {
                           id="clientCode"
                           name="clientCode"
                           size="small"
-                          value={
-                            getClientCodeName(
-                              formik.values.clientCode
-                            ) as keyof typeof ClientCodeEnum
-                          }
+                          value={formik.values.clientCode}
                           onChange={formik.handleChange}
                           onBlur={formik.handleBlur}
                         >

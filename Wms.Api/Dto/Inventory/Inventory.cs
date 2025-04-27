@@ -14,6 +14,8 @@ namespace Wms.Api.Dto.Inventory
         public int NewBalance { get; set; } // Balance after the transaction  
 
         public string Product { get; set; }
+        public string ClientCode { get; set; }
+        public string StockGroup { get; set; }
         public string Warehouse { get; set; }
         public string CurrentLocation { get; set; }
     } 

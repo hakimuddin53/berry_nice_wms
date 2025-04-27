@@ -14,10 +14,6 @@ export const useUserRoleTable = () => {
   const userRoleData = useMemo<DataTableHeaderCell<UserRoleDetailsDto>[]>(
     () => [
       {
-        id: "id",
-        label: t("userRole-id"),
-      },
-      {
         id: "name",
         label: t("name"),
         render: (row) => (

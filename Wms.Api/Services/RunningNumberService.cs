@@ -5,14 +5,9 @@ using Wms.Api.Model;
 
 namespace Wms.Api.Services
 {
-    public class RunningNumberService : IRunningNumberService
+    public class RunningNumberService(ApplicationDbContext context) : IRunningNumberService
     {
-        private readonly ApplicationDbContext _context;
-
-        public RunningNumberService(ApplicationDbContext context)
-        {
-            _context = context;
-        }
+        private readonly ApplicationDbContext _context = context;
 
         public async Task<string> GenerateRunningNumberAsync(OperationTypeEnum operationType)
         {

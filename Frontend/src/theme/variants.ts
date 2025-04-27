@@ -15,7 +15,7 @@ const customBlue = {
   900: "#2052c2 ",
 };
 
-export const arvatoBlue = {
+export const mhGlobalBlue = {
   50: "#e4f4ff",
   100: "#b0e0ff",
   200: "#6fbaeb",
@@ -24,7 +24,7 @@ export const arvatoBlue = {
   500: "#3594d1",
   600: "#2c8ac7",
   700: "#1b78b3",
-  800: "#0068A9", //standard arvato blue
+  800: "#0068A9", //standard mhglobal blue
   900: "#005b93",
 };
 
@@ -264,11 +264,11 @@ export const platbricksVariant = merge(defaultVariant, {
   palette: {
     mode: "light",
     primary: {
-      main: arvatoBlue[800],
+      main: mhGlobalBlue[800],
       contrastText: "#FFF",
     },
     secondary: {
-      main: arvatoBlue[600],
+      main: mhGlobalBlue[600],
       contrastText: "#FFF",
     },
     background: {
@@ -278,7 +278,7 @@ export const platbricksVariant = merge(defaultVariant, {
   },
   header: {
     color: grey[200],
-    background: arvatoBlue[800],
+    background: mhGlobalBlue[800],
     search: {
       color: grey[200],
     },
@@ -291,7 +291,7 @@ export const platbricksVariant = merge(defaultVariant, {
     background: "#233044",
     header: {
       color: "#FFF",
-      background: arvatoBlue[900],
+      background: mhGlobalBlue[900],
       brand: {
         color: "#FFFFFF",
       },
@@ -305,7 +305,7 @@ export const platbricksVariant = merge(defaultVariant, {
     },
     badge: {
       color: "#FFF",
-      background: arvatoBlue[500],
+      background: mhGlobalBlue[500],
     },
   },
 });

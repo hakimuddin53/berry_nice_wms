@@ -105,10 +105,6 @@ project.fragment.lock.json
 .nCrunchTemp/
 ~$*
 
-########################
-# Entity Framework Migrations
-########################
-Migrations/
 
 # Uncomment if using Rider IDE:
 # .idea/

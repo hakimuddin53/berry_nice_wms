@@ -11,6 +11,7 @@ import { spacing } from "@mui/system";
 
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import useAppTheme from "hooks/useTheme";
+import { ModuleEnum } from "interfaces/enums/GlobalEnums";
 import { useSearchParams } from "react-router-dom";
 import { SidebarItemsType } from "types/sidebar";
 import Footer from "../components/Footer";
@@ -126,33 +127,37 @@ export const dashboardItems: SidebarItemsType[] = [
     icon: <DashboardIcon />,
     type: "single",
     children: [],
+    // No requiredModule needed for Dashboard typically
   },
   {
     id: 2,
     href: "/user",
     itemType: "link",
     title: "User",
-    icon: <RemoveShoppingCartIcon />,
+    icon: <RemoveShoppingCartIcon />, // Consider a different icon if needed
     type: "single",
     children: [],
+    requiredModule: ModuleEnum.USER, // <--- Link to USER module
   },
   {
     id: 3,
     href: "/user-role",
     itemType: "link",
     title: "User Role",
-    icon: <RemoveShoppingCartIcon />,
+    icon: <RemoveShoppingCartIcon />, // Consider a different icon if needed
     type: "single",
     children: [],
+    requiredModule: ModuleEnum.USERROLE, // <--- Link to USERROLE module
   },
   {
     id: 4,
     href: "/product",
     itemType: "link",
     title: "Product",
-    icon: <RemoveShoppingCartIcon />,
+    icon: <RemoveShoppingCartIcon />, // Consider a different icon if needed
     type: "single",
     children: [],
+    requiredModule: ModuleEnum.PRODUCT, // <--- Link to PRODUCT module
   },
   {
     id: 5,
@@ -162,6 +167,7 @@ export const dashboardItems: SidebarItemsType[] = [
     icon: <AddShoppingCartIcon />,
     type: "single",
     children: [],
+    requiredModule: ModuleEnum.STOCKIN, // <--- Link to STOCKIN module
   },
   {
     id: 6,
@@ -171,6 +177,7 @@ export const dashboardItems: SidebarItemsType[] = [
     icon: <RemoveShoppingCartIcon />,
     type: "single",
     children: [],
+    requiredModule: ModuleEnum.STOCKOUT, // <--- Link to STOCKOUT module
   },
   {
     id: 7,
@@ -180,6 +187,7 @@ export const dashboardItems: SidebarItemsType[] = [
     icon: <AddShoppingCartIcon />,
     type: "single",
     children: [],
+    requiredModule: ModuleEnum.STOCKTRANSFER, // <--- Link to STOCKTRANSFER module
   },
   {
     id: 8,
@@ -189,6 +197,7 @@ export const dashboardItems: SidebarItemsType[] = [
     icon: <RemoveShoppingCartIcon />,
     type: "single",
     children: [],
+    requiredModule: ModuleEnum.STOCKRESERVATION, // <--- Link to STOCKRESERVATION module
   },
   {
     id: 9,
@@ -198,6 +207,7 @@ export const dashboardItems: SidebarItemsType[] = [
     icon: <RemoveShoppingCartIcon />,
     type: "single",
     children: [],
+    requiredModule: ModuleEnum.INVENTORY, // <--- Link to INVENTORY module
   },
   {
     id: 10,
@@ -207,6 +217,7 @@ export const dashboardItems: SidebarItemsType[] = [
     icon: <RemoveShoppingCartIcon />,
     type: "single",
     children: [],
+    requiredModule: ModuleEnum.CATEGORY, // <--- Link to CATEGORY module
   },
   {
     id: 11,
@@ -216,6 +227,7 @@ export const dashboardItems: SidebarItemsType[] = [
     icon: <RemoveShoppingCartIcon />,
     type: "single",
     children: [],
+    requiredModule: ModuleEnum.COLOUR, // <--- Link to COLOUR module
   },
   {
     id: 12,
@@ -225,15 +237,17 @@ export const dashboardItems: SidebarItemsType[] = [
     icon: <RemoveShoppingCartIcon />,
     type: "single",
     children: [],
+    requiredModule: ModuleEnum.DESIGN, // <--- Link to DESIGN module
   },
   {
     id: 13,
-    href: "/location",
+    href: "/location", // Assuming "Rack" maps to the LOCATION module
     itemType: "link",
     title: "Rack",
     icon: <RemoveShoppingCartIcon />,
     type: "single",
     children: [],
+    requiredModule: ModuleEnum.LOCATION, // <--- Link to LOCATION module
   },
   {
     id: 14,
@@ -243,6 +257,7 @@ export const dashboardItems: SidebarItemsType[] = [
     icon: <RemoveShoppingCartIcon />,
     type: "single",
     children: [],
+    requiredModule: ModuleEnum.SIZE, // <--- Link to SIZE module
   },
   {
     id: 15,
@@ -252,6 +267,7 @@ export const dashboardItems: SidebarItemsType[] = [
     icon: <RemoveShoppingCartIcon />,
     type: "single",
     children: [],
+    requiredModule: ModuleEnum.STOCKGROUP, // <--- Link to STOCKGROUP module
   },
   {
     id: 16,
@@ -261,6 +277,7 @@ export const dashboardItems: SidebarItemsType[] = [
     icon: <RemoveShoppingCartIcon />,
     type: "single",
     children: [],
+    requiredModule: ModuleEnum.WAREHOUSE, // <--- Link to WAREHOUSE module
   },
 ];
 

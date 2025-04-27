@@ -13,11 +13,6 @@ export const useUserTable = () => {
   const userData = useMemo<DataTableHeaderCell<UserDetailsV12Dto>[]>(
     () => [
       {
-        id: "id",
-        label: t("user-id"),
-      },
-
-      {
         id: "email",
         label: t("email"),
         render: (row) => (
@@ -31,6 +26,10 @@ export const useUserTable = () => {
       {
         id: "name",
         label: t("name"),
+      },
+      {
+        id: "userRoleName",
+        label: t("userRole"),
       },
     ],
     [t]

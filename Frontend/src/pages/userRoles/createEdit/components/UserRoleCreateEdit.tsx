@@ -15,7 +15,6 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useCartonSizeService } from "services/CartonSizeService";
 import { isRequiredField } from "utils/formikHelpers";
-import { getModuleName } from "utils/helper";
 import {
   UserRoleCreateEditSchema,
   YupUserRoleCreateEdit,
@@ -29,11 +28,10 @@ const UserRoleCreateEdit = (props: {
   const formik = props.formik;
 
   const CartonSizeService = useCartonSizeService();
-  const [selectedStockGroup, setSelectedStockGroups] = useState<
-    SelectAsyncOption[]
-  >([]);
 
   const [options, setOptions] = useState<SelectAsyncOption[]>([]);
+
+  console.log(formik.values.module);
 
   useEffect(() => {
     CartonSizeService.getSelectOptions("", 1, 100)
@@ -94,16 +92,13 @@ const UserRoleCreateEdit = (props: {
                 fullWidth
                 error={formik.touched.module && Boolean(formik.errors.module)}
               >
-                <Autocomplete<ModuleEnum, true, undefined>
+                <Autocomplete<ModuleEnum, true, false>
                   multiple
                   size="small"
                   id="module"
-                  value={formik.values.module
-                    .map((number) => {
-                      const moduleName = getModuleName(number);
-                      return moduleName as keyof typeof ModuleEnum; // Type assertion
-                    })
-                    .filter(Boolean)}
+                  value={formik.values.module?.filter(
+                    (item): item is string => item !== undefined
+                  )}
                   onChange={(event, newValue) => {
                     console.log(newValue);
                     formik.setFieldValue("module", newValue);

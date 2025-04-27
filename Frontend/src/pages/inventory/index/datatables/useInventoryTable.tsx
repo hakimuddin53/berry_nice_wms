@@ -19,8 +19,12 @@ export const useInventoryTable = () => {
         label: t("warehouse"),
       },
       {
-        id: "currentLocation",
-        label: t("location"),
+        id: "clientCode",
+        label: t("client-code"),
+      },
+      {
+        id: "stockGroup",
+        label: t("carton-size"),
       },
       {
         id: "quantityIn",
@@ -37,6 +41,10 @@ export const useInventoryTable = () => {
       {
         id: "newBalance",
         label: t("new-balance"),
+      },
+      {
+        id: "currentLocation",
+        label: t("location"),
       },
       {
         id: "createdAt",

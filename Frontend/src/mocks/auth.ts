@@ -16,7 +16,7 @@ const users: User[] = [
   {
     id: "a8553063-7bd5-45ed-adbe-db6f069a3802",
     displayName: "Lucy Lavender",
-    email: "info@arvato.de",
+    email: "info@mhglobal.com",
     password: "Sommer16$",
     avatar: "/static/img/avatars/avatar-1.jpg",
   },

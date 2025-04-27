@@ -19,6 +19,8 @@ export const ModuleEnum = {
   SIZE: "SIZE",
   STOCKGROUP: "STOCKGROUP",
   WAREHOUSE: "WAREHOUSE",
+  USER: "USER",
+  USERROLE: "USERROLE",
 };
 
 export const MonthEnum = {

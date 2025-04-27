@@ -81,8 +81,7 @@ namespace Wms.Api.Controllers
                 var stockGroups = new List<string>(); 
                 foreach (var sizeId in roles.CartonSizeId)
                 {
-                    stockGroups.Add(_context.CartonSizes?.Where(x => x.Id == sizeId)?.FirstOrDefault()?.Name ?? "");
-                    
+                    stockGroups.Add(_context.CartonSizes?.Where(x => x.Id == sizeId)?.FirstOrDefault()?.Name ?? "");                    
                 }
                
                 roles.CartonSizeName = stockGroups; 

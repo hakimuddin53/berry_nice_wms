@@ -1,3 +1,5 @@
+import { ModuleEnum } from "interfaces/enums/GlobalEnums";
+
 export type SidebarItemsType = {
   id: any;
   href: string;
@@ -7,4 +9,5 @@ export type SidebarItemsType = {
   children: SidebarItemsType[];
   badge?: string;
   type: string;
+  requiredModule?: ModuleEnum; // <--- Add this optional property
 };

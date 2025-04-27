@@ -50,7 +50,7 @@ namespace Wms.Api.Controllers
             if (result.Succeeded)
             {
                 var user = await _userManager.FindByNameAsync(model.Email);
-                var jwt = _tokenService.GenerateJwtToken(user!);
+                var jwt = await _tokenService.GenerateJwtTokenAsync(user!);
                 return Ok(new { jwt });
             }
 

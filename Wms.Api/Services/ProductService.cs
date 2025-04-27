@@ -6,17 +6,11 @@ using Wms.Api.Model;
  
 namespace Wms.Api.Services
 {
-    public class ProductService : IProductService
+    public class ProductService(IProductRepository productRepository, IRunningNumberService runningNumberService) : IProductService
     {
 
-        private readonly IProductRepository _productRepository;
-        private readonly IRunningNumberService _runningNumberService;
-
-        public ProductService(IProductRepository productRepository, IRunningNumberService runningNumberService)
-        {
-            _productRepository = productRepository;
-            _runningNumberService = runningNumberService;
-        }
+        private readonly IProductRepository _productRepository = productRepository;
+        private readonly IRunningNumberService _runningNumberService = runningNumberService;
 
         public async Task<(bool IsSuccess, string ErrorMessage)> BulkUploadProducts(IFormFile file)
         {

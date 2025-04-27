@@ -13,6 +13,7 @@ using System;
 using System.Linq;
 using Microsoft.AspNetCore.Identity;
 using Wms.Api.Dto.UserRole;
+using DocumentFormat.OpenXml.InkML;
 
 namespace Wms.Api.Controllers
 {
@@ -63,30 +64,36 @@ namespace Wms.Api.Controllers
 
             PagedList<ApplicationUser> pagedResult = new PagedList<ApplicationUser>(resultToList, selectFilterV12Dto.Page, selectFilterV12Dto.PageSize);
 
-            var warehouseDtos = _autoMapperService.Map<PagedListDto<SelectOptionV12Dto>>(pagedResult);
-            return Ok(warehouseDtos);
+            var userDtos = _autoMapperService.Map<PagedListDto<SelectOptionV12Dto>>(pagedResult);
+            return Ok(userDtos);
         }
 
         [HttpPost("search", Name = "SearchUsersAsync")]
-        public async Task<IActionResult> SearchUsersAsync([FromBody] UserSearchDto warehouseSearch)
+        public async Task<IActionResult> SearchUsersAsync([FromBody] UserSearchDto userSearch)
         {
-            var warehouses = await _service.GetAllAsync(e => e.Name.Contains(warehouseSearch.Search));
+            var users = await _service.GetAllAsync(e => e.Name.Contains(userSearch.Search));
 
-            var result = warehouses.Skip((warehouseSearch.Page - 1) * warehouseSearch.PageSize).Take(warehouseSearch.PageSize).ToList();
-            PagedList<ApplicationUser> pagedResult = new PagedList<ApplicationUser>(result, warehouseSearch.Page, warehouseSearch.PageSize);
+            var result = users.Skip((userSearch.Page - 1) * userSearch.PageSize).Take(userSearch.PageSize).ToList();
+            PagedList<ApplicationUser> pagedResult = new PagedList<ApplicationUser>(result, userSearch.Page, userSearch.PageSize);
 
-            var warehouseDtos = _autoMapperService.Map<PagedListDto<UserDetailsDto>>(pagedResult);         
-             
-            return Ok(warehouseDtos);  
+            var userDtos = _autoMapperService.Map<PagedListDto<UserDetailsDto>>(pagedResult);
+
+            foreach (var user in userDtos.Data)
+            {
+                var role = await _roleManager.FindByIdAsync(user.UserRoleId.ToString());
+                user.UserRoleName = role?.Name ?? "";                
+            }
+
+            return Ok(userDtos);  
         }
 
         [HttpPost("count", Name = "CountUsersAsync")]
-        public async Task<IActionResult> CountUsersAsync([FromBody] UserSearchDto warehouseSearch)
+        public async Task<IActionResult> CountUsersAsync([FromBody] UserSearchDto userSearch)
         {
-            var warehouses = await _service.GetAllAsync(e => e.Name.Contains(warehouseSearch.Search));
+            var users = await _service.GetAllAsync(e => e.Name.Contains(userSearch.Search));
 
-            var warehouseDtos = _autoMapperService.Map<List<UserDetailsDto>>(warehouses);
-            return Ok(warehouseDtos.Count);
+            var userDtos = _autoMapperService.Map<List<UserDetailsDto>>(users);
+            return Ok(userDtos.Count);
         }
 
         [HttpGet("{id}")]

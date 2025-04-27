@@ -68,18 +68,10 @@ function Footer() {
                 <ListItemText primary="Help Center" />
               </ListItemButton>
              */}
-            <ListItemButton
-              component="a"
-              target="_blank"
-              href="https://legallinkingkit.arvato-systems.de/api/Documents/989d9520-fa89-4f4f-9046-1f159ffab3a5"
-            >
+            <ListItemButton component="a" target="_blank">
               <ListItemText primary={t("terms-of-usage")} />
             </ListItemButton>
-            <ListItemButton
-              component="a"
-              target="_blank"
-              href="https://www.arvato-systems.com/imprint"
-            >
+            <ListItemButton component="a" target="_blank">
               <ListItemText primary={t("imprint")} />
             </ListItemButton>
             <LangdonButton component="a" href="#Will be 23 on April 24th">
@@ -91,7 +83,7 @@ function Footer() {
           <List>
             <ListItemButton>
               <ListItemText
-                primary={`© ${new Date().getFullYear()} - Arvato Systems`}
+                primary={`© ${new Date().getFullYear()} - MH Global`}
               />
             </ListItemButton>
           </List>

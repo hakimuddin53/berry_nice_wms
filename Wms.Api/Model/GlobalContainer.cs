@@ -54,5 +54,7 @@ namespace Wms.Api.Model
         SIZE = 10,
         STOCKGROUP = 11,
         WAREHOUSE = 12,
+        USER = 13,
+        USERROLE = 14,
     }
 }

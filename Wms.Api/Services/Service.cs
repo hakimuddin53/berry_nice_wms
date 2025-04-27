@@ -5,14 +5,9 @@ using Wms.Api.Repositories.Interface;
 
 namespace Wms.Api.Services
 {
-    public class Service<T> : IService<T> where T : class
+    public class Service<T>(IRepository<T> repository) : IService<T> where T : class
     {
-        private readonly IRepository<T> _repository;
-
-        public Service(IRepository<T> repository)
-        {
-            _repository = repository;
-        }
+        private readonly IRepository<T> _repository = repository;
 
         public async Task<IQueryable<T>> GetAllAsync(Expression<Func<T, bool>>? predicate = null)
         {

@@ -1,7 +1,7 @@
 import { Box, Typography } from "@mui/material";
 import { KeyedObject } from "interfaces/v12/dashboard/ChartResultV12Dto";
 import { useTranslation } from "react-i18next";
-import { arvatoBlue } from "theme/variants";
+import { mhGlobalBlue } from "theme/variants";
 
 interface MetricProps {
   data?: KeyedObject[];
@@ -45,7 +45,7 @@ const Metric = (props: MetricProps) => {
       flexDirection="column"
       justifyContent="center"
     >
-      <Typography variant="h1" color={arvatoBlue[500]} textAlign="center">
+      <Typography variant="h1" color={mhGlobalBlue[500]} textAlign="center">
         {value}
       </Typography>
     </Box>

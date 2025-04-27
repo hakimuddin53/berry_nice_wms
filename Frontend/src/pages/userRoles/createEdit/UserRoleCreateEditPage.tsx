@@ -4,6 +4,7 @@ import Page from "components/platbricks/shared/Page";
 import { PbCard } from "components/platbricks/shared/PbCard";
 import { PbTab, PbTabPanel, PbTabs } from "components/platbricks/shared/PbTab";
 import { FormikProvider, setNestedObjectValues, useFormik } from "formik";
+import { ModuleEnum } from "interfaces/enums/GlobalEnums";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
@@ -11,6 +12,7 @@ import { useNotificationService } from "services/NotificationService";
 import { useUserRoleService } from "services/UserRoleService";
 import { guid } from "types/guid";
 import { formikObjectHasHeadTouchedErrors } from "utils/formikHelpers";
+import { getModuleName } from "utils/helper";
 import UserRoleCreateEdit from "./components/UserRoleCreateEdit";
 import {
   UserRoleCreateEditSchema,
@@ -64,6 +66,8 @@ const UserRoleCreateEditPage: React.FC = () => {
     validationSchema: UserRoleCreateEditSchema,
     onSubmit: (values, { resetForm }) => {
       setPageBlocker(true);
+
+      console.log("UserRole", values);
 
       const transformedValues = {
         ...values,
@@ -122,8 +126,18 @@ const UserRoleCreateEditPage: React.FC = () => {
   useEffect(() => {
     if (id) {
       UserRoleService.getUserRoleById(id as guid)
-        .then((YardResource: any) => {
-          setUserRole(YardResource);
+        .then((userRole: any) => {
+          const modules = userRole.module
+            .map((number: any) => {
+              const moduleName = getModuleName(number);
+              return moduleName as keyof typeof ModuleEnum;
+            })
+            .filter(Boolean);
+
+          setUserRole({
+            ...userRole,
+            module: modules,
+          });
           setPageReady(true);
         })
         .catch((err) => {});
