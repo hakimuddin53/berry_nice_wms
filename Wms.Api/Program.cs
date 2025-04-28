@@ -19,6 +19,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
+// Retrieve CORS origins from configuration
+var allowedOrigins = builder.Configuration.GetSection("CorsSettings:AllowedOrigins").Get<string[]>();
 
 builder.Services.AddAutoMapper(typeof(StockInProfile));
 builder.Services.AddAutoMapper(typeof(StockOutProfile));
@@ -62,10 +64,13 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp", policy =>
     {
-        policy.WithOrigins("http://localhost:3005") // React app's URL
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
+        if (allowedOrigins != null && allowedOrigins.Length > 0)
+        {
+            policy.WithOrigins(allowedOrigins) // React app's URL
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        }
     });
 });
 
@@ -123,12 +128,10 @@ var app = builder.Build();
 
 app.UseCors("AllowReactApp"); // Apply the CORS policy
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+ 
+app.UseSwagger();
+app.UseSwaggerUI();
+ 
  
 app.UseHttpsRedirection();
 
