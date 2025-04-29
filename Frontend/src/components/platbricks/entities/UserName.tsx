@@ -13,6 +13,8 @@ const UserName = (props: UserNameProps) => {
   const [getUserById] = useUserCache();
   const [displayText, setDisplayText] = useState("");
 
+  console.log(props.userId);
+
   useEffect(() => {
     if (props.userId) {
       var { userName } = getUserById(props.userId as guid);

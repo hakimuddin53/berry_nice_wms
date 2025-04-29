@@ -150,7 +150,7 @@ namespace Wms.Api.Controllers
         public async Task<IActionResult> Create([FromBody] ProductCreateUpdateDto productCreateUpdateDto)
         { 
             var product = _autoMapperService.Map<Product>(productCreateUpdateDto);
-            string serialNumber = await _runningNumberService.GenerateRunningNumberAsync(OperationTypeEnum.PRODUCTSERIALNUMBER);
+            string serialNumber = await _runningNumberService.GenerateRunningNumberAsync(OperationTypeEnum.PRODUCT);
             product.SerialNumber = serialNumber;
 
             await _service.AddAsync(product);

@@ -12,6 +12,8 @@ namespace Wms.Api.Repositories
         Task<Guid> GetOrCreateDesignIdAsync(string designName);
         Task<Guid> GetOrCreateCartonSizeIdAsync(string cartonSizeName);
         Task<Product?> GetProductByItemCodeAsync(string itemCode);
+
+        Task<Guid> GetOrCreateRackIdAsync(string rackName);
         Task<Guid> GetFirstWarehouseIdAsync();
         Task AddInventoryRecordAsync(Inventory inventory);
         Task SaveChangesAsync();

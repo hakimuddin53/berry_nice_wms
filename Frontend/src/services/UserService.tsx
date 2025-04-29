@@ -55,7 +55,7 @@ const getByParameters = (
   resultSize?: number
 ) => {
   return axios
-    .get("/v12/user", {
+    .get("/user", {
       params: { userIds, page: resultPage, pageSize: resultSize },
       paramsSerializer: (params) => {
         return qs.stringify(params);

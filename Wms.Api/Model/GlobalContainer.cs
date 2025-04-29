@@ -28,7 +28,7 @@ namespace Wms.Api.Model
         STOCKRESERVATIONITEM = 6,
         STOCKTRANSFER = 7,
         STOCKTRANSFERITEM = 8,
-        PRODUCTSERIALNUMBER = 9,
+        PRODUCT = 9,
     }
 
     public enum TransactionTypeEnum

@@ -9,11 +9,7 @@ using LinqKit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Wms.Api.Dto.Usere;
-using System;
-using System.Linq;
 using Microsoft.AspNetCore.Identity;
-using Wms.Api.Dto.UserRole;
-using DocumentFormat.OpenXml.InkML;
 using System.Security.Claims;
 
 namespace Wms.Api.Controllers
@@ -66,6 +62,20 @@ namespace Wms.Api.Controllers
             PagedList<ApplicationUser> pagedResult = new PagedList<ApplicationUser>(resultToList, selectFilterV12Dto.Page, selectFilterV12Dto.PageSize);
 
             var userDtos = _autoMapperService.Map<PagedListDto<SelectOptionV12Dto>>(pagedResult);
+            return Ok(userDtos);
+        }
+
+        [HttpGet(Name = "FindUserAsync")]
+        public async Task<IActionResult> FindUserAsync([FromQuery] UserFindByParametersDto userFindByParametersDto)
+        {              
+            var userIdsAsString = userFindByParametersDto.UserIds.Select(id => id.ToString()).ToArray();
+
+            var usersQuery = await _service.GetAllAsync(e => userIdsAsString.Contains(e.Id));
+
+            var result = usersQuery.Skip((userFindByParametersDto.Page - 1) * userFindByParametersDto.PageSize).Take(userFindByParametersDto.PageSize).ToList();
+            PagedList<ApplicationUser> pagedResult = new PagedList<ApplicationUser>(result, userFindByParametersDto.Page, userFindByParametersDto.PageSize);
+
+            var userDtos = _autoMapperService.Map<PagedListDto<UserDetailsDto>>(pagedResult);
             return Ok(userDtos);
         }
 

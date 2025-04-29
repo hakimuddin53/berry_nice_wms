@@ -20,5 +20,8 @@ export interface InventoryDetailsDto extends CreatedChangedEntity {
 }
 
 export interface InventorySearchDto extends PagedRequestAbstractDto {
-  search: string;
+  productId?: string[];
+  warehouseId?: string[];
+  clientCode?: string[];
+  locationId?: string[];
 }

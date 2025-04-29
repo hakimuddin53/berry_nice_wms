@@ -22,6 +22,9 @@ namespace Wms.Api.Dto.Inventory
 
     public class InventorySearchDto : PagedRequestAbstractDto
     {
-        public required string Search { get; set; }
+        public string[]? ProductId { get; set; }
+        public string[]? WarehouseId { get; set; }
+        public string[]? ClientCode { get; set; } 
+        public string[]? LocationId { get; set; }
     }
 }

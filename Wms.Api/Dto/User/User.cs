@@ -1,4 +1,5 @@
-﻿ using Wms.Api.Entities; 
+﻿using System.ComponentModel.DataAnnotations;
+using Wms.Api.Entities; 
 
 namespace Wms.Api.Dto.Usere
 {
@@ -22,5 +23,11 @@ namespace Wms.Api.Dto.Usere
     public class UserSearchDto : PagedRequestAbstractDto
     {
         public required string Search { get; set; }
+    }
+
+    public class UserFindByParametersDto : PagedRequestAbstractDto
+    {
+        [Required, MinLength(1)]
+        public Guid[] UserIds { get; set; }
     }
 }

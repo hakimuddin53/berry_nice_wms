@@ -41,6 +41,7 @@ const ProductBulkUploadPage: React.FC = () => {
       "ListPrice",
       "QuantityPerCarton",
       "Threshold",
+      "Rack",
     ];
 
     const headers = jsonData[0] as string[];

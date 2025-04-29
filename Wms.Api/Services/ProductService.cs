@@ -26,7 +26,7 @@ namespace Wms.Api.Services
                         var expectedHeaders = new List<string>
                         {
                             "Name", "ItemCode", "ClientCode", "StockGroup", "InboundQuantity",
-                            "Category", "Colour", "Design", "Size", "ListPrice", "QuantityPerCarton", "Threshold"
+                            "Category", "Colour", "Design", "Size", "ListPrice", "QuantityPerCarton", "Threshold" , "Rack"
                         };
 
                         var actualHeaders = worksheet.Row(1).Cells(1, expectedHeaders.Count)
@@ -51,6 +51,7 @@ namespace Wms.Api.Services
                             var colourName = worksheet.Cell(row, 7).GetString();
                             var designName = worksheet.Cell(row, 8).GetString();
                             var sizeName = worksheet.Cell(row, 9).GetString();
+                            var rackName = worksheet.Cell(row, 13).GetString();
                             var inboundQuantity = worksheet.Cell(row, 5).GetValue<int>();
 
                             // Check if the product already exists
@@ -63,6 +64,7 @@ namespace Wms.Api.Services
                                 var colourId = await _productRepository.GetOrCreateColourIdAsync(colourName);
                                 var designId = await _productRepository.GetOrCreateDesignIdAsync(designName);
                                 var cartonSizeId = await _productRepository.GetOrCreateCartonSizeIdAsync(stockGroupName);
+                                var rackId = await _productRepository.GetOrCreateRackIdAsync(rackName);
 
                                 // Create product
                                 var product = new Product
@@ -78,7 +80,7 @@ namespace Wms.Api.Services
                                     CartonSizeId = cartonSizeId,
                                     ListPrice = worksheet.Cell(row, 10).GetValue<decimal>(),
                                     Threshold = worksheet.Cell(row, 12).GetValue<int>(),
-                                    SerialNumber = await _runningNumberService.GenerateRunningNumberAsync(OperationTypeEnum.PRODUCTSERIALNUMBER)
+                                    SerialNumber = await _runningNumberService.GenerateRunningNumberAsync(OperationTypeEnum.PRODUCT)
                                 };
 
                                 await _productRepository.AddProductAsync(product);
@@ -88,6 +90,7 @@ namespace Wms.Api.Services
                                 {
                                     ProductId = product.Id,
                                     TransactionType = TransactionTypeEnum.STOCKIN,
+                                    CurrentLocationId = rackId,
                                     WarehouseId = warehouseId,
                                     QuantityIn = inboundQuantity,
                                     NewBalance = inboundQuantity,

@@ -30,5 +30,10 @@ namespace Wms.Api.Dto.Product.ProductDetails
         [Column(TypeName = "decimal(18,5)")]
         public decimal ListPrice { get; set; }
         public int Threshold { get; set; }
+
+        public DateTime CreatedAt { get; set; }
+        public required string CreatedById { get; set; }
+        public DateTime? ChangedAt { get; set; }
+        public string? ChangedById { get; set; }
     }
 }

@@ -18,7 +18,7 @@ namespace Wms.Api.Services
             try
             {
                 var runningNumber = await _context.RunningNumbers
-                    .FirstOrDefaultAsync(r => r.OperationType == operationType && r.Date == datePart);
+                    .FirstOrDefaultAsync(r => r.OperationType == operationType);
 
                 if (runningNumber != null)
                 {
@@ -43,7 +43,7 @@ namespace Wms.Api.Services
                 await transaction.CommitAsync();
 
                 // Return the formatted running number
-                return $"{operationType}-{datePart}-{runningNumber.CurrentSequence:D4}";
+                return $"{operationType}{runningNumber.CurrentSequence:D4}";
             }
             catch
             {

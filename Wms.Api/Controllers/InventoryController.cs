@@ -70,7 +70,7 @@ namespace Wms.Api.Controllers
             }
 
             // 1. Get the base filtered query
-            var filteredQuery = GetFilteredInventoryQuery(stockGroupId, isAdmin);
+            var filteredQuery = GetFilteredInventoryQuery(inventorySearch, stockGroupId, isAdmin);
 
             // --- Apply sorting if needed ---
             filteredQuery = filteredQuery.OrderByDescending(i => i.CreatedAt); 
@@ -123,7 +123,7 @@ namespace Wms.Api.Controllers
                 stockGroupId = userRole.CartonSizeId;
             }
 
-            var filteredQuery = GetFilteredInventoryQuery(stockGroupId);
+            var filteredQuery = GetFilteredInventoryQuery(inventorySearch, stockGroupId);
 
             var inventoryDtos = _autoMapperService.Map<List<InventoryDetailsDto>>(filteredQuery);
             return Ok(inventoryDtos.Count);
@@ -141,45 +141,101 @@ namespace Wms.Api.Controllers
 
 
         // Helper method to get the filtered inventory query
-        private IQueryable<Inventory> GetFilteredInventoryQuery(string? stockGroupIds, bool isAdmin = false)
+        private IQueryable<Inventory> GetFilteredInventoryQuery(InventorySearchDto inventorySearch, string? stockGroupIds, bool isAdmin = false)
         {
-            var query = _context.Inventories.AsQueryable(); // Start with IQueryable
+            // 1) Start with everything
+            var query = _context.Inventories.AsQueryable();
 
-            if (isAdmin)
-            {
-                return query;
-            }
+            //if (isAdmin)
+            //{
+            //    // Admin sees all
+            //    return query;
+            //}
 
-            List<Guid>? allowedCartonSizeIds = null;
-
+            // 2) Existing stock‐group / carton‐size filter
             if (!string.IsNullOrWhiteSpace(stockGroupIds))
             {
-                allowedCartonSizeIds = stockGroupIds
+                var allowedCartonSizeIds = stockGroupIds
                     .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                    .Select(idStr => Guid.TryParse(idStr, out var guid) ? guid : Guid.Empty)
-                    .Where(guid => guid != Guid.Empty)
+                    .Select(id => Guid.TryParse(id, out var g) ? g : Guid.Empty)
+                    .Where(g => g != Guid.Empty)
                     .ToList();
+
+                if (allowedCartonSizeIds.Count != 0)
+                {
+                    query = query
+                        .Join(_context.Products,
+                              inv => inv.ProductId,
+                              prod => prod.Id,
+                              (inv, prod) => new { inv, prod })
+                        .Where(x => allowedCartonSizeIds.Contains(x.prod.CartonSizeId))
+                        .Select(x => x.inv);
+                }
             }
 
-            // Apply filter ONLY if allowedCartonSizeIds were found and are not empty
-            if (allowedCartonSizeIds != null && allowedCartonSizeIds.Count != 0)
+            // 3) Filter by explicit ProductId list
+            if (inventorySearch.ProductId?.Any() == true)
             {
-                // Efficiently filter by joining Inventory with Product
-                // Only include Inventories where the linked Product's CartonSizeId is in the allowed list
-                query = query
-                    .Join(_context.Products, // Join Inventory...
-                          inv => inv.ProductId, // ...on ProductId...
-                          prod => prod.Id,     // ...with Product Id
-                          (inv, prod) => new { Inventory = inv, Product = prod }) // Keep both
-                    .Where(joined => allowedCartonSizeIds.Contains(joined.Product.CartonSizeId)) // Filter based on Product.CartonSizeId
-                    .Select(joined => joined.Inventory); // Select only the Inventory part back
-            }
-            // If stockGroupIdCsv is null/empty or parsing yields no Guids, the filter is skipped,
-            // and all inventories are considered (based on this specific filter).
+                var prodGuids = inventorySearch.ProductId
+                    .Select(id => Guid.TryParse(id, out var g) ? g : Guid.Empty)
+                    .Where(g => g != Guid.Empty)
+                    .ToList();
 
-            // --- Add other potential filters from inventorySearch here ---
-            // Example: if (inventorySearch.WarehouseId.HasValue) query = query.Where(i => i.WarehouseId == inventorySearch.WarehouseId.Value);
-            // Example: if (!string.IsNullOrWhiteSpace(inventorySearch.ProductName)) query = query.Where(i => _context.Products.Any(p => p.Id == i.ProductId && p.Name.Contains(inventorySearch.ProductName))); // Needs optimization if used often
+                if (prodGuids.Any())
+                {
+                    query = query.Where(inv => prodGuids.Contains(inv.ProductId));
+                }
+            }
+
+            // 4) Filter by WarehouseId
+            if (inventorySearch.WarehouseId?.Any() == true)
+            {
+                var whGuids = inventorySearch.WarehouseId
+                    .Select(id => Guid.TryParse(id, out var g) ? g : Guid.Empty)
+                    .Where(g => g != Guid.Empty)
+                    .ToList();
+
+                if (whGuids.Any())
+                {
+                    query = query.Where(inv => whGuids.Contains(inv.WarehouseId));
+                }
+            }
+
+            // 5) Filter by CurrentLocationId
+            if (inventorySearch.LocationId?.Any() == true)
+            {
+                var locGuids = inventorySearch.LocationId
+                    .Select(id => Guid.TryParse(id, out var g) ? g : Guid.Empty)
+                    .Where(g => g != Guid.Empty)
+                    .ToList();
+
+                if (locGuids.Any())
+                {
+                    query = query.Where(inv => locGuids.Contains(inv.CurrentLocationId));
+                }
+            }
+
+            // 6) Filter by ClientCode on the Product
+            if (inventorySearch.ClientCode?.Any() == true)
+            {
+                // Parse string codes into enum values
+                var clientCodes = inventorySearch.ClientCode
+                    .Select(code => Enum.TryParse<ClientCodeEnum>(code, out var c) ? (ClientCodeEnum?)c : null)
+                    .Where(c => c.HasValue)
+                    .Select(c => c!.Value)
+                    .ToList();
+
+                if (clientCodes.Any())
+                {
+                    query = query
+                        .Join(_context.Products,
+                              inv => inv.ProductId,
+                              prod => prod.Id,
+                              (inv, prod) => new { inv, prod })
+                        .Where(x => clientCodes.Contains(x.prod.ClientCode))
+                        .Select(x => x.inv);
+                }
+            }
 
             return query;
         }

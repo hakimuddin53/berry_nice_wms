@@ -78,6 +78,17 @@ namespace Wms.Api.Repositories
             return cartonSize.Id;
         }
 
+        public async Task<Guid> GetOrCreateRackIdAsync(string rackName)
+        {
+            var rack = await _dbContext.Locations.FirstOrDefaultAsync(c => c.Name == rackName);
+            if (rack == null)
+            {
+                rack = new Location { Id = Guid.NewGuid(), Name = rackName };
+                _dbContext.Locations.Add(rack);
+            }
+            return rack.Id;
+        }
+
         public async Task<Product?> GetProductByItemCodeAsync(string itemCode)
         {
             return await _dbContext.Products.FirstOrDefaultAsync(p => p.ItemCode == itemCode);

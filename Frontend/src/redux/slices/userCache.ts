@@ -35,6 +35,7 @@ const performFetch = createAsyncThunk(
           if (result.length <= 0) {
             thunk.dispatch(setUsersNotFoundState(ids));
           }
+          console.log(result);
           thunk.dispatch(addUsers(result));
         })
         .catch(async (res) => {
@@ -104,14 +105,11 @@ export const userCacheSlice = createSlice({
   name: "userCache",
   initialState,
   reducers: {
-    addUsers: (
-      state,
-      action: PayloadAction<{ id: guid; forename: string; surname: string }[]>
-    ) => {
+    addUsers: (state, action: PayloadAction<{ id: guid; email: string }[]>) => {
       action.payload.forEach((user) => {
         state.data[user.id] = {
           id: user.id,
-          userName: user.forename + " " + user.surname,
+          userName: user.email,
           status: CacheObjectStatus.SUCCESS,
         };
       });
