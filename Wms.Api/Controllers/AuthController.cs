@@ -47,14 +47,14 @@ namespace Wms.Api.Controllers
         {
             var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, isPersistent: false, lockoutOnFailure: false);
 
-            //if (result.Succeeded)
-            //{
+            if (result.Succeeded)
+            {
                 var user = await _userManager.FindByNameAsync(model.Email);
                 var jwt = await _tokenService.GenerateJwtTokenAsync(user!);
                 return Ok(new { jwt });
-            //}
+            }
 
-            //return Unauthorized("Invalid login attempt.");
+            return Unauthorized("Invalid login attempt.");
         }
     }
 
