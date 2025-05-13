@@ -5,7 +5,6 @@ import { Outlet } from "react-router-dom";
 import { CssBaseline } from "@mui/material";
 
 import GlobalStyle from "../components/GlobalStyle";
-import Settings from "../components/Settings";
 
 import Box from "@mui/material/Box";
 
@@ -43,7 +42,7 @@ const Auth: React.FC<AuthType> = ({ children }) => {
         <GlobalStyle />
         {children}
         <Outlet />
-        <Settings />
+        {/* <Settings /> */}
       </Root>
     </PageWrapper>
   );

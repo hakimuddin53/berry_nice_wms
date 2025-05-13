@@ -1,3 +1,4 @@
+import ProductName from "components/platbricks/entities/ProductName";
 import { DataTableHeaderCell } from "components/platbricks/shared/dataTable/DataTable";
 import { useCreatedChangeDate } from "hooks/useCreatedChangeDate";
 import { StockOutItemDetailsDto } from "interfaces/v12/stockout/stockOutDetails/stockOutDetailsDto";
@@ -19,8 +20,9 @@ export const useStockOutItemTable = () => {
         hidden,
       },
       {
-        id: "stockOutItemNumber",
-        label: t("common:item"),
+        id: "product",
+        label: t("product"),
+        render: (row) => <ProductName productId={row.productId} />,
       },
       {
         id: "quantity",

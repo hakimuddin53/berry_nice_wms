@@ -7,104 +7,136 @@ namespace Wms.Api.Repositories
 {
     public class ProductRepository(ApplicationDbContext dbContext) : IProductRepository
     {
-        private readonly ApplicationDbContext _dbContext = dbContext;
-
         public async Task AddProductAsync(Product product, bool saveChanges = false)
         {
-            _dbContext.Products.Add(product);
+            dbContext.Products.Add(product);
             if (saveChanges)
             {
-                await _dbContext.SaveChangesAsync();
+                await dbContext.SaveChangesAsync();
             }
         }
 
         public async Task SaveChangesAsync()
         {
-              await _dbContext.SaveChangesAsync();             
+              await dbContext.SaveChangesAsync();             
         }
 
         public async Task<Guid> GetOrCreateCategoryIdAsync(string categoryName)
         {
-            var category = await _dbContext.Categories.FirstOrDefaultAsync(c => c.Name == categoryName);
+            var category = await dbContext.Categories.FirstOrDefaultAsync(c => c.Name == categoryName);
             if (category == null)
             {
                 category = new Category { Id = Guid.NewGuid(), Name = categoryName };
-                _dbContext.Categories.Add(category);
+                dbContext.Categories.Add(category);
             }
             return category.Id;
         }
 
         public async Task<Guid> GetOrCreateSizeIdAsync(string sizeName)
         {
-            var size = await _dbContext.Sizes.FirstOrDefaultAsync(s => s.Name == sizeName);
+            var size = await dbContext.Sizes.FirstOrDefaultAsync(s => s.Name == sizeName);
             if (size == null)
             {
                 size = new Size { Id = Guid.NewGuid(), Name = sizeName };
-                _dbContext.Sizes.Add(size);
+                dbContext.Sizes.Add(size);
             }
             return size.Id;
         }
 
         public async Task<Guid> GetOrCreateColourIdAsync(string colourName)
         {
-            var colour = await _dbContext.Colours.FirstOrDefaultAsync(c => c.Name == colourName);
+            var colour = await dbContext.Colours.FirstOrDefaultAsync(c => c.Name == colourName);
             if (colour == null)
             {
                 colour = new Colour { Id = Guid.NewGuid(), Name = colourName };
-                _dbContext.Colours.Add(colour);
+                dbContext.Colours.Add(colour);
             }
             return colour.Id;
         }
 
         public async Task<Guid> GetOrCreateDesignIdAsync(string designName)
         {
-            var design = await _dbContext.Designs.FirstOrDefaultAsync(d => d.Name == designName);
+            var design = await dbContext.Designs.FirstOrDefaultAsync(d => d.Name == designName);
             if (design == null)
             {
                 design = new Design { Id = Guid.NewGuid(), Name = designName };
-                _dbContext.Designs.Add(design);
+                dbContext.Designs.Add(design);
             }
             return design.Id;
         }
 
         public async Task<Guid> GetOrCreateCartonSizeIdAsync(string cartonSizeName)
         {
-            var cartonSize = await _dbContext.CartonSizes.FirstOrDefaultAsync(c => c.Name == cartonSizeName);
+            var cartonSize = await dbContext.CartonSizes.FirstOrDefaultAsync(c => c.Name == cartonSizeName);
             if (cartonSize == null)
             {
                 cartonSize = new CartonSize { Id = Guid.NewGuid(), Name = cartonSizeName };
-                _dbContext.CartonSizes.Add(cartonSize);
+                dbContext.CartonSizes.Add(cartonSize);
             }
             return cartonSize.Id;
         }
 
         public async Task<Guid> GetOrCreateRackIdAsync(string rackName)
         {
-            var rack = await _dbContext.Locations.FirstOrDefaultAsync(c => c.Name == rackName);
+            var rack = await dbContext.Locations.FirstOrDefaultAsync(c => c.Name == rackName);
             if (rack == null)
             {
                 rack = new Location { Id = Guid.NewGuid(), Name = rackName };
-                _dbContext.Locations.Add(rack);
+                dbContext.Locations.Add(rack);
             }
             return rack.Id;
+        }
+        
+        public async Task<Guid> GetOrCreateClientCodeIdAsync(string clientCodeName)
+        {
+            var clientCode = await dbContext.ClientCodes.FirstOrDefaultAsync(c => c.Name == clientCodeName);
+            if (clientCode == null)
+            {
+                clientCode = new ClientCode { Id = Guid.NewGuid(), Name = clientCodeName };
+                dbContext.ClientCodes.Add(clientCode);
+            }
+            return clientCode.Id;
+        }
+        
+        public async Task<Product?> GetProductByAllCriteriaAsync(
+            string itemCode,
+            Guid clientCodeId, 
+            Guid cartonSizeId,
+            Guid categoryId,
+            Guid colourId,
+            Guid designId,
+            Guid sizeId)
+        {
+            return await dbContext.Products
+                .Where(p => p.ItemCode == itemCode
+                            && p.ClientCodeId == clientCodeId 
+                            && p.CartonSizeId == cartonSizeId
+                            && p.CategoryId == categoryId
+                            && p.ColourId == colourId
+                            && p.DesignId == designId
+                            && p.SizeId == sizeId)
+                .FirstOrDefaultAsync();
         }
 
         public async Task<Product?> GetProductByItemCodeAsync(string itemCode)
         {
-            return await _dbContext.Products.FirstOrDefaultAsync(p => p.ItemCode == itemCode);
+            return await dbContext.Products.FirstOrDefaultAsync(p => p.ItemCode == itemCode);
         }
 
-        public async Task<Guid> GetFirstWarehouseIdAsync()
+        public async Task<Guid> GetOrCreateWarehouseIdAsync(string warehouseName)
         {
-            var warehouse = await _dbContext.Warehouses.FirstOrDefaultAsync();
+            var warehouse = await dbContext.Warehouses.FirstOrDefaultAsync(c => c.Name == warehouseName);
             if (warehouse == null)
-                throw new Exception("No warehouse found in the database.");
+            {
+                warehouse = new Warehouse { Id = Guid.NewGuid(), Name = warehouseName };
+                dbContext.Warehouses.Add(warehouse);
+            }
             return warehouse.Id;
         }
 
         public async Task AddInventoryRecordAsync(Inventory inventory)
         {
-            await _dbContext.Inventories.AddAsync(inventory); 
+            await dbContext.Inventories.AddAsync(inventory); 
         }
     }
 }

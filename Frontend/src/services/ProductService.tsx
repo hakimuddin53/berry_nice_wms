@@ -1,7 +1,9 @@
 import { SelectAsyncOption } from "components/platbricks/shared/SelectAsync";
+import { PagedListDto } from "interfaces/general/pagedList/PagedListDto";
 import { ProductCreateUpdateDto } from "interfaces/v12/product/productCreateUpdate/productCreateUpdateDto";
 import { ProductDetailsDto } from "interfaces/v12/product/productDetails/productDetailsDto";
 import { ProductSearchDto } from "interfaces/v12/product/productSearch/productSearchDto";
+import qs from "qs";
 import React from "react";
 import { guid } from "../types/guid";
 import axios from "../utils/axios";
@@ -22,9 +24,29 @@ interface IProductService {
     ids?: string[]
   ) => Promise<SelectAsyncOption[]>;
   bulkUploadProducts: (formData: FormData) => Promise<void>;
+  getByParameters: (
+    userIds: guid[],
+    resultPage?: number,
+    resultSize?: number
+  ) => Promise<PagedListDto<ProductDetailsDto>>;
 }
 
 const ProductServiceContext = createContext({} as IProductService);
+
+const getByParameters = (
+  productIds: guid[],
+  resultPage?: number,
+  resultSize?: number
+) => {
+  return axios
+    .get("/product", {
+      params: { productIds, page: resultPage, pageSize: resultSize },
+      paramsSerializer: (params) => {
+        return qs.stringify(params);
+      },
+    })
+    .then((res) => res.data);
+};
 
 export type ProductServiceProviderProps = {
   children?: React.ReactNode;
@@ -36,6 +58,7 @@ export type ProductServiceProviderProps = {
   deleteProduct?: any;
   getSelectOptions?: any;
   bulkUploadProducts?: any;
+  getByParameters?: any;
 };
 export const ProductServiceProvider: React.FC<ProductServiceProviderProps> = (
   props
@@ -114,6 +137,7 @@ export const ProductServiceProvider: React.FC<ProductServiceProviderProps> = (
     deleteProduct: props.deleteProduct || deleteProduct,
     getSelectOptions: props.getSelectOptions || getSelectOptions,
     bulkUploadProducts: props.bulkUploadProducts || bulkUploadProducts,
+    getByParameters: props.getByParameters || getByParameters,
   };
 
   return (
@@ -126,3 +150,5 @@ export const ProductServiceProvider: React.FC<ProductServiceProviderProps> = (
 export const useProductService = () => {
   return useContext(ProductServiceContext);
 };
+
+export { getByParameters };

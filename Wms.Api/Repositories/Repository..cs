@@ -28,10 +28,13 @@ namespace Wms.Api.Repositories
 
         public async Task<T> GetByIdAsync(Guid id) => await _dbSet.FindAsync(id);
 
-        public async Task AddAsync(T entity)
+        public async Task AddAsync(T entity, bool saveChanges = true)
         {
             await _dbSet.AddAsync(entity);
-            await _context.SaveChangesAsync();
+            if (saveChanges)
+            {
+                await _context.SaveChangesAsync();
+            }
         }
 
         public async Task UpdateAsync(T entity)

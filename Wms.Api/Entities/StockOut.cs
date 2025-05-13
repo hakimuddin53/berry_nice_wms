@@ -13,6 +13,12 @@ namespace Wms.Api.Entities
         [Required]
         public required string DONumber { get; set; }
 
+        [Required]
+        public Guid WarehouseId { get; set; }
+
+        [Required]
+        public Guid LocationId { get; set; }
+
         // Navigation Property
         public ICollection<StockOutItem>? StockOutItems { get; set; }
     }

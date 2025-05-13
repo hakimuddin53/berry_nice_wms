@@ -7,7 +7,7 @@ namespace Wms.Api.Services
     {
         Task<IQueryable<T>> GetAllAsync(Expression<Func<T, bool>>? predicate = null);
         Task<T> GetByIdAsync(Guid id);
-        Task AddAsync(T entity);
+        Task AddAsync(T entity, bool saveChanges = true);
         Task UpdateAsync(T entity);
         Task DeleteAsync(Guid id);
 

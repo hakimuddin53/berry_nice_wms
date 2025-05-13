@@ -3,7 +3,7 @@ using Wms.Api.Dto;
 using Wms.Api.Dto.Size;
 using Wms.Api.Entities;
 
-namespace Leitstand.Mapping.Profiles.v12_0;
+namespace Wms.Api.Profiles;
 
 public class SizeProfile : Profile
 {

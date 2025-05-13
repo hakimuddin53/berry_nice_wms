@@ -12,10 +12,7 @@ namespace Wms.Api.Entities
         public Guid StockOutId { get; set; }
 
         [Required]
-        public required string StockOutItemNumber { get; set; }
-
-        [Required]
-        public Guid ProductId { get; set; }
+        public Guid ProductId { get; set; }                      
 
         [Required]
         public int Quantity { get; set; } 

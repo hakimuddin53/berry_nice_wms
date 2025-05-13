@@ -22,9 +22,7 @@ const StockTransferItemDetails: React.FC<{
 
   return (
     <>
-      <h2>
-        {t("common:item")} {stockTransferItem.stockTransferItemNumber}
-      </h2>
+      <h2>{t("common:item")}</h2>
       <PbCard px={2} pt={2}>
         <PbTabs
           value={tab}
@@ -39,9 +37,6 @@ const StockTransferItemDetails: React.FC<{
         <CardContent>
           <PbTabPanel value={tab} index={0}>
             <KeyValueList>
-              <KeyValuePair label={t("common:item")}>
-                {stockTransferItem.stockTransferItemNumber}
-              </KeyValuePair>
               <KeyValuePair label={t("quantity")}>
                 {stockTransferItem.quantityTransferred}
               </KeyValuePair>
@@ -51,8 +46,14 @@ const StockTransferItemDetails: React.FC<{
               <KeyValuePair label={t("source-warehouse")}>
                 {stockTransferItem.fromWarehouse}
               </KeyValuePair>
+              <KeyValuePair label={t("source-location")}>
+                {stockTransferItem.fromLocation}
+              </KeyValuePair>
               <KeyValuePair label={t("destination-warehouse")}>
                 {stockTransferItem.toWarehouse}
+              </KeyValuePair>
+              <KeyValuePair label={t("destination-location")}>
+                {stockTransferItem.toLocation}
               </KeyValuePair>
               <KeyValuePair label={t("common:created-at")}>
                 <UserDateTime date={stockTransferItem.createdAt} />

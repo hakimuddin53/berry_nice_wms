@@ -12,36 +12,38 @@ import {
 } from "components/platbricks/shared";
 import UserDateTime from "components/platbricks/shared/UserDateTime";
 import useDeleteConfirmationDialog from "hooks/useDeleteConfimationDialog";
-import { WarehouseDetailsDto } from "interfaces/v12/warehouse/warehouse";
+import { ClientCodeDetailsDto } from "interfaces/v12/clientCode/clientCode";
 
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
-import { useWarehouseService } from "services/WarehouseService";
+import { useClientCodeService } from "services/ClientCodeService";
 import { guid } from "types/guid";
 
-function WarehouseDetailsPage() {
+function ClientCodeDetailsPage() {
   const { t } = useTranslation();
   const [tab, setTab] = useState(0);
   const { id } = useParams();
 
-  const WarehouseService = useWarehouseService();
-  const [warehouse, setWarehouse] = useState<WarehouseDetailsDto | null>(null);
+  const ClientCodeService = useClientCodeService();
+  const [clientCode, setClientCode] = useState<ClientCodeDetailsDto | null>(
+    null
+  );
 
   const { OpenDeleteConfirmationDialog } = useDeleteConfirmationDialog();
 
   const [pageBlocker, setPageBlocker] = useState(false);
 
   useEffect(() => {
-    WarehouseService.getWarehouseById(id as guid)
-      .then((warehouse) => setWarehouse(warehouse))
+    ClientCodeService.getClientCodeById(id as guid)
+      .then((clientCode) => setClientCode(clientCode))
       .catch((err) => {});
-  }, [WarehouseService, id]);
+  }, [ClientCodeService, id]);
 
-  if (!warehouse) {
+  if (!clientCode) {
     return (
       <Page
-        pagename={t("warehouse")}
+        pagename={t("clientCode")}
         breadcrumbs={[]}
         title={"Not Found"}
       ></Page>
@@ -50,8 +52,8 @@ function WarehouseDetailsPage() {
 
   return (
     <Page
-      title={t("warehouse")}
-      subtitle={warehouse.id}
+      title={t("clientCode")}
+      subtitle={clientCode.id}
       showBackdrop={pageBlocker}
       breadcrumbs={[
         {
@@ -59,11 +61,11 @@ function WarehouseDetailsPage() {
           to: "/",
         },
         {
-          label: t("warehouses"),
-          to: `/warehouse`,
+          label: t("clientCodes"),
+          to: `/client-code`,
         },
         {
-          label: warehouse.id,
+          label: clientCode.id,
         },
       ]}
       actions={[
@@ -78,12 +80,12 @@ function WarehouseDetailsPage() {
           onclick: () => {
             OpenDeleteConfirmationDialog({
               onConfirmDeletion: async () => {
-                await WarehouseService.deleteWarehouse(warehouse.id as guid);
+                await ClientCodeService.deleteClientCode(clientCode.id as guid);
               },
               setPageBlocker: setPageBlocker,
-              entity: "warehouse",
+              entity: "clientCode",
               translationNamespace: "common",
-              redirectLink: `/warehouse`,
+              redirectLink: `/clientCode`,
             });
           },
         },
@@ -101,21 +103,23 @@ function WarehouseDetailsPage() {
         <CardContent>
           <PbTabPanel value={tab} index={0}>
             <KeyValueList gridTemplateColumns="2fr 4fr">
-              <KeyValuePair label={t("name")}>
-                <EasyCopy clipboard={warehouse.name}>{warehouse.name}</EasyCopy>
+              <KeyValuePair label={t("code")}>
+                <EasyCopy clipboard={clientCode.name}>
+                  {clientCode.name}
+                </EasyCopy>
               </KeyValuePair>
 
               <KeyValuePair label={t("created-at")}>
-                <UserDateTime date={warehouse.createdAt} />
+                <UserDateTime date={clientCode.createdAt} />
               </KeyValuePair>
               <KeyValuePair label={t("changed-at")}>
-                <UserDateTime date={warehouse.changedAt} />
+                <UserDateTime date={clientCode.changedAt} />
               </KeyValuePair>
               <KeyValuePair label={t("created-by")}>
-                <UserName userId={warehouse.createdById} placeholder="-" />
+                <UserName userId={clientCode.createdById} placeholder="-" />
               </KeyValuePair>
               <KeyValuePair label={t("changed-by")}>
-                <UserName userId={warehouse.changedById} placeholder="-" />
+                <UserName userId={clientCode.changedById} placeholder="-" />
               </KeyValuePair>
             </KeyValueList>
           </PbTabPanel>
@@ -125,4 +129,4 @@ function WarehouseDetailsPage() {
   );
 }
 
-export default WarehouseDetailsPage;
+export default ClientCodeDetailsPage;

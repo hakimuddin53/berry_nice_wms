@@ -19,20 +19,25 @@ export const useStockTransferItemTable = () => {
         hidden,
       },
       {
-        id: "stockTransferItemNumber",
-        label: t("common:item"),
-      },
-      {
         id: "product",
         label: t("product"),
       },
+
       {
         id: "fromWarehouse",
         label: t("source-warehouse"),
       },
       {
+        id: "fromLocation",
+        label: t("source-location"),
+      },
+      {
         id: "toWarehouse",
         label: t("destination-warehouse"),
+      },
+      {
+        id: "toLocation",
+        label: t("destination-location"),
       },
       {
         id: "quantityTransferred",

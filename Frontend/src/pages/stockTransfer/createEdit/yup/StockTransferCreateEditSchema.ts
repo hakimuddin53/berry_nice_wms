@@ -8,9 +8,10 @@ export const StockTransferCreateEditSchema = yup.object({
     .of(
       yup.object().shape({
         key: yup.string(),
-        stockTransferItemNumber: yup.string().nullable(),
         productId: yup.mixed<guid>().required(),
         quantityTransferred: yup.number().required(),
+        fromLocationId: yup.mixed<guid>().required(),
+        toLocationId: yup.mixed<guid>().required(),
         fromWarehouseId: yup.mixed<guid>().required(),
         toWarehouseId: yup.mixed<guid>().required(),
       })

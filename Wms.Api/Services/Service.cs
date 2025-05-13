@@ -16,7 +16,7 @@ namespace Wms.Api.Services
 
         public async Task<T> GetByIdAsync(Guid id) => await _repository.GetByIdAsync(id);
 
-        public async Task AddAsync(T entity) => await _repository.AddAsync(entity);
+        public async Task AddAsync(T entity, bool saveChanges = true) => await _repository.AddAsync(entity, saveChanges);
 
         public async Task UpdateAsync(T entity) => await _repository.UpdateAsync(entity);
 

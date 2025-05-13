@@ -1,11 +1,10 @@
-import { ClientCodeEnum } from "interfaces/enums/GlobalEnums";
 import { guid } from "types/guid";
 import * as yup from "yup";
 
 export const productCreateEditShema = yup.object({
   name: yup.string().required(),
   itemCode: yup.string().required(),
-  clientCode: yup.mixed<ClientCodeEnum>().required(),
+  clientCodeId: yup.mixed<guid>().required(),
   quantityPerCarton: yup.number().nullable(),
   categoryId: yup.mixed<guid>().required(),
   sizeId: yup.mixed<guid>().required(),

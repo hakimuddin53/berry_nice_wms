@@ -11,14 +11,19 @@ namespace Wms.Api.Entities
         public Guid StockTransferId { get; set; }
 
         [Required]
-        public required string StockTransferItemNumber { get; set; }
-
-        [Required]
         public Guid ProductId { get; set; }
         public string Product { get; set; }
 
         [Required]
         public int QuantityTransferred { get; set; }
+        
+        [Required]
+        public Guid FromLocationId { get; set; }  
+        public string FromLocation { get; set; }  
+
+        [Required]
+        public Guid ToLocationId { get; set; }  
+        public string ToLocation { get; set; } 
 
         [Required]
         public Guid FromWarehouseId { get; set; } // Source warehouse

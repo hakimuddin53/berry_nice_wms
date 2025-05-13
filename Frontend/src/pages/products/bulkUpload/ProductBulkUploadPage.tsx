@@ -42,10 +42,10 @@ const ProductBulkUploadPage: React.FC = () => {
       "QuantityPerCarton",
       "Threshold",
       "Rack",
+      "Warehouse",
     ];
 
     const headers = jsonData[0] as string[];
-    console.log(headers);
 
     for (const column of requiredColumns) {
       if (!headers.includes(column)) {
@@ -84,10 +84,11 @@ const ProductBulkUploadPage: React.FC = () => {
         "product"
       );
       setTimeout(() => {
-        navigate(`/product}`);
+        navigate(`/product`);
       }, 100);
     } catch (error) {
-      //notificationService.handleApiErrorMessage(error.data, "product");
+      console.log("Error uploading file:", error);
+      notificationService.handleErrorMessage("Upload failed");
     } finally {
       setPageBlocker(false);
     }

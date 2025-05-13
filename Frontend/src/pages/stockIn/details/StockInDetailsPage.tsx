@@ -35,8 +35,6 @@ function StockInDetailsPage() {
 
   const [stockInItemTable] = useStockInItemTable();
 
-  console.log(stockIn);
-
   const [pageBlocker, setPageBlocker] = useState(false);
 
   const [selectedStockInItem, setSelectedStockInItem] =

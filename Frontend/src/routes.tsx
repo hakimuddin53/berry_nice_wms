@@ -26,6 +26,9 @@ import CartonSizeListPage from "pages/cartonSize/index/CartonSizeListPage";
 import CategoryCreateEditPage from "pages/category/createEdit/CategoryCreateEditPage";
 import CategoryDetailsPage from "pages/category/details/CategoryDetailsPage";
 import CategoryListPage from "pages/category/index/CategoryListPage";
+import ClientCodeCreateEditPage from "pages/clientCode/createEdit/ClientCodeCreateEditPage";
+import ClientCodeDetailsPage from "pages/clientCode/details/ClientCodeDetailsPage";
+import ClientCodeListPage from "pages/clientCode/index/ClientCodeListPage";
 import ColourCreateEditPage from "pages/colour/createEdit/ColourCreateEditPage";
 import ColourDetailsPage from "pages/colour/details/ColourDetailsPage";
 import ColourListPage from "pages/colour/index/ColourListPage";
@@ -33,8 +36,8 @@ import DashboardPage from "pages/dashboard/DashboardPage";
 import DesignCreateEditPage from "pages/design/createEdit/DesignCreateEditPage";
 import DesignDetailsPage from "pages/design/details/DesignDetailsPage";
 import DesignListPage from "pages/design/index/DesignListPage";
-import InventoryDetailsPage from "pages/inventory/details/InventoryDetailsPage";
-import InventoryListPage from "pages/inventory/index/InventoryListPage";
+import InventoryListPage from "pages/inventory/InventoryListPage";
+import InventorySummaryListPage from "pages/inventorySummary/InventorySummaryListPage";
 import LocationCreateEditPage from "pages/location/createEdit/LocationCreateEditPage";
 import LocationDetailsPage from "pages/location/details/LocationDetailsPage";
 import LocationListPage from "pages/location/index/LocationListPage";
@@ -45,6 +48,9 @@ import ProductListPage from "pages/products/index/ProductListPage";
 import SizeCreateEditPage from "pages/size/createEdit/SizeCreateEditPage";
 import SizeDetailsPage from "pages/size/details/SizeDetailsPage";
 import SizeListPage from "pages/size/index/SizeListPage";
+import StockAdjustmentCreateEditPage from "pages/stockAdjustment/createEdit/StockAdjustmentCreateEditPage";
+import StockAdjustmentDetailsPage from "pages/stockAdjustment/details/StockAdjustmentDetailsPage";
+import StockAdjustmentListPage from "pages/stockAdjustment/index/StockAdjustmentListPage";
 import StockInCreateEditPage from "pages/stockIn/createEdit/StockInCreateEditPage";
 import StockInDetailsPage from "pages/stockIn/details/StockInDetailsPage";
 import StockInListPage from "pages/stockIn/index/StockInListPage";
@@ -232,6 +238,43 @@ const routes = [
             element: (
               <ModuleGuard requiredModule={ModuleEnum.STOCKOUT}>
                 <StockOutCreateEditPage />
+              </ModuleGuard>
+            ),
+          },
+        ],
+      },
+      {
+        path: "stock-adjustment",
+        children: [
+          {
+            index: true,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.STOCKADJUSTMENT}>
+                <StockAdjustmentListPage />
+              </ModuleGuard>
+            ),
+          },
+          {
+            path: "new",
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.STOCKADJUSTMENT}>
+                <StockAdjustmentCreateEditPage />
+              </ModuleGuard>
+            ),
+          },
+          {
+            path: ":id",
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.STOCKADJUSTMENT}>
+                <StockAdjustmentDetailsPage />
+              </ModuleGuard>
+            ),
+          },
+          {
+            path: ":id/edit",
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.STOCKADJUSTMENT}>
+                <StockAdjustmentCreateEditPage />
               </ModuleGuard>
             ),
           },
@@ -515,11 +558,16 @@ const routes = [
               </ModuleGuard>
             ),
           },
+        ],
+      },
+      {
+        path: "inventory-summary",
+        children: [
           {
-            path: ":id",
+            index: true,
             element: (
               <ModuleGuard requiredModule={ModuleEnum.INVENTORY}>
-                <InventoryDetailsPage />
+                <InventorySummaryListPage />
               </ModuleGuard>
             ),
           },
@@ -631,6 +679,43 @@ const routes = [
             element: (
               <ModuleGuard requiredModule={ModuleEnum.WAREHOUSE}>
                 <WarehouseCreateEditPage />
+              </ModuleGuard>
+            ),
+          },
+        ],
+      },
+      {
+        path: "client-code",
+        children: [
+          {
+            index: true,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.CLIENTCODE}>
+                <ClientCodeListPage />
+              </ModuleGuard>
+            ),
+          },
+          {
+            path: "new",
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.CLIENTCODE}>
+                <ClientCodeCreateEditPage />
+              </ModuleGuard>
+            ),
+          },
+          {
+            path: ":id",
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.CLIENTCODE}>
+                <ClientCodeDetailsPage />
+              </ModuleGuard>
+            ),
+          },
+          {
+            path: ":id/edit",
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.CLIENTCODE}>
+                <ClientCodeCreateEditPage />
               </ModuleGuard>
             ),
           },

@@ -16,7 +16,7 @@ namespace Wms.Api.Entities
         public required string ItemCode { get; set; }         
 
         [Required]
-        public ClientCodeEnum ClientCode { get; set; }
+        public Guid ClientCodeId { get; set; }
 
         [Required]
         public int QuantityPerCarton { get; set; }  

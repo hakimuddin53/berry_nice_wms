@@ -35,7 +35,6 @@ const performFetch = createAsyncThunk(
           if (result.length <= 0) {
             thunk.dispatch(setUsersNotFoundState(ids));
           }
-          console.log(result);
           thunk.dispatch(addUsers(result));
         })
         .catch(async (res) => {

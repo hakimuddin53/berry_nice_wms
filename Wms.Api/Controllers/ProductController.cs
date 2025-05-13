@@ -91,8 +91,7 @@ namespace Wms.Api.Controllers
                 product.Colour = _context.Colours?.Where(x => x.Id == product.ColourId)?.FirstOrDefault()?.Name ?? "";
                 product.Design = _context.Designs?.Where(x => x.Id == product.DesignId)?.FirstOrDefault()?.Name ?? "";
                 product.CartonSize = _context.CartonSizes?.Where(x => x.Id == product.CartonSizeId)?.FirstOrDefault()?.Name ?? "";
-                 
-                product.ClientCodeString = GetEnumDescription(product.ClientCode);
+                product.ClientCodeString = _context.ClientCodes?.Where(x => x.Id == product.ClientCodeId)?.FirstOrDefault()?.Name ?? "";
             }
             return Ok(productDtos);
         }
@@ -122,8 +121,7 @@ namespace Wms.Api.Controllers
             productDetails.Colour = _context.Colours?.Where(x => x.Id ==  productDetails.ColourId)?.FirstOrDefault()?.Name ?? "";
             productDetails.Design = _context.Designs?.Where(x => x.Id ==  productDetails.DesignId)?.FirstOrDefault()?.Name ?? "";
             productDetails.CartonSize = _context.CartonSizes?.Where(x => x.Id ==  productDetails.CartonSizeId)?.FirstOrDefault()?.Name ?? "";
-            
-            productDetails.ClientCodeString = GetEnumDescription(productDetails.ClientCode);
+            productDetails.ClientCodeString = _context.ClientCodes?.Where(x => x.Id ==  productDetails.ClientCodeId)?.FirstOrDefault()?.Name ?? "";
 
             return Ok(productDetails);
         }
@@ -175,6 +173,28 @@ namespace Wms.Api.Controllers
         {
             await _service.DeleteAsync(id);
             return NoContent();
+        }
+        
+        [HttpGet(Name = "FindProductAsync")]
+        public async Task<IActionResult> FindProductAsync([FromQuery] ProductFindByParametersDto productFindByParametersDto)
+        {
+            var productIdsAsString = productFindByParametersDto.ProductIds.Select(id => id.ToString()).ToArray();
+
+            var productsQuery = await _service.GetAllAsync(e => productIdsAsString.Contains(e.Id.ToString()));
+
+            var result = productsQuery
+                .Skip((productFindByParametersDto.Page - 1) * productFindByParametersDto.PageSize)
+                .Take(productFindByParametersDto.PageSize)
+                .ToList();
+
+            PagedList<Product> pagedResult = new PagedList<Product>(
+                result, 
+                productFindByParametersDto.Page, 
+                productFindByParametersDto.PageSize);
+
+            var productDtos = _autoMapperService.Map<PagedListDto<ProductDetailsDto>>(pagedResult);
+
+            return Ok(productDtos);
         }
 
         public static string GetEnumDescription<T>(T enumValue) where T : Enum

@@ -37,10 +37,7 @@ const StockOutItemCreateEdit: React.FC<
   const ProductService = useProductService();
 
   return (
-    <PageSection
-      title={t("common:items")}
-      subtitle={props.values.stockOutItemNumber ?? ""}
-    >
+    <PageSection title={t("common:items")}>
       <PbCard px={2} pt={2}>
         <PbTabs
           value={tab}

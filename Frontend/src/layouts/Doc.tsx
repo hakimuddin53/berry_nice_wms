@@ -1,5 +1,5 @@
-import React, { useState } from "react";
 import styled from "@emotion/styled";
+import React, { useState } from "react";
 import { Outlet } from "react-router-dom";
 
 import { Box, CssBaseline, Paper as MuiPaper } from "@mui/material";
@@ -11,7 +11,6 @@ import GlobalStyle from "../components/GlobalStyle";
 import NavbarSimple from "../components/navbar/NavbarSimple";
 import docItems from "../components/sidebar/docItems";
 import Sidebar from "../components/sidebar/Sidebar";
-import Settings from "../components/Settings";
 
 const drawerWidth = 258;
 
@@ -93,7 +92,7 @@ const Doc: React.FC<DocType> = ({ children }) => {
           <Outlet />
         </MainContent>
       </AppContent>
-      <Settings />
+      {/* <Settings /> */}
     </Root>
   );
 };

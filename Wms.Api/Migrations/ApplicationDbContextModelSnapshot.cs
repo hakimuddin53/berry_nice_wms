@@ -293,6 +293,33 @@ namespace Wms.Api.Migrations
                     b.ToTable("Categories");
                 });
 
+            modelBuilder.Entity("Wms.Api.Entities.ClientCode", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ChangedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ChangedById")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("CreatedById")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ClientCodes");
+                });
+
             modelBuilder.Entity("Wms.Api.Entities.Colour", b =>
                 {
                     b.Property<Guid>("Id")
@@ -386,6 +413,9 @@ namespace Wms.Api.Migrations
                     b.Property<string>("Remark")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid>("StockAdjustmentId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("StockInId")
                         .HasColumnType("uniqueidentifier");
 
@@ -451,8 +481,8 @@ namespace Wms.Api.Migrations
                     b.Property<Guid?>("ChangedById")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("ClientCode")
-                        .HasColumnType("int");
+                    b.Property<Guid>("ClientCodeId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("ColourId")
                         .HasColumnType("uniqueidentifier");
@@ -548,6 +578,73 @@ namespace Wms.Api.Migrations
                     b.ToTable("Sizes");
                 });
 
+            modelBuilder.Entity("Wms.Api.Entities.StockAdjustment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ChangedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ChangedById")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("CreatedById")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("LocationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("WarehouseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("StockAdjustments");
+                });
+
+            modelBuilder.Entity("Wms.Api.Entities.StockAdjustmentItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ChangedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ChangedById")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("CreatedById")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("StockAdjustmentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StockAdjustmentId");
+
+                    b.ToTable("StockAdjustmentItems");
+                });
+
             modelBuilder.Entity("Wms.Api.Entities.StockIn", b =>
                 {
                     b.Property<Guid>("Id")
@@ -612,10 +709,6 @@ namespace Wms.Api.Migrations
                     b.Property<Guid>("StockInId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("StockInItemNumber")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("StockInId");
@@ -645,9 +738,15 @@ namespace Wms.Api.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid>("LocationId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Number")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("WarehouseId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -680,10 +779,6 @@ namespace Wms.Api.Migrations
 
                     b.Property<Guid>("StockOutId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("StockOutItemNumber")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -752,10 +847,6 @@ namespace Wms.Api.Migrations
                     b.Property<Guid>("StockReservationId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("StockReservationItemNumber")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("StockReservationId");
@@ -808,6 +899,13 @@ namespace Wms.Api.Migrations
                     b.Property<Guid>("CreatedById")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("FromLocation")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("FromLocationId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("FromWarehouse")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -828,9 +926,12 @@ namespace Wms.Api.Migrations
                     b.Property<Guid>("StockTransferId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("StockTransferItemNumber")
+                    b.Property<string>("ToLocation")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("ToLocationId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ToWarehouse")
                         .IsRequired()
@@ -924,6 +1025,15 @@ namespace Wms.Api.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Wms.Api.Entities.StockAdjustmentItem", b =>
+                {
+                    b.HasOne("Wms.Api.Entities.StockAdjustment", null)
+                        .WithMany("StockAdjustmentItems")
+                        .HasForeignKey("StockAdjustmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Wms.Api.Entities.StockInItem", b =>
                 {
                     b.HasOne("Wms.Api.Entities.StockIn", null)
@@ -958,6 +1068,11 @@ namespace Wms.Api.Migrations
                         .HasForeignKey("StockTransferId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Wms.Api.Entities.StockAdjustment", b =>
+                {
+                    b.Navigation("StockAdjustmentItems");
                 });
 
             modelBuilder.Entity("Wms.Api.Entities.StockIn", b =>

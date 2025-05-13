@@ -1,10 +1,9 @@
-import { ClientCodeEnum } from "interfaces/enums/GlobalEnums";
 import { guid } from "types/guid";
 
 export interface ProductCreateUpdateDto {
   name: string;
   itemCode: string;
-  clientCode: ClientCodeEnum;
+  clientCodeId: guid;
   quantityPerCarton?: number | null;
   categoryId: guid;
   sizeId: guid;

@@ -12,9 +12,6 @@ namespace Wms.Api.Entities
         public Guid StockInId { get; set; }
 
         [Required]
-        public required string StockInItemNumber { get; set; }
-
-        [Required]
         public Guid ProductId { get; set; }
 
         [Required]

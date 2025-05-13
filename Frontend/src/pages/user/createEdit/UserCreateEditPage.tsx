@@ -67,7 +67,6 @@ const UserCreateEditPage: React.FC = () => {
     onSubmit: (values, { resetForm }) => {
       setPageBlocker(true);
 
-      console.log(formik.errors);
       if (!id) {
         UserService.createUser(values)
           .then((createdResult) => {
@@ -125,7 +124,6 @@ const UserCreateEditPage: React.FC = () => {
 
   useEffect(() => {
     if (formik.submitCount > 0 && !formik.isSubmitting && !formik.isValid) {
-      console.log(formik.errors);
       notificationService.handleErrorMessage(
         t("common:please-fix-the-errors-and-try-again")
       );

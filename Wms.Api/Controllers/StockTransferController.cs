@@ -18,61 +18,53 @@ namespace Wms.Api.Controllers
     [ApiController]
     [Route("api/stock-transfer")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    public class StockTransferController : ControllerBase
+    public class StockTransferController(
+        IService<StockTransfer> service,
+        IMapper autoMapperService,
+        ApplicationDbContext context,
+        IRunningNumberService runningNumberService,
+        IInventoryService inventoryService)
+        : ControllerBase
     {
-        private readonly IService<StockTransfer> _service;
-        private readonly IRunningNumberService _runningNumberService;
-        private readonly IInventoryService _inventoryService;
-        private readonly IMapper _autoMapperService;
-        private readonly ApplicationDbContext _context;
-
-        public StockTransferController(IService<StockTransfer> service,
-            IMapper autoMapperService, ApplicationDbContext context, IRunningNumberService runningNumberService, IInventoryService inventoryService)
-        {
-            _service = service;
-            _autoMapperService = autoMapperService;
-            _context = context;
-            _runningNumberService = runningNumberService;
-            _inventoryService = inventoryService;
-        }
-
         [HttpPost("search", Name = "SearchStockTransfersAsync")]
         public async Task<IActionResult> SearchStockTransfersAsync([FromBody] StockTransferSearchDto stockTransferSearch)
         {  
-            var stockTransfers = await _service.GetAllAsync(e => e.Number.Contains(stockTransferSearch.search));
+            var stockTransfers = await service.GetAllAsync(e => e.Number.Contains(stockTransferSearch.search));
 
             var result = stockTransfers.Skip((stockTransferSearch.Page - 1) * stockTransferSearch.PageSize).Take(stockTransferSearch.PageSize).ToList();
             PagedList<StockTransfer> pagedResult = new PagedList<StockTransfer>(result, stockTransferSearch.Page, stockTransferSearch.PageSize);
 
-            var stockTransferDtos = _autoMapperService.Map<PagedListDto<StockTransferDetailsDto>>(pagedResult); 
+            var stockTransferDtos = autoMapperService.Map<PagedListDto<StockTransferDetailsDto>>(pagedResult); 
             return Ok(stockTransferDtos);
         }
          
         [HttpPost("count", Name = "CountStockTransfersAsync")]     
         public async Task<IActionResult> CountStockTransfersAsync([FromBody] StockTransferSearchDto stockTransferSearch)
         {
-            var stockTransfers = await _service.GetAllAsync(e => e.Number.Contains(stockTransferSearch.search));
+            var stockTransfers = await service.GetAllAsync(e => e.Number.Contains(stockTransferSearch.search));
              
-            var stockTransferDtos = _autoMapperService.Map<List<StockTransferDetailsDto>>(stockTransfers);
+            var stockTransferDtos = autoMapperService.Map<List<StockTransferDetailsDto>>(stockTransfers);
             return Ok(stockTransferDtos.Count);
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         { 
-            var stockTransfer = await _service.GetByIdAsync(id);
+            var stockTransfer = await service.GetByIdAsync(id);
             if (stockTransfer == null)
                 return NotFound();
 
-            stockTransfer.StockTransferItems = _context.StockTransferItems.Where(x => x.StockTransferId == stockTransfer.Id).ToList();
+            stockTransfer.StockTransferItems = context.StockTransferItems.Where(x => x.StockTransferId == stockTransfer.Id).ToList();
 
-            var stockTransferDtos = _autoMapperService.Map<StockTransferDetailsDto>(stockTransfer);
+            var stockTransferDtos = autoMapperService.Map<StockTransferDetailsDto>(stockTransfer);
              
             foreach (var stockTransferItem in stockTransferDtos.StockTransferItems!)
             {
-                stockTransferItem.Product = _context.Products?.Where(x => x.Id == stockTransferItem.ProductId)?.FirstOrDefault()?.Name ?? "";
-                stockTransferItem.FromWarehouse = _context.Warehouses?.Where(x => x.Id == stockTransferItem.FromWarehouseId)?.FirstOrDefault()?.Name ?? "";
-                stockTransferItem.ToWarehouse = _context.Warehouses?.Where(x => x.Id == stockTransferItem.ToWarehouseId)?.FirstOrDefault()?.Name ?? "";
+                stockTransferItem.Product = context.Products?.Where(x => x.Id == stockTransferItem.ProductId)?.FirstOrDefault()?.Name ?? "";
+                stockTransferItem.FromWarehouse = context.Warehouses?.Where(x => x.Id == stockTransferItem.FromWarehouseId)?.FirstOrDefault()?.Name ?? "";
+                stockTransferItem.ToWarehouse = context.Warehouses?.Where(x => x.Id == stockTransferItem.ToWarehouseId)?.FirstOrDefault()?.Name ?? "";
+                stockTransferItem.FromLocation = context.Locations?.Where(x => x.Id == stockTransferItem.FromLocationId)?.FirstOrDefault()?.Name ?? "";
+                stockTransferItem.ToLocation = context.Locations?.Where(x => x.Id == stockTransferItem.ToLocationId)?.FirstOrDefault()?.Name ?? "";
             }
 
             return Ok(stockTransferDtos);
@@ -81,22 +73,23 @@ namespace Wms.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] StockTransferCreateUpdateDto stockTransferCreateUpdateDto)
         {   
-            string stockTransferNumber = await _runningNumberService.GenerateRunningNumberAsync(OperationTypeEnum.STOCKTRANSFER);
+            string stockTransferNumber = await runningNumberService.GenerateRunningNumberAsync(OperationTypeEnum.STOCKTRANSFER);
         
             stockTransferCreateUpdateDto.Number = stockTransferNumber;
-            var stockTransferDtos = _autoMapperService.Map<StockTransfer>(stockTransferCreateUpdateDto); 
+            var stockTransferDtos = autoMapperService.Map<StockTransfer>(stockTransferCreateUpdateDto); 
              
             foreach (var item in stockTransferDtos?.StockTransferItems ?? [])
             {
-                item.StockTransferItemNumber = await _runningNumberService.GenerateRunningNumberAsync(OperationTypeEnum.STOCKTRANSFERITEM);
                 item.FromWarehouse = "";
                 item.ToWarehouse = "";
                 item.Product = "";
+                item.FromLocation = "";
+                item.ToLocation = "";
             } 
 
-            await _service.AddAsync(stockTransferDtos!);
+            await service.AddAsync(stockTransferDtos!);
 
-            await _inventoryService.StockTransferAsync(stockTransferDtos!);
+            await inventoryService.StockTransferAsync(stockTransferDtos!);
              
 
             return CreatedAtAction(nameof(GetById), new { id = stockTransferDtos?.Id }, stockTransferDtos);
@@ -105,22 +98,22 @@ namespace Wms.Api.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] StockTransferCreateUpdateDto stockTransferCreateUpdate)
         {
-            var stockTransfer = await _service.GetByIdAsync(id);
+            var stockTransfer = await service.GetByIdAsync(id);
 
-            var stockTransferDtos = _autoMapperService.Map<StockTransferDetailsDto>(stockTransfer);
+            var stockTransferDtos = autoMapperService.Map<StockTransferDetailsDto>(stockTransfer);
             if (stockTransferDtos == null)
                 return NotFound();
 
-            _autoMapperService.Map(stockTransferCreateUpdate, stockTransfer);
+            autoMapperService.Map(stockTransferCreateUpdate, stockTransfer);
 
-            await _service.UpdateAsync(stockTransfer);
+            await service.UpdateAsync(stockTransfer);
             return NoContent();
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            await _service.DeleteAsync(id);
+            await service.DeleteAsync(id);
             return NoContent();
         }
     }

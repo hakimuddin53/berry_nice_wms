@@ -22,9 +22,7 @@ const StockInItemDetails: React.FC<{
 
   return (
     <>
-      <h2>
-        {t("common:item")} {stockInItem.stockInItemNumber}
-      </h2>
+      <h2>{t("common:item")}</h2>
       <PbCard px={2} pt={2}>
         <PbTabs
           value={tab}
@@ -39,9 +37,6 @@ const StockInItemDetails: React.FC<{
         <CardContent>
           <PbTabPanel value={tab} index={0}>
             <KeyValueList>
-              <KeyValuePair label={t("common:item")}>
-                {stockInItem.stockInItemNumber}
-              </KeyValuePair>
               <KeyValuePair label={t("quantity")}>
                 {stockInItem.quantity}
               </KeyValuePair>

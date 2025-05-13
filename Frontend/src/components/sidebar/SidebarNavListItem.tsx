@@ -115,8 +115,7 @@ type SidebarNavListItemProps = ListItemProps & {
   className?: string;
   depth: number;
   href: string;
-  //icon: React.ReactNode;
-  icon: any;
+  icon: React.ReactNode;
   badge?: string;
   open?: boolean;
   title: string;
@@ -216,7 +215,7 @@ const SidebarNavListItem: React.FC<SidebarNavListItemProps> = (props) => {
         }}
         disablelink={navItemUrlMatchCurrentRoute()}
       >
-        {/* {Icon} */}
+        {props.icon}
         <Title depth={depth}>
           {title}
           {badge && <Badge label={badge} />}

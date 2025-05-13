@@ -5,9 +5,10 @@ export interface StockTransferCreateUpdateDto {
   stockTransferItems: StockTransferItemCreateUpdate[];
 }
 export interface StockTransferItemCreateUpdate {
-  stockTransferItemNumber?: string | null;
   productId: guid;
   quantityTransferred: number;
+  fromLocationId: guid;
+  toLocationId: guid;
   fromWarehouseId: guid;
   toWarehouseId: guid;
 }

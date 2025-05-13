@@ -1,11 +1,4 @@
-import {
-  CardContent,
-  FormControl,
-  FormHelperText,
-  MenuItem,
-  Select,
-  TextField,
-} from "@mui/material";
+import { CardContent, TextField } from "@mui/material";
 import {
   DataList,
   PbTab,
@@ -18,12 +11,12 @@ import Page from "components/platbricks/shared/Page";
 import { PbCard } from "components/platbricks/shared/PbCard";
 import SelectAsync2 from "components/platbricks/shared/SelectAsync2";
 import { FormikProvider, setNestedObjectValues, useFormik } from "formik";
-import { ClientCodeEnum } from "interfaces/enums/GlobalEnums";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCartonSizeService } from "services/CartonSizeService";
 import { useCategoryService } from "services/CategoryService";
+import { useClientCodeService } from "services/ClientCodeService";
 import { useColourService } from "services/ColourService";
 import { useDesignService } from "services/DesignService";
 import { useNotificationService } from "services/NotificationService";
@@ -31,7 +24,6 @@ import { useProductService } from "services/ProductService";
 import { useSizeService } from "services/SizeService";
 import { EMPTY_GUID, guid } from "types/guid";
 import { isRequiredField } from "utils/formikHelpers";
-import { getClientCodeName } from "utils/helper";
 import {
   productCreateEditShema,
   YupProductCreateEdit,
@@ -43,6 +35,7 @@ const ProductCreateEditPage: React.FC = () => {
   const [tab, setTab] = useState(0);
 
   const CategoryService = useCategoryService();
+  const ClientCodeService = useClientCodeService();
   const SizeService = useSizeService();
   const ColourService = useColourService();
   const DesignService = useDesignService();
@@ -58,7 +51,7 @@ const ProductCreateEditPage: React.FC = () => {
   const [product, setProduct] = useState<YupProductCreateEdit>({
     name: "",
     itemCode: "",
-    clientCode: "PETRONAS" as ClientCodeEnum,
+    clientCodeId: EMPTY_GUID as guid,
     quantityPerCarton: 0,
     categoryId: EMPTY_GUID as guid,
     sizeId: EMPTY_GUID as guid,
@@ -105,7 +98,6 @@ const ProductCreateEditPage: React.FC = () => {
       setPageBlocker(true);
 
       if (!id) {
-        console.log(values);
         ProductService.createProduct(values)
           .then((result) => {
             resetForm({ values });
@@ -147,12 +139,6 @@ const ProductCreateEditPage: React.FC = () => {
     if (id) {
       ProductService.getProductById(id as guid)
         .then((product: any) => {
-          console.log(product);
-
-          product.clientCode = getClientCodeName(
-            product.clientCode
-          ) as keyof typeof ClientCodeEnum;
-          console.log(product);
           setProduct(product);
 
           setPageReady(true);
@@ -166,7 +152,6 @@ const ProductCreateEditPage: React.FC = () => {
   }, [id, ProductService]);
 
   useEffect(() => {
-    console.log(formik);
     if (formik.submitCount > 0 && !formik.isSubmitting && !formik.isValid) {
       notificationService.handleErrorMessage(
         t("common:please-fix-the-errors-and-try-again")
@@ -281,38 +266,45 @@ const ProductCreateEditPage: React.FC = () => {
                     label: t("client-code"),
                     required: isRequiredField(
                       productCreateEditShema,
-                      "clientCode"
+                      "clientCodeId"
                     ),
                     value: (
-                      <FormControl
-                        fullWidth
-                        error={
-                          formik.touched.clientCode &&
-                          Boolean(formik.errors.clientCode)
+                      <SelectAsync2
+                        name="clientCodeId"
+                        ids={useMemo(
+                          () =>
+                            formik.values.clientCodeId
+                              ? [formik.values.clientCodeId]
+                              : [],
+                          [formik.values.clientCodeId]
+                        )}
+                        onSelectionChange={async (newOption) => {
+                          formik.setFieldValue(
+                            "clientCodeId",
+                            newOption?.value || null
+                          );
+                        }}
+                        asyncFunc={(
+                          input: string,
+                          page: number,
+                          pageSize: number,
+                          ids?: guid[]
+                        ) =>
+                          ClientCodeService.getSelectOptions(
+                            input,
+                            page,
+                            pageSize,
+                            ids
+                          )
                         }
-                      >
-                        <Select
-                          id="clientCode"
-                          name="clientCode"
-                          size="small"
-                          value={formik.values.clientCode}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
-                        >
-                          {Object.values(ClientCodeEnum).map((p) => (
-                            <MenuItem value={p} key={p}>
-                              {t(p)}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                        <FormHelperText>
+                        helperText={
                           <FormikErrorMessage
-                            touched={formik.touched.clientCode}
-                            error={formik.errors.clientCode}
+                            touched={formik.touched.clientCodeId}
+                            error={formik.errors.clientCodeId}
                             translatedFieldName={t("client-code")}
                           />
-                        </FormHelperText>
-                      </FormControl>
+                        }
+                      />
                     ),
                   },
                   {

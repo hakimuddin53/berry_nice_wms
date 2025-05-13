@@ -41,6 +41,8 @@ const StockOutCreateEditPage: React.FC = () => {
   const [stockOut, setStockOut] = useState<YupStockOutCreateEdit>({
     number: "",
     doNumber: "",
+    warehouseId: EMPTY_GUID as guid,
+    locationId: EMPTY_GUID as guid,
     stockOutItems: [],
   });
 
@@ -210,7 +212,6 @@ const StockOutCreateEditPage: React.FC = () => {
 
       return {
         key,
-        stockOutItemNumber: "",
         productId: EMPTY_GUID as guid,
         quantity: 0,
       };

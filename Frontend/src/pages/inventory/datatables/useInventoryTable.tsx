@@ -1,8 +1,8 @@
+import { DataTableHeaderCell } from "components/platbricks/shared/dataTable/DataTable";
 import UserDateTime from "components/platbricks/shared/UserDateTime";
 import { InventoryDetailsDto } from "interfaces/v12/inventory/inventory";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { DataTableHeaderCell } from "../../../../components/platbricks/shared/dataTable/DataTable";
 
 export const useInventoryTable = () => {
   const { t } = useTranslation();
@@ -27,6 +27,14 @@ export const useInventoryTable = () => {
         label: t("carton-size"),
       },
       {
+        id: "transactionNumber",
+        label: t("transaction-number"),
+      },
+      {
+        id: "currentLocation",
+        label: t("location"),
+      },
+      {
         id: "quantityIn",
         label: t("quantity-in"),
       },
@@ -42,10 +50,7 @@ export const useInventoryTable = () => {
         id: "newBalance",
         label: t("new-balance"),
       },
-      {
-        id: "currentLocation",
-        label: t("location"),
-      },
+
       {
         id: "createdAt",
         label: t("common:created-at"),

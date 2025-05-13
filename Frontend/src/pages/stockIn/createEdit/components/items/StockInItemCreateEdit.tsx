@@ -37,10 +37,7 @@ const StockInItemCreateEdit: React.FC<
   const ProductService = useProductService();
 
   return (
-    <PageSection
-      title={t("common:items")}
-      subtitle={props.values.stockInItemNumber ?? ""}
-    >
+    <PageSection title={t("common:items")}>
       <PbCard px={2} pt={2}>
         <PbTabs
           value={tab}

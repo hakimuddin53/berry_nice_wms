@@ -1,10 +1,3 @@
-export const ClientCodeEnum = {
-  PETRONAS: "PETRONAS",
-  PROTON: "PROTON",
-  UTP: "UTP",
-  MXD: "MXD",
-};
-
 export const ModuleEnum = {
   STOCKIN: "STOCKIN",
   STOCKOUT: "STOCKOUT",
@@ -21,6 +14,8 @@ export const ModuleEnum = {
   WAREHOUSE: "WAREHOUSE",
   USER: "USER",
   USERROLE: "USERROLE",
+  CLIENTCODE: "CLIENTCODE",
+  STOCKADJUSTMENT: "STOCKADJUSTMENT",
 };
 
 export const MonthEnum = {
@@ -50,7 +45,6 @@ export const MenuItemTypeEnum = {
 };
 
 /* eslint-disable @typescript-eslint/no-redeclare */
-export type ClientCodeEnum = typeof ClientCodeEnum[keyof typeof ClientCodeEnum];
 export type ModuleEnum = typeof ModuleEnum[keyof typeof ModuleEnum];
 export type MonthEnum = typeof MonthEnum[keyof typeof MonthEnum];
 export type MenuItemTypeEnum =

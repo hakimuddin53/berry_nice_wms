@@ -1,5 +1,5 @@
 import { SortableDataTableHeaderCell } from "components/platbricks/shared/dataTable/DataTable";
-import { ClientCodeEnum, ModuleEnum } from "interfaces/enums/GlobalEnums";
+import { ModuleEnum } from "interfaces/enums/GlobalEnums";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { baseURL } from "./axios";
 
@@ -170,13 +170,4 @@ export const getModuleName = (moduleNumber: any) => {
     return Object.keys(ModuleEnum).indexOf(key) === moduleNumber;
   });
   return moduleKey || moduleNumber;
-};
-
-export const getClientCodeName = (clientCode: any) => {
-  // Find the key in ClientCodeEnum whose value matches the clientCode (index + 1)
-  const moduleKey = Object.keys(ClientCodeEnum).find((key) => {
-    // Assuming the enum values are assigned sequentially starting from 1
-    return Object.keys(ClientCodeEnum).indexOf(key) === clientCode;
-  });
-  return moduleKey || clientCode;
 };

@@ -8,7 +8,7 @@ namespace Wms.Api.Dto.Product.ProductCreateUpdate
     {   
         public required string Name { get; set; } 
         public required string ItemCode { get; set; } 
-        public string ClientCode { get; set; } 
+        public Guid ClientCodeId { get; set; } 
         public int QuantityPerCarton { get; set; }
         public Guid CategoryId { get; set; }
         public Guid SizeId { get; set; }

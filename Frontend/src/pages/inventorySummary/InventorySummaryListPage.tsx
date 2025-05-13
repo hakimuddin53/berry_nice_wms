@@ -1,4 +1,4 @@
-import Button from "@mui/material/Button";
+import { Button } from "@mui/material";
 import { DataList, DataTable, PbCard } from "components/platbricks/shared";
 import Page from "components/platbricks/shared/Page";
 import {
@@ -11,25 +11,27 @@ import ValueFilter, {
   FilterChangeParam,
 } from "components/platbricks/shared/ValueFilter";
 import { useDatatableControls } from "hooks/useDatatableControls";
-import { ClientCodeEnum } from "interfaces/enums/GlobalEnums";
 import {
-  InventoryDetailsDto,
   InventorySearchDto,
+  InventorySummaryDetailsDto,
 } from "interfaces/v12/inventory/inventory";
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { useClientCodeService } from "services/ClientCodeService";
 import { useInventoryService } from "services/InventoryService";
 import { useLocationService } from "services/LocationService";
 import { useProductService } from "services/ProductService";
 import { useWarehouseService } from "services/WarehouseService";
-import { useInventoryTable } from "./datatables/useInventoryTable";
+import axios from "utils/axios";
+import { useInventorySummaryTable } from "./datatables/useInventorySummaryTable";
 
-function InventoryListPage() {
+function InventorySummaryListPage() {
   const { t } = useTranslation();
-  const [inventoryTable] = useInventoryTable();
+  const [summaryTable] = useInventorySummaryTable();
   const InventoryService = useInventoryService();
   const ProductService = useProductService();
   const WarehouseService = useWarehouseService();
+  const ClientCodeService = useClientCodeService();
   const LocationService = useLocationService();
 
   const searchRef = useRef<InventorySearchDto>({
@@ -37,14 +39,8 @@ function InventoryListPage() {
     pageSize: 10,
   });
 
-  const loadData = async (
-    page: number,
-    pageSize: number,
-    searchValue: string,
-    orderBy: string,
-    order: "asc" | "desc"
-  ) => {
-    return InventoryService.searchInventorys(searchRef.current)
+  const loadData = async () => {
+    return InventoryService.searchInventorySummary(searchRef.current)
       .then((res: any) => res)
       .catch((err: any) => {
         console.error(err);
@@ -52,14 +48,8 @@ function InventoryListPage() {
       });
   };
 
-  const loadDataCount = async (
-    page: number,
-    pageSize: number,
-    searchValue: string,
-    orderBy: string,
-    order: "asc" | "desc"
-  ) => {
-    return InventoryService.countInventorys(searchRef.current)
+  const loadDataCount = async () => {
+    return InventoryService.countInventorySummary(searchRef.current)
       .then((res: any) => res)
       .catch((err: any) => {
         console.error(err);
@@ -67,23 +57,48 @@ function InventoryListPage() {
       });
   };
 
-  const { tableProps, reloadData } = useDatatableControls<InventoryDetailsDto>({
-    initialData: [] as InventoryDetailsDto[],
-    loadData,
-    loadDataCount,
-  });
+  const { tableProps, reloadData } =
+    useDatatableControls<InventorySummaryDetailsDto>({
+      initialData: [] as InventorySummaryDetailsDto[],
+      loadData,
+      loadDataCount,
+    });
 
-  // On mount, load initial data
   useEffect(() => {
     reloadData();
   }, [reloadData]);
 
+  const handleExport = async () => {
+    try {
+      const response = await axios.post(
+        "/api/summary/inventory/export",
+        searchRef.current,
+        {
+          responseType: "blob",
+        }
+      );
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `InventorySummaryExport_${new Date().toISOString().slice(0, 10)}.xlsx`
+      );
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error("Error exporting inventory:", error);
+    }
+  };
+
   return (
     <Page
-      title={t("inventory")}
+      title={t("inventory-summary")}
       breadcrumbs={[
         { label: t("common:dashboard"), to: "/" },
-        { label: t("inventory") },
+        { label: t("inventory-summary") },
       ]}
       showSearch={true}
       renderSearch={() => (
@@ -108,13 +123,7 @@ function InventoryListPage() {
                           (x) => x.value
                         );
                       }}
-                      inValuesAsync={(
-                        input: string,
-                        page: number,
-                        pageSize: number
-                      ) =>
-                        ProductService.getSelectOptions(input, page, pageSize)
-                      }
+                      inValuesAsync={ProductService.getSelectOptions}
                     />
                   ),
                 },
@@ -128,13 +137,7 @@ function InventoryListPage() {
                         searchRef.current.warehouseId =
                           filter.valueMultiple.map((x) => x.value);
                       }}
-                      inValuesAsync={(
-                        input: string,
-                        page: number,
-                        pageSize: number
-                      ) =>
-                        WarehouseService.getSelectOptions(input, page, pageSize)
-                      }
+                      inValuesAsync={WarehouseService.getSelectOptions}
                     />
                   ),
                 },
@@ -143,45 +146,47 @@ function InventoryListPage() {
                   value: (
                     <ValueFilter
                       placeholder={t("client-code")}
-                      dataType={DataType.ENUM}
+                      dataType={DataType.GUID}
                       onFilterChange={(filter: FilterChangeParam) => {
-                        searchRef.current.clientCode = filter.valueMultiple.map(
-                          (x) => x.value
-                        );
+                        searchRef.current.clientCodeId =
+                          filter.valueMultiple.map((x) => x.value);
                       }}
-                      inValues={Object.values(ClientCodeEnum).map((p) => {
-                        return {
-                          value: p,
-                          label: t(p),
-                        };
-                      })}
+                      inValuesAsync={ClientCodeService.getSelectOptions}
                     />
                   ),
                 },
                 {
-                  label: t("rack"),
+                  label: t("location"),
                   value: (
                     <ValueFilter
-                      placeholder={t("rack")}
+                      placeholder={t("location")}
                       dataType={DataType.GUID}
                       onFilterChange={(filter: FilterChangeParam) => {
                         searchRef.current.locationId = filter.valueMultiple.map(
                           (x) => x.value
                         );
                       }}
-                      inValuesAsync={(
-                        input: string,
-                        page: number,
-                        pageSize: number
-                      ) =>
-                        LocationService.getSelectOptions(input, page, pageSize)
-                      }
+                      inValuesAsync={LocationService.getSelectOptions}
                     />
                   ),
                 },
               ]}
             />
-            <div style={{ textAlign: "right" }}>
+            <div
+              style={{
+                textAlign: "right",
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: "10px",
+              }}
+            >
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => handleExport()}
+              >
+                {t("common:export")}
+              </Button>
               <Button variant="contained" onClick={() => reloadData()}>
                 {t("common:search")}
               </Button>
@@ -192,15 +197,15 @@ function InventoryListPage() {
       hasSingleActionButton
     >
       <DataTable
-        title={t("inventory")}
-        tableKey="InventoryListPage-Inbound Deliveries"
-        headerCells={inventoryTable}
+        title={t("inventory-summary")}
+        tableKey="InventorySummaryListPage"
+        headerCells={summaryTable}
         data={tableProps}
-        dataKey="inventoryId"
+        dataKey="id"
         showSearch={true}
       />
     </Page>
   );
 }
 
-export default InventoryListPage;
+export default InventorySummaryListPage;

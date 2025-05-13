@@ -1,34 +1,14 @@
-﻿using System.ComponentModel;
-using Wms.Api.Entities;
-
-namespace Wms.Api.Model
+﻿namespace Wms.Api.Model
 {
-    public enum ClientCodeEnum
-    {
-        [Description("Petronas")]
-        PETRONAS = 0,
-
-        [Description("Proton")]
-        PROTON = 1,
-
-        [Description("Utp")]
-        UTP = 2,
-
-        [Description("Mxd")]
-        MXD = 3,        
-    }
-
+     
     public enum OperationTypeEnum
     {
-        STOCKIN = 0,
-        STOCKINITEM = 1,
-        STOCKOUT = 3,
-        STOCKOUTITEM = 4,
-        STOCKRESERVATION = 5,
-        STOCKRESERVATIONITEM = 6,
-        STOCKTRANSFER = 7,
-        STOCKTRANSFERITEM = 8,
-        PRODUCT = 9,
+        STOCKIN = 0, 
+        STOCKOUT = 1, 
+        STOCKRESERVATION = 2, 
+        STOCKTRANSFER = 3, 
+        PRODUCT = 4,
+        STOCKADJUSTMENT = 5, 
     }
 
     public enum TransactionTypeEnum
@@ -37,6 +17,8 @@ namespace Wms.Api.Model
         STOCKOUT = 1,
         STOCKTRANSFERIN = 2,
         STOCKTRANSFEROUT = 3,
+        STOCKADJUSTMENT = 4,
+        BULKUPLOAD = 5,
     }
 
     public enum ModuleEnum
@@ -55,6 +37,8 @@ namespace Wms.Api.Model
         STOCKGROUP = 11,
         WAREHOUSE = 12,
         USER = 13,
-        USERROLE = 14,
+        USERROLE = 14, 
+        CLIENTCODE = 15,
+        STOCKADJUSTMENT = 16,
     }
 }

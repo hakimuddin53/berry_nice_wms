@@ -2,21 +2,36 @@ import styled from "@emotion/styled";
 import React, { useState } from "react";
 import { Outlet } from "react-router-dom";
 
-import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
-import RemoveShoppingCartIcon from "@mui/icons-material/RemoveShoppingCart";
 import { Box, CssBaseline, Hidden, Paper as MuiPaper } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { spacing } from "@mui/system";
+import {
+  Archive,
+  ArchiveX,
+  ArrowLeft,
+  ArrowLeftRight,
+  ArrowRight,
+  Box as BoxIcon,
+  Database,
+  Palette,
+  PersonStanding,
+  RotateCcw,
+  Ruler,
+  Settings,
+  ShoppingCart,
+  SquareScissors,
+  Store,
+  Users,
+  Warehouse,
+} from "lucide-react";
 
-import DashboardIcon from "@mui/icons-material/Dashboard";
 import useAppTheme from "hooks/useTheme";
 import { ModuleEnum } from "interfaces/enums/GlobalEnums";
 import { useSearchParams } from "react-router-dom";
 import { SidebarItemsType } from "types/sidebar";
 import Footer from "../components/Footer";
 import GlobalStyle from "../components/GlobalStyle";
-import Settings from "../components/Settings";
 import Navbar from "../components/navbar/Navbar";
 import Sidebar from "../components/sidebar/Sidebar";
 
@@ -112,7 +127,7 @@ const Dashboard: React.FC<DashboardType> = ({ children }) => {
           <Footer />
         </Hidden>
       </AppContent>
-      <Settings />
+      {/* <Settings /> */}
     </Root>
   );
 };
@@ -123,7 +138,7 @@ export const dashboardItems: SidebarItemsType[] = [
     href: "/dashboard",
     itemType: "link",
     title: "Dashboard",
-    icon: <DashboardIcon />,
+    icon: <Database size={20} />,
     type: "single",
     children: [],
     // No requiredModule needed for Dashboard typically
@@ -133,7 +148,7 @@ export const dashboardItems: SidebarItemsType[] = [
     href: "/user",
     itemType: "link",
     title: "User",
-    icon: <RemoveShoppingCartIcon />, // Consider a different icon if needed
+    icon: <Users size={20} />,
     type: "single",
     children: [],
     requiredModule: ModuleEnum.USER, // <--- Link to USER module
@@ -143,7 +158,7 @@ export const dashboardItems: SidebarItemsType[] = [
     href: "/user-role",
     itemType: "link",
     title: "User Role",
-    icon: <RemoveShoppingCartIcon />, // Consider a different icon if needed
+    icon: <Settings size={20} />,
     type: "single",
     children: [],
     requiredModule: ModuleEnum.USERROLE, // <--- Link to USERROLE module
@@ -153,7 +168,7 @@ export const dashboardItems: SidebarItemsType[] = [
     href: "/product",
     itemType: "link",
     title: "Product",
-    icon: <RemoveShoppingCartIcon />, // Consider a different icon if needed
+    icon: <ShoppingCart size={20} />,
     type: "single",
     children: [],
     requiredModule: ModuleEnum.PRODUCT, // <--- Link to PRODUCT module
@@ -163,7 +178,7 @@ export const dashboardItems: SidebarItemsType[] = [
     href: "/stock-in",
     itemType: "link",
     title: "Stock In",
-    icon: <AddShoppingCartIcon />,
+    icon: <ArrowRight size={20} />,
     type: "single",
     children: [],
     requiredModule: ModuleEnum.STOCKIN, // <--- Link to STOCKIN module
@@ -173,7 +188,7 @@ export const dashboardItems: SidebarItemsType[] = [
     href: "/stock-out",
     itemType: "link",
     title: "Stock Out",
-    icon: <RemoveShoppingCartIcon />,
+    icon: <ArrowLeft size={20} />,
     type: "single",
     children: [],
     requiredModule: ModuleEnum.STOCKOUT, // <--- Link to STOCKOUT module
@@ -183,7 +198,7 @@ export const dashboardItems: SidebarItemsType[] = [
     href: "/stock-transfer",
     itemType: "link",
     title: "Stock Transfer",
-    icon: <AddShoppingCartIcon />,
+    icon: <ArrowLeftRight size={20} />,
     type: "single",
     children: [],
     requiredModule: ModuleEnum.STOCKTRANSFER, // <--- Link to STOCKTRANSFER module
@@ -200,83 +215,113 @@ export const dashboardItems: SidebarItemsType[] = [
   // },
   {
     id: 9,
-    href: "/inventory",
+    href: "/stock-adjustment",
     itemType: "link",
-    title: "Inventory",
-    icon: <RemoveShoppingCartIcon />,
+    title: "Stock Adjustment",
+    icon: <RotateCcw size={20} />,
     type: "single",
     children: [],
-    requiredModule: ModuleEnum.INVENTORY, // <--- Link to INVENTORY module
+    requiredModule: ModuleEnum.STOCKADJUSTMENT, // <--- Link to STOCKADJUSTMENT module
   },
   {
     id: 10,
-    href: "/category",
+    href: "/inventory",
     itemType: "link",
-    title: "Category",
-    icon: <RemoveShoppingCartIcon />,
+    title: "Inventory",
+    icon: <BoxIcon size={20} />,
     type: "single",
     children: [],
-    requiredModule: ModuleEnum.CATEGORY, // <--- Link to CATEGORY module
+    requiredModule: ModuleEnum.INVENTORY,
   },
   {
     id: 11,
-    href: "/colour",
+    href: "/inventory-summary",
     itemType: "link",
-    title: "Colour",
-    icon: <RemoveShoppingCartIcon />,
+    title: "Inventory Summary",
+    icon: <Store size={20} />,
     type: "single",
     children: [],
-    requiredModule: ModuleEnum.COLOUR, // <--- Link to COLOUR module
+    requiredModule: ModuleEnum.INVENTORY,
   },
   {
     id: 12,
-    href: "/design",
+    href: "/category",
     itemType: "link",
-    title: "Design",
-    icon: <RemoveShoppingCartIcon />,
+    title: "Category",
+    icon: <Archive size={20} />,
     type: "single",
     children: [],
-    requiredModule: ModuleEnum.DESIGN, // <--- Link to DESIGN module
+    requiredModule: ModuleEnum.CATEGORY,
   },
   {
     id: 13,
-    href: "/location", // Assuming "Rack" maps to the LOCATION module
+    href: "/colour",
     itemType: "link",
-    title: "Rack",
-    icon: <RemoveShoppingCartIcon />,
+    title: "Colour",
+    icon: <Palette size={20} />,
     type: "single",
     children: [],
-    requiredModule: ModuleEnum.LOCATION, // <--- Link to LOCATION module
+    requiredModule: ModuleEnum.COLOUR,
   },
   {
     id: 14,
-    href: "/size",
+    href: "/design",
     itemType: "link",
-    title: "Size",
-    icon: <RemoveShoppingCartIcon />,
+    title: "Design",
+    icon: <SquareScissors size={20} />,
     type: "single",
     children: [],
-    requiredModule: ModuleEnum.SIZE, // <--- Link to SIZE module
+    requiredModule: ModuleEnum.DESIGN,
   },
   {
     id: 15,
-    href: "/stock-group",
+    href: "/location",
     itemType: "link",
-    title: "Stock Group",
-    icon: <RemoveShoppingCartIcon />,
+    title: "Rack",
+    icon: <ArchiveX size={20} />,
     type: "single",
     children: [],
-    requiredModule: ModuleEnum.STOCKGROUP, // <--- Link to STOCKGROUP module
+    requiredModule: ModuleEnum.LOCATION,
   },
   {
     id: 16,
+    href: "/size",
+    itemType: "link",
+    title: "Size",
+    icon: <Ruler size={20} />,
+    type: "single",
+    children: [],
+    requiredModule: ModuleEnum.SIZE,
+  },
+  {
+    id: 17,
+    href: "/stock-group",
+    itemType: "link",
+    title: "Stock Group",
+    icon: <BoxIcon size={20} />,
+    type: "single",
+    children: [],
+    requiredModule: ModuleEnum.STOCKGROUP,
+  },
+  {
+    id: 18,
     href: "/warehouse",
     itemType: "link",
     title: "Warehouse",
-    icon: <RemoveShoppingCartIcon />,
+    icon: <Warehouse size={20} />,
     type: "single",
     children: [],
-    requiredModule: ModuleEnum.WAREHOUSE, // <--- Link to WAREHOUSE module
+    requiredModule: ModuleEnum.WAREHOUSE,
+  },
+  {
+    id: 19,
+    href: "/client-code",
+    itemType: "link",
+    title: "Client Code",
+    icon: <PersonStanding size={20} />,
+    type: "single",
+    children: [],
+    requiredModule: ModuleEnum.CLIENTCODE,
   },
 ];
 

@@ -22,6 +22,7 @@ namespace Wms.Api.Entities
         public Guid StockInId { get; set; }
         public Guid StockOutId { get; set; }
         public Guid StockTransferId { get; set; }
+        public Guid StockAdjustmentId { get; set; }
 
         public string? Remark { get; set; }
 

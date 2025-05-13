@@ -75,11 +75,7 @@ namespace Wms.Api.Controllers
 
             stockReservationCreateUpdateDto.Number = stockReservationNumber;
             var stockReservationDtos = _autoMapperService.Map<StockReservation>(stockReservationCreateUpdateDto);
-
-            foreach (var item in stockReservationDtos?.StockReservationItems ?? [])
-            {
-                item.StockReservationItemNumber = await _runningNumberService.GenerateRunningNumberAsync(OperationTypeEnum.STOCKRESERVATIONITEM);
-            }
+            
 
             await _service.AddAsync(stockReservationDtos!);
             return CreatedAtAction(nameof(GetById), new { id = stockReservationDtos?.Id }, stockReservationDtos);

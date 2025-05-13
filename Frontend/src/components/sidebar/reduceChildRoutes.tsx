@@ -42,7 +42,6 @@ const hasChildPath = (
 
 const reduceChildRoutes = (props: ReduceChildRoutesProps) => {
   const { items, page, depth, currentRoute, minimize } = props;
-
   if (page.type === "Separator") {
     items.push(
       <Title variant="subtitle2" key={page.title}>

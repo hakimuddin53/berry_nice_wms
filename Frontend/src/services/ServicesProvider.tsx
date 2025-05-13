@@ -1,11 +1,13 @@
 import { CartonSizeServiceProvider } from "./CartonSizeService";
 import { CategoryServiceProvider } from "./CategoryService";
+import { ClientCodeServiceProvider } from "./ClientCodeService";
 import { ColourServiceProvider } from "./ColourService";
 import { DesignServiceProvider } from "./DesignService";
 import { InventoryServiceProvider } from "./InventoryService";
 import { LocationServiceProvider } from "./LocationService";
 import { ProductServiceProvider } from "./ProductService";
 import { SizeServiceProvider } from "./SizeService";
+import { StockAdjustmentServiceProvider } from "./StockAdjustmentService";
 import { StockInServiceProvider } from "./StockInService";
 import { StockOutServiceProvider } from "./StockOutService";
 import { StockReservationServiceProvider } from "./StockReservationService";
@@ -30,6 +32,8 @@ const serviceProviders = [
   StockTransferServiceProvider,
   UserServiceProvider,
   UserRoleServiceProvider,
+  ClientCodeServiceProvider,
+  StockAdjustmentServiceProvider,
 ];
 export type ServicesProviderProps = {
   children?: React.ReactNode;

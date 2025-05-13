@@ -87,15 +87,9 @@ namespace Wms.Api.Controllers
             stockOutCreateUpdateDto.Number = stockOutNumber;
             var stockOutDtos = _autoMapperService.Map<StockOut>(stockOutCreateUpdateDto);
 
-            foreach (var item in stockOutDtos?.StockOutItems ?? [])
-            {
-                item.StockOutItemNumber = await _runningNumberService.GenerateRunningNumberAsync(OperationTypeEnum.STOCKOUTITEM);
-            }
-
-            await _service.AddAsync(stockOutDtos!);
+            await _service.AddAsync(stockOutDtos!, false);
 
             await _inventoryService.StockOutAsync(stockOutDtos!);
-
 
             return CreatedAtAction(nameof(GetById), new { id = stockOutDtos?.Id }, stockOutDtos);
         }

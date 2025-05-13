@@ -141,7 +141,6 @@ const StockInCreateEditPage: React.FC = () => {
       stockInService
         .getStockInById(id as guid)
         .then((stockIn: any) => {
-          console.log(stockIn);
           stockIn.stockInItems.forEach((x: any, i: any) => (x.key = i));
           setStockIn(stockIn);
 
@@ -215,7 +214,6 @@ const StockInCreateEditPage: React.FC = () => {
 
       return {
         key,
-        stockInItemNumber: "",
         productId: EMPTY_GUID as guid,
         quantity: 0,
       };

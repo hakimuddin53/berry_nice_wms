@@ -13,8 +13,19 @@ namespace Wms.Api.Repositories
         Task<Guid> GetOrCreateCartonSizeIdAsync(string cartonSizeName);
         Task<Product?> GetProductByItemCodeAsync(string itemCode);
 
+        Task<Product?> GetProductByAllCriteriaAsync(
+            string itemCode,
+            Guid clientCodeId,
+            Guid cartonSizeId,
+            Guid categoryId,
+            Guid colourId,
+            Guid designId,
+            Guid sizeId);
+
+        Task<Guid> GetOrCreateClientCodeIdAsync(string clientCodeName);
+
         Task<Guid> GetOrCreateRackIdAsync(string rackName);
-        Task<Guid> GetFirstWarehouseIdAsync();
+        Task<Guid> GetOrCreateWarehouseIdAsync(string warehouseName);
         Task AddInventoryRecordAsync(Inventory inventory);
         Task SaveChangesAsync();
     }

@@ -67,8 +67,6 @@ const UserRoleCreateEditPage: React.FC = () => {
     onSubmit: (values, { resetForm }) => {
       setPageBlocker(true);
 
-      console.log("UserRole", values);
-
       const transformedValues = {
         ...values,
         displayName: values.name,

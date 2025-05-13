@@ -8,7 +8,6 @@ export interface StockInCreateUpdateDto {
   stockInItems: StockInItemCreateUpdate[] | null;
 }
 export interface StockInItemCreateUpdate {
-  stockInItemNumber?: string | null;
   productId: guid;
   quantity: number;
 }

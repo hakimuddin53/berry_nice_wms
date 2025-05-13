@@ -6,14 +6,11 @@ using Wms.Api.Services;
 
 namespace Wms.Api.Context
 {
-    public class ApplicationDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, string>
+    public class ApplicationDbContext(
+        DbContextOptions<ApplicationDbContext> options,
+        ICurrentUserService currentUserService)
+        : IdentityDbContext<ApplicationUser, ApplicationRole, string>(options)
     {
-        private readonly ICurrentUserService _currentUserService;
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, ICurrentUserService currentUserService) : base(options)
-        {
-            _currentUserService = currentUserService;
-        }
-
         public override int SaveChanges()
         {
             UpdateAuditEntities();
@@ -31,7 +28,7 @@ namespace Wms.Api.Context
             var entries = ChangeTracker.Entries<CreatedChangedEntity>();
 
             var now = DateTime.UtcNow;
-            var user = _currentUserService.UserId();
+            var user = currentUserService.UserId();
 
             foreach (var entry in entries)
             {
@@ -49,7 +46,9 @@ namespace Wms.Api.Context
             }
         }
 
-        public DbSet<Product> Products { get; set; } 
+        public DbSet<Product> Products { get; set; }
+        public DbSet<StockAdjustment> StockAdjustments { get; set; }
+        public DbSet<StockAdjustmentItem> StockAdjustmentItems { get; set; }
         public DbSet<StockIn> StockIns { get; set; }
         public DbSet<StockInItem> StockInItems { get; set; }
         public DbSet<StockOut> StockOuts { get; set; }
@@ -69,6 +68,7 @@ namespace Wms.Api.Context
         public DbSet<Colour> Colours { get; set; }
         public DbSet<Size> Sizes { get; set; }
         public DbSet<Location> Locations { get; set; } 
+        public DbSet<ClientCode> ClientCodes { get; set; } 
 
     }
 }

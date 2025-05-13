@@ -17,6 +17,7 @@ import SelectAsync2 from "components/platbricks/shared/SelectAsync2";
 import { EntityCreateEditChildComponentProps } from "interfaces/general/createEditPage/createEditComponentInterfaces";
 import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useLocationService } from "services/LocationService";
 import { useProductService } from "services/ProductService";
 import { useWarehouseService } from "services/WarehouseService";
 import {
@@ -36,12 +37,10 @@ const StockTransferItemCreateEdit: React.FC<
 
   const ProductService = useProductService();
   const WarehouseService = useWarehouseService();
+  const LocationService = useLocationService();
 
   return (
-    <PageSection
-      title={t("common:items")}
-      subtitle={props.values.stockTransferItemNumber ?? ""}
-    >
+    <PageSection title={t("common:items")}>
       <PbCard px={2} pt={2}>
         <PbTabs
           value={tab}
@@ -149,7 +148,6 @@ const StockTransferItemCreateEdit: React.FC<
                     />
                   ),
                 },
-
                 {
                   label: t("source-warehouse"),
                   required: isRequiredField(
@@ -211,6 +209,66 @@ const StockTransferItemCreateEdit: React.FC<
                   ),
                 },
                 {
+                  label: t("source-location"),
+                  required: isRequiredField(
+                    StockTransferCreateEditSchema,
+                    "stockTransferItems[].fromLocationId"
+                  ),
+                  value: (
+                    <FormControl
+                      fullWidth
+                      error={
+                        props.touched.fromLocationId &&
+                        Boolean(props.errors.fromLocationId)
+                      }
+                    >
+                      <SelectAsync2
+                        name={`stockTransferItems.${props.elementKey}.fromLocationId`}
+                        error={
+                          props.touched.fromLocationId &&
+                          Boolean(props.errors.fromLocationId)
+                        }
+                        onBlur={() =>
+                          props.formik.setFieldTouched("fromLocationId")
+                        }
+                        ids={useMemo(
+                          () =>
+                            props.values.fromLocationId
+                              ? [props.values.fromLocationId]
+                              : [],
+                          [props.values.fromLocationId]
+                        )}
+                        onSelectionChange={async (newOption) => {
+                          props.formik.setFieldValue(
+                            `stockTransferItems.${props.elementKey}.fromLocationId`,
+                            newOption?.value || null
+                          );
+                        }}
+                        asyncFunc={(
+                          input: string,
+                          page: number,
+                          pageSize: number,
+                          ids?: string[]
+                        ) =>
+                          LocationService.getSelectOptions(
+                            input,
+                            page,
+                            pageSize,
+                            ids
+                          )
+                        }
+                      />
+                      <FormHelperText>
+                        <FormikErrorMessage
+                          touched={props.touched.fromLocationId}
+                          error={props.errors.fromLocationId}
+                          translatedFieldName={t("source-location")}
+                        />
+                      </FormHelperText>
+                    </FormControl>
+                  ),
+                },
+                {
                   label: t("destination-warehouse"),
                   required: isRequiredField(
                     StockTransferCreateEditSchema,
@@ -265,6 +323,66 @@ const StockTransferItemCreateEdit: React.FC<
                           touched={props.touched.toWarehouseId}
                           error={props.errors.toWarehouseId}
                           translatedFieldName={t("destination-warehouse")}
+                        />
+                      </FormHelperText>
+                    </FormControl>
+                  ),
+                },
+                {
+                  label: t("destination-location"),
+                  required: isRequiredField(
+                    StockTransferCreateEditSchema,
+                    "stockTransferItems[].toLocationId"
+                  ),
+                  value: (
+                    <FormControl
+                      fullWidth
+                      error={
+                        props.touched.toLocationId &&
+                        Boolean(props.errors.toLocationId)
+                      }
+                    >
+                      <SelectAsync2
+                        name={`stockTransferItems.${props.elementKey}.toLocationId`}
+                        error={
+                          props.touched.toLocationId &&
+                          Boolean(props.errors.toLocationId)
+                        }
+                        onBlur={() =>
+                          props.formik.setFieldTouched("toLocationId")
+                        }
+                        ids={useMemo(
+                          () =>
+                            props.values.toLocationId
+                              ? [props.values.toLocationId]
+                              : [],
+                          [props.values.toLocationId]
+                        )}
+                        onSelectionChange={async (newOption) => {
+                          props.formik.setFieldValue(
+                            `stockTransferItems.${props.elementKey}.toLocationId`,
+                            newOption?.value || null
+                          );
+                        }}
+                        asyncFunc={(
+                          input: string,
+                          page: number,
+                          pageSize: number,
+                          ids?: string[]
+                        ) =>
+                          LocationService.getSelectOptions(
+                            input,
+                            page,
+                            pageSize,
+                            ids
+                          )
+                        }
+                      />
+                      <FormHelperText>
+                        <FormikErrorMessage
+                          touched={props.touched.toLocationId}
+                          error={props.errors.toLocationId}
+                          translatedFieldName={t("destination-location")}
                         />
                       </FormHelperText>
                     </FormControl>

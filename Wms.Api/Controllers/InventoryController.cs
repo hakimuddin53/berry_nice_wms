@@ -1,98 +1,106 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Wms.Api.Dto;
-using Wms.Api.Dto.PagedList; 
+using Wms.Api.Dto.PagedList;
 using Wms.Api.Entities;
 using Wms.Api.Services;
 using Wms.Api.Dto.Inventory;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.EntityFrameworkCore;
 using Wms.Api.Context;
 using System.ComponentModel;
 using Wms.Api.Model;
-using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Identity;
-using System.Reflection;
-using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
+using ClosedXML.Excel;
 
 namespace Wms.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    public class InventoryController : ControllerBase
+    public class InventoryController(
+        IService<Inventory> service,
+        ApplicationDbContext context,
+        IMapper autoMapperService,
+        RoleManager<ApplicationRole> roleManager,
+        UserManager<ApplicationUser> userManager)
+        : ControllerBase
     {
-        private readonly IService<Inventory> _service;
-        private readonly IMapper _autoMapperService;
-        private readonly ApplicationDbContext _context;
-
-        protected readonly RoleManager<ApplicationRole> _roleManager;
-        protected readonly UserManager<ApplicationUser> _userManager;
-
-        public InventoryController(IService<Inventory> service, ApplicationDbContext context, IMapper autoMapperService, RoleManager<ApplicationRole> roleManager, UserManager<ApplicationUser> userManager)
-        {
-            _service = service;
-            _autoMapperService = autoMapperService;
-            _context = context;
-            _roleManager = roleManager;
-            _userManager = userManager;
-        }
-         
-
         [HttpPost("search", Name = "SearchInventorysAsync")]
         public async Task<IActionResult> SearchInventorysAsync([FromBody] InventorySearchDto inventorySearch)
         {
-            var stockGroupId = "";
-
-            var emailClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-
-            if (emailClaim == null || string.IsNullOrEmpty(emailClaim.Value))
+            var userInfo = await GetUserInformationAsync();
+            if (!userInfo.Success)
             {
-                return BadRequest("User email is missing or invalid.");
+                return userInfo.ErrorResult!;
             }
 
-            var email = emailClaim.Value;
-            var user = await _userManager.FindByEmailAsync(email);
-            if (user == null)
-            {
-                return BadRequest("User not found.");
-            } 
+            // 1. Get the base-filtered query
+            var filteredQuery = GetFilteredInventoryQuery(inventorySearch, userInfo.StockGroupId, userInfo.IsAdmin);
 
-            // Check if the user is admin
-            bool isAdmin = email.Equals("admin@mhglobal.com", StringComparison.OrdinalIgnoreCase);
-         
+            filteredQuery = filteredQuery.OrderByDescending(i => i.CreatedAt);
 
-            var userRole = await _roleManager.FindByIdAsync(user.UserRoleId.ToString());
-            if (userRole != null)
-            {
-                stockGroupId = userRole.CartonSizeId;
-            }
+            var result = filteredQuery.Skip((inventorySearch.Page - 1) * inventorySearch.PageSize)
+                .Take(inventorySearch.PageSize).ToList();
+            var pagedResult = new PagedList<Inventory>(result, inventorySearch.Page, inventorySearch.PageSize);
 
-            // 1. Get the base filtered query
-            var filteredQuery = GetFilteredInventoryQuery(inventorySearch, stockGroupId, isAdmin);
-
-            // --- Apply sorting if needed ---
-            filteredQuery = filteredQuery.OrderByDescending(i => i.CreatedAt); 
-
-
-            var result = filteredQuery.Skip((inventorySearch.Page - 1) * inventorySearch.PageSize).Take(inventorySearch.PageSize).ToList();
-            PagedList<Inventory> pagedResult = new PagedList<Inventory>(result, inventorySearch.Page, inventorySearch.PageSize);
-
-            var inventoryDtos = _autoMapperService.Map<PagedListDto<InventoryDetailsDto>>(pagedResult);
+            var inventoryDtos = autoMapperService.Map<PagedListDto<InventoryDetailsDto>>(pagedResult);
 
             foreach (var inventory in inventoryDtos.Data)
             {
-                var product = _context.Products?.Where(x => x.Id == inventory.ProductId)?.FirstOrDefault();
+                var product = context.Products?.Where(x => x.Id == inventory.ProductId)?.FirstOrDefault();
                 inventory.Product = product?.Name ?? "";
-                inventory.Warehouse = _context.Warehouses?.Where(x => x.Id == inventory.WarehouseId)?.FirstOrDefault()?.Name ?? "";
-                inventory.CurrentLocation = _context.Locations?.Where(x => x.Id == inventory.CurrentLocationId)?.FirstOrDefault()?.Name ?? "";
+                inventory.Warehouse =
+                    context.Warehouses?.Where(x => x.Id == inventory.WarehouseId)?.FirstOrDefault()?.Name ?? "";
+                inventory.CurrentLocation = context.Locations?.Where(x => x.Id == inventory.CurrentLocationId)
+                    ?.FirstOrDefault()?.Name ?? "";
 
                 if (product != null)
                 {
-                    inventory.StockGroup = _context.CartonSizes?.Where(x => x.Id == product.CartonSizeId)?.FirstOrDefault()?.Name ?? "";
-                    inventory.ClientCode = GetEnumDescription(product.ClientCode);
+                    inventory.StockGroup = context.CartonSizes?.Where(x => x.Id == product.CartonSizeId)
+                        ?.FirstOrDefault()?.Name ?? "";
+                    inventory.ClientCode = context.ClientCodes?.Where(x => x.Id == product.ClientCodeId)
+                        ?.FirstOrDefault()?.Name ?? ""; 
                 }
+                
+                // Set transaction number based on TransactionType
+                switch (inventory.TransactionType)
+                {
+                    case TransactionTypeEnum.STOCKIN:
+                        inventory.TransactionNumber = context.StockIns
+                            .Where(s => s.Id == inventory.StockInId)
+                            .Select(s => s.Number)
+                            .FirstOrDefault() ?? "";
+                        break;
+
+                    case TransactionTypeEnum.STOCKOUT:
+                        inventory.TransactionNumber = context.StockOuts
+                            .Where(s => s.Id == inventory.StockOutId)
+                            .Select(s => s.Number)
+                            .FirstOrDefault() ?? "";
+                        break;
+
+                    case TransactionTypeEnum.STOCKTRANSFERIN:
+                    case TransactionTypeEnum.STOCKTRANSFEROUT:
+                        inventory.TransactionNumber = context.StockTransfers
+                            .Where(s => s.Id == inventory.StockTransferId)
+                            .Select(s => s.Number)
+                            .FirstOrDefault() ?? "";
+                        break;
+
+                    case TransactionTypeEnum.STOCKADJUSTMENT:
+                        inventory.TransactionNumber = context.StockAdjustments
+                            .Where(s => s.Id == inventory.StockAdjustmentId)
+                            .Select(s => s.Number)
+                            .FirstOrDefault() ?? "";
+                        break;
+
+                    default:
+                        inventory.TransactionNumber = "";
+                        break;
+                }
+
             }
 
             return Ok(inventoryDtos);
@@ -101,56 +109,303 @@ namespace Wms.Api.Controllers
         [HttpPost("count", Name = "CountInventorysAsync")]
         public async Task<IActionResult> CountInventorysAsync([FromBody] InventorySearchDto inventorySearch)
         {
-            var stockGroupId = "";
+            var result = await GetUserInformationAsync();
+            if (!result.Success)
+            {
+                return result.ErrorResult!;
+            }
+            
+            var filteredQuery = GetFilteredInventoryQuery(inventorySearch, result.StockGroupId);
 
-            var emailClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            var inventoryDtos = autoMapperService.Map<List<InventoryDetailsDto>>(filteredQuery);
+            return Ok(inventoryDtos.Count);
+        }
+
+
+        [HttpPost("summary/search", Name = "SearchInventorySummaryAsync")]
+        public async Task<IActionResult> SearchInventorySummaryAsync([FromBody] InventorySearchDto inventorySearch)
+        {
+            var result = await GetUserInformationAsync();
+            if (!result.Success)
+            {
+                return result.ErrorResult!;
+            }
+            
+            // 1. Get the base filtered query
+            var filteredQuery = GetFilteredInventoryQuery(inventorySearch, result.StockGroupId, result.IsAdmin);
+
+            // 2. Group by ProductId and WarehouseId, then select the latest record from each group
+            var latestInventoryQuery = filteredQuery
+                .GroupBy(i => new { i.ProductId, i.WarehouseId })
+                .Select(g =>
+                    g.OrderByDescending(i => i.CreatedAt).FirstOrDefault()); // Get the most recent inventory per group
+
+            // Ensure FirstOrDefault doesn't return null groups if the base query could be empty
+            latestInventoryQuery = latestInventoryQuery.Where(i => i != null);
+            
+
+            // 4. Apply pagination to the query selecting the latest records
+            var pagedLatestInventory = await latestInventoryQuery
+                .Skip((inventorySearch.Page - 1) * inventorySearch.PageSize)
+                .Take(inventorySearch.PageSize)
+                .ToListAsync(); // Execute the paged query
+
+            var inventorySummaryDtos =
+                autoMapperService.Map<PagedListDto<InventorySummaryDetailsDto>>(pagedLatestInventory);
+
+            foreach (var latestInventory in inventorySummaryDtos.Data)
+            {
+                var product = await context.Products.FindAsync(latestInventory.ProductId);
+                var warehouse = await context.Warehouses.FindAsync(latestInventory.WarehouseId);
+                var location = await context.Locations.FindAsync(latestInventory.CurrentLocationId);
+
+                var summaryDto = new InventorySummaryDetailsDto
+                {
+                    Id = latestInventory.Id, // Use the Id of the latest inventory record
+                    ProductId = latestInventory.ProductId,
+                    WarehouseId = latestInventory.WarehouseId,
+                    CurrentLocationId = latestInventory.CurrentLocationId,
+                    AvailableQuantity = latestInventory.AvailableQuantity, // Map the quantity from the latest record
+                    Product = product?.Name ?? "",
+                    Warehouse = warehouse?.Name ?? "",
+                    CurrentLocation = location?.Name ?? "",
+                    CreatedAt = latestInventory.CreatedAt,
+                    ChangedAt = latestInventory.ChangedAt
+                };
+
+                if (product != null)
+                {
+                    // Fetch CartonSize name based on Product's CartonSizeId
+                    summaryDto.StockGroup =
+                        context.CartonSizes?.FirstOrDefault(cs => cs.Id == product.CartonSizeId)?.Name ?? "";
+                    summaryDto.ClientCode =
+                        context.ClientCodes?.FirstOrDefault(cs => cs.Id == product.ClientCodeId)?.Name ?? "";
+                }
+            }
+
+            return Ok(inventorySummaryDtos);
+        }
+
+        [HttpPost("summary/count", Name = "CountInventorySummaryAsync")]
+        public async Task<IActionResult> CountInventorySummaryAsync([FromBody] InventorySearchDto inventorySearch)
+        {
+            var result = await GetUserInformationAsync();
+            if (!result.Success)
+            {
+                return result.ErrorResult!;
+            }
+            // 1. Get the base filtered query
+            var filteredQuery = GetFilteredInventoryQuery(inventorySearch, result.StockGroupId, result.IsAdmin);
+
+            // 2. Group by the relevant fields (Product, Warehouse)
+            var groupedQuery = filteredQuery
+                .GroupBy(i => new { i.ProductId, i.WarehouseId });
+
+            // 3. Count the number of distinct groups
+            var count = await groupedQuery.CountAsync();
+
+            return Ok(count);
+        }
+
+        [HttpPost("export", Name = "ExportInventoryAsync")]
+        public async Task<IActionResult> ExportInventoryAsync([FromBody] InventorySearchDto inventorySearch)
+        {
+            var result = await GetUserInformationAsync();
+            if (!result.Success)
+            {
+                return result.ErrorResult!;
+            }
+
+            // Get full filtered query without pagination
+            var filteredQuery = GetFilteredInventoryQuery(inventorySearch, result.StockGroupId, result.IsAdmin)
+                .OrderByDescending(i => i.CreatedAt);
+            
+            var inventoryDtos = autoMapperService.Map<List<InventoryDetailsDto>>( filteredQuery.ToList());
+
+            foreach (var inventory in inventoryDtos)
+            {
+                var product = context.Products?.FirstOrDefault(x => x.Id == inventory.ProductId);
+                inventory.Product = product?.Name ?? "";
+                inventory.Warehouse =
+                    context.Warehouses?.FirstOrDefault(x => x.Id == inventory.WarehouseId)?.Name ?? "";
+                inventory.CurrentLocation =
+                    context.Locations?.FirstOrDefault(x => x.Id == inventory.CurrentLocationId)?.Name ?? "";
+
+                if (product != null)
+                {
+                    inventory.StockGroup =
+                        context.CartonSizes?.FirstOrDefault(x => x.Id == product.CartonSizeId)?.Name ?? "";
+                    inventory.ClientCode =
+                        context.ClientCodes?.FirstOrDefault(x => x.Id == product.ClientCodeId)?.Name ?? "";
+                }
+            }
+
+            using var workbook = new XLWorkbook();
+            var worksheet = workbook.Worksheets.Add("Inventory");
+
+            // Add headers
+            worksheet.Cell(1, 1).Value = "Id";
+            worksheet.Cell(1, 2).Value = "Product";
+            worksheet.Cell(1, 3).Value = "Warehouse";
+            worksheet.Cell(1, 4).Value = "Current Location";
+            worksheet.Cell(1, 5).Value = "Quantity In";
+            worksheet.Cell(1, 6).Value = "Quantity Out";
+            worksheet.Cell(1, 7).Value = "Old Balance";
+            worksheet.Cell(1, 8).Value = "New Balance";
+            worksheet.Cell(1, 9).Value = "Stock Group";
+            worksheet.Cell(1, 10).Value = "Client Code";
+            worksheet.Cell(1, 11).Value = "Created At"; 
+
+            for (int i = 0; i < inventoryDtos.Count; i++)
+            {
+                var inventory = inventoryDtos[i];
+                var row = i + 2;
+
+                worksheet.Cell(row, 1).Value = inventory.Id.ToString();
+                worksheet.Cell(row, 2).Value = inventory.Product;
+                worksheet.Cell(row, 3).Value = inventory.Warehouse;
+                worksheet.Cell(row, 4).Value = inventory.CurrentLocation;
+                worksheet.Cell(row, 5).Value = inventory.QuantityIn;
+                worksheet.Cell(row, 6).Value = inventory.QuantityOut;
+                worksheet.Cell(row, 7).Value = inventory.OldBalance;
+                worksheet.Cell(row, 8).Value = inventory.NewBalance;
+                worksheet.Cell(row, 9).Value = inventory.StockGroup;
+                worksheet.Cell(row, 10).Value = inventory.ClientCode;
+                worksheet.Cell(row, 11).Value = inventory.CreatedAt; 
+            }
+
+            using var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+            stream.Seek(0, SeekOrigin.Begin);
+
+            var contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+            
+            var fileName = $"InventoryExport_{DateTime.Now:yyyyMMdd}.xlsx";
+
+            return File(stream.ToArray(), contentType, fileName);
+        }
+
+        [HttpPost("summary/export", Name = "ExportInventorySummaryAsync")]
+        public async Task<IActionResult> ExportInventorySummaryAsync([FromBody] InventorySearchDto inventorySearch)
+        {
+            var result = await GetUserInformationAsync();
+            if (!result.Success)
+            {
+                return result.ErrorResult!;
+            }
+            
+            var filteredQuery = GetFilteredInventoryQuery(inventorySearch, result.StockGroupId, result.IsAdmin);
+
+            // Group by ProductId and WarehouseId, then select the latest record from each group
+            var latestInventoryQuery = filteredQuery
+                .GroupBy(i => new { i.ProductId, i.WarehouseId })
+                .Select(g => g.OrderByDescending(i => i.CreatedAt).FirstOrDefault())
+                .Where(i => i != null);
+
+            var latestInventoryList = await latestInventoryQuery.ToListAsync();
+
+            var inventorySummaryDtos = autoMapperService.Map<List<InventorySummaryDetailsDto>>(latestInventoryList);
+
+            foreach (var latestInventory in inventorySummaryDtos)
+            {
+                var product = await context.Products.FindAsync(latestInventory.ProductId);
+                var warehouse = await context.Warehouses.FindAsync(latestInventory.WarehouseId);
+                var location = await context.Locations.FindAsync(latestInventory.CurrentLocationId);
+
+                latestInventory.Product = product?.Name ?? "";
+                latestInventory.Warehouse = warehouse?.Name ?? "";
+                latestInventory.CurrentLocation = location?.Name ?? "";
+
+                if (product != null)
+                {
+                    latestInventory.StockGroup =
+                        context.CartonSizes?.FirstOrDefault(cs => cs.Id == product.CartonSizeId)?.Name ?? "";
+                    latestInventory.ClientCode =
+                        context.ClientCodes?.FirstOrDefault(cs => cs.Id == product.ClientCodeId)?.Name ?? "";
+                }
+            }
+
+            using var workbook = new XLWorkbook();
+            var worksheet = workbook.Worksheets.Add("Inventory Summary");
+
+            // Add headers
+            worksheet.Cell(1, 1).Value = "Id";
+            worksheet.Cell(1, 2).Value = "Product";
+            worksheet.Cell(1, 3).Value = "Warehouse";
+            worksheet.Cell(1, 4).Value = "Current Location";
+            worksheet.Cell(1, 5).Value = "Available Quantity";
+            worksheet.Cell(1, 6).Value = "Stock Group";
+            worksheet.Cell(1, 7).Value = "Client Code";
+            worksheet.Cell(1, 8).Value = "Created At";
+            worksheet.Cell(1, 9).Value = "Changed At";
+
+            for (int i = 0; i < inventorySummaryDtos.Count; i++)
+            {
+                var summary = inventorySummaryDtos[i];
+                var row = i + 2;
+
+                worksheet.Cell(row, 1).Value = summary.Id.ToString();
+                worksheet.Cell(row, 2).Value = summary.Product;
+                worksheet.Cell(row, 3).Value = summary.Warehouse;
+                worksheet.Cell(row, 4).Value = summary.CurrentLocation;
+                worksheet.Cell(row, 5).Value = summary.AvailableQuantity;
+                worksheet.Cell(row, 6).Value = summary.StockGroup;
+                worksheet.Cell(row, 7).Value = summary.ClientCode;
+                worksheet.Cell(row, 8).Value = summary.CreatedAt;
+                worksheet.Cell(row, 9).Value = summary.ChangedAt;
+            }
+
+            using var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+            stream.Seek(0, SeekOrigin.Begin);
+
+            var contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+            var fileName = $"InventorySummaryExport_{DateTime.Now:yyyyMMdd}.xlsx";
+
+            return File(stream.ToArray(), contentType, fileName);
+        }
+
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(Guid id)
+        {
+            var product = await service.GetByIdAsync(id);
+            return Ok(product);
+        }
+        
+        private async Task<(bool Success, IActionResult? ErrorResult, ApplicationUser? User, bool IsAdmin, string StockGroupId)> GetUserInformationAsync()
+        {
+            var stockGroupId = "";
+            var emailClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
 
             if (emailClaim == null || string.IsNullOrEmpty(emailClaim.Value))
             {
-                return BadRequest("User email is missing or invalid.");
+                return (false, BadRequest("User email is missing or invalid."), null, false, stockGroupId);
             }
 
             var email = emailClaim.Value;
-            var user = await _userManager.FindByEmailAsync(email);
+            var user = await userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return BadRequest("User not found.");
+                return (false, BadRequest("User not found."), null, false, stockGroupId);
             }
 
-            var userRole = await _roleManager.FindByIdAsync(user.UserRoleId.ToString());
+            bool isAdmin = email.Equals("admin@mhglobal.com", StringComparison.OrdinalIgnoreCase);
+            var userRole = await roleManager.FindByIdAsync(user.UserRoleId.ToString());
             if (userRole != null)
             {
                 stockGroupId = userRole.CartonSizeId;
             }
 
-            var filteredQuery = GetFilteredInventoryQuery(inventorySearch, stockGroupId);
-
-            var inventoryDtos = _autoMapperService.Map<List<InventoryDetailsDto>>(filteredQuery);
-            return Ok(inventoryDtos.Count);
+            return (true, null, user, isAdmin, stockGroupId);
         }
-
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(Guid id)
-        {
-            var product = await _service.GetByIdAsync(id);
-            if (product == null)
-                return NotFound();
-
-            return Ok(product);
-        }
-
 
         // Helper method to get the filtered inventory query
-        private IQueryable<Inventory> GetFilteredInventoryQuery(InventorySearchDto inventorySearch, string? stockGroupIds, bool isAdmin = false)
+        private IQueryable<Inventory> GetFilteredInventoryQuery(InventorySearchDto inventorySearch,
+            string? stockGroupIds, bool isAdmin = false)
         {
             // 1) Start with everything
-            var query = _context.Inventories.AsQueryable();
-
-            //if (isAdmin)
-            //{
-            //    // Admin sees all
-            //    return query;
-            //}
+            var query = context.Inventories.AsQueryable();
 
             // 2) Existing stock‐group / carton‐size filter
             if (!string.IsNullOrWhiteSpace(stockGroupIds))
@@ -164,10 +419,10 @@ namespace Wms.Api.Controllers
                 if (allowedCartonSizeIds.Count != 0)
                 {
                     query = query
-                        .Join(_context.Products,
-                              inv => inv.ProductId,
-                              prod => prod.Id,
-                              (inv, prod) => new { inv, prod })
+                        .Join(context.Products,
+                            inv => inv.ProductId,
+                            prod => prod.Id,
+                            (inv, prod) => new { inv, prod })
                         .Where(x => allowedCartonSizeIds.Contains(x.prod.CartonSizeId))
                         .Select(x => x.inv);
                 }
@@ -209,30 +464,29 @@ namespace Wms.Api.Controllers
                     .Where(g => g != Guid.Empty)
                     .ToList();
 
-                if (locGuids.Any())
+                if (locGuids.Count != 0)
                 {
                     query = query.Where(inv => locGuids.Contains(inv.CurrentLocationId));
                 }
             }
 
             // 6) Filter by ClientCode on the Product
-            if (inventorySearch.ClientCode?.Any() == true)
+            if (inventorySearch.ClientCodeId?.Any() == true)
             {
                 // Parse string codes into enum values
-                var clientCodes = inventorySearch.ClientCode
-                    .Select(code => Enum.TryParse<ClientCodeEnum>(code, out var c) ? (ClientCodeEnum?)c : null)
-                    .Where(c => c.HasValue)
-                    .Select(c => c!.Value)
+                var clientCodeIds = inventorySearch.ClientCodeId
+                    .Select(id => Guid.TryParse(id, out var g) ? g : Guid.Empty)
+                    .Where(g => g != Guid.Empty)
                     .ToList();
 
-                if (clientCodes.Any())
+                if (clientCodeIds.Any())
                 {
                     query = query
-                        .Join(_context.Products,
-                              inv => inv.ProductId,
-                              prod => prod.Id,
-                              (inv, prod) => new { inv, prod })
-                        .Where(x => clientCodes.Contains(x.prod.ClientCode))
+                        .Join(context.Products,
+                            inv => inv.ProductId,
+                            prod => prod.Id,
+                            (inv, prod) => new { inv, prod })
+                        .Where(x => clientCodeIds.Contains(x.prod.ClientCodeId))
                         .Select(x => x.inv);
                 }
             }
@@ -240,10 +494,11 @@ namespace Wms.Api.Controllers
             return query;
         }
 
-        public static string GetEnumDescription<T>(T enumValue) where T : Enum
+        private static string GetEnumDescription<T>(T enumValue) where T : Enum
         {
             var fieldInfo = enumValue.GetType().GetField(enumValue.ToString());
-            var attributes = (DescriptionAttribute[])fieldInfo!.GetCustomAttributes(typeof(DescriptionAttribute), false);
+            var attributes =
+                (DescriptionAttribute[])fieldInfo!.GetCustomAttributes(typeof(DescriptionAttribute), false);
 
             return attributes.Length > 0 ? attributes[0].Description : enumValue.ToString();
         }

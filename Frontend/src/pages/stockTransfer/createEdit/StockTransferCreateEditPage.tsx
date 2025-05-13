@@ -216,7 +216,6 @@ const StockTransferCreateEditPage: React.FC = () => {
 
       return {
         key,
-        stockTransferItemNumber: "",
         productId: EMPTY_GUID as guid,
         quantity: 0,
       };

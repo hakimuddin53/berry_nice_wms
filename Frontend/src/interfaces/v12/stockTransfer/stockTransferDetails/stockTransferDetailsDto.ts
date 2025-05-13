@@ -9,10 +9,14 @@ export interface StockTransferDetailsDto extends CreatedChangedEntity {
 export interface StockTransferItemDetailsDto extends CreatedChangedEntity {
   id: guid;
   stockTransferId: guid;
-  stockTransferItemNumber?: string | null;
   productId: guid;
   product: string;
   quantityTransferred: number;
+  fromLocationId: guid;
+  fromLocation: string;
+  toLocationId: guid;
+  toLocation: string;
+
   fromWarehouseId: guid;
   fromWarehouse: string;
   toWarehouseId: guid;

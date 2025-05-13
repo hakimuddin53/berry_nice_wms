@@ -1,4 +1,3 @@
-import { ClientCodeEnum } from "interfaces/enums/GlobalEnums";
 import { CreatedChangedEntity } from "interfaces/v12/CreatedChangedEntity";
 import { guid } from "types/guid";
 
@@ -7,7 +6,7 @@ export interface ProductDetailsDto extends CreatedChangedEntity {
   serialNumber: string;
   name: string;
   itemCode: string;
-  clientCode: ClientCodeEnum;
+  clientCodeId: guid;
   clientCodeString: string;
   quantityPerCarton: number;
   category: string;

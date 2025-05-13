@@ -31,8 +31,6 @@ const UserRoleCreateEdit = (props: {
 
   const [options, setOptions] = useState<SelectAsyncOption[]>([]);
 
-  console.log(formik.values.module);
-
   useEffect(() => {
     CartonSizeService.getSelectOptions("", 1, 100)
       .then((userRole) => setOptions(userRole))

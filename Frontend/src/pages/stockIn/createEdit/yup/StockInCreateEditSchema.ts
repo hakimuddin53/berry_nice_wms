@@ -11,7 +11,6 @@ export const StockInCreateEditSchema = yup.object({
     .of(
       yup.object().shape({
         key: yup.string(),
-        stockInItemNumber: yup.string().nullable(),
         productId: yup.mixed<guid>().required(),
         quantity: yup.number().required(),
       })

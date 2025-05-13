@@ -43,8 +43,6 @@ function StockOutDetailsPage() {
   const [selectedStockOutItem, setSelectedStockOutItem] =
     useState<StockOutItemDetailsDto | null>(null);
 
-  console.log(selectedStockOutItem);
-
   const loadStockOut = useCallback(() => {
     StockOutService.getStockOutById(id as guid)
       .then((stockOut) => setStockOut(stockOut))
@@ -137,6 +135,12 @@ function StockOutDetailsPage() {
                   </KeyValuePair>
                   <KeyValuePair label={t("doNumber")}>
                     {stockOut.doNumber}
+                  </KeyValuePair>
+                  <KeyValuePair label={t("warehouse")}>
+                    {stockOut.warehouse}
+                  </KeyValuePair>
+                  <KeyValuePair label={t("rack")}>
+                    {stockOut.location}
                   </KeyValuePair>
                   <KeyValuePair label={t("created-at")}>
                     <UserDateTime date={stockOut.createdAt} />
