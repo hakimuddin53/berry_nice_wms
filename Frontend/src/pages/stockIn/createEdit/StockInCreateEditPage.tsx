@@ -42,7 +42,6 @@ const StockInCreateEditPage: React.FC = () => {
     number: "",
     poNumber: "",
     warehouseId: EMPTY_GUID as guid,
-    locationId: EMPTY_GUID as guid,
     stockInItems: [],
   });
 

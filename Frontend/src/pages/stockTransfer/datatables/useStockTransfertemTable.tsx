@@ -1,3 +1,6 @@
+import LocationName from "components/platbricks/entities/LocationName";
+import ProductName from "components/platbricks/entities/ProductName";
+import WarehouseName from "components/platbricks/entities/WarehouseName";
 import { DataTableHeaderCell } from "components/platbricks/shared/dataTable/DataTable";
 import { useCreatedChangeDate } from "hooks/useCreatedChangeDate";
 import { StockTransferItemDetailsDto } from "interfaces/v12/stockTransfer/stockTransferDetails/stockTransferDetailsDto";
@@ -21,23 +24,28 @@ export const useStockTransferItemTable = () => {
       {
         id: "product",
         label: t("product"),
+        render: (row) => <ProductName productId={row.productId} />,
       },
 
       {
         id: "fromWarehouse",
         label: t("source-warehouse"),
+        render: (row) => <WarehouseName warehouseId={row.fromWarehouseId} />,
       },
       {
         id: "fromLocation",
         label: t("source-location"),
+        render: (row) => <LocationName locationId={row.fromLocationId} />,
       },
       {
         id: "toWarehouse",
         label: t("destination-warehouse"),
+        render: (row) => <WarehouseName warehouseId={row.toWarehouseId} />,
       },
       {
         id: "toLocation",
         label: t("destination-location"),
+        render: (row) => <LocationName locationId={row.toLocationId} />,
       },
       {
         id: "quantityTransferred",
@@ -49,10 +57,6 @@ export const useStockTransferItemTable = () => {
             <span />
           );
         },
-      },
-      {
-        id: "listPrice",
-        label: t("list-price"),
       },
     ],
     [t]

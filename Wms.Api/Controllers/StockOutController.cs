@@ -72,10 +72,6 @@ namespace Wms.Api.Controllers
 
             var stockOutDtos = _autoMapperService.Map<StockOutDetailsDto>(stockOut); 
 
-            foreach (var item in stockOutDtos?.StockOutItems ?? [])
-            {
-                item.Product = _context.Products?.Where(x => x.Id == item.ProductId)?.FirstOrDefault()?.Name ?? ""; 
-            } 
             return Ok(stockOutDtos);
         }
 

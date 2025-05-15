@@ -1,4 +1,6 @@
 import { CardContent } from "@mui/material";
+import LocationName from "components/platbricks/entities/LocationName";
+import ProductName from "components/platbricks/entities/ProductName";
 import UserName from "components/platbricks/entities/UserName";
 import {
   KeyValueList,
@@ -37,11 +39,17 @@ const StockAdjustmentItemDetails: React.FC<{
         <CardContent>
           <PbTabPanel value={tab} index={0}>
             <KeyValueList>
+              <KeyValuePair label={t("product")}>
+                <ProductName productId={stockAdjustmentItem.productId} />
+              </KeyValuePair>
+              <KeyValuePair label={t("rack")}>
+                <LocationName locationId={stockAdjustmentItem.locationId} />
+              </KeyValuePair>
               <KeyValuePair label={t("quantity")}>
                 {stockAdjustmentItem.quantity}
               </KeyValuePair>
-              <KeyValuePair label={t("product")}>
-                {stockAdjustmentItem.product}
+              <KeyValuePair label={t("reason")}>
+                {stockAdjustmentItem.reason}
               </KeyValuePair>
               <KeyValuePair label={t("common:created-at")}>
                 <UserDateTime date={stockAdjustmentItem.createdAt} />

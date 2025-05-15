@@ -1,4 +1,6 @@
 import { CardContent } from "@mui/material";
+import LocationName from "components/platbricks/entities/LocationName";
+import ProductName from "components/platbricks/entities/ProductName";
 import UserName from "components/platbricks/entities/UserName";
 import {
   KeyValueList,
@@ -41,7 +43,10 @@ const StockOutItemDetails: React.FC<{
                 {stockOutItem.quantity}
               </KeyValuePair>
               <KeyValuePair label={t("product")}>
-                {stockOutItem.product}
+                <ProductName productId={stockOutItem.productId} />
+              </KeyValuePair>
+              <KeyValuePair label={t("rack")}>
+                <LocationName locationId={stockOutItem.locationId} />
               </KeyValuePair>
               <KeyValuePair label={t("common:created-at")}>
                 <UserDateTime date={stockOutItem.createdAt} />

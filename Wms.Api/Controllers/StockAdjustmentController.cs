@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using DocumentFormat.OpenXml.Bibliography;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -55,16 +56,12 @@ namespace Wms.Api.Controllers
             
             if (stockAdjustment == null)
                 return NotFound();
-
-
+            
             stockAdjustment.StockAdjustmentItems = context.StockAdjustmentItems.Where(x => x.StockAdjustmentId == stockAdjustment.Id).ToList();
 
-            var stockAdjustmentDtos = autoMapperService.Map<StockAdjustmentDetailsDto>(stockAdjustment); 
-
-            foreach (var item in stockAdjustmentDtos?.StockAdjustmentItems ?? [])
-            {
-                item.Product = context.Products?.Where(x => x.Id == item.ProductId)?.FirstOrDefault()?.Name ?? ""; 
-            } 
+            var stockAdjustmentDtos = autoMapperService.Map<StockAdjustmentDetailsDto>(stockAdjustment);
+            
+          
             return Ok(stockAdjustmentDtos);
         }
 

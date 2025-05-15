@@ -14,6 +14,10 @@ namespace Wms.Api.Entities
         [Required]
         public Guid ProductId { get; set; }
 
+
+        [Required]
+        public Guid LocationId { get; set; }
+
         [Required]
         public int Quantity { get; set; } 
     }

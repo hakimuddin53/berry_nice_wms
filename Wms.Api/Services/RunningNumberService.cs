@@ -7,24 +7,33 @@ namespace Wms.Api.Services
 {
     public class RunningNumberService(ApplicationDbContext context) : IRunningNumberService
     {
-        private readonly ApplicationDbContext _context = context;
-
         public async Task<string> GenerateRunningNumberAsync(OperationTypeEnum operationType)
         {
             string datePart = DateTime.Now.ToString("yyyyMMdd");
 
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            string operationPrefix = operationType switch
+            {
+                OperationTypeEnum.STOCKIN => "SI",
+                OperationTypeEnum.STOCKOUT => "SO",
+                OperationTypeEnum.STOCKRESERVATION => "SR",
+                OperationTypeEnum.STOCKTRANSFER => "ST",
+                OperationTypeEnum.PRODUCT => "P",
+                OperationTypeEnum.STOCKADJUSTMENT => "SA",
+                _ => throw new ArgumentOutOfRangeException(nameof(operationType), "Invalid operation type")
+            };
+
+            using var transaction = await context.Database.BeginTransactionAsync();
 
             try
             {
-                var runningNumber = await _context.RunningNumbers
-                    .FirstOrDefaultAsync(r => r.OperationType == operationType);
+                var runningNumber = await context.RunningNumbers
+                    .FirstOrDefaultAsync(r => r.OperationType == operationType && r.Date == datePart);
 
                 if (runningNumber != null)
                 {
                     // Increment the sequence number
                     runningNumber.CurrentSequence++;
-                    _context.RunningNumbers.Update(runningNumber);
+                    context.RunningNumbers.Update(runningNumber);
                 }
                 else
                 {
@@ -35,15 +44,15 @@ namespace Wms.Api.Services
                         Date = datePart,
                         CurrentSequence = 1
                     };
-                    await _context.RunningNumbers.AddAsync(runningNumber);
+                    await context.RunningNumbers.AddAsync(runningNumber);
                 }
 
                 // Save changes and commit the transaction
-                await _context.SaveChangesAsync();
+                await context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
                 // Return the formatted running number
-                return $"{operationType}{runningNumber.CurrentSequence:D4}";
+                return $"{operationPrefix}{datePart}{runningNumber.CurrentSequence:D4}";
             }
             catch
             {

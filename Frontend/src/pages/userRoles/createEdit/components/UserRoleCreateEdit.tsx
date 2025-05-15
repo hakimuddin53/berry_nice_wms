@@ -98,7 +98,6 @@ const UserRoleCreateEdit = (props: {
                     (item): item is string => item !== undefined
                   )}
                   onChange={(event, newValue) => {
-                    console.log(newValue);
                     formik.setFieldValue("module", newValue);
                   }}
                   onBlur={formik.handleBlur}

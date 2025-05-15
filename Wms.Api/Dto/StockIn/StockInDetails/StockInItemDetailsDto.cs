@@ -4,8 +4,9 @@
     {
         public Guid Id { get; set; } 
         public Guid StockInId { get; set; }
-        public Guid ProductId { get; set; }
-        public string Product { get; set; }
+        public Guid ProductId { get; set; } 
+
+        public Guid LocationId { get; set; } 
         public int Quantity { get; set; }  
     }
 }

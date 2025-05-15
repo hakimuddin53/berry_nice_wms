@@ -16,9 +16,6 @@ namespace Wms.Api.Entities
         [Required]
         public Guid WarehouseId { get; set; }
 
-        [Required]
-        public Guid LocationId { get; set; }
-
         public ICollection<StockInItem>? StockInItems { get; set; }
     }
 }

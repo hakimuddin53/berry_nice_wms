@@ -1,8 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc; 
 using Wms.Api.Context;
 using Wms.Api.Dto;
 using Wms.Api.Dto.PagedList;
@@ -57,15 +56,7 @@ namespace Wms.Api.Controllers
             stockTransfer.StockTransferItems = context.StockTransferItems.Where(x => x.StockTransferId == stockTransfer.Id).ToList();
 
             var stockTransferDtos = autoMapperService.Map<StockTransferDetailsDto>(stockTransfer);
-             
-            foreach (var stockTransferItem in stockTransferDtos.StockTransferItems!)
-            {
-                stockTransferItem.Product = context.Products?.Where(x => x.Id == stockTransferItem.ProductId)?.FirstOrDefault()?.Name ?? "";
-                stockTransferItem.FromWarehouse = context.Warehouses?.Where(x => x.Id == stockTransferItem.FromWarehouseId)?.FirstOrDefault()?.Name ?? "";
-                stockTransferItem.ToWarehouse = context.Warehouses?.Where(x => x.Id == stockTransferItem.ToWarehouseId)?.FirstOrDefault()?.Name ?? "";
-                stockTransferItem.FromLocation = context.Locations?.Where(x => x.Id == stockTransferItem.FromLocationId)?.FirstOrDefault()?.Name ?? "";
-                stockTransferItem.ToLocation = context.Locations?.Where(x => x.Id == stockTransferItem.ToLocationId)?.FirstOrDefault()?.Name ?? "";
-            }
+                      
 
             return Ok(stockTransferDtos);
         }
@@ -77,16 +68,7 @@ namespace Wms.Api.Controllers
         
             stockTransferCreateUpdateDto.Number = stockTransferNumber;
             var stockTransferDtos = autoMapperService.Map<StockTransfer>(stockTransferCreateUpdateDto); 
-             
-            foreach (var item in stockTransferDtos?.StockTransferItems ?? [])
-            {
-                item.FromWarehouse = "";
-                item.ToWarehouse = "";
-                item.Product = "";
-                item.FromLocation = "";
-                item.ToLocation = "";
-            } 
-
+              
             await service.AddAsync(stockTransferDtos!);
 
             await inventoryService.StockTransferAsync(stockTransferDtos!);

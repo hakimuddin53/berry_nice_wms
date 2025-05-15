@@ -22,6 +22,7 @@ import {
   isRequiredField,
 } from "utils/formikHelpers";
 
+import { useLocationService } from "services/LocationService";
 import { useProductService } from "services/ProductService";
 import {
   StockInCreateEditSchema,
@@ -35,6 +36,7 @@ const StockInItemCreateEdit: React.FC<
   const [tab, setTab] = useState(0);
 
   const ProductService = useProductService();
+  const LocationService = useLocationService();
 
   return (
     <PageSection title={t("common:items")}>
@@ -111,6 +113,66 @@ const StockInItemCreateEdit: React.FC<
                           touched={props.touched.productId}
                           error={props.errors.productId}
                           translatedFieldName={t("product")}
+                        />
+                      </FormHelperText>
+                    </FormControl>
+                  ),
+                },
+                {
+                  label: t("rack"),
+                  required: isRequiredField(
+                    StockInCreateEditSchema,
+                    "stockInItems[].locationId"
+                  ),
+                  value: (
+                    <FormControl
+                      fullWidth
+                      error={
+                        props.touched.locationId &&
+                        Boolean(props.errors.locationId)
+                      }
+                    >
+                      <SelectAsync2
+                        name={`stockInItems.${props.elementKey}.locationId`}
+                        error={
+                          props.touched.locationId &&
+                          Boolean(props.errors.locationId)
+                        }
+                        onBlur={() =>
+                          props.formik.setFieldTouched("locationId")
+                        }
+                        ids={useMemo(
+                          () =>
+                            props.values.locationId
+                              ? [props.values.locationId]
+                              : [],
+                          [props.values.locationId]
+                        )}
+                        onSelectionChange={async (newOption) => {
+                          props.formik.setFieldValue(
+                            `stockInItems.${props.elementKey}.locationId`,
+                            newOption?.value || null
+                          );
+                        }}
+                        asyncFunc={(
+                          input: string,
+                          page: number,
+                          pageSize: number,
+                          ids?: string[]
+                        ) =>
+                          LocationService.getSelectOptions(
+                            input,
+                            page,
+                            pageSize,
+                            ids
+                          )
+                        }
+                      />
+                      <FormHelperText>
+                        <FormikErrorMessage
+                          touched={props.touched.locationId}
+                          error={props.errors.locationId}
+                          translatedFieldName={t("rack")}
                         />
                       </FormHelperText>
                     </FormControl>

@@ -1,5 +1,6 @@
 import { CardContent, Grid, Typography } from "@mui/material";
 import UserName from "components/platbricks/entities/UserName";
+import WarehouseName from "components/platbricks/entities/WarehouseName";
 import {
   BadgeText,
   EasyCopy,
@@ -110,10 +111,7 @@ function StockInDetailsPage() {
                     {stockIn.poNumber}
                   </KeyValuePair>
                   <KeyValuePair label={t("warehouse")}>
-                    {stockIn.warehouse}
-                  </KeyValuePair>
-                  <KeyValuePair label={t("rack")}>
-                    {stockIn.location}
+                    <WarehouseName warehouseId={stockIn.warehouseId} />
                   </KeyValuePair>
                   <KeyValuePair label={t("created-at")}>
                     <UserDateTime date={stockIn.createdAt} />

@@ -1,3 +1,4 @@
+import LocationName from "components/platbricks/entities/LocationName";
 import ProductName from "components/platbricks/entities/ProductName";
 import { DataTableHeaderCell } from "components/platbricks/shared/dataTable/DataTable";
 import { useCreatedChangeDate } from "hooks/useCreatedChangeDate";
@@ -21,6 +22,11 @@ export const useStockInItemTable = () => {
         id: "product",
         label: t("product"),
         render: (row) => <ProductName productId={row.productId} />,
+      },
+      {
+        id: "rack",
+        label: t("rack"),
+        render: (row) => <LocationName locationId={row.locationId} />,
       },
       {
         id: "quantity",

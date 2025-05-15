@@ -25,8 +25,8 @@ public class ProductProfile : Profile
         #endregion
 
         CreateMap<Product, SelectOptionV12Dto>()
-        .ForMember(x => x.Value, option => option.MapFrom(y => y.Id))
-        .ForMember(x => x.Label, option => option.MapFrom(y => y.Name));
+            .ForMember(x => x.Value, option => option.MapFrom(y => y.Id))
+            .ForMember(x => x.Label, option => option.MapFrom(y => $"{y.Name} ({y.ItemCode})"));
 
     }
 }

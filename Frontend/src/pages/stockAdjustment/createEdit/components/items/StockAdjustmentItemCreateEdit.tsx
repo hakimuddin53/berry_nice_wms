@@ -22,6 +22,7 @@ import {
   isRequiredField,
 } from "utils/formikHelpers";
 
+import { useLocationService } from "services/LocationService";
 import { useProductService } from "services/ProductService";
 import {
   StockAdjustmentCreateEditSchema,
@@ -35,6 +36,7 @@ const StockAdjustmentItemCreateEdit: React.FC<
   const [tab, setTab] = useState(0);
 
   const ProductService = useProductService();
+  const LocationService = useLocationService();
 
   return (
     <PageSection title={t("common:items")}>
@@ -117,6 +119,66 @@ const StockAdjustmentItemCreateEdit: React.FC<
                   ),
                 },
                 {
+                  label: t("rack"),
+                  required: isRequiredField(
+                    StockAdjustmentCreateEditSchema,
+                    "stockAdjustmentItems[].locationId"
+                  ),
+                  value: (
+                    <FormControl
+                      fullWidth
+                      error={
+                        props.touched.locationId &&
+                        Boolean(props.errors.locationId)
+                      }
+                    >
+                      <SelectAsync2
+                        name={`stockAdjustmentItems.${props.elementKey}.locationId`}
+                        error={
+                          props.touched.locationId &&
+                          Boolean(props.errors.locationId)
+                        }
+                        onBlur={() =>
+                          props.formik.setFieldTouched("locationId")
+                        }
+                        ids={useMemo(
+                          () =>
+                            props.values.locationId
+                              ? [props.values.locationId]
+                              : [],
+                          [props.values.locationId]
+                        )}
+                        onSelectionChange={async (newOption) => {
+                          props.formik.setFieldValue(
+                            `stockAdjustmentItems.${props.elementKey}.locationId`,
+                            newOption?.value || null
+                          );
+                        }}
+                        asyncFunc={(
+                          input: string,
+                          page: number,
+                          pageSize: number,
+                          ids?: string[]
+                        ) =>
+                          LocationService.getSelectOptions(
+                            input,
+                            page,
+                            pageSize,
+                            ids
+                          )
+                        }
+                      />
+                      <FormHelperText>
+                        <FormikErrorMessage
+                          touched={props.touched.locationId}
+                          error={props.errors.locationId}
+                          translatedFieldName={t("rack")}
+                        />
+                      </FormHelperText>
+                    </FormControl>
+                  ),
+                },
+                {
                   label: t("quantity"),
                   required: isRequiredField(
                     StockAdjustmentCreateEditSchema,
@@ -128,6 +190,7 @@ const StockAdjustmentItemCreateEdit: React.FC<
                       id={`stockAdjustmentItems.${props.elementKey}.quantity`}
                       name={`stockAdjustmentItems.${props.elementKey}.quantity`}
                       size="small"
+                      type="number"
                       value={props.values.quantity}
                       onChange={props.handleChange}
                       onBlur={props.handleBlur}
@@ -139,6 +202,35 @@ const StockAdjustmentItemCreateEdit: React.FC<
                           touched={props.touched.quantity}
                           error={props.errors.quantity}
                           translatedFieldName={t("quantity")}
+                        />
+                      }
+                    />
+                  ),
+                },
+
+                {
+                  label: t("reason"),
+                  required: isRequiredField(
+                    StockAdjustmentCreateEditSchema,
+                    "stockAdjustmentItems[].reason"
+                  ),
+                  value: (
+                    <TextField
+                      fullWidth
+                      id={`stockAdjustmentItems.${props.elementKey}.reason`}
+                      name={`stockAdjustmentItems.${props.elementKey}.reason`}
+                      size="small"
+                      value={props.values.reason}
+                      onChange={props.handleChange}
+                      onBlur={props.handleBlur}
+                      error={
+                        props.touched.reason && Boolean(props.errors.reason)
+                      }
+                      helperText={
+                        <FormikErrorMessage
+                          touched={props.touched.reason}
+                          error={props.errors.reason}
+                          translatedFieldName={t("reason")}
                         />
                       }
                     />

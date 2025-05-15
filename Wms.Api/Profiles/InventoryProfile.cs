@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Wms.Api.Dto.CartonSize;
 using Wms.Api.Dto.Inventory;
 using Wms.Api.Entities;
 
@@ -9,8 +10,10 @@ public class InventoryProfile : Profile
     public InventoryProfile()
     {
         #region DetailsV12Dto
-        CreateMap<Inventory, InventoryDetailsDto>(); 
-        #endregion  
+        CreateMap<Inventory, InventoryDetailsDto>();
+        #endregion
 
+
+        CreateMap<Inventory, InventorySummaryDetailsDto>();
     }
 }

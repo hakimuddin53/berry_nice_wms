@@ -33,12 +33,7 @@ namespace Wms.Api.Controllers
             PagedList<StockIn> pagedResult = new PagedList<StockIn>(result, stockInSearch.Page, stockInSearch.PageSize);
 
             var stockInDtos = autoMapperService.Map<PagedListDto<StockInDetailsDto>>(pagedResult);
-
-            foreach (var stock in stockInDtos.Data)
-            {
-                stock.Warehouse = context.Warehouses?.Where(x => x.Id == stock.WarehouseId)?.FirstOrDefault()?.Name ?? "";
-                stock.Location = context.Locations?.Where(x => x.Id == stock.LocationId)?.FirstOrDefault()?.Name ?? "";
-            }
+            
             return Ok(stockInDtos);
         }
          
@@ -60,15 +55,7 @@ namespace Wms.Api.Controllers
 
             stockIn.StockInItems = context.StockInItems.Where(x => x.StockInId == stockIn.Id).ToList();
 
-            var stockInDtos = autoMapperService.Map<StockInDetailsDto>(stockIn); 
-
-            stockInDtos.Warehouse = context.Warehouses?.Where(x => x.Id == stockInDtos.WarehouseId)?.FirstOrDefault()?.Name ?? "";
-            stockInDtos.Location = context.Locations?.Where(x => x.Id == stockInDtos.LocationId)?.FirstOrDefault()?.Name ?? "";
-
-            foreach(var stockInItem in stockInDtos.StockInItems!)
-            {
-                stockInItem.Product = context.Products?.Where(x => x.Id == stockInItem.ProductId)?.FirstOrDefault()?.Name ?? "";
-            }
+            var stockInDtos = autoMapperService.Map<StockInDetailsDto>(stockIn);   
 
             return Ok(stockInDtos);
         }

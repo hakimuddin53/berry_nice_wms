@@ -140,9 +140,9 @@ namespace Wms.Api.Services
                                 
                                 await productRepository.AddInventoryRecordAsync(inventory);
                             }
+                            
+                            await productRepository.SaveChangesAsync();
                         }
-
-                        await productRepository.SaveChangesAsync();
                     }
                 }
 

@@ -15,7 +15,7 @@ import {
   InventoryDetailsDto,
   InventorySearchDto,
 } from "interfaces/v12/inventory/inventory";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useClientCodeService } from "services/ClientCodeService";
 import { useInventoryService } from "services/InventoryService";
@@ -33,6 +33,7 @@ function InventoryListPage() {
   const WarehouseService = useWarehouseService();
   const ClientCodeService = useClientCodeService();
   const LocationService = useLocationService();
+  const [pageBlocker, setPageBlocker] = useState(false);
 
   const searchRef = useRef<InventorySearchDto>({
     page: 1,
@@ -82,13 +83,16 @@ function InventoryListPage() {
 
   const handleExport = async () => {
     try {
+      setPageBlocker(true);
       const response = await axios.post(
-        "/api/inventory/export",
+        "/inventory/export",
         searchRef.current,
         {
           responseType: "blob",
         }
       );
+
+      setPageBlocker(false);
 
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
@@ -108,6 +112,7 @@ function InventoryListPage() {
   return (
     <Page
       title={t("inventory")}
+      showBackdrop={pageBlocker}
       breadcrumbs={[
         { label: t("common:dashboard"), to: "/" },
         { label: t("inventory") },

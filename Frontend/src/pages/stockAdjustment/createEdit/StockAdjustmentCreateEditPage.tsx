@@ -42,7 +42,6 @@ const StockAdjustmentCreateEditPage: React.FC = () => {
     useState<YupStockAdjustmentCreateEdit>({
       number: "",
       warehouseId: EMPTY_GUID as guid,
-      locationId: EMPTY_GUID as guid,
       stockAdjustmentItems: [],
     });
 

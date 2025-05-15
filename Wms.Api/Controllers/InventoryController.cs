@@ -50,7 +50,8 @@ namespace Wms.Api.Controllers
             foreach (var inventory in inventoryDtos.Data)
             {
                 var product = context.Products?.Where(x => x.Id == inventory.ProductId)?.FirstOrDefault();
-                inventory.Product = product?.Name ?? "";
+                inventory.Product = product != null ? $"{product.Name} - {product.ItemCode}" : "";
+
                 inventory.Warehouse =
                     context.Warehouses?.Where(x => x.Id == inventory.WarehouseId)?.FirstOrDefault()?.Name ?? "";
                 inventory.CurrentLocation = context.Locations?.Where(x => x.Id == inventory.CurrentLocationId)
@@ -130,60 +131,105 @@ namespace Wms.Api.Controllers
             {
                 return result.ErrorResult!;
             }
-            
-            // 1. Get the base filtered query
+
+            // Base filtered query
             var filteredQuery = GetFilteredInventoryQuery(inventorySearch, result.StockGroupId, result.IsAdmin);
 
-            // 2. Group by ProductId and WarehouseId, then select the latest record from each group
-            var latestInventoryQuery = filteredQuery
-                .GroupBy(i => new { i.ProductId, i.WarehouseId })
-                .Select(g =>
-                    g.OrderByDescending(i => i.CreatedAt).FirstOrDefault()); // Get the most recent inventory per group
+            //var groupedQuery = filteredQuery
+            //        .GroupBy(i => new { i.ProductId, i.WarehouseId, i.CurrentLocationId })
+            //        .Select(g => g
+            //            .OrderByDescending(i => i.CreatedAt)
+            //            .FirstOrDefault()!
+            //        )
+            //        .Select(i => new
+            //        {
+            //            i.ProductId,
+            //            i.WarehouseId,
+            //            i.CurrentLocationId, 
+            //            i.NewBalance,
+            //            i.CreatedAt,
+            //            i.ChangedAt
+            //        });
 
-            // Ensure FirstOrDefault doesn't return null groups if the base query could be empty
-            latestInventoryQuery = latestInventoryQuery.Where(i => i != null);
-            
+            var latestDatesPerGroup = filteredQuery
+    .GroupBy(i => new { i.ProductId, i.WarehouseId, i.CurrentLocationId })
+    .Select(g => new
+    {
+        g.Key.ProductId,
+        g.Key.WarehouseId,
+        g.Key.CurrentLocationId,
+        MaxCreatedAt = g.Max(i => i.CreatedAt)
+    });
 
-            // 4. Apply pagination to the query selecting the latest records
-            var pagedLatestInventory = await latestInventoryQuery
+            var groupedQuery = from item in filteredQuery
+                                   join latest in latestDatesPerGroup
+                                   on new { item.ProductId, item.WarehouseId, item.CurrentLocationId, item.CreatedAt }
+                                   equals new { latest.ProductId, latest.WarehouseId, latest.CurrentLocationId, CreatedAt = latest.MaxCreatedAt }
+                                   select new
+                                   {
+                                       item.ProductId,
+                                       item.WarehouseId,
+                                       item.CurrentLocationId,
+                                       item.NewBalance,
+                                       item.CreatedAt,
+                                       item.ChangedAt
+                                   };
+
+
+
+            var totalCount = await groupedQuery.CountAsync();
+
+            var pagedGroupedData = await groupedQuery
                 .Skip((inventorySearch.Page - 1) * inventorySearch.PageSize)
                 .Take(inventorySearch.PageSize)
-                .ToListAsync(); // Execute the paged query
+                .ToListAsync();
 
-            var inventorySummaryDtos =
-                autoMapperService.Map<PagedListDto<InventorySummaryDetailsDto>>(pagedLatestInventory);
+            // Fetch related data in batch to avoid N+1 query problem
+            var productIds = pagedGroupedData.Select(p => p.ProductId).Distinct().ToList();
+            var warehouseIds = pagedGroupedData.Select(p => p.WarehouseId).Distinct().ToList();
+            var locationIds = pagedGroupedData.Select(p => p.CurrentLocationId).Distinct().ToList();
 
-            foreach (var latestInventory in inventorySummaryDtos.Data)
+            var products = await context.Products.Where(p => productIds.Contains(p.Id)).ToListAsync();
+            var warehouses = await context.Warehouses.Where(w => warehouseIds.Contains(w.Id)).ToListAsync();
+            var locations = await context.Locations.Where(l => locationIds.Contains(l.Id)).ToListAsync();
+
+            // Prepare the result DTOs manually
+            var inventorySummaryDtos = pagedGroupedData.Select(item =>
             {
-                var product = await context.Products.FindAsync(latestInventory.ProductId);
-                var warehouse = await context.Warehouses.FindAsync(latestInventory.WarehouseId);
-                var location = await context.Locations.FindAsync(latestInventory.CurrentLocationId);
+                var product = products.FirstOrDefault(p => p.Id == item.ProductId);
+                var warehouse = warehouses.FirstOrDefault(w => w.Id == item.WarehouseId);
+                var location = locations.FirstOrDefault(l => l.Id == item.CurrentLocationId);
 
-                var summaryDto = new InventorySummaryDetailsDto
+                var dto = new InventorySummaryDetailsDto
                 {
-                    Id = latestInventory.Id, // Use the Id of the latest inventory record
-                    ProductId = latestInventory.ProductId,
-                    WarehouseId = latestInventory.WarehouseId,
-                    CurrentLocationId = latestInventory.CurrentLocationId,
-                    AvailableQuantity = latestInventory.AvailableQuantity, // Map the quantity from the latest record
-                    Product = product?.Name ?? "",
+                    ProductId = item.ProductId,
+                    WarehouseId = item.WarehouseId,
+                    CurrentLocationId = item.CurrentLocationId,
+                    AvailableQuantity = item.NewBalance,
+                    CreatedAt = item.CreatedAt,
+                    ChangedAt = item.ChangedAt,
+                    Product = product != null ? $"{product.Name} ({product.ItemCode})" : "",
                     Warehouse = warehouse?.Name ?? "",
-                    CurrentLocation = location?.Name ?? "",
-                    CreatedAt = latestInventory.CreatedAt,
-                    ChangedAt = latestInventory.ChangedAt
+                    CurrentLocation = location?.Name ?? ""
                 };
 
                 if (product != null)
                 {
-                    // Fetch CartonSize name based on Product's CartonSizeId
-                    summaryDto.StockGroup =
-                        context.CartonSizes?.FirstOrDefault(cs => cs.Id == product.CartonSizeId)?.Name ?? "";
-                    summaryDto.ClientCode =
-                        context.ClientCodes?.FirstOrDefault(cs => cs.Id == product.ClientCodeId)?.Name ?? "";
+                    dto.StockGroup = context.CartonSizes?.FirstOrDefault(cs => cs.Id == product.CartonSizeId)?.Name ?? "";
+                    dto.ClientCode = context.ClientCodes?.FirstOrDefault(cc => cc.Id == product.ClientCodeId)?.Name ?? "";
                 }
-            }
 
-            return Ok(inventorySummaryDtos);
+                return dto;
+            }).ToList();
+
+            var pagedListDto = new PagedListDto<InventorySummaryDetailsDto>
+            {
+                Data = inventorySummaryDtos,
+                CurrentPage = inventorySearch.Page,
+                PageSize = inventorySearch.PageSize, 
+            };
+
+            return Ok(pagedListDto);
         }
 
         [HttpPost("summary/count", Name = "CountInventorySummaryAsync")]
@@ -207,7 +253,7 @@ namespace Wms.Api.Controllers
             return Ok(count);
         }
 
-        [HttpPost("export", Name = "ExportInventoryAsync")]
+       [HttpPost("export", Name = "ExportInventoryAsync")]
         public async Task<IActionResult> ExportInventoryAsync([FromBody] InventorySearchDto inventorySearch)
         {
             var result = await GetUserInformationAsync();
@@ -219,24 +265,57 @@ namespace Wms.Api.Controllers
             // Get full filtered query without pagination
             var filteredQuery = GetFilteredInventoryQuery(inventorySearch, result.StockGroupId, result.IsAdmin)
                 .OrderByDescending(i => i.CreatedAt);
-            
-            var inventoryDtos = autoMapperService.Map<List<InventoryDetailsDto>>( filteredQuery.ToList());
+
+            var inventoryDtos = autoMapperService.Map<List<InventoryDetailsDto>>(filteredQuery.ToList());
 
             foreach (var inventory in inventoryDtos)
             {
                 var product = context.Products?.FirstOrDefault(x => x.Id == inventory.ProductId);
-                inventory.Product = product?.Name ?? "";
-                inventory.Warehouse =
-                    context.Warehouses?.FirstOrDefault(x => x.Id == inventory.WarehouseId)?.Name ?? "";
-                inventory.CurrentLocation =
-                    context.Locations?.FirstOrDefault(x => x.Id == inventory.CurrentLocationId)?.Name ?? "";
+                inventory.Product = product != null ? $"{product.Name} - {product.ItemCode}" : "";
+                inventory.Warehouse = context.Warehouses?.FirstOrDefault(x => x.Id == inventory.WarehouseId)?.Name ?? "";
+                inventory.CurrentLocation = context.Locations?.FirstOrDefault(x => x.Id == inventory.CurrentLocationId)?.Name ?? "";
 
                 if (product != null)
                 {
-                    inventory.StockGroup =
-                        context.CartonSizes?.FirstOrDefault(x => x.Id == product.CartonSizeId)?.Name ?? "";
-                    inventory.ClientCode =
-                        context.ClientCodes?.FirstOrDefault(x => x.Id == product.ClientCodeId)?.Name ?? "";
+                    inventory.StockGroup = context.CartonSizes?.FirstOrDefault(x => x.Id == product.CartonSizeId)?.Name ?? "";
+                    inventory.ClientCode = context.ClientCodes?.FirstOrDefault(x => x.Id == product.ClientCodeId)?.Name ?? "";
+                }
+
+                // If you want transaction number here as well, replicate logic from SearchInventorysAsync
+                switch (inventory.TransactionType)
+                {
+                    case TransactionTypeEnum.STOCKIN:
+                        inventory.TransactionNumber = context.StockIns
+                            .Where(s => s.Id == inventory.StockInId)
+                            .Select(s => s.Number)
+                            .FirstOrDefault() ?? "";
+                        break;
+
+                    case TransactionTypeEnum.STOCKOUT:
+                        inventory.TransactionNumber = context.StockOuts
+                            .Where(s => s.Id == inventory.StockOutId)
+                            .Select(s => s.Number)
+                            .FirstOrDefault() ?? "";
+                        break;
+
+                    case TransactionTypeEnum.STOCKTRANSFERIN:
+                    case TransactionTypeEnum.STOCKTRANSFEROUT:
+                        inventory.TransactionNumber = context.StockTransfers
+                            .Where(s => s.Id == inventory.StockTransferId)
+                            .Select(s => s.Number)
+                            .FirstOrDefault() ?? "";
+                        break;
+
+                    case TransactionTypeEnum.STOCKADJUSTMENT:
+                        inventory.TransactionNumber = context.StockAdjustments
+                            .Where(s => s.Id == inventory.StockAdjustmentId)
+                            .Select(s => s.Number)
+                            .FirstOrDefault() ?? "";
+                        break;
+
+                    default:
+                        inventory.TransactionNumber = "";
+                        break;
                 }
             }
 
@@ -248,13 +327,15 @@ namespace Wms.Api.Controllers
             worksheet.Cell(1, 2).Value = "Product";
             worksheet.Cell(1, 3).Value = "Warehouse";
             worksheet.Cell(1, 4).Value = "Current Location";
-            worksheet.Cell(1, 5).Value = "Quantity In";
-            worksheet.Cell(1, 6).Value = "Quantity Out";
-            worksheet.Cell(1, 7).Value = "Old Balance";
-            worksheet.Cell(1, 8).Value = "New Balance";
-            worksheet.Cell(1, 9).Value = "Stock Group";
-            worksheet.Cell(1, 10).Value = "Client Code";
-            worksheet.Cell(1, 11).Value = "Created At"; 
+            
+            worksheet.Cell(1, 5).Value = "Stock Group";
+            worksheet.Cell(1, 6).Value = "Client Code";
+            worksheet.Cell(1, 7).Value = "Quantity In";
+            worksheet.Cell(1, 8).Value = "Quantity Out";
+            worksheet.Cell(1, 9).Value = "Old Balance";
+            worksheet.Cell(1, 10).Value = "Available Balance";
+            worksheet.Cell(1, 11).Value = "Transaction Number";  // Add header for this if needed
+            worksheet.Cell(1, 12).Value = "Created At";
 
             for (int i = 0; i < inventoryDtos.Count; i++)
             {
@@ -265,13 +346,14 @@ namespace Wms.Api.Controllers
                 worksheet.Cell(row, 2).Value = inventory.Product;
                 worksheet.Cell(row, 3).Value = inventory.Warehouse;
                 worksheet.Cell(row, 4).Value = inventory.CurrentLocation;
-                worksheet.Cell(row, 5).Value = inventory.QuantityIn;
-                worksheet.Cell(row, 6).Value = inventory.QuantityOut;
-                worksheet.Cell(row, 7).Value = inventory.OldBalance;
-                worksheet.Cell(row, 8).Value = inventory.NewBalance;
-                worksheet.Cell(row, 9).Value = inventory.StockGroup;
-                worksheet.Cell(row, 10).Value = inventory.ClientCode;
-                worksheet.Cell(row, 11).Value = inventory.CreatedAt; 
+                worksheet.Cell(row, 5).Value = inventory.StockGroup;
+                worksheet.Cell(row, 6).Value = inventory.ClientCode;
+                worksheet.Cell(row, 7).Value = inventory.QuantityIn;
+                worksheet.Cell(row, 8).Value = inventory.QuantityOut;
+                worksheet.Cell(row, 9).Value = inventory.OldBalance;
+                worksheet.Cell(row, 10).Value = inventory.NewBalance;
+                worksheet.Cell(row, 11).Value = inventory.TransactionNumber;  // Include transaction number value
+                worksheet.Cell(row, 12).Value = inventory.CreatedAt;
             }
 
             using var stream = new MemoryStream();
@@ -279,11 +361,12 @@ namespace Wms.Api.Controllers
             stream.Seek(0, SeekOrigin.Begin);
 
             var contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-            
+
             var fileName = $"InventoryExport_{DateTime.Now:yyyyMMdd}.xlsx";
 
             return File(stream.ToArray(), contentType, fileName);
         }
+
 
         [HttpPost("summary/export", Name = "ExportInventorySummaryAsync")]
         public async Task<IActionResult> ExportInventorySummaryAsync([FromBody] InventorySearchDto inventorySearch)

@@ -1,4 +1,4 @@
-import { Chip, Link } from "@mui/material";
+import { Chip, Link, Typography } from "@mui/material";
 import { EasyCopy } from "components/platbricks/shared";
 import { UserRoleDetailsDto } from "interfaces/v12/userRole/userRole";
 import { useMemo } from "react";
@@ -42,6 +42,16 @@ export const useUserRoleTable = () => {
       {
         id: "cartonSizeName",
         label: t("cartonSize"),
+        render: (row) => (
+          <Typography variant="body1" component="div">
+            {row.cartonSizeName.map((size, index) => (
+              <span key={size}>
+                {t(size)}
+                {index < row.cartonSizeName.length - 1 && " | "}
+              </span>
+            ))}
+          </Typography>
+        ),
       },
     ],
     [t]

@@ -11,26 +11,21 @@ namespace Wms.Api.Entities
         public Guid StockTransferId { get; set; }
 
         [Required]
-        public Guid ProductId { get; set; }
-        public string Product { get; set; }
+        public Guid ProductId { get; set; } 
 
         [Required]
         public int QuantityTransferred { get; set; }
         
         [Required]
-        public Guid FromLocationId { get; set; }  
-        public string FromLocation { get; set; }  
+        public Guid FromLocationId { get; set; }   
 
         [Required]
-        public Guid ToLocationId { get; set; }  
-        public string ToLocation { get; set; } 
+        public Guid ToLocationId { get; set; }   
 
         [Required]
-        public Guid FromWarehouseId { get; set; } // Source warehouse
-        public string FromWarehouse { get; set; }  
+        public Guid FromWarehouseId { get; set; } // Source warehouse 
 
         [Required]
-        public Guid ToWarehouseId { get; set; } // Destination warehouse
-        public string ToWarehouse { get; set; } 
+        public Guid ToWarehouseId { get; set; } // Destination warehouse 
     }
 }

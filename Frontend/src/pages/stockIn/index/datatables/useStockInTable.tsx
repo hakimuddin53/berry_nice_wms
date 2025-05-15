@@ -1,4 +1,5 @@
 import { Link } from "@mui/material";
+import WarehouseName from "components/platbricks/entities/WarehouseName";
 import { useCreatedChangeDate } from "hooks/useCreatedChangeDate";
 import { StockInDetailsDto } from "interfaces/v12/stockin/stockInDetails/stockInDetailsDto";
 import { useMemo } from "react";
@@ -38,10 +39,7 @@ export const useStockInTable = () => {
       {
         id: "warehouse",
         label: t("warehouse"),
-      },
-      {
-        id: "location",
-        label: t("rack"),
+        render: (row) => <WarehouseName warehouseId={row.warehouseId} />,
       },
     ],
     [t]

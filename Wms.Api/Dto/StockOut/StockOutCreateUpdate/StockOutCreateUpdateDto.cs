@@ -6,7 +6,6 @@ namespace Wms.Api.Dto.StockOut.StockOutCreateUpdateDto
     { 
         public required string Number { get; set; }
         public required string DONumber { get; set; }
-        public Guid LocationId { get; set; }
         public Guid WarehouseId { get; set; }
         public ICollection<StockOutItemCreateUpdateDto>? StockOutItems { get; set; }
     }

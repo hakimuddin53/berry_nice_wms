@@ -1,9 +1,11 @@
 import { SelectAsyncOption } from "components/platbricks/shared/SelectAsync";
+import { PagedListDto } from "interfaces/general/pagedList/PagedListDto";
 import {
   LocationCreateUpdateDto,
   LocationDetailsDto,
   LocationSearchDto,
 } from "interfaces/v12/location/location";
+import qs from "qs";
 import React from "react";
 import { guid } from "types/guid";
 import axios from "../utils/axios";
@@ -23,9 +25,29 @@ interface ILocationService {
     resultLocation: number,
     ids?: string[]
   ) => Promise<SelectAsyncOption[]>;
+  getByParameters: (
+    userIds: guid[],
+    resultPage?: number,
+    resultSize?: number
+  ) => Promise<PagedListDto<LocationDetailsDto>>;
 }
 
 const LocationServiceContext = createContext({} as ILocationService);
+
+const getByParameters = (
+  locationIds: guid[],
+  resultPage?: number,
+  resultSize?: number
+) => {
+  return axios
+    .get("/location", {
+      params: { locationIds, page: resultPage, pageSize: resultSize },
+      paramsSerializer: (params) => {
+        return qs.stringify(params);
+      },
+    })
+    .then((res) => res.data);
+};
 
 export const LocationServiceProvider: React.FC<{
   children?: React.ReactNode;
@@ -36,6 +58,7 @@ export const LocationServiceProvider: React.FC<{
   deleteLocation?: any;
   getLocationById?: any;
   getSelectOptions?: any;
+  getByParameters?: any;
 }> = (props) => {
   const getLocationById = async (locationId: string) => {
     return await axios.get(`/location/${locationId}`).then((res) => res.data);
@@ -98,6 +121,7 @@ export const LocationServiceProvider: React.FC<{
     deleteLocation: props.deleteLocation || deleteLocation,
     getLocationById: props.getLocationById || getLocationById,
     getSelectOptions: props.getSelectOptions || getSelectOptions,
+    getByParameters: props.getByParameters || getByParameters,
   };
 
   return (
@@ -110,3 +134,5 @@ export const LocationServiceProvider: React.FC<{
 export const useLocationService = () => {
   return useContext(LocationServiceContext);
 };
+
+export { getByParameters };

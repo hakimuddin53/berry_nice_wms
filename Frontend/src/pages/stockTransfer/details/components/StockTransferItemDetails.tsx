@@ -1,5 +1,8 @@
 import { CardContent } from "@mui/material";
+import LocationName from "components/platbricks/entities/LocationName";
+import ProductName from "components/platbricks/entities/ProductName";
 import UserName from "components/platbricks/entities/UserName";
+import WarehouseName from "components/platbricks/entities/WarehouseName";
 import {
   KeyValueList,
   KeyValuePair,
@@ -41,19 +44,21 @@ const StockTransferItemDetails: React.FC<{
                 {stockTransferItem.quantityTransferred}
               </KeyValuePair>
               <KeyValuePair label={t("product")}>
-                {stockTransferItem.product}
+                <ProductName productId={stockTransferItem.productId} />
               </KeyValuePair>
               <KeyValuePair label={t("source-warehouse")}>
-                {stockTransferItem.fromWarehouse}
+                <WarehouseName
+                  warehouseId={stockTransferItem.fromWarehouseId}
+                />
               </KeyValuePair>
               <KeyValuePair label={t("source-location")}>
-                {stockTransferItem.fromLocation}
+                <LocationName locationId={stockTransferItem.fromLocationId} />
               </KeyValuePair>
               <KeyValuePair label={t("destination-warehouse")}>
-                {stockTransferItem.toWarehouse}
+                <WarehouseName warehouseId={stockTransferItem.toWarehouseId} />
               </KeyValuePair>
               <KeyValuePair label={t("destination-location")}>
-                {stockTransferItem.toLocation}
+                <LocationName locationId={stockTransferItem.toLocationId} />
               </KeyValuePair>
               <KeyValuePair label={t("common:created-at")}>
                 <UserDateTime date={stockTransferItem.createdAt} />

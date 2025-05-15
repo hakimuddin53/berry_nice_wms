@@ -17,4 +17,9 @@ namespace Wms.Api.Dto.Warehouse
     {
         public required string Search { get; set; }
     }
+    
+    public class WarehouseFindByParametersDto : PagedRequestAbstractDto
+    {
+        public Guid[] WarehouseIds { get; set; } = [];
+    }
 }

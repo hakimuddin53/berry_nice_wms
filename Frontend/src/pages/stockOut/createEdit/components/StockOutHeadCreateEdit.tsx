@@ -5,7 +5,6 @@ import SelectAsync2 from "components/platbricks/shared/SelectAsync2";
 import { FormikProps } from "formik";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocationService } from "services/LocationService";
 import { useWarehouseService } from "services/WarehouseService";
 import { guid } from "types/guid";
 import { isRequiredField } from "utils/formikHelpers";
@@ -21,8 +20,6 @@ const StockOutHeadCreateEdit = (props: {
   const formik = props.formik;
 
   const WarehouseService = useWarehouseService();
-  const LocationService = useLocationService();
-
   return (
     <DataList
       hideDevider={true}
@@ -95,53 +92,6 @@ const StockOutHeadCreateEdit = (props: {
                   touched={formik.touched.warehouseId}
                   error={formik.errors.warehouseId}
                   translatedFieldName={t("warehouse")}
-                />
-              </FormHelperText>
-            </FormControl>
-          ),
-        },
-        {
-          label: t("rack"),
-          required: isRequiredField(
-            StockOutCreateEditSchema,
-            "locationId",
-            formik.values
-          ),
-          value: (
-            <FormControl
-              fullWidth
-              error={
-                formik.touched.locationId && Boolean(formik.errors.locationId)
-              }
-            >
-              <SelectAsync2
-                name="locationId"
-                error={
-                  formik.touched.locationId && Boolean(formik.errors.locationId)
-                }
-                onBlur={() => formik.setFieldTouched("locationId")}
-                ids={useMemo(
-                  () =>
-                    formik.values.locationId ? [formik.values.locationId] : [],
-                  [formik.values.locationId]
-                )}
-                onSelectionChange={async (newOption) => {
-                  formik.setFieldValue("locationId", newOption?.value || null);
-                }}
-                asyncFunc={(
-                  input: string,
-                  page: number,
-                  pageSize: number,
-                  ids?: guid[]
-                ) =>
-                  LocationService.getSelectOptions(input, page, pageSize, ids)
-                }
-              />
-              <FormHelperText sx={{ color: "#d32f2f" }}>
-                <FormikErrorMessage
-                  touched={formik.touched.locationId}
-                  error={formik.errors.locationId}
-                  translatedFieldName={t("rack")}
                 />
               </FormHelperText>
             </FormControl>

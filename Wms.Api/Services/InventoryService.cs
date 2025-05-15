@@ -18,7 +18,7 @@ namespace Wms.Api.Services
                     {
                         // Retrieve the existing inventory record for the product and warehouse
                         var existingInventory = await context.Inventories
-                            .Where(i => i.ProductId == item.ProductId && i.WarehouseId == stockIn.WarehouseId && i.CurrentLocationId == stockIn.LocationId)
+                            .Where(i => i.ProductId == item.ProductId && i.WarehouseId == stockIn.WarehouseId && i.CurrentLocationId == item.LocationId)
                             .OrderByDescending(i => i.CreatedAt)  
                             .FirstOrDefaultAsync();
 
@@ -32,7 +32,7 @@ namespace Wms.Api.Services
                             Id = Guid.NewGuid(),
                             TransactionType = TransactionTypeEnum.STOCKIN,
                             ProductId = item.ProductId,
-                            CurrentLocationId = stockIn.LocationId,
+                            CurrentLocationId = item.LocationId,
                             WarehouseId = stockIn.WarehouseId,
                             StockInId = item.StockInId,
                             QuantityIn = item.Quantity,
@@ -72,7 +72,7 @@ namespace Wms.Api.Services
                         var existingInventory = await context.Inventories
                             .Where(i => i.ProductId == item.ProductId
                                         && i.WarehouseId == stockOut.WarehouseId
-                                        && i.CurrentLocationId == stockOut.LocationId)
+                                        && i.CurrentLocationId == item.LocationId)
                             .OrderByDescending(i => i.CreatedAt)
                             .FirstOrDefaultAsync();
 
@@ -92,7 +92,7 @@ namespace Wms.Api.Services
                             Id = Guid.NewGuid(),
                             TransactionType = TransactionTypeEnum.STOCKOUT,
                             ProductId = item.ProductId,
-                            CurrentLocationId = stockOut.LocationId,
+                            CurrentLocationId = item.LocationId,
                             WarehouseId = stockOut.WarehouseId,
                             StockOutId = stockOut.Id, // Assuming StockOutId is part of stockOut parameter, or passed in item
                             QuantityIn = 0,
@@ -122,38 +122,42 @@ namespace Wms.Api.Services
             {
                 try
                 {
-                    foreach (var item in stockAdjustment.StockAdjustmentItems ?? [])
+                    foreach (var item in stockAdjustment.StockAdjustmentItems ?? Enumerable.Empty<StockAdjustmentItem>())
                     {
                         // Retrieve latest inventory record for product, warehouse, and location
                         var existingInventory = await context.Inventories
                             .Where(i => i.ProductId == item.ProductId 
                                         && i.WarehouseId == stockAdjustment.WarehouseId
-                                        && i.CurrentLocationId == stockAdjustment.LocationId)
+                                        && i.CurrentLocationId == item.LocationId)
                             .OrderByDescending(i => i.CreatedAt)
                             .FirstOrDefaultAsync();
 
                         int oldBalance = existingInventory?.NewBalance ?? 0;
-                        int newBalance = oldBalance + item.Quantity;
+                        int newBalance = item.Quantity; // New balance is the quantity input directly
 
-                        // If quantity is negative (stock decrease), check stock sufficiency
-                        if (item.Quantity < 0 && oldBalance < Math.Abs(item.Quantity))
+                        // If new balance is negative, check stock sufficiency (oldBalance >= 0 but we cannot have negative stock)
+                        if (newBalance < 0)
                         {
                             throw new InvalidOperationException(
-                                $"Insufficient stock for ProductId {item.ProductId}. " +
-                                $"Required: {Math.Abs(item.Quantity)}, Available: {oldBalance}.");
+                                $"Invalid new balance for ProductId {item.ProductId}. " +
+                                $"Quantity cannot be negative.");
                         }
 
-                        // Create a new inventory record for the stock adjustment
+                        // Calculate quantity in and out based on difference between newBalance and oldBalance
+                        int quantityDifference = newBalance - oldBalance;
+                        int quantityIn = quantityDifference > 0 ? quantityDifference : 0;
+                        int quantityOut = quantityDifference < 0 ? -quantityDifference : 0;
+
                         var inventory = new Inventory
                         {
                             Id = Guid.NewGuid(),
                             TransactionType = TransactionTypeEnum.STOCKADJUSTMENT,
                             ProductId = item.ProductId,
-                            CurrentLocationId = stockAdjustment.LocationId,
+                            CurrentLocationId = item.LocationId,
                             WarehouseId = stockAdjustment.WarehouseId, 
                             StockAdjustmentId = stockAdjustment.Id,
-                            QuantityIn = item.Quantity > 0 ? item.Quantity : 0,
-                            QuantityOut = item.Quantity < 0 ? Math.Abs(item.Quantity) : 0,
+                            QuantityIn = quantityIn,
+                            QuantityOut = quantityOut,
                             OldBalance = oldBalance,
                             NewBalance = newBalance,
                         };

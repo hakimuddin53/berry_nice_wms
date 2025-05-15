@@ -42,7 +42,6 @@ const StockOutCreateEditPage: React.FC = () => {
     number: "",
     doNumber: "",
     warehouseId: EMPTY_GUID as guid,
-    locationId: EMPTY_GUID as guid,
     stockOutItems: [],
   });
 

@@ -17,4 +17,9 @@ namespace Wms.Api.Dto.Location
     {
         public required string Search { get; set; }
     }
+    
+    public class LocationFindByParametersDto : PagedRequestAbstractDto
+    {
+        public Guid[] LocationIds { get; set; } = [];
+    }
 }

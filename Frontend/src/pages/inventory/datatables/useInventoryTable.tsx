@@ -48,7 +48,7 @@ export const useInventoryTable = () => {
       },
       {
         id: "newBalance",
-        label: t("new-balance"),
+        label: t("available-balance"),
       },
 
       {

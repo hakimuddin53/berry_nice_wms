@@ -16,18 +16,8 @@ namespace Wms.Api.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    public class LocationController : ControllerBase
+    public class LocationController(IService<Location> service, IMapper autoMapperService) : ControllerBase
     {
-        private readonly IService<Location> _service;
-        private readonly IMapper _autoMapperService;
-
-        public LocationController(IService<Location> service, IMapper autoMapperService)
-        {
-            _service = service;
-            _autoMapperService = autoMapperService;
-        }
-
-
         [HttpGet("select-options")]
         [ProducesResponseType(typeof(PagedListDto<SelectOptionV12Dto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetSelectOptionsAsync([FromQuery] GlobalSelectFilterV12Dto selectFilterV12Dto)
@@ -47,7 +37,7 @@ namespace Wms.Api.Controllers
             }
 
             // Use the reusable pagination method
-            var paginatedResult = await _service.GetPaginatedAsync(predicate, new Paginator
+            var paginatedResult = await service.GetPaginatedAsync(predicate, new Paginator
             {
                 Page = selectFilterV12Dto.Page,
                 PageSize = selectFilterV12Dto.PageSize,
@@ -57,35 +47,35 @@ namespace Wms.Api.Controllers
 
             PagedList<Location> pagedResult = new PagedList<Location>(resultToList, selectFilterV12Dto.Page, selectFilterV12Dto.PageSize);
 
-            var locationDtos = _autoMapperService.Map<PagedListDto<SelectOptionV12Dto>>(pagedResult);
+            var locationDtos = autoMapperService.Map<PagedListDto<SelectOptionV12Dto>>(pagedResult);
             return Ok(locationDtos);
         }
 
         [HttpPost("search", Name = "SearchLocationsAsync")]
         public async Task<IActionResult> SearchLocationsAsync([FromBody] LocationSearchDto locationSearch)
         {
-            var locations = await _service.GetAllAsync(e => e.Name.Contains(locationSearch.Search));
+            var locations = await service.GetAllAsync(e => e.Name.Contains(locationSearch.Search));
 
             var result = locations.Skip((locationSearch.Page - 1) * locationSearch.PageSize).Take(locationSearch.PageSize).ToList();
             PagedList<Location> pagedResult = new PagedList<Location>(result, locationSearch.Page, locationSearch.PageSize);
 
-            var locationDtos = _autoMapperService.Map<PagedListDto<LocationDetailsDto>>(pagedResult);
+            var locationDtos = autoMapperService.Map<PagedListDto<LocationDetailsDto>>(pagedResult);
             return Ok(locationDtos);
         }
 
         [HttpPost("count", Name = "CountLocationsAsync")]
         public async Task<IActionResult> CountLocationsAsync([FromBody] LocationSearchDto locationSearch)
         {
-            var locations = await _service.GetAllAsync(e => e.Name.Contains(locationSearch.Search));
+            var locations = await service.GetAllAsync(e => e.Name.Contains(locationSearch.Search));
 
-            var locationDtos = _autoMapperService.Map<List<LocationDetailsDto>>(locations);
+            var locationDtos = autoMapperService.Map<List<LocationDetailsDto>>(locations);
             return Ok(locationDtos.Count);
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
-            var product = await _service.GetByIdAsync(id);
+            var product = await service.GetByIdAsync(id);
             if (product == null)
                 return NotFound();
 
@@ -98,7 +88,7 @@ namespace Wms.Api.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            await _service.AddAsync(product);
+            await service.AddAsync(product);
             return CreatedAtAction(nameof(GetById), new { id = product.Id }, product);
         }
 
@@ -108,15 +98,37 @@ namespace Wms.Api.Controllers
             if (!ModelState.IsValid || id != product.Id)
                 return BadRequest();
 
-            await _service.UpdateAsync(product);
+            await service.UpdateAsync(product);
             return NoContent();
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            await _service.DeleteAsync(id);
+            await service.DeleteAsync(id);
             return NoContent();
+        }
+        
+        [HttpGet(Name = "FindLocationAsync")]
+        public async Task<IActionResult> FindLocationAsync([FromQuery] LocationFindByParametersDto locationFindByParametersDto)
+        {
+            var locationIdsAsString = locationFindByParametersDto.LocationIds.Select(id => id.ToString()).ToArray();
+
+            var locationsQuery = await service.GetAllAsync(e => locationIdsAsString.Contains(e.Id.ToString()));
+
+            var result = locationsQuery
+                .Skip((locationFindByParametersDto.Page - 1) * locationFindByParametersDto.PageSize)
+                .Take(locationFindByParametersDto.PageSize)
+                .ToList();
+
+            PagedList<Location> pagedResult = new PagedList<Location>(
+                result,
+                locationFindByParametersDto.Page,
+                locationFindByParametersDto.PageSize);
+
+            var locationDtos = autoMapperService.Map<PagedListDto<LocationDetailsDto>>(pagedResult);
+
+            return Ok(locationDtos);
         }
     }
 }

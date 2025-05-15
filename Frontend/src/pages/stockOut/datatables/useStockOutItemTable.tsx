@@ -25,6 +25,11 @@ export const useStockOutItemTable = () => {
         render: (row) => <ProductName productId={row.productId} />,
       },
       {
+        id: "product",
+        label: t("rack"),
+        render: (row) => <ProductName productId={row.productId} />,
+      },
+      {
         id: "quantity",
         label: t("quantity"),
         render: (row) => {

@@ -131,6 +131,7 @@ const StockTransferItemCreateEdit: React.FC<
                       id={`stockTransferItems.${props.elementKey}.quantityTransferred`}
                       name={`stockTransferItems.${props.elementKey}.quantityTransferred`}
                       size="small"
+                      type="number"
                       value={props.values.quantityTransferred}
                       onChange={props.handleChange}
                       onBlur={props.handleBlur}

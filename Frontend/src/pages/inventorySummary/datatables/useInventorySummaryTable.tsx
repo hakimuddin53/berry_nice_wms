@@ -21,6 +21,11 @@ export const useInventorySummaryTable = () => {
         render: (row) => row.warehouse,
       },
       {
+        id: "currentLocation",
+        label: t("location"),
+        render: (row) => row.currentLocation,
+      },
+      {
         id: "clientCode",
         label: t("client-code"),
         render: (row) => row.clientCode,
@@ -34,11 +39,6 @@ export const useInventorySummaryTable = () => {
         id: "availableQuantity",
         label: t("available-quantity"),
         render: (row) => row.availableQuantity.toLocaleString(), // formatted number
-      },
-      {
-        id: "currentLocation",
-        label: t("location"),
-        render: (row) => row.currentLocation,
       },
     ],
     [t]
