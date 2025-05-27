@@ -18,8 +18,7 @@ export const UserRoleCreateEditSchema = yup.object({
           "Invalid GUID format"
         )
     ) // Validate GUID format
-    .required()
-    .min(1, "At least one carton size must be selected"), // Optional: add a minimum length validation
+    .notRequired(),
 });
 
 export type YupUserRoleCreateEdit = yup.InferType<

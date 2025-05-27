@@ -68,21 +68,6 @@ function DesignDetailsPage() {
           to: "edit",
           icon: "Edit",
         },
-        {
-          title: t("common:delete"),
-          icon: "Delete",
-          onclick: () => {
-            OpenDeleteConfirmationDialog({
-              onConfirmDeletion: async () => {
-                await DesignService.deleteDesign(design.id as guid);
-              },
-              setPageBlocker: setPageBlocker,
-              entity: "design",
-              translationNamespace: "common",
-              redirectLink: `/designs`,
-            });
-          },
-        },
       ]}
     >
       <PbCard px={2} pt={2}>

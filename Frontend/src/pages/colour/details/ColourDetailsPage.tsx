@@ -68,21 +68,6 @@ function ColourDetailsPage() {
           to: "edit",
           icon: "Edit",
         },
-        {
-          title: t("common:delete"),
-          icon: "Delete",
-          onclick: () => {
-            OpenDeleteConfirmationDialog({
-              onConfirmDeletion: async () => {
-                await ColourService.deleteColour(colour.id as guid);
-              },
-              setPageBlocker: setPageBlocker,
-              entity: "colour",
-              translationNamespace: "common",
-              redirectLink: `/colours`,
-            });
-          },
-        },
       ]}
     >
       <PbCard px={2} pt={2}>

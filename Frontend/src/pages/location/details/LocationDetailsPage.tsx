@@ -72,21 +72,6 @@ function LocationDetailsPage() {
           to: "edit",
           icon: "Edit",
         },
-        {
-          title: t("common:delete"),
-          icon: "Delete",
-          onclick: () => {
-            OpenDeleteConfirmationDialog({
-              onConfirmDeletion: async () => {
-                await LocationService.deleteLocation(location.id as guid);
-              },
-              setPageBlocker: setPageBlocker,
-              entity: "location",
-              translationNamespace: "common",
-              redirectLink: `/locations`,
-            });
-          },
-        },
       ]}
     >
       <PbCard px={2} pt={2}>

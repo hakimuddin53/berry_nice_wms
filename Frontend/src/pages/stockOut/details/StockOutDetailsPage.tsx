@@ -89,22 +89,6 @@ function StockOutDetailsPage() {
           icon: "Edit",
           pageConfigIdentifier: "edit",
         },
-        {
-          title: t("delete"),
-          icon: "Delete",
-          onclick: () => {
-            OpenDeleteConfirmationDialog({
-              onConfirmDeletion: async () => {
-                await StockOutService.deleteStockOut(stockOut.id);
-              },
-              setPageBlocker: setPageBlocker,
-              entity: "stock-out",
-              translationNamespace: "common",
-              deleteDataName: stockOut.number,
-              redirectLink: `/stock-out`,
-            });
-          },
-        },
       ]}
     >
       <PbCard px={2} pt={2}>

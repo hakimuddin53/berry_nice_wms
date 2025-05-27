@@ -27,6 +27,11 @@ export const useInventoryTable = () => {
         label: t("carton-size"),
       },
       {
+        id: "size",
+        label: t("size"),
+        render: (row) => row.size,
+      },
+      {
         id: "transactionNumber",
         label: t("transaction-number"),
       },

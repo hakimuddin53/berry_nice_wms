@@ -37,7 +37,7 @@ namespace Wms.Api.Controllers
             }
 
             // 1. Get the base-filtered query
-            var filteredQuery = GetFilteredInventoryQuery(inventorySearch, userInfo.StockGroupId, userInfo.IsAdmin);
+            var filteredQuery = GetFilteredInventoryQuery(inventorySearch, userInfo.stockGroupIds, userInfo.IsAdminRole);
 
             filteredQuery = filteredQuery.OrderByDescending(i => i.CreatedAt);
 
@@ -62,6 +62,8 @@ namespace Wms.Api.Controllers
                     inventory.StockGroup = context.CartonSizes?.Where(x => x.Id == product.CartonSizeId)
                         ?.FirstOrDefault()?.Name ?? "";
                     inventory.ClientCode = context.ClientCodes?.Where(x => x.Id == product.ClientCodeId)
+                        ?.FirstOrDefault()?.Name ?? ""; 
+                    inventory.Size = context.Sizes?.Where(x => x.Id == product.SizeId)
                         ?.FirstOrDefault()?.Name ?? ""; 
                 }
                 
@@ -116,7 +118,7 @@ namespace Wms.Api.Controllers
                 return result.ErrorResult!;
             }
             
-            var filteredQuery = GetFilteredInventoryQuery(inventorySearch, result.StockGroupId);
+            var filteredQuery = GetFilteredInventoryQuery(inventorySearch,result.stockGroupIds, result.IsAdminRole);
 
             var inventoryDtos = autoMapperService.Map<List<InventoryDetailsDto>>(filteredQuery);
             return Ok(inventoryDtos.Count);
@@ -133,33 +135,17 @@ namespace Wms.Api.Controllers
             }
 
             // Base filtered query
-            var filteredQuery = GetFilteredInventoryQuery(inventorySearch, result.StockGroupId, result.IsAdmin);
-
-            //var groupedQuery = filteredQuery
-            //        .GroupBy(i => new { i.ProductId, i.WarehouseId, i.CurrentLocationId })
-            //        .Select(g => g
-            //            .OrderByDescending(i => i.CreatedAt)
-            //            .FirstOrDefault()!
-            //        )
-            //        .Select(i => new
-            //        {
-            //            i.ProductId,
-            //            i.WarehouseId,
-            //            i.CurrentLocationId, 
-            //            i.NewBalance,
-            //            i.CreatedAt,
-            //            i.ChangedAt
-            //        });
-
+            var filteredQuery = GetFilteredInventoryQuery(inventorySearch,result.stockGroupIds,  result.IsAdminRole);
+             
             var latestDatesPerGroup = filteredQuery
-    .GroupBy(i => new { i.ProductId, i.WarehouseId, i.CurrentLocationId })
-    .Select(g => new
-    {
-        g.Key.ProductId,
-        g.Key.WarehouseId,
-        g.Key.CurrentLocationId,
-        MaxCreatedAt = g.Max(i => i.CreatedAt)
-    });
+                .GroupBy(i => new { i.ProductId, i.WarehouseId, i.CurrentLocationId })
+                .Select(g => new
+                {
+                    g.Key.ProductId,
+                    g.Key.WarehouseId,
+                    g.Key.CurrentLocationId,
+                    MaxCreatedAt = g.Max(i => i.CreatedAt)
+                });
 
             var groupedQuery = from item in filteredQuery
                                    join latest in latestDatesPerGroup
@@ -174,8 +160,7 @@ namespace Wms.Api.Controllers
                                        item.CreatedAt,
                                        item.ChangedAt
                                    };
-
-
+             
 
             var totalCount = await groupedQuery.CountAsync();
 
@@ -217,6 +202,7 @@ namespace Wms.Api.Controllers
                 {
                     dto.StockGroup = context.CartonSizes?.FirstOrDefault(cs => cs.Id == product.CartonSizeId)?.Name ?? "";
                     dto.ClientCode = context.ClientCodes?.FirstOrDefault(cc => cc.Id == product.ClientCodeId)?.Name ?? "";
+                    dto.Size = context.Sizes?.FirstOrDefault(cc => cc.Id == product.SizeId)?.Name ?? "";
                 }
 
                 return dto;
@@ -232,27 +218,6 @@ namespace Wms.Api.Controllers
             return Ok(pagedListDto);
         }
 
-        [HttpPost("summary/count", Name = "CountInventorySummaryAsync")]
-        public async Task<IActionResult> CountInventorySummaryAsync([FromBody] InventorySearchDto inventorySearch)
-        {
-            var result = await GetUserInformationAsync();
-            if (!result.Success)
-            {
-                return result.ErrorResult!;
-            }
-            // 1. Get the base filtered query
-            var filteredQuery = GetFilteredInventoryQuery(inventorySearch, result.StockGroupId, result.IsAdmin);
-
-            // 2. Group by the relevant fields (Product, Warehouse)
-            var groupedQuery = filteredQuery
-                .GroupBy(i => new { i.ProductId, i.WarehouseId });
-
-            // 3. Count the number of distinct groups
-            var count = await groupedQuery.CountAsync();
-
-            return Ok(count);
-        }
-
        [HttpPost("export", Name = "ExportInventoryAsync")]
         public async Task<IActionResult> ExportInventoryAsync([FromBody] InventorySearchDto inventorySearch)
         {
@@ -263,7 +228,7 @@ namespace Wms.Api.Controllers
             }
 
             // Get full filtered query without pagination
-            var filteredQuery = GetFilteredInventoryQuery(inventorySearch, result.StockGroupId, result.IsAdmin)
+            var filteredQuery = GetFilteredInventoryQuery(inventorySearch,result.stockGroupIds,  result.IsAdminRole)
                 .OrderByDescending(i => i.CreatedAt);
 
             var inventoryDtos = autoMapperService.Map<List<InventoryDetailsDto>>(filteredQuery.ToList());
@@ -279,6 +244,8 @@ namespace Wms.Api.Controllers
                 {
                     inventory.StockGroup = context.CartonSizes?.FirstOrDefault(x => x.Id == product.CartonSizeId)?.Name ?? "";
                     inventory.ClientCode = context.ClientCodes?.FirstOrDefault(x => x.Id == product.ClientCodeId)?.Name ?? "";
+                    inventory.Size = context.Sizes?.Where(x => x.Id == product.SizeId)
+                        ?.FirstOrDefault()?.Name ?? ""; 
                 }
 
                 // If you want transaction number here as well, replicate logic from SearchInventorysAsync
@@ -334,8 +301,9 @@ namespace Wms.Api.Controllers
             worksheet.Cell(1, 8).Value = "Quantity Out";
             worksheet.Cell(1, 9).Value = "Old Balance";
             worksheet.Cell(1, 10).Value = "Available Balance";
-            worksheet.Cell(1, 11).Value = "Transaction Number";  // Add header for this if needed
-            worksheet.Cell(1, 12).Value = "Created At";
+            worksheet.Cell(1, 11).Value = "Transaction Number";  
+            worksheet.Cell(1, 12).Value = "Size";  
+            worksheet.Cell(1, 13).Value = "Created At";
 
             for (int i = 0; i < inventoryDtos.Count; i++)
             {
@@ -352,8 +320,9 @@ namespace Wms.Api.Controllers
                 worksheet.Cell(row, 8).Value = inventory.QuantityOut;
                 worksheet.Cell(row, 9).Value = inventory.OldBalance;
                 worksheet.Cell(row, 10).Value = inventory.NewBalance;
-                worksheet.Cell(row, 11).Value = inventory.TransactionNumber;  // Include transaction number value
-                worksheet.Cell(row, 12).Value = inventory.CreatedAt;
+                worksheet.Cell(row, 11).Value = inventory.TransactionNumber;  
+                worksheet.Cell(row, 12).Value = inventory.Size;  
+                worksheet.Cell(row, 13).Value = inventory.CreatedAt;
             }
 
             using var stream = new MemoryStream();
@@ -376,37 +345,76 @@ namespace Wms.Api.Controllers
             {
                 return result.ErrorResult!;
             }
-            
-            var filteredQuery = GetFilteredInventoryQuery(inventorySearch, result.StockGroupId, result.IsAdmin);
 
-            // Group by ProductId and WarehouseId, then select the latest record from each group
-            var latestInventoryQuery = filteredQuery
-                .GroupBy(i => new { i.ProductId, i.WarehouseId })
-                .Select(g => g.OrderByDescending(i => i.CreatedAt).FirstOrDefault())
-                .Where(i => i != null);
+            var filteredQuery = GetFilteredInventoryQuery(inventorySearch, result.stockGroupIds, result.IsAdminRole);
 
-            var latestInventoryList = await latestInventoryQuery.ToListAsync();
+            var latestDatesPerGroup = filteredQuery
+                .GroupBy(i => new { i.ProductId, i.WarehouseId, i.CurrentLocationId })
+                .Select(g => new
+                {
+                    g.Key.ProductId,
+                    g.Key.WarehouseId,
+                    g.Key.CurrentLocationId,
+                    MaxCreatedAt = g.Max(i => i.CreatedAt)
+                });
 
-            var inventorySummaryDtos = autoMapperService.Map<List<InventorySummaryDetailsDto>>(latestInventoryList);
 
-            foreach (var latestInventory in inventorySummaryDtos)
+            var groupedQuery = from item in filteredQuery
+                               join latest in latestDatesPerGroup
+                               on new { item.ProductId, item.WarehouseId, item.CurrentLocationId, item.CreatedAt }
+                               equals new { latest.ProductId, latest.WarehouseId, latest.CurrentLocationId, CreatedAt = latest.MaxCreatedAt }
+                               select new
+                               {
+                                   item.ProductId,
+                                   item.WarehouseId,
+                                   item.CurrentLocationId,
+                                   AvailableQuantity = item.NewBalance, 
+                                   item.CreatedAt,
+                                   item.ChangedAt
+                               };
+
+             
+            var latestInventoryList = await groupedQuery.ToListAsync();
+             
+
+            var productIds = latestInventoryList.Select(x => x.ProductId).Distinct().ToList();
+            var warehouseIds = latestInventoryList.Select(x => x.WarehouseId).Distinct().ToList();
+            var locationIds = latestInventoryList.Select(x => x.CurrentLocationId).Distinct().ToList();
+
+            var products = await context.Products.Where(p => productIds.Contains(p.Id)).ToListAsync();
+            var warehouses = await context.Warehouses.Where(w => warehouseIds.Contains(w.Id)).ToListAsync();
+            var locations = await context.Locations.Where(l => locationIds.Contains(l.Id)).ToListAsync();
+
+            var inventorySummaryDtos = latestInventoryList.Select(item =>
             {
-                var product = await context.Products.FindAsync(latestInventory.ProductId);
-                var warehouse = await context.Warehouses.FindAsync(latestInventory.WarehouseId);
-                var location = await context.Locations.FindAsync(latestInventory.CurrentLocationId);
+                var product = products.FirstOrDefault(p => p.Id == item.ProductId);
+                var warehouse = warehouses.FirstOrDefault(w => w.Id == item.WarehouseId);
+                var location = locations.FirstOrDefault(l => l.Id == item.CurrentLocationId);
 
-                latestInventory.Product = product?.Name ?? "";
-                latestInventory.Warehouse = warehouse?.Name ?? "";
-                latestInventory.CurrentLocation = location?.Name ?? "";
+                var dto = new InventorySummaryDetailsDto
+                {
+                    Id = Guid.NewGuid(),
+                    ProductId = item.ProductId,
+                    WarehouseId = item.WarehouseId,
+                    CurrentLocationId = item.CurrentLocationId,
+                    AvailableQuantity = item.AvailableQuantity,
+                    CreatedAt = item.CreatedAt,
+                    ChangedAt = item.ChangedAt,
+                    Product = product != null ? $"{product.Name} ({product.ItemCode})" : "",
+                    Warehouse = warehouse?.Name ?? "",
+                    CurrentLocation = location?.Name ?? ""
+                };
 
                 if (product != null)
                 {
-                    latestInventory.StockGroup =
-                        context.CartonSizes?.FirstOrDefault(cs => cs.Id == product.CartonSizeId)?.Name ?? "";
-                    latestInventory.ClientCode =
-                        context.ClientCodes?.FirstOrDefault(cs => cs.Id == product.ClientCodeId)?.Name ?? "";
+                    dto.StockGroup = context.CartonSizes?.FirstOrDefault(cs => cs.Id == product.CartonSizeId)?.Name ?? "";
+                    dto.ClientCode = context.ClientCodes?.FirstOrDefault(cc => cc.Id == product.ClientCodeId)?.Name ?? "";
+                    dto.Size = context.Sizes?.FirstOrDefault(cc => cc.Id == product.SizeId)?.Name ?? "";
                 }
-            }
+
+                return dto;
+            }).ToList();
+            
 
             using var workbook = new XLWorkbook();
             var worksheet = workbook.Worksheets.Add("Inventory Summary");
@@ -419,9 +427,8 @@ namespace Wms.Api.Controllers
             worksheet.Cell(1, 5).Value = "Available Quantity";
             worksheet.Cell(1, 6).Value = "Stock Group";
             worksheet.Cell(1, 7).Value = "Client Code";
-            worksheet.Cell(1, 8).Value = "Created At";
-            worksheet.Cell(1, 9).Value = "Changed At";
-
+            worksheet.Cell(1, 8).Value = "Size";
+            worksheet.Cell(1, 9).Value = "Created At"; 
             for (int i = 0; i < inventorySummaryDtos.Count; i++)
             {
                 var summary = inventorySummaryDtos[i];
@@ -434,8 +441,8 @@ namespace Wms.Api.Controllers
                 worksheet.Cell(row, 5).Value = summary.AvailableQuantity;
                 worksheet.Cell(row, 6).Value = summary.StockGroup;
                 worksheet.Cell(row, 7).Value = summary.ClientCode;
-                worksheet.Cell(row, 8).Value = summary.CreatedAt;
-                worksheet.Cell(row, 9).Value = summary.ChangedAt;
+                worksheet.Cell(row, 8).Value = summary.Size; 
+                worksheet.Cell(row, 9).Value = summary.CreatedAt; 
             }
 
             using var stream = new MemoryStream();
@@ -448,6 +455,37 @@ namespace Wms.Api.Controllers
             return File(stream.ToArray(), contentType, fileName);
         }
 
+        [HttpPost("summary/count", Name = "CountInventorySummaryAsync")]
+        public async Task<IActionResult> CountInventorySummaryAsync([FromBody] InventorySearchDto inventorySearch)
+        {
+            var result = await GetUserInformationAsync();
+            if (!result.Success)
+            {
+                return result.ErrorResult!;
+            }
+
+            var filteredQuery = GetFilteredInventoryQuery(inventorySearch, result.stockGroupIds,result.IsAdminRole);
+
+            var latestDatesPerGroup = filteredQuery
+                .GroupBy(i => new { i.ProductId, i.WarehouseId, i.CurrentLocationId })
+                .Select(g => new
+                {
+                    g.Key.ProductId,
+                    g.Key.WarehouseId,
+                    g.Key.CurrentLocationId,
+                    MaxCreatedAt = g.Max(i => i.CreatedAt)
+                });
+
+            var latestInventoryQuery = from item in filteredQuery
+                                       join latest in latestDatesPerGroup
+                                       on new { item.ProductId, item.WarehouseId, item.CurrentLocationId, item.CreatedAt }
+                                       equals new { latest.ProductId, latest.WarehouseId, latest.CurrentLocationId, CreatedAt = latest.MaxCreatedAt }
+                                       select item;
+
+            var count = await latestInventoryQuery.CountAsync();
+
+            return Ok(count);
+        }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
@@ -456,42 +494,47 @@ namespace Wms.Api.Controllers
             return Ok(product);
         }
         
-        private async Task<(bool Success, IActionResult? ErrorResult, ApplicationUser? User, bool IsAdmin, string StockGroupId)> GetUserInformationAsync()
+        private async Task<(bool Success, IActionResult? ErrorResult, string stockGroupIds, bool IsAdminRole)> GetUserInformationAsync()
         {
-            var stockGroupId = "";
             var emailClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
 
             if (emailClaim == null || string.IsNullOrEmpty(emailClaim.Value))
             {
-                return (false, BadRequest("User email is missing or invalid."), null, false, stockGroupId);
+                return (false, BadRequest("User email is missing or invalid."), null, false);
             }
 
             var email = emailClaim.Value;
             var user = await userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return (false, BadRequest("User not found."), null, false, stockGroupId);
+                return (false, BadRequest("User not found."), null, false);
             }
 
-            bool isAdmin = email.Equals("admin@mhglobal.com", StringComparison.OrdinalIgnoreCase);
-            var userRole = await roleManager.FindByIdAsync(user.UserRoleId.ToString());
-            if (userRole != null)
+            bool isAdminRole = false;
+            var cartonSizeIds = "";
+            if (user.UserRoleId != null)
             {
-                stockGroupId = userRole.CartonSizeId;
+                var userRole = await roleManager.FindByIdAsync(user.UserRoleId.ToString());
+                if (userRole != null)
+                {
+                    // Check if userRole.Name indicates admin role
+                    isAdminRole = userRole.Name.Equals("admin", StringComparison.OrdinalIgnoreCase);
+                    cartonSizeIds = userRole.CartonSizeId;
+                }
             }
 
-            return (true, null, user, isAdmin, stockGroupId);
+            return (true, null, cartonSizeIds, isAdminRole);
         }
 
         // Helper method to get the filtered inventory query
         private IQueryable<Inventory> GetFilteredInventoryQuery(InventorySearchDto inventorySearch,
-            string? stockGroupIds, bool isAdmin = false)
+            string stockGroupIds, bool isAdminRole)
         {
             // 1) Start with everything
             var query = context.Inventories.AsQueryable();
 
-            // 2) Existing stock‐group / carton‐size filter
-            if (!string.IsNullOrWhiteSpace(stockGroupIds))
+            // 2) Existing stock‐group / carton‐size filter and if not admin role, filter by stock group
+            if (!isAdminRole && !string.IsNullOrWhiteSpace(stockGroupIds))
             {
                 var allowedCartonSizeIds = stockGroupIds
                     .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)

@@ -36,6 +36,11 @@ export const useInventorySummaryTable = () => {
         render: (row) => row.stockGroup,
       },
       {
+        id: "size",
+        label: t("size"),
+        render: (row) => row.size,
+      },
+      {
         id: "availableQuantity",
         label: t("available-quantity"),
         render: (row) => row.availableQuantity.toLocaleString(), // formatted number

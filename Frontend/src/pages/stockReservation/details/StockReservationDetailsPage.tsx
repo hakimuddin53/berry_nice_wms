@@ -73,23 +73,6 @@ function StockReservationDetailsPage() {
           to: "edit",
           icon: "Edit",
         },
-        {
-          title: t("common:delete"),
-          icon: "Delete",
-          onclick: () => {
-            OpenDeleteConfirmationDialog({
-              onConfirmDeletion: async () => {
-                await StockReservationService.deleteStockReservation(
-                  stockReservation.id as guid
-                );
-              },
-              setPageBlocker: setPageBlocker,
-              entity: "stock-reservation",
-              translationNamespace: "common",
-              redirectLink: `/stock-reservations`,
-            });
-          },
-        },
       ]}
     >
       <PbCard px={2} pt={2}>

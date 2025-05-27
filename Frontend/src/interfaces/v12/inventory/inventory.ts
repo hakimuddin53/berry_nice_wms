@@ -17,6 +17,7 @@ export interface InventoryDetailsDto extends CreatedChangedEntity {
   transactionNumber: string;
   clientCode: string;
   stockGroup: string;
+  size: string;
 }
 
 export interface InventorySummaryDetailsDto extends CreatedChangedEntity {
@@ -30,6 +31,7 @@ export interface InventorySummaryDetailsDto extends CreatedChangedEntity {
   currentLocation: string;
   clientCode: string;
   stockGroup: string;
+  size: string;
 }
 
 export interface InventorySearchDto extends PagedRequestAbstractDto {

@@ -21,11 +21,11 @@ namespace Wms.Api.Services
                         var worksheet = workbook.Worksheet(1);
 
                         var expectedHeaders = new List<string>
-                        {
-                            "Name", "ItemCode", "ClientCode", "StockGroup", "InboundQuantity",
-                            "Category", "Colour", "Design", "Size", "ListPrice", "QuantityPerCarton", "Threshold",
-                            "Rack", "Warehouse"
-                        };
+                {
+                    "Name", "ItemCode", "ClientCode", "StockGroup", "InboundQuantity",
+                    "Category", "Colour", "Design", "Size", "ListPrice", "QuantityPerCarton", "Threshold",
+                    "Rack", "Warehouse"
+                };
 
                         var actualHeaders = worksheet.Row(1).Cells(1, expectedHeaders.Count)
                             .Select(cell => cell.GetString().Trim())
@@ -66,14 +66,14 @@ namespace Wms.Api.Services
                             var threshold = worksheet.Cell(row, 12).GetValue<int>();
 
                             // Check if product exists by all criteria
-                            var existingProduct = await productRepository.GetProductByAllCriteriaAsync(                               
+                            var existingProduct = await productRepository.GetProductByAllCriteriaAsync(
                                 itemCode: itemCode,
                                 clientCodeId: clientCodeId,
                                 cartonSizeId: cartonSizeId,
                                 categoryId: categoryId,
                                 colourId: colourId,
                                 designId: designId,
-                                sizeId: sizeId );
+                                sizeId: sizeId);
 
                             if (existingProduct == null)
                             {
@@ -111,37 +111,75 @@ namespace Wms.Api.Services
                                 };
 
                                 await productRepository.AddInventoryRecordAsync(inventory);
+
+                                // Add inventory balance record for new product
+                                var inventoryBalance = new InventoryBalance
+                                {
+                                    Id = Guid.NewGuid(),
+                                    ProductId = product.Id,
+                                    WarehouseId = warehouseId,
+                                    CurrentLocationId = rackId,
+                                    Quantity = inboundQuantity
+                                };
+
+                                context.InventoryBalances.Add(inventoryBalance);
                             }
                             else
                             {
-                                
-                                // Retrieve the existing inventory record for the product and warehouse
+                                // Retrieve the existing inventory record for the product and warehouse/rack (latest)
                                 var existingInventory = await context.Inventories
                                     .Where(i => i.ProductId == existingProduct.Id && i.WarehouseId == warehouseId && i.CurrentLocationId == rackId)
-                                    .OrderByDescending(i => i.CreatedAt)  
+                                    .OrderByDescending(i => i.CreatedAt)
                                     .FirstOrDefaultAsync();
 
                                 // Calculate old and new balances
                                 int oldBalance = existingInventory != null ? existingInventory.NewBalance : 0;
                                 int newBalance = oldBalance + inboundQuantity;
-                                 
+
                                 var inventory = new Inventory
                                 {
                                     Id = Guid.NewGuid(),
                                     TransactionType = TransactionTypeEnum.BULKUPLOAD,
                                     ProductId = existingProduct.Id,
                                     CurrentLocationId = rackId,
-                                    WarehouseId = warehouseId, 
+                                    WarehouseId = warehouseId,
                                     QuantityIn = inboundQuantity,
                                     QuantityOut = 0,
                                     OldBalance = oldBalance,
-                                    NewBalance = newBalance
+                                    NewBalance = newBalance,
+                                    Remark = "Bulk upload adjustment"
                                 };
-                                
+
                                 await productRepository.AddInventoryRecordAsync(inventory);
+
+                                // Update or add inventory balance record
+                                var existingBalance = await context.InventoryBalances
+                                    .FirstOrDefaultAsync(b =>
+                                        b.ProductId == existingProduct.Id &&
+                                        b.WarehouseId == warehouseId &&
+                                        b.CurrentLocationId == rackId);
+
+                                if (existingBalance == null)
+                                {
+                                    var newBalanceRecord = new InventoryBalance
+                                    {
+                                        Id = Guid.NewGuid(),
+                                        ProductId = existingProduct.Id,
+                                        WarehouseId = warehouseId,
+                                        CurrentLocationId = rackId,
+                                        Quantity = inboundQuantity
+                                    };
+                                    context.InventoryBalances.Add(newBalanceRecord);
+                                }
+                                else
+                                {
+                                    existingBalance.Quantity += inboundQuantity;
+                                    context.InventoryBalances.Update(existingBalance);
+                                }
                             }
-                            
+
                             await productRepository.SaveChangesAsync();
+                            await context.SaveChangesAsync();
                         }
                     }
                 }

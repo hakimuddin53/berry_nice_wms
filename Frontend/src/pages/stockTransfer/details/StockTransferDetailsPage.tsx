@@ -91,24 +91,6 @@ function StockTransferDetailsPage() {
           icon: "Edit",
           pageConfigIdentifier: "edit",
         },
-        {
-          title: t("delete"),
-          icon: "Delete",
-          onclick: () => {
-            OpenDeleteConfirmationDialog({
-              onConfirmDeletion: async () => {
-                await StockTransferService.deleteStockTransfer(
-                  stockTransfer.id
-                );
-              },
-              setPageBlocker: setPageBlocker,
-              entity: "stock-transfer",
-              translationNamespace: "common",
-              deleteDataName: stockTransfer.number,
-              redirectLink: `/stock-transfer`,
-            });
-          },
-        },
       ]}
     >
       <PbCard px={2} pt={2}>

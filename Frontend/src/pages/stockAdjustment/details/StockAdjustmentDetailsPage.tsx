@@ -90,24 +90,6 @@ function StockAdjustmentDetailsPage() {
           icon: "Edit",
           pageConfigIdentifier: "edit",
         },
-        {
-          title: t("delete"),
-          icon: "Delete",
-          onclick: () => {
-            OpenDeleteConfirmationDialog({
-              onConfirmDeletion: async () => {
-                await StockAdjustmentService.deleteStockAdjustment(
-                  stockAdjustment.id
-                );
-              },
-              setPageBlocker: setPageBlocker,
-              entity: "stock-out",
-              translationNamespace: "common",
-              deleteDataName: stockAdjustment.number,
-              redirectLink: `/stock-out`,
-            });
-          },
-        },
       ]}
     >
       <PbCard px={2} pt={2}>

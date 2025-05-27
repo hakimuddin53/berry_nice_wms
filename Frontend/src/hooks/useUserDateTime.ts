@@ -2,17 +2,34 @@ import useAuth from "./useAuth";
 
 export const useUserDateTime = () => {
   const { user } = useAuth();
+  console.log(user);
+  const locale = "en-MY";
+  const timeZone = "Asia/Kuala_Lumpur";
 
   const getLocalDateAndTime = (date: string) => {
-    return new Date(date).toLocaleString(user?.locale);
+    console.log("getLocalDateAndTime", date);
+    console.log(
+      "getLocalDateAndTime",
+      new Date(date).toLocaleString(locale, { timeZone })
+    );
+
+    const normalizedUtcDateString = date.endsWith("Z") ? date : date + "Z";
+    const normalizeDate = new Date(normalizedUtcDateString);
+
+    return normalizeDate.toLocaleString(locale, { timeZone });
   };
 
   const getLocalDate = (date: string) => {
-    return new Date(date).toLocaleDateString(user?.locale);
+    const normalizedUtcDateString = date.endsWith("Z") ? date : date + "Z";
+    const normalizeDate = new Date(normalizedUtcDateString);
+
+    return normalizeDate.toLocaleDateString(locale, { timeZone });
   };
 
   const getLocalTime = (date: string) => {
-    return new Date(date).toLocaleTimeString(user?.locale);
+    const normalizedUtcDateString = date.endsWith("Z") ? date : date + "Z";
+    const normalizeDate = new Date(normalizedUtcDateString);
+    return normalizeDate.toLocaleTimeString(locale, { timeZone });
   };
 
   const isIsoDate = (date: string) => {

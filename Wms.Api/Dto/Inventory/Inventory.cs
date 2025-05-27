@@ -28,6 +28,7 @@ namespace Wms.Api.Dto.Inventory
         public string StockGroup { get; set; }
         public string Warehouse { get; set; }
         public string CurrentLocation { get; set; }
+        public string Size { get; set; }
     } 
     
     public class InventorySummaryDetailsDto : CreatedChangedEntity
@@ -42,6 +43,8 @@ namespace Wms.Api.Dto.Inventory
         public string StockGroup { get; set; }
         public string Warehouse { get; set; }
         public string CurrentLocation { get; set; }
+        
+        public string Size { get; set; }
     } 
 
     public class InventorySearchDto : PagedRequestAbstractDto

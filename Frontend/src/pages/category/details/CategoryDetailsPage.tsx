@@ -72,21 +72,6 @@ function CategoryDetailsPage() {
           to: "edit",
           icon: "Edit",
         },
-        {
-          title: t("common:delete"),
-          icon: "Delete",
-          onclick: () => {
-            OpenDeleteConfirmationDialog({
-              onConfirmDeletion: async () => {
-                await CategoryService.deleteCategory(category.id as guid);
-              },
-              setPageBlocker: setPageBlocker,
-              entity: "category",
-              translationNamespace: "common",
-              redirectLink: `/categorys`,
-            });
-          },
-        },
       ]}
     >
       <PbCard px={2} pt={2}>

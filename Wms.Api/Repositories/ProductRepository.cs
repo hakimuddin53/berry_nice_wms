@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using Wms.Api.Entities;
 using Wms.Api.Context;
 using Microsoft.EntityFrameworkCore;
+using DocumentFormat.OpenXml.InkML;
 
 namespace Wms.Api.Repositories
 {
@@ -14,6 +15,14 @@ namespace Wms.Api.Repositories
             {
                 await dbContext.SaveChangesAsync();
             }
+        }
+
+        public async Task AddProductsAsync(IEnumerable<Product> products)
+        {
+            if (products != null)             
+                await dbContext.Products.AddRangeAsync(products);
+            else
+                throw new ArgumentNullException(nameof(products));
         }
 
         public async Task SaveChangesAsync()

@@ -13,6 +13,8 @@ namespace Wms.Api.Repositories
         Task<Guid> GetOrCreateCartonSizeIdAsync(string cartonSizeName);
         Task<Product?> GetProductByItemCodeAsync(string itemCode);
 
+        Task AddProductsAsync(IEnumerable<Product> products);
+
         Task<Product?> GetProductByAllCriteriaAsync(
             string itemCode,
             Guid clientCodeId,

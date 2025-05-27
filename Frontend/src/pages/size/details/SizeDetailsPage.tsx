@@ -68,21 +68,6 @@ function SizeDetailsPage() {
           to: "edit",
           icon: "Edit",
         },
-        {
-          title: t("common:delete"),
-          icon: "Delete",
-          onclick: () => {
-            OpenDeleteConfirmationDialog({
-              onConfirmDeletion: async () => {
-                await SizeService.deleteSize(size.id as guid);
-              },
-              setPageBlocker: setPageBlocker,
-              entity: "size",
-              translationNamespace: "common",
-              redirectLink: `/sizes`,
-            });
-          },
-        },
       ]}
     >
       <PbCard px={2} pt={2}>

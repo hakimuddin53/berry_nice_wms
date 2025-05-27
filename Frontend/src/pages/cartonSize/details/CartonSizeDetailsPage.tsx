@@ -74,21 +74,6 @@ function CartonSizeDetailsPage() {
           to: "edit",
           icon: "Edit",
         },
-        {
-          title: t("common:delete"),
-          icon: "Delete",
-          onclick: () => {
-            OpenDeleteConfirmationDialog({
-              onConfirmDeletion: async () => {
-                await CartonSizeService.deleteCartonSize(cartonSize.id as guid);
-              },
-              setPageBlocker: setPageBlocker,
-              entity: "cartonSize",
-              translationNamespace: "common",
-              redirectLink: `/stock-group`,
-            });
-          },
-        },
       ]}
     >
       <PbCard px={2} pt={2}>

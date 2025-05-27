@@ -72,21 +72,6 @@ function WarehouseDetailsPage() {
           to: "edit",
           icon: "Edit",
         },
-        {
-          title: t("common:delete"),
-          icon: "Delete",
-          onclick: () => {
-            OpenDeleteConfirmationDialog({
-              onConfirmDeletion: async () => {
-                await WarehouseService.deleteWarehouse(warehouse.id as guid);
-              },
-              setPageBlocker: setPageBlocker,
-              entity: "warehouse",
-              translationNamespace: "common",
-              redirectLink: `/warehouse`,
-            });
-          },
-        },
       ]}
     >
       <PbCard px={2} pt={2}>

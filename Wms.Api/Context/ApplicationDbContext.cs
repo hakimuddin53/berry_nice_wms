@@ -68,7 +68,8 @@ namespace Wms.Api.Context
         public DbSet<Colour> Colours { get; set; }
         public DbSet<Size> Sizes { get; set; }
         public DbSet<Location> Locations { get; set; } 
-        public DbSet<ClientCode> ClientCodes { get; set; } 
+        public DbSet<ClientCode> ClientCodes { get; set; }
+        public DbSet<InventoryBalance> InventoryBalances { get; set; } 
 
     }
 }

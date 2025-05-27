@@ -74,21 +74,6 @@ function ClientCodeDetailsPage() {
           to: "edit",
           icon: "Edit",
         },
-        {
-          title: t("common:delete"),
-          icon: "Delete",
-          onclick: () => {
-            OpenDeleteConfirmationDialog({
-              onConfirmDeletion: async () => {
-                await ClientCodeService.deleteClientCode(clientCode.id as guid);
-              },
-              setPageBlocker: setPageBlocker,
-              entity: "clientCode",
-              translationNamespace: "common",
-              redirectLink: `/clientCode`,
-            });
-          },
-        },
       ]}
     >
       <PbCard px={2} pt={2}>

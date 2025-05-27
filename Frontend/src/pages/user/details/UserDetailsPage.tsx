@@ -65,21 +65,6 @@ function UserDetailsPage() {
           to: "edit",
           icon: "Edit",
         },
-        {
-          title: t("common:delete"),
-          icon: "Delete",
-          onclick: () => {
-            OpenDeleteConfirmationDialog({
-              onConfirmDeletion: async () => {
-                await UserService.deleteUser(user.id as guid);
-              },
-              setPageBlocker: setPageBlocker,
-              entity: "user",
-              translationNamespace: "common",
-              redirectLink: `/user`,
-            });
-          },
-        },
       ]}
     >
       <PbCard px={2} pt={2}>
