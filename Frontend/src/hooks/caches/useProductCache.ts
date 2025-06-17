@@ -21,7 +21,7 @@ const useProductCache = () => {
   const getProductById = useCallback(
     (id: guid) => {
       if (id === EMPTY_GUID) {
-        return { name: "", itemCode: "" };
+        return { name: "", itemCode: "", size: "" };
       }
       if (productCache.data[id]) {
         return productCache.data[id];
@@ -30,6 +30,7 @@ const useProductCache = () => {
         return {
           name: CacheObjectStateMessage.LOADING,
           itemCode: CacheObjectStateMessage.LOADING,
+          size: CacheObjectStateMessage.LOADING,
         };
       }
     },

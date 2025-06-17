@@ -38,8 +38,10 @@ namespace Wms.Api.Controllers
 
         [HttpPost("search", Name = "SearchStockOutsAsync")]
         public async Task<IActionResult> SearchStockOutsAsync([FromBody] StockOutSearchDto stockOutSearch)
-        {    
-            var stockOuts = await _service.GetAllAsync(e => e.Number.Contains(stockOutSearch.search));
+        {     
+            var stockOuts = await _service.GetAllAsync(e =>
+                                                       e.Number.Contains(stockOutSearch.search) ||
+                                                       e.DONumber.Contains(stockOutSearch.search));
 
             var result = stockOuts.Skip((stockOutSearch.Page - 1) * stockOutSearch.PageSize).Take(stockOutSearch.PageSize).ToList();
             PagedList<StockOut> pagedResult = new PagedList<StockOut>(result, stockOutSearch.Page, stockOutSearch.PageSize);
@@ -53,7 +55,9 @@ namespace Wms.Api.Controllers
         [HttpPost("count", Name = "CountStockOutsAsync")]
         public async Task<IActionResult> CountStockInsAsync([FromBody] StockOutSearchDto stockOutSearch)
         {
-            var stockOuts = await _service.GetAllAsync(e => e.Number.Contains(stockOutSearch.search));
+            var stockOuts = await _service.GetAllAsync(e =>
+                                                       e.Number.Contains(stockOutSearch.search) ||
+                                                       e.DONumber.Contains(stockOutSearch.search));
 
             var stockOutDtos = _autoMapperService.Map<List<StockOutDetailsDto>>(stockOuts);
             return Ok(stockOutDtos.Count);

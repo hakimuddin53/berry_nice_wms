@@ -11,6 +11,7 @@ export interface ProductCacheObject extends StatusObject {
   id: guid;
   name: string;
   itemCode: string;
+  size: string;
 }
 
 const initialState: {
@@ -70,13 +71,16 @@ export const productCacheSlice = createSlice({
   reducers: {
     addProducts: (
       state,
-      action: PayloadAction<{ id: guid; name: string; itemCode: string }[]>
+      action: PayloadAction<
+        { id: guid; name: string; itemCode: string; size: string }[]
+      >
     ) => {
       action.payload.forEach((product) => {
         state.data[product.id] = {
           id: product.id,
           name: product.name,
           itemCode: product.itemCode,
+          size: product.size,
           status: CacheObjectStatus.SUCCESS,
         };
       });
@@ -86,6 +90,7 @@ export const productCacheSlice = createSlice({
         id: action.payload,
         name: CacheObjectStateMessage.LOADING,
         itemCode: CacheObjectStateMessage.LOADING,
+        size: CacheObjectStateMessage.LOADING,
         status: CacheObjectStatus.PENDING,
       };
     },
@@ -95,6 +100,7 @@ export const productCacheSlice = createSlice({
           id,
           name: CacheObjectStateMessage.LOADING,
           itemCode: CacheObjectStateMessage.LOADING,
+          size: CacheObjectStateMessage.LOADING,
           status: CacheObjectStatus.FETCHING,
         };
       });
@@ -105,6 +111,7 @@ export const productCacheSlice = createSlice({
           id,
           name: CacheObjectStateMessage.NOTFOUND,
           itemCode: CacheObjectStateMessage.NOTFOUND,
+          size: CacheObjectStateMessage.NOTFOUND,
           status: CacheObjectStatus.NOTFOUND,
         };
       });
@@ -115,6 +122,7 @@ export const productCacheSlice = createSlice({
           id,
           name: CacheObjectStateMessage.UNKNOWN,
           itemCode: CacheObjectStateMessage.UNKNOWN,
+          size: CacheObjectStateMessage.UNKNOWN,
           status: CacheObjectStatus.ERROR,
         };
       });
@@ -125,6 +133,7 @@ export const productCacheSlice = createSlice({
           id,
           name: CacheObjectStateMessage.ERROR,
           itemCode: CacheObjectStateMessage.ERROR,
+          size: CacheObjectStateMessage.ERROR,
           status: CacheObjectStatus.ERROR,
         };
       });

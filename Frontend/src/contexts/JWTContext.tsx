@@ -2,7 +2,6 @@ import { createContext, ReactNode, useEffect, useReducer } from "react";
 
 import { ActionMap, AuthState, AuthUser, JWTContextType } from "../types/auth";
 
-import jwtDecode from "jwt-decode";
 import axios from "../utils/axios";
 import { isValidToken, setSession } from "../utils/jwt";
 
@@ -77,11 +76,6 @@ function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const accessToken = window.localStorage.getItem("accessToken");
 
-        console.log(accessToken);
-
-        const decoded = accessToken ? jwtDecode(accessToken) : (null as any);
-        console.log(decoded);
-
         if (accessToken && isValidToken(accessToken)) {
           setSession(accessToken);
 
@@ -117,14 +111,12 @@ function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    console.log("try log in");
     const response = await axios.post("/auth/sign-in", {
       email: email,
       password: password,
     });
     var accessToken = response.data.jwt;
-    console.log(accessToken);
-    console.log(response);
+
     setSession(accessToken);
 
     dispatch({

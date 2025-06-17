@@ -1,18 +1,8 @@
-import useAuth from "./useAuth";
-
 export const useUserDateTime = () => {
-  const { user } = useAuth();
-  console.log(user);
   const locale = "en-MY";
   const timeZone = "Asia/Kuala_Lumpur";
 
   const getLocalDateAndTime = (date: string) => {
-    console.log("getLocalDateAndTime", date);
-    console.log(
-      "getLocalDateAndTime",
-      new Date(date).toLocaleString(locale, { timeZone })
-    );
-
     const normalizedUtcDateString = date.endsWith("Z") ? date : date + "Z";
     const normalizeDate = new Date(normalizedUtcDateString);
 

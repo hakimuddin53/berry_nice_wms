@@ -186,6 +186,11 @@ namespace Wms.Api.Controllers
 
             var productDtos = autoMapperService.Map<PagedListDto<ProductDetailsDto>>(pagedResult);
 
+            foreach (var product in productDtos.Data)
+            { 
+                product.Size = context.Sizes?.Where(x => x.Id == product.SizeId)?.FirstOrDefault()?.Name ?? ""; 
+            }
+
             return Ok(productDtos);
         }
 

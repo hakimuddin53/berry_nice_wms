@@ -5,7 +5,7 @@ import {
   WarehouseDetailsDto,
   WarehouseSearchDto,
 } from "interfaces/v12/warehouse/warehouse";
-import qs from "qs";
+import queryString from "query-string";
 import React from "react";
 import { guid } from "types/guid";
 import axios from "../utils/axios";
@@ -46,7 +46,7 @@ const getByParameters = (
     .get("/warehouse", {
       params: { warehouseIds, page: resultPage, pageSize: resultSize },
       paramsSerializer: (params) => {
-        return qs.stringify(params);
+        return queryString.stringify(params);
       },
     })
     .then((res) => res.data);
