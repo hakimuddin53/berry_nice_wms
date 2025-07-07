@@ -54,6 +54,7 @@ import StockAdjustmentListPage from "pages/stockAdjustment/index/StockAdjustment
 import StockInCreateEditPage from "pages/stockIn/createEdit/StockInCreateEditPage";
 import StockInDetailsPage from "pages/stockIn/details/StockInDetailsPage";
 import StockInListPage from "pages/stockIn/index/StockInListPage";
+import StockInPrintPage from "pages/stockIn/print/StockInPrintPage";
 import StockOutCreateEditPage from "pages/stockOut/createEdit/StockOutCreateEditPage";
 import StockOutDetailsPage from "pages/stockOut/details/StockOutDetailsPage";
 import StockOutListPage from "pages/stockOut/index/StockOutListPage";
@@ -201,6 +202,14 @@ const routes = [
             element: (
               <ModuleGuard requiredModule={ModuleEnum.STOCKIN}>
                 <StockInCreateEditPage />
+              </ModuleGuard>
+            ),
+          },
+          {
+            path: ":id/print",
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.STOCKIN}>
+                <StockInPrintPage />
               </ModuleGuard>
             ),
           },
