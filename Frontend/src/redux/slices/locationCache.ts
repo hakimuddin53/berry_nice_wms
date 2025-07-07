@@ -29,7 +29,6 @@ const performFetch = createAsyncThunk(
       .map((x) => x.id);
     if (ids.length > 0) {
       thunk.dispatch(setLocationsFetchingState(ids));
-      console.log("Fetching locations for ids: ", ids);
       await getByParameters(ids, 1, ids.length)
         .then(async (res) => {
           let result = res.data;

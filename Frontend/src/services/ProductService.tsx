@@ -3,7 +3,7 @@ import { PagedListDto } from "interfaces/general/pagedList/PagedListDto";
 import { ProductCreateUpdateDto } from "interfaces/v12/product/productCreateUpdate/productCreateUpdateDto";
 import { ProductDetailsDto } from "interfaces/v12/product/productDetails/productDetailsDto";
 import { ProductSearchDto } from "interfaces/v12/product/productSearch/productSearchDto";
-import qs from "qs";
+import queryString from "query-string";
 import React from "react";
 import { guid } from "../types/guid";
 import axios from "../utils/axios";
@@ -42,7 +42,7 @@ const getByParameters = (
     .get("/product", {
       params: { productIds, page: resultPage, pageSize: resultSize },
       paramsSerializer: (params) => {
-        return qs.stringify(params);
+        return queryString.stringify(params);
       },
     })
     .then((res) => res.data);

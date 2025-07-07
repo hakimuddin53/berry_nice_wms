@@ -26,8 +26,11 @@ namespace Wms.Api.Controllers
     {
         [HttpPost("search", Name = "SearchStockInsAsync")]
         public async Task<IActionResult> SearchStockInsAsync([FromBody] StockInSearchDto stockInSearch)
-        {  
-            var stockIns = await service.GetAllAsync(e => e.Number.Contains(stockInSearch.search));
+        {
+            var stockIns = await service.GetAllAsync(e =>
+                                                        e.Number.Contains(stockInSearch.search) ||
+                                                        e.PONumber.Contains(stockInSearch.search));
+
 
             var result = stockIns.Skip((stockInSearch.Page - 1) * stockInSearch.PageSize).Take(stockInSearch.PageSize).ToList();
             PagedList<StockIn> pagedResult = new PagedList<StockIn>(result, stockInSearch.Page, stockInSearch.PageSize);
@@ -40,8 +43,10 @@ namespace Wms.Api.Controllers
         [HttpPost("count", Name = "CountStockInsAsync")]     
         public async Task<IActionResult> CountStockInsAsync([FromBody] StockInSearchDto stockInSearch)
         {
-            var stockIns = await service.GetAllAsync(e => e.Number.Contains(stockInSearch.search));
-             
+            var stockIns = await service.GetAllAsync(e =>
+                                                        e.Number.Contains(stockInSearch.search) ||
+                                                        e.PONumber.Contains(stockInSearch.search));
+
             var stockInDtos = autoMapperService.Map<List<StockInDetailsDto>>(stockIns);
             return Ok(stockInDtos.Count);
         }

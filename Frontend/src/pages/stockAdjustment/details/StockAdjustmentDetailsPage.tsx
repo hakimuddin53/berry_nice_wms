@@ -67,7 +67,7 @@ function StockAdjustmentDetailsPage() {
 
   return (
     <Page
-      title={t("stock-out")}
+      title={t("stock-adjustment")}
       subtitle={stockAdjustment.number}
       showBackdrop={pageBlocker}
       breadcrumbs={[
@@ -76,8 +76,8 @@ function StockAdjustmentDetailsPage() {
           to: "/",
         },
         {
-          label: t("stock-out"),
-          to: `/stock-out`,
+          label: t("stock-adjustment"),
+          to: `/stock-adjustment`,
         },
         {
           label: stockAdjustment.number,
