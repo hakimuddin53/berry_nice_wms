@@ -1,7 +1,10 @@
+import PrintIcon from "@mui/icons-material/Print";
+import { Link } from "@mui/material";
 import UserName from "components/platbricks/entities/UserName";
 import UserDateTime from "components/platbricks/shared/UserDateTime";
 import { DataTableHeaderCell } from "components/platbricks/shared/dataTable/DataTable";
 import i18next from "i18next";
+import { NavLink } from "react-router-dom";
 import { RemoveExistingCreatedChanged } from "utils/helper";
 
 export const useCreatedChangeDate = (
@@ -10,12 +13,14 @@ export const useCreatedChangeDate = (
   hideCreatedAt?: boolean,
   hideCreatedById?: boolean,
   hideChangedAt?: boolean,
-  hideChangedById?: boolean
+  hideChangedById?: boolean,
+  hidePrint?: boolean
 ) => {
   RemoveExistingCreatedChanged("createdAt", columns);
   RemoveExistingCreatedChanged("createdById", columns);
   RemoveExistingCreatedChanged("changedAt", columns);
   RemoveExistingCreatedChanged("changedById", columns);
+  RemoveExistingCreatedChanged("print", columns);
 
   columns.push(
     {
@@ -41,6 +46,22 @@ export const useCreatedChangeDate = (
       label: i18next.t("common:changed-by"),
       render: (row) => <UserName userId={row.changedById} />,
       hidden: (hidesAll ?? false) || (hideChangedById ?? false),
+    },
+    {
+      id: "print",
+      label: "",
+      render: (row) => (
+        <Link
+          component={NavLink}
+          to={`/stock-in/${row.id}/print`}
+          underline="hover"
+          sx={{ display: "inline-flex", alignItems: "center" }}
+        >
+          <PrintIcon fontSize="small" sx={{ color: "grey.500" }} />
+        </Link>
+      ),
+
+      hidden: (hidesAll ?? false) || (hidePrint ?? false),
     }
   );
 

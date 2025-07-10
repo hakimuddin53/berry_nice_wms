@@ -41,19 +41,6 @@ export const useStockInTable = () => {
         label: t("warehouse"),
         render: (row) => <WarehouseName warehouseId={row.warehouseId} />,
       },
-      {
-        id: "print",
-        label: t("print"),
-        render: (row) => (
-          <Link
-            component={NavLink}
-            to={`/stock-in/${row.id}/print`}
-            underline="hover"
-          >
-            {t("print")}
-          </Link>
-        ),
-      },
     ],
     [t]
   );
