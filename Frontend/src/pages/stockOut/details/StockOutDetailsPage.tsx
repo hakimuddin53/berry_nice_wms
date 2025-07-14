@@ -121,6 +121,9 @@ function StockOutDetailsPage() {
                   <KeyValuePair label={t("doNumber")}>
                     {stockOut.doNumber}
                   </KeyValuePair>
+                  <KeyValuePair label={t("to-location")}>
+                    {stockOut.toLocation}
+                  </KeyValuePair>
                   <KeyValuePair label={t("warehouse")}>
                     <WarehouseName warehouseId={stockOut.warehouseId} />
                   </KeyValuePair>

@@ -14,6 +14,9 @@ namespace Wms.Api.Entities
         public required string DONumber { get; set; }
 
         [Required]
+        public required string ToLocation { get; set; }
+
+        [Required]
         public Guid WarehouseId { get; set; }
 
         // Navigation Property

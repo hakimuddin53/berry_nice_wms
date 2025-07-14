@@ -47,7 +47,7 @@ export const useStockOutItemTable = () => {
     [t]
   );
 
-  useCreatedChangeDate(stockOutItemData, hidden);
+  useCreatedChangeDate(stockOutItemData, hidden, "stock-out");
 
   return [stockOutItemData];
 };

@@ -1,19 +1,19 @@
 // src/routes/StockInPrintPage.tsx
 import { PDFViewer } from "@react-pdf/renderer";
-import { StockInDetailsDto } from "interfaces/v12/stockin/stockInDetails/stockInDetailsDto";
+import { Print, ReportPdf } from "components/ReportPdf";
+import { StockOutDetailsDto } from "interfaces/v12/stockout/stockOutDetails/stockOutDetailsDto";
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useInventoryService } from "services/InventoryService";
 import { useLocationService } from "services/LocationService";
 import { useProductService } from "services/ProductService";
-import { useStockInService } from "services/StockInService";
+import { useStockOutService } from "services/StockOutService";
 import { useWarehouseService } from "services/WarehouseService";
 import { guid } from "types/guid";
-import { Print, ReportPdf } from "../../../components/ReportPdf";
 
-const StockInPrintPage: React.FC = () => {
+const StockOutPrintPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const stockInSvc = useStockInService();
+  const stockOutSvc = useStockOutService();
   const whSvc = useWarehouseService();
   const productSvc = useProductService();
   const locationSvc = useLocationService();
@@ -24,7 +24,9 @@ const StockInPrintPage: React.FC = () => {
 
   useEffect(() => {
     async function load() {
-      const raw: StockInDetailsDto = await stockInSvc.getStockInById(guid(id!));
+      const raw: StockOutDetailsDto = await stockOutSvc.getStockOutById(
+        guid(id!)
+      );
 
       // resolve display names
       const [warehouse] = await Promise.all([
@@ -32,7 +34,7 @@ const StockInPrintPage: React.FC = () => {
       ]);
 
       const items = await Promise.all(
-        raw.stockInItems.map(async (i, idx) => {
+        raw.stockOutItems.map(async (i, idx) => {
           const product = await productSvc.getProductById(guid(i.productId!));
 
           // fetch size name and category name
@@ -64,12 +66,12 @@ const StockInPrintPage: React.FC = () => {
 
       setData({
         slipNo: raw.number,
-        orderNumber: raw.poNumber,
-        location: raw.fromLocation,
+        orderNumber: raw.doNumber,
+        location: raw.toLocation,
         warehouse: warehouse,
         createdAt: raw.createdAt,
         createdBy: "",
-        type: "Stock In",
+        type: "Stock Out",
         items: items,
       });
     }
@@ -85,4 +87,4 @@ const StockInPrintPage: React.FC = () => {
   );
 };
 
-export default StockInPrintPage;
+export default StockOutPrintPage;

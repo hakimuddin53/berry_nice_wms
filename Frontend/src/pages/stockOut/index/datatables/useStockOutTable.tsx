@@ -35,6 +35,10 @@ export const useStockOutTable = () => {
         id: "doNumber",
         label: t("doNumber"),
       },
+      {
+        id: "toLocation",
+        label: t("to-location"),
+      },
     ],
     [t]
   );

@@ -6,6 +6,7 @@ export interface StockInDetailsDto extends CreatedChangedEntity {
   number: string;
   poNumber: string;
   warehouseId: guid;
+  fromLocation: string;
   stockInItems: StockInItemDetailsDto[];
 }
 export interface StockInItemDetailsDto extends CreatedChangedEntity {

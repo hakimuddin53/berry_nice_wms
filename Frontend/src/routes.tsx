@@ -58,6 +58,7 @@ import StockInPrintPage from "pages/stockIn/print/StockInPrintPage";
 import StockOutCreateEditPage from "pages/stockOut/createEdit/StockOutCreateEditPage";
 import StockOutDetailsPage from "pages/stockOut/details/StockOutDetailsPage";
 import StockOutListPage from "pages/stockOut/index/StockOutListPage";
+import StockOutPrintPage from "pages/stockOut/print/StockOutPrintPage";
 import StockReservationCreateEditPage from "pages/stockReservation/createEdit/StockReservationCreateEditPage";
 import StockReservationDetailsPage from "pages/stockReservation/details/StockReservationDetailsPage";
 import StockReservationListPage from "pages/stockReservation/index/StockReservationListPage";
@@ -247,6 +248,14 @@ const routes = [
             element: (
               <ModuleGuard requiredModule={ModuleEnum.STOCKOUT}>
                 <StockOutCreateEditPage />
+              </ModuleGuard>
+            ),
+          },
+          {
+            path: ":id/print",
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.STOCKOUT}>
+                <StockOutPrintPage />
               </ModuleGuard>
             ),
           },

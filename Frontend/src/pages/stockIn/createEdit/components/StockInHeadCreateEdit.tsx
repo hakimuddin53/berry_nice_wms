@@ -49,6 +49,32 @@ const StockInHeadCreateEdit = (props: {
           ),
         },
         {
+          label: t("from-location"),
+          required: isRequiredField(StockInCreateEditSchema, "fromLocation"),
+          value: (
+            <TextField
+              fullWidth
+              id="fromLocation"
+              name="fromLocation"
+              size="small"
+              value={formik.values.fromLocation}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={
+                formik.touched.fromLocation &&
+                Boolean(formik.errors.fromLocation)
+              }
+              helperText={
+                <FormikErrorMessage
+                  touched={formik.touched.fromLocation}
+                  error={formik.errors.fromLocation}
+                  translatedFieldName={t("from-location")}
+                />
+              }
+            />
+          ),
+        },
+        {
           label: t("warehouse"),
           required: isRequiredField(
             StockInCreateEditSchema,

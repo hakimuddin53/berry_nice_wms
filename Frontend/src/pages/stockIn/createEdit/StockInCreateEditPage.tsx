@@ -41,6 +41,7 @@ const StockInCreateEditPage: React.FC = () => {
   const [stockIn, setStockIn] = useState<YupStockInCreateEdit>({
     number: "",
     poNumber: "",
+    fromLocation: "",
     warehouseId: EMPTY_GUID as guid,
     stockInItems: [],
   });

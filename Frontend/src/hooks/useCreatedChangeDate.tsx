@@ -10,6 +10,7 @@ import { RemoveExistingCreatedChanged } from "utils/helper";
 export const useCreatedChangeDate = (
   columns: DataTableHeaderCell<any>[],
   hidesAll?: boolean,
+  type?: string,
   hideCreatedAt?: boolean,
   hideCreatedById?: boolean,
   hideChangedAt?: boolean,
@@ -53,7 +54,7 @@ export const useCreatedChangeDate = (
       render: (row) => (
         <Link
           component={NavLink}
-          to={`/stock-in/${row.id}/print`}
+          to={`/{${type}/${row.id}/print`}
           underline="hover"
           sx={{ display: "inline-flex", alignItems: "center" }}
         >

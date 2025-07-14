@@ -4,6 +4,7 @@ export interface StockOutCreateUpdateDto {
   number?: string | null;
   doNumber: string;
   warehouseId: guid;
+  toLocation: string;
   stockOutItems: StockOutItemCreateUpdate[];
 }
 export interface StockOutItemCreateUpdate {

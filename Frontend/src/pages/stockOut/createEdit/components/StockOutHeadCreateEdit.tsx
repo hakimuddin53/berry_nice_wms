@@ -48,6 +48,31 @@ const StockOutHeadCreateEdit = (props: {
           ),
         },
         {
+          label: t("to-location"),
+          required: isRequiredField(StockOutCreateEditSchema, "toLocation"),
+          value: (
+            <TextField
+              fullWidth
+              id="toLocation"
+              name="toLocation"
+              size="small"
+              value={formik.values.toLocation}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={
+                formik.touched.toLocation && Boolean(formik.errors.toLocation)
+              }
+              helperText={
+                <FormikErrorMessage
+                  touched={formik.touched.toLocation}
+                  error={formik.errors.toLocation}
+                  translatedFieldName={t("to-location")}
+                />
+              }
+            />
+          ),
+        },
+        {
           label: t("warehouse"),
           required: isRequiredField(
             StockOutCreateEditSchema,

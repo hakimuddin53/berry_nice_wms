@@ -110,6 +110,9 @@ function StockInDetailsPage() {
                   <KeyValuePair label={t("po-number")}>
                     {stockIn.poNumber}
                   </KeyValuePair>
+                  <KeyValuePair label={t("from-location")}>
+                    {stockIn.fromLocation}
+                  </KeyValuePair>
                   <KeyValuePair label={t("warehouse")}>
                     <WarehouseName warehouseId={stockIn.warehouseId} />
                   </KeyValuePair>

@@ -37,6 +37,10 @@ export const useStockInTable = () => {
         label: t("po-number"),
       },
       {
+        id: "fromLocation",
+        label: t("from-location"),
+      },
+      {
         id: "warehouse",
         label: t("warehouse"),
         render: (row) => <WarehouseName warehouseId={row.warehouseId} />,
@@ -45,6 +49,6 @@ export const useStockInTable = () => {
     [t]
   );
   /* eslint-enable */
-  useCreatedChangeDate(stockInData);
+  useCreatedChangeDate(stockInData, undefined, "stock-in");
   return [stockInData];
 };
