@@ -39,7 +39,15 @@ function InventorySummaryListPage() {
     pageSize: 10,
   });
 
-  const loadData = async () => {
+  const loadData = async (
+    page: number,
+    pageSize: number,
+    searchValue: string,
+    orderBy: string,
+    order: "asc" | "desc"
+  ) => {
+    searchRef.current.page = page + 1; // Adjusting for 1-based index
+    searchRef.current.pageSize = pageSize;
     return InventoryService.searchInventorySummary(searchRef.current)
       .then((res: any) => res)
       .catch((err: any) => {
@@ -48,7 +56,15 @@ function InventorySummaryListPage() {
       });
   };
 
-  const loadDataCount = async () => {
+  const loadDataCount = async (
+    page: number,
+    pageSize: number,
+    searchValue: string,
+    orderBy: string,
+    order: "asc" | "desc"
+  ) => {
+    searchRef.current.page = page + 1; // Adjusting for 1-based index
+    searchRef.current.pageSize = pageSize;
     return InventoryService.countInventorySummary(searchRef.current)
       .then((res: any) => res)
       .catch((err: any) => {

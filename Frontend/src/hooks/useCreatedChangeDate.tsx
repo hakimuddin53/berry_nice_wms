@@ -54,7 +54,7 @@ export const useCreatedChangeDate = (
       render: (row) => (
         <Link
           component={NavLink}
-          to={`/{${type}/${row.id}/print`}
+          to={`/${type}/${row.id}/print`}
           underline="hover"
           sx={{ display: "inline-flex", alignItems: "center" }}
         >

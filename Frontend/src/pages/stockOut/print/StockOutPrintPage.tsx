@@ -19,7 +19,6 @@ const StockOutPrintPage: React.FC = () => {
   const locationSvc = useLocationService();
   const inventorySvc = useInventoryService();
 
-  console.log(id);
   const [data, setData] = useState<Print | null>(null);
 
   useEffect(() => {
@@ -42,9 +41,9 @@ const StockOutPrintPage: React.FC = () => {
             locationSvc.getLocationById(i.locationId).then((c) => c.name),
             inventorySvc
               .searchInventorySummary({
-                productId: i.productId,
-                locationId: i.locationId,
-                warehouseId: raw.warehouseId,
+                productId: [i.productId],
+                locationId: [i.locationId],
+                warehouseId: [raw.warehouseId],
               })
               .then((res) => res[0]?.availableQuantity || 0),
           ]);
