@@ -36,7 +36,7 @@ namespace Wms.Api.Dto.Inventory
         public Guid Id { get; set; } 
         public Guid ProductId { get; set; }  
         public Guid WarehouseId { get; set; } 
-        public Guid CurrentLocationId { get; set; } 
+        public Guid CurrentLocationId { get; set; } = Guid.Empty; // Default to empty if not set
         public int AvailableQuantity { get; set; } // Quantity available
         public string Product { get; set; }
         public string ClientCode { get; set; }
@@ -53,5 +53,7 @@ namespace Wms.Api.Dto.Inventory
         public string[]? WarehouseId { get; set; }
         public string[]? ClientCodeId { get; set; } 
         public string[]? LocationId { get; set; }
+
+        public bool GroupByProduct { get; set; } = false;  
     }
 }

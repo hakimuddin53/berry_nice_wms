@@ -1,4 +1,4 @@
-import { Button } from "@mui/material";
+import { Button, FormControlLabel, Switch } from "@mui/material";
 import { DataList, DataTable, PbCard } from "components/platbricks/shared";
 import Page from "components/platbricks/shared/Page";
 import {
@@ -15,7 +15,7 @@ import {
   InventorySearchDto,
   InventorySummaryDetailsDto,
 } from "interfaces/v12/inventory/inventory";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useClientCodeService } from "services/ClientCodeService";
 import { useInventoryService } from "services/InventoryService";
@@ -48,6 +48,7 @@ function InventorySummaryListPage() {
   ) => {
     searchRef.current.page = page + 1; // Adjusting for 1-based index
     searchRef.current.pageSize = pageSize;
+
     return InventoryService.searchInventorySummary(searchRef.current)
       .then((res: any) => res)
       .catch((err: any) => {
@@ -65,6 +66,7 @@ function InventorySummaryListPage() {
   ) => {
     searchRef.current.page = page + 1; // Adjusting for 1-based index
     searchRef.current.pageSize = pageSize;
+
     return InventoryService.countInventorySummary(searchRef.current)
       .then((res: any) => res)
       .catch((err: any) => {
@@ -80,9 +82,16 @@ function InventorySummaryListPage() {
       loadDataCount,
     });
 
+  // useEffect(() => {
+  //   reloadData();
+  // }, [reloadData]);
+
   useEffect(() => {
-    reloadData();
-  }, [reloadData]);
+    const stored = localStorage.getItem("groupByProduct");
+    if (stored !== null) {
+      searchRef.current.groupByProduct = stored === "true";
+    }
+  }, []);
 
   const handleExport = async () => {
     try {
@@ -107,6 +116,20 @@ function InventorySummaryListPage() {
     } catch (error) {
       console.error("Error exporting inventory:", error);
     }
+  };
+
+  const [groupByProduct, setGroupByProduct] = useState(
+    localStorage.getItem("groupByProduct") === "true"
+  );
+
+  const handleGroupByProductChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const checked = event.target.checked;
+
+    searchRef.current.groupByProduct = checked;
+    setGroupByProduct(checked);
+    localStorage.setItem("groupByProduct", checked.toString());
   };
 
   return (
@@ -187,6 +210,16 @@ function InventorySummaryListPage() {
                   ),
                 },
               ]}
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={groupByProduct}
+                  onChange={handleGroupByProductChange}
+                  color="primary"
+                />
+              }
+              label={t("Group By Product")}
             />
             <div
               style={{

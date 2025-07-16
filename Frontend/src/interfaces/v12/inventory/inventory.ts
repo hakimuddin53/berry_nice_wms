@@ -39,4 +39,5 @@ export interface InventorySearchDto extends PagedRequestAbstractDto {
   warehouseId?: string[];
   clientCodeId?: string[];
   locationId?: string[];
+  groupByProduct?: boolean;
 }
