@@ -1,17 +1,18 @@
+using Leitstand.Mapping.Profiles.v12_0;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens; 
-using System.Text;
-using Wms.Api.Model;
-using Wms.Api.Repositories.Interface;
-using Wms.Api.Repositories;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Wms.Api.Services;
+using Microsoft.IdentityModel.Tokens; 
+using Microsoft.OpenApi.Models;
+using System;
+using System.Text;
 using Wms.Api.Context;
 using Wms.Api.Entities;
+using Wms.Api.Model;
 using Wms.Api.Profiles;
-using Leitstand.Mapping.Profiles.v12_0;
-using Microsoft.AspNetCore.Identity;
-using System;
+using Wms.Api.Repositories;
+using Wms.Api.Repositories.Interface;
+using Wms.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -58,7 +59,36 @@ builder.Services.AddAuthentication(options =>
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    // 1) Define the Bearer scheme
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme. Enter your token below:\n\nBearer {token}",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.Http,
+        Scheme = JwtBearerDefaults.AuthenticationScheme, // "bearer"
+        BearerFormat = "JWT"
+    });
+
+    // 2) Require Bearer for all endpoints
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
+
 
 builder.Services.AddCors(options =>
 {

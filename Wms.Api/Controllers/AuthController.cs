@@ -23,7 +23,70 @@ namespace Wms.Api.Controllers
             _userManager = userManager;
             _signInManager = signInManager;
         }
- 
+
+        [HttpPost("GeneratePassword")]
+        public async Task<IActionResult> GeneratePassword()
+        {
+            // List of users with their raw passwords
+            var entries = new List<(string Name, string RawPassword)>
+        {
+            ("Aziana Binti Talib", "830219016350"),
+            ("Fatin Hamiza Binti Abd Hamid", "960425145706"),
+            ("Mohd Hasman Bin Ab Rahman", "820626105861"),
+            ("Nor Solehah Binti Mohammad Salleh", "941006086330"),
+            ("Mohd Arshad Bin Abu Talib", "870820146013"),
+            ("Cynthia Ng Siew Ting", "870606495407"),
+            ("Aileen O. Peraltha", "P5642894B"),
+            ("Pang Min Yuan", "960122016392"),
+            ("Raven Kissel Bulan", "raven12345"),
+            ("DG Siti Hafizah Binti Zaidi", "971022125982"),
+            ("Jogie Rebucas Momprio", "P8651244B"),
+            ("Misliyati Binti Elas", "711111085256"),
+            ("Toh Chin Wei", "940126055147"),
+            ("Lai Wen Qian", "1103141354"),
+            ("Nur Batrisyia Ilhami", "40402080020"),
+            ("Liew Xin Yi", "940729055488"),
+            ("Fairry Gil Elle", "P6030306A"),
+            ("Mary Lovely C. Templa", "P9961049A"),
+            ("Nur Shahira Binti Mohd Rosnan", "950111106334"),
+            ("Choong Li Khee (Carene)", "50325146200"),
+            ("Tengku Sarah Amalina", "931201115708"),
+            ("Zarifah Binti Zohainan", "971105136310"),
+            ("Ryna Bulan Dela Cruz", "P9083935A"),
+            ("Nur Atasha Alina", "991015066222"),
+            ("Chandra Kirana", "X1328752"),
+            ("Intan Sabrina Hanapi", "20922011004"),
+            ("Nursyarina Atika Binti Ahmad", "1101102458"),
+            ("Muhammad Hisyam Bin Che Aziz", "980529035817"),
+            ("Adeleen Andrina Robeiro", "921014086324"),
+            ("Yap Li Teng (Ivy)", "821018086040"),
+            ("Rohaizura Binti A Rahim", "901123016116"),
+            ("Nurul Aqilah Binti Mohd Idrus", "10727140186"),
+            ("Haresh Singh", "718131107"),
+            ("Naqib", "124040283"),
+            ("Andrew Solomon", "770802105703"),
+            ("Sharmiza", "900320145182"),
+            ("Edmund Chong", "edmund123")
+        };
+
+            var hasher = new PasswordHasher<IdentityUser>();
+
+            foreach (var (name, raw) in entries)
+            {
+                // Prefix numeric-only passwords with "Mh"
+                var password = $"Mh{raw}";
+                var hash = hasher.HashPassword(null, password);
+
+                Console.WriteLine($"Name: {name}");
+                Console.WriteLine($"Password: {password}");
+                Console.WriteLine($"Hash: {hash}");
+                Console.WriteLine(new string('-', 40));
+            }
+
+            return Ok();
+        }
+
+
 
         // POST: api/Auth/Register
         [HttpPost("register")]
