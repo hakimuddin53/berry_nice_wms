@@ -123,6 +123,8 @@ namespace Wms.Api.Controllers
             var inventoryDtos = autoMapperService.Map<List<InventoryDetailsDto>>(filteredQuery);
             return Ok(inventoryDtos.Count);
         }
+        
+        
 
 
         [HttpPost("summary/search", Name = "SearchInventorySummaryAsync")]
@@ -135,19 +137,97 @@ namespace Wms.Api.Controllers
             }
 
             // Base filtered query
-            var filteredQuery = GetFilteredInventoryQuery(inventorySearch,result.stockGroupIds,  result.IsAdminRole);
-             
-            var latestDatesPerGroup = filteredQuery
-                .GroupBy(i => new { i.ProductId, i.WarehouseId, i.CurrentLocationId })
-                .Select(g => new
-                {
-                    g.Key.ProductId,
-                    g.Key.WarehouseId,
-                    g.Key.CurrentLocationId,
-                    MaxCreatedAt = g.Max(i => i.CreatedAt)
-                });
+            var filteredQuery = GetFilteredInventoryQuery(inventorySearch, result.stockGroupIds, result.IsAdminRole);
 
-            var groupedQuery = from item in filteredQuery
+            if (inventorySearch.GroupByProduct)
+            { 
+                var latestDatesPerGroup = filteredQuery
+                        .GroupBy(i => new { i.ProductId, i.WarehouseId })
+                        .Select(g => new
+                        {
+                            g.Key.ProductId,
+                            g.Key.WarehouseId, 
+                            MaxCreatedAt = g.Max(i => i.CreatedAt),
+                            AvailableQuantity = g.Sum(i => i.NewBalance)
+                        });
+
+                var groupedQuery = from item in filteredQuery
+                                   join latest in latestDatesPerGroup
+                                   on new { item.ProductId, item.WarehouseId, item.CreatedAt }
+                                   equals new { latest.ProductId, latest.WarehouseId, CreatedAt = latest.MaxCreatedAt }
+                                   select new
+                                   {
+                                       item.ProductId,
+                                       item.WarehouseId,
+                                       item.CurrentLocationId, 
+                                       NewBalance = latest.AvailableQuantity,
+                                       item.CreatedAt,
+                                       item.ChangedAt
+                                   };
+
+                var pagedGroupedData = await groupedQuery
+                    .Skip((inventorySearch.Page - 1) * inventorySearch.PageSize)
+                    .Take(inventorySearch.PageSize)
+                    .ToListAsync();
+
+                var productIds = pagedGroupedData.Select(p => p.ProductId).Distinct().ToList();
+                var warehouseIds = pagedGroupedData.Select(p => p.WarehouseId).Distinct().ToList();
+
+                var products = await context.Products.Where(p => productIds.Contains(p.Id)).ToListAsync();
+                var warehouses = await context.Warehouses.Where(w => warehouseIds.Contains(w.Id)).ToListAsync();
+
+                // CurrentLocation is empty per requirement
+                var inventorySummaryDtos = pagedGroupedData.Select(item =>
+                {
+                    var product = products.FirstOrDefault(p => p.Id == item.ProductId);
+                    var warehouse = warehouses.FirstOrDefault(w => w.Id == item.WarehouseId);
+
+                    var dto = new InventorySummaryDetailsDto
+                    {
+                        ProductId = item.ProductId,
+                        WarehouseId = item.WarehouseId,
+                        CurrentLocationId = Guid.Empty,
+                        AvailableQuantity = item.NewBalance,
+                        CreatedAt = item.CreatedAt,
+                        ChangedAt = item.ChangedAt,
+                        Product = product != null ? $"{product.Name} ({product.ItemCode})" : "",
+                        Warehouse = warehouse?.Name ?? "",
+                        CurrentLocation = ""
+                    };
+
+                    if (product != null)
+                    {
+                        dto.StockGroup = context.CartonSizes?.FirstOrDefault(cs => cs.Id == product.CartonSizeId)?.Name ?? "";
+                        dto.ClientCode = context.ClientCodes?.FirstOrDefault(cc => cc.Id == product.ClientCodeId)?.Name ?? "";
+                        dto.Size = context.Sizes?.FirstOrDefault(cc => cc.Id == product.SizeId)?.Name ?? "";
+                    }
+
+                    return dto;
+                }).ToList();
+
+                var pagedListDto = new PagedListDto<InventorySummaryDetailsDto>
+                {
+                    Data = inventorySummaryDtos,
+                    CurrentPage = inventorySearch.Page,
+                    PageSize = inventorySearch.PageSize,
+                };
+
+                return Ok(pagedListDto);
+            }
+            else
+            {
+                // Existing grouping by ProductId, WarehouseId, CurrentLocationId with latest CreatedAt
+                var latestDatesPerGroup = filteredQuery
+                    .GroupBy(i => new { i.ProductId, i.WarehouseId, i.CurrentLocationId })
+                    .Select(g => new
+                    {
+                        g.Key.ProductId,
+                        g.Key.WarehouseId,
+                        g.Key.CurrentLocationId,
+                        MaxCreatedAt = g.Max(i => i.CreatedAt)
+                    });
+
+                var groupedQuery = from item in filteredQuery
                                    join latest in latestDatesPerGroup
                                    on new { item.ProductId, item.WarehouseId, item.CurrentLocationId, item.CreatedAt }
                                    equals new { latest.ProductId, latest.WarehouseId, latest.CurrentLocationId, CreatedAt = latest.MaxCreatedAt }
@@ -160,64 +240,107 @@ namespace Wms.Api.Controllers
                                        item.CreatedAt,
                                        item.ChangedAt
                                    };
-             
+ 
 
-            var totalCount = await groupedQuery.CountAsync();
+                var pagedGroupedData = await groupedQuery
+                    .Skip((inventorySearch.Page - 1) * inventorySearch.PageSize)
+                    .Take(inventorySearch.PageSize)
+                    .ToListAsync();
 
-            var pagedGroupedData = await groupedQuery
-                .Skip((inventorySearch.Page - 1) * inventorySearch.PageSize)
-                .Take(inventorySearch.PageSize)
-                .ToListAsync();
+                // Fetch related data in batch to avoid N+1 query problem
+                var productIds = pagedGroupedData.Select(p => p.ProductId).Distinct().ToList();
+                var warehouseIds = pagedGroupedData.Select(p => p.WarehouseId).Distinct().ToList();
+                var locationIds = pagedGroupedData.Select(p => p.CurrentLocationId).Distinct().ToList();
 
-            // Fetch related data in batch to avoid N+1 query problem
-            var productIds = pagedGroupedData.Select(p => p.ProductId).Distinct().ToList();
-            var warehouseIds = pagedGroupedData.Select(p => p.WarehouseId).Distinct().ToList();
-            var locationIds = pagedGroupedData.Select(p => p.CurrentLocationId).Distinct().ToList();
+                var products = await context.Products.Where(p => productIds.Contains(p.Id)).ToListAsync();
+                var warehouses = await context.Warehouses.Where(w => warehouseIds.Contains(w.Id)).ToListAsync();
+                var locations = await context.Locations.Where(l => locationIds.Contains(l.Id)).ToListAsync();
 
-            var products = await context.Products.Where(p => productIds.Contains(p.Id)).ToListAsync();
-            var warehouses = await context.Warehouses.Where(w => warehouseIds.Contains(w.Id)).ToListAsync();
-            var locations = await context.Locations.Where(l => locationIds.Contains(l.Id)).ToListAsync();
-
-            // Prepare the result DTOs manually
-            var inventorySummaryDtos = pagedGroupedData.Select(item =>
-            {
-                var product = products.FirstOrDefault(p => p.Id == item.ProductId);
-                var warehouse = warehouses.FirstOrDefault(w => w.Id == item.WarehouseId);
-                var location = locations.FirstOrDefault(l => l.Id == item.CurrentLocationId);
-
-                var dto = new InventorySummaryDetailsDto
+                // Prepare the result DTOs manually
+                var inventorySummaryDtos = pagedGroupedData.Select(item =>
                 {
-                    ProductId = item.ProductId,
-                    WarehouseId = item.WarehouseId,
-                    CurrentLocationId = item.CurrentLocationId,
-                    AvailableQuantity = item.NewBalance,
-                    CreatedAt = item.CreatedAt,
-                    ChangedAt = item.ChangedAt,
-                    Product = product != null ? $"{product.Name} ({product.ItemCode})" : "",
-                    Warehouse = warehouse?.Name ?? "",
-                    CurrentLocation = location?.Name ?? ""
+                    var product = products.FirstOrDefault(p => p.Id == item.ProductId);
+                    var warehouse = warehouses.FirstOrDefault(w => w.Id == item.WarehouseId);
+                    var location = locations.FirstOrDefault(l => l.Id == item.CurrentLocationId);
+
+                    var dto = new InventorySummaryDetailsDto
+                    {
+                        ProductId = item.ProductId,
+                        WarehouseId = item.WarehouseId,
+                        CurrentLocationId = item.CurrentLocationId,
+                        AvailableQuantity = item.NewBalance,
+                        CreatedAt = item.CreatedAt,
+                        ChangedAt = item.ChangedAt,
+                        Product = product != null ? $"{product.Name} ({product.ItemCode})" : "",
+                        Warehouse = warehouse?.Name ?? "",
+                        CurrentLocation = location?.Name ?? ""
+                    };
+
+                    if (product != null)
+                    {
+                        dto.StockGroup = context.CartonSizes?.FirstOrDefault(cs => cs.Id == product.CartonSizeId)?.Name ?? "";
+                        dto.ClientCode = context.ClientCodes?.FirstOrDefault(cc => cc.Id == product.ClientCodeId)?.Name ?? "";
+                        dto.Size = context.Sizes?.FirstOrDefault(cc => cc.Id == product.SizeId)?.Name ?? "";
+                    }
+
+                    return dto;
+                }).ToList();
+
+                var pagedListDto = new PagedListDto<InventorySummaryDetailsDto>
+                {
+                    Data = inventorySummaryDtos,
+                    CurrentPage = inventorySearch.Page,
+                    PageSize = inventorySearch.PageSize,
                 };
 
-                if (product != null)
-                {
-                    dto.StockGroup = context.CartonSizes?.FirstOrDefault(cs => cs.Id == product.CartonSizeId)?.Name ?? "";
-                    dto.ClientCode = context.ClientCodes?.FirstOrDefault(cc => cc.Id == product.ClientCodeId)?.Name ?? "";
-                    dto.Size = context.Sizes?.FirstOrDefault(cc => cc.Id == product.SizeId)?.Name ?? "";
-                }
-
-                return dto;
-            }).ToList();
-
-            var pagedListDto = new PagedListDto<InventorySummaryDetailsDto>
-            {
-                Data = inventorySummaryDtos,
-                CurrentPage = inventorySearch.Page,
-                PageSize = inventorySearch.PageSize, 
-            };
-
-            return Ok(pagedListDto);
+                return Ok(pagedListDto);
+            }
         }
 
+        [HttpPost("summary/count", Name = "CountInventorySummaryAsync")]
+        public async Task<IActionResult> CountInventorySummaryAsync([FromBody] InventorySearchDto inventorySearch)
+        {
+            var result = await GetUserInformationAsync();
+            if (!result.Success)
+            {
+                return result.ErrorResult!;
+            }
+
+            var filteredQuery = GetFilteredInventoryQuery(inventorySearch, result.stockGroupIds, result.IsAdminRole);
+
+            if (inventorySearch.GroupByProduct)
+            {
+                // Group by ProductId and WarehouseId, count distinct groups for total count
+                var groupedCount = await filteredQuery
+                    .GroupBy(i => new { i.ProductId, i.WarehouseId })
+                    .CountAsync();
+
+                return Ok(groupedCount);
+            }
+            else
+            {
+                var latestDatesPerGroup = filteredQuery
+                    .GroupBy(i => new { i.ProductId, i.WarehouseId, i.CurrentLocationId })
+                    .Select(g => new
+                    {
+                        g.Key.ProductId,
+                        g.Key.WarehouseId,
+                        g.Key.CurrentLocationId,
+                        MaxCreatedAt = g.Max(i => i.CreatedAt)
+                    });
+
+                var latestInventoryQuery = from item in filteredQuery
+                    join latest in latestDatesPerGroup
+                        on new { item.ProductId, item.WarehouseId, item.CurrentLocationId, item.CreatedAt }
+                        equals new { latest.ProductId, latest.WarehouseId, latest.CurrentLocationId, CreatedAt = latest.MaxCreatedAt }
+                    select item;
+
+                var count = await latestInventoryQuery.CountAsync();
+
+                return Ok(count);
+            }
+        }
+        
        [HttpPost("export", Name = "ExportInventoryAsync")]
         public async Task<IActionResult> ExportInventoryAsync([FromBody] InventorySearchDto inventorySearch)
         {
@@ -455,37 +578,7 @@ namespace Wms.Api.Controllers
             return File(stream.ToArray(), contentType, fileName);
         }
 
-        [HttpPost("summary/count", Name = "CountInventorySummaryAsync")]
-        public async Task<IActionResult> CountInventorySummaryAsync([FromBody] InventorySearchDto inventorySearch)
-        {
-            var result = await GetUserInformationAsync();
-            if (!result.Success)
-            {
-                return result.ErrorResult!;
-            }
-
-            var filteredQuery = GetFilteredInventoryQuery(inventorySearch, result.stockGroupIds,result.IsAdminRole);
-
-            var latestDatesPerGroup = filteredQuery
-                .GroupBy(i => new { i.ProductId, i.WarehouseId, i.CurrentLocationId })
-                .Select(g => new
-                {
-                    g.Key.ProductId,
-                    g.Key.WarehouseId,
-                    g.Key.CurrentLocationId,
-                    MaxCreatedAt = g.Max(i => i.CreatedAt)
-                });
-
-            var latestInventoryQuery = from item in filteredQuery
-                                       join latest in latestDatesPerGroup
-                                       on new { item.ProductId, item.WarehouseId, item.CurrentLocationId, item.CreatedAt }
-                                       equals new { latest.ProductId, latest.WarehouseId, latest.CurrentLocationId, CreatedAt = latest.MaxCreatedAt }
-                                       select item;
-
-            var count = await latestInventoryQuery.CountAsync();
-
-            return Ok(count);
-        }
+        
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
@@ -619,14 +712,6 @@ namespace Wms.Api.Controllers
 
             return query;
         }
-
-        private static string GetEnumDescription<T>(T enumValue) where T : Enum
-        {
-            var fieldInfo = enumValue.GetType().GetField(enumValue.ToString());
-            var attributes =
-                (DescriptionAttribute[])fieldInfo!.GetCustomAttributes(typeof(DescriptionAttribute), false);
-
-            return attributes.Length > 0 ? attributes[0].Description : enumValue.ToString();
-        }
+         
     }
 }

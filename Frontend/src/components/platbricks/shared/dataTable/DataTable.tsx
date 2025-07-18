@@ -442,7 +442,7 @@ const DataTable: React.FC<DataTableProps<any>> = (props) => {
             )}
           </TableContainer>
           <TablePagination
-            rowsPerPageOptions={[5, 10, 25]}
+            rowsPerPageOptions={[5, 10, 100]}
             component="div"
             count={Math.max(
               props.data.totalCount ?? 0,

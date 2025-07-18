@@ -31,8 +31,11 @@ namespace Wms.Api.Controllers
                                                         e.Number.Contains(stockInSearch.search) ||
                                                         e.PONumber.Contains(stockInSearch.search));
 
+            var orderedStockIns = stockIns.OrderByDescending(e => e.CreatedAt);
 
-            var result = stockIns.Skip((stockInSearch.Page - 1) * stockInSearch.PageSize).Take(stockInSearch.PageSize).ToList();
+
+
+            var result = orderedStockIns.Skip((stockInSearch.Page - 1) * stockInSearch.PageSize).Take(stockInSearch.PageSize).ToList();
             PagedList<StockIn> pagedResult = new PagedList<StockIn>(result, stockInSearch.Page, stockInSearch.PageSize);
 
             var stockInDtos = autoMapperService.Map<PagedListDto<StockInDetailsDto>>(pagedResult);

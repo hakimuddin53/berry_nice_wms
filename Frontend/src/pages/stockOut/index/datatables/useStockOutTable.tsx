@@ -43,7 +43,8 @@ export const useStockOutTable = () => {
     [t]
   );
   /* eslint-enable */
-  useCreatedChangeDate(stockOutData);
+
+  useCreatedChangeDate(stockOutData, undefined, "stock-out");
 
   return [stockOutData];
 };
