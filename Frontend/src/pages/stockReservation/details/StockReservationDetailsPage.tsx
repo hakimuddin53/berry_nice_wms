@@ -96,18 +96,10 @@ function StockReservationDetailsPage() {
               <KeyValuePair label={t("created-at")}>
                 <UserDateTime date={stockReservation.createdAt} />
               </KeyValuePair>
-              <KeyValuePair label={t("changed-at")}>
-                <UserDateTime date={stockReservation.changedAt} />
-              </KeyValuePair>
+
               <KeyValuePair label={t("created-by")}>
                 <UserName
                   userId={stockReservation.createdById}
-                  placeholder="-"
-                />
-              </KeyValuePair>
-              <KeyValuePair label={t("changed-by")}>
-                <UserName
-                  userId={stockReservation.changedById}
                   placeholder="-"
                 />
               </KeyValuePair>

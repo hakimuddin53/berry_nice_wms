@@ -56,9 +56,34 @@ function UserRoleListPage() {
       });
   };
 
+  const loadDataCount = (
+    page: number,
+    pageSize: number,
+    searchValue: string,
+    orderBy: string,
+    order: "asc" | "desc"
+  ) => {
+    const searchOptions = getSearchOptions(
+      page,
+      pageSize,
+      searchValue,
+      orderBy,
+      order
+    );
+    return UserRoleService.countUserRoles(searchOptions)
+      .then((res: any) => {
+        return res;
+      })
+      .catch((err: any) => {
+        console.log(err);
+        return 0;
+      });
+  };
+
   const { tableProps, reloadData } = useDatatableControls({
     initialData: [] as UserRoleDetailsDto[],
     loadData,
+    loadDataCount,
   });
 
   useEffect(() => {

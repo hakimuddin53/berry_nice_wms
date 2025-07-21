@@ -1,5 +1,4 @@
 import { FormControl, FormHelperText, TextField } from "@mui/material";
-import { DatePicker } from "@mui/x-date-pickers";
 import DataList from "components/platbricks/shared/DataList";
 import FormikErrorMessage from "components/platbricks/shared/ErrorMessage";
 import SelectAsync2 from "components/platbricks/shared/SelectAsync2";
@@ -147,36 +146,6 @@ const StockReservationCreateEdit = (props: {
                   translatedFieldName={t("quantity")}
                 />
               }
-            />
-          ),
-        },
-        {
-          label: t("reservation-date"),
-          value: (
-            <DatePicker
-              label={t("common:date")}
-              value={new Date(formik.values.reservationDate)}
-              onChange={(value) => {
-                formik.setFieldValue("reservationDate", value);
-              }}
-              slotProps={{
-                textField: { variant: "outlined", size: "small" },
-              }}
-            />
-          ),
-        },
-        {
-          label: t("expiration-date"),
-          value: (
-            <DatePicker
-              label={t("common:date")}
-              value={new Date(formik.values.expirationDate)}
-              onChange={(value) => {
-                formik.setFieldValue("expirationDate", value);
-              }}
-              slotProps={{
-                textField: { variant: "outlined", size: "small" },
-              }}
             />
           ),
         },

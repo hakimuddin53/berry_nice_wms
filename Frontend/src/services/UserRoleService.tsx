@@ -28,6 +28,7 @@ interface IUserRoleService {
   createUserRole: (role: any) => Promise<any>;
   updateUserRole: (id: guid, role: any) => Promise<any>;
   searchUserRoles: (searchDto: any) => Promise<SelectAsyncOption[]>;
+  countUserRoles: (searchDto: any) => Promise<number>;
 }
 
 const UserRoleServiceContext = createContext({} as IUserRoleService);
@@ -86,6 +87,10 @@ const searchUserRoles = (searchDto: UserRoleSearchDto) => {
   });
 };
 
+const countUserRoles = (searchDto: any) => {
+  return axios.post("/user-role/count", searchDto).then((res) => res.data);
+};
+
 export type UserRoleServiceProviderProps = {
   children?: React.ReactNode;
   getSelectOptions?: IUserRoleService["getSelectOptions"];
@@ -94,6 +99,7 @@ export type UserRoleServiceProviderProps = {
   createUserRole?: IUserRoleService["createUserRole"];
   updateUserRole?: IUserRoleService["updateUserRole"];
   searchUserRoles?: IUserRoleService["searchUserRoles"];
+  countUserRoles?: IUserRoleService["countUserRoles"];
 };
 
 export const UserRoleServiceProvider: React.FC<UserRoleServiceProviderProps> = (
@@ -106,6 +112,7 @@ export const UserRoleServiceProvider: React.FC<UserRoleServiceProviderProps> = (
     createUserRole: props.createUserRole || createUserRole,
     updateUserRole: props.updateUserRole || updateUserRole,
     searchUserRoles: props.searchUserRoles || searchUserRoles,
+    countUserRoles: props.countUserRoles || countUserRoles,
   };
 
   return (

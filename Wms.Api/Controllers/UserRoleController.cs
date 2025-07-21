@@ -1,18 +1,19 @@
 ﻿using AutoMapper;
+using LinqKit;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore; 
+using Wms.Api.Context;
 using Wms.Api.Dto;
 using Wms.Api.Dto.PagedList; 
-using Wms.Api.Entities;
-using Wms.Api.Services; 
-using LinqKit;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Wms.Api.Dto.Usere;
 using Wms.Api.Dto.UserRole;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Identity;
-using Wms.Api.Context;
+using Wms.Api.Entities;
 using Wms.Api.Model;
+using Wms.Api.Services; 
 
 namespace Wms.Api.Controllers
 {
@@ -88,7 +89,7 @@ namespace Wms.Api.Controllers
             }
 
             return Ok(userRoleDtos);
-        }
+        }         
 
         [HttpPost("count", Name = "CountUserRolesAsync")]
         public async Task<IActionResult> CountUserRolesAsync([FromBody] UserRoleSearchDto userRoleSearch)

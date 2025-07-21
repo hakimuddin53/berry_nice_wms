@@ -1,5 +1,4 @@
 import { Link } from "@mui/material";
-import UserDateTime from "components/platbricks/shared/UserDateTime";
 import { useCreatedChangeDate } from "hooks/useCreatedChangeDate";
 import { StockReservationDetailsDto } from "interfaces/v12/stockReservation/stockReservationDetails/stockReservationDetailsDto";
 import { useMemo } from "react";
@@ -38,20 +37,6 @@ export const useStockReservationTable = () => {
       {
         id: "quantity",
         label: t("quantity"),
-      },
-      {
-        id: "reservationDate",
-        label: t("reservation-date"),
-      },
-      {
-        id: "reservationDate",
-        label: t("reservation-date"),
-        render: (row) => <UserDateTime date={row.reservationDate} />,
-      },
-      {
-        id: "expirationDate",
-        label: t("expiration-date"),
-        render: (row) => <UserDateTime date={row.expirationDate} />,
       },
     ],
     [t]
