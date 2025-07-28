@@ -1,3 +1,5 @@
+using Hangfire;
+using Hangfire.SqlServer;
 using Leitstand.Mapping.Profiles.v12_0;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -15,6 +17,8 @@ using Wms.Api.Repositories.Interface;
 using Wms.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var defaultConn = builder.Configuration.GetConnectionString("DefaultConnection");
 
 // Add services to the container.
 
@@ -124,15 +128,18 @@ builder.Services.AddScoped<IRunningNumberService, RunningNumberService>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped(typeof(IService<>), typeof(Service<>));
 builder.Services.AddScoped<IProductService, ProductService>();
-    builder.Services.AddScoped<IProductRepository, ProductRepository>();
+
+builder.Services.AddScoped<IStockReservationService, StockReservationService>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"), opts => opts.CommandTimeout((int)TimeSpan.FromMinutes(2).TotalSeconds)));
+    options.UseSqlServer(defaultConn, opts => opts.CommandTimeout((int)TimeSpan.FromMinutes(2).TotalSeconds)));
 
 // Add Identity services
 builder.Services.AddIdentity<ApplicationUser, ApplicationRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
+
 
 // Configure Identity options (optional)
 builder.Services.Configure<IdentityOptions>(options =>
@@ -152,23 +159,38 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.User.RequireUniqueEmail = true;
 });
 
+builder.Services.AddHangfire(cfg => cfg
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UseSqlServerStorage(defaultConn, new SqlServerStorageOptions
+    {
+        PrepareSchemaIfNecessary = true,    // auto?create tables if missing
+        SchemaName = "hangfire"            // remove or change if you want dbo
+    })
+);
+
+// 3) Start the background server
+builder.Services.AddHangfireServer();
+
 
 var app = builder.Build();
 
+// optional Hangfire dashboard
+app.UseHangfireDashboard("/hangfire");
+
+// schedule the expiration job daily at 2am
+RecurringJob.AddOrUpdate<IStockReservationService>(
+    "release-expired-reservations",
+    svc => svc.ReleaseExpiredReservationsAsync(),
+    "0 2 * * *"   // Cron daily at 02:00
+);
+
 
 app.UseCors("AllowReactApp"); // Apply the CORS policy
-
- 
 app.UseSwagger();
 app.UseSwaggerUI();
- 
- 
 app.UseHttpsRedirection();
-
 app.UseAuthentication(); 
-
 app.UseAuthorization();
-
 app.MapControllers();
-
 app.Run();

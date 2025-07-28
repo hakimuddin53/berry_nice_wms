@@ -121,6 +121,9 @@ function StockOutDetailsPage() {
                   <KeyValuePair label={t("doNumber")}>
                     {stockOut.doNumber}
                   </KeyValuePair>
+                  <KeyValuePair label={t("soNumber")}>
+                    {stockOut.soNumber}
+                  </KeyValuePair>
                   <KeyValuePair label={t("to-location")}>
                     {stockOut.toLocation}
                   </KeyValuePair>
@@ -130,14 +133,8 @@ function StockOutDetailsPage() {
                   <KeyValuePair label={t("created-at")}>
                     <UserDateTime date={stockOut.createdAt} />
                   </KeyValuePair>
-                  <KeyValuePair label={t("changed-at")}>
-                    <UserDateTime date={stockOut.changedAt} />
-                  </KeyValuePair>
                   <KeyValuePair label={t("created-by")}>
                     <UserName userId={stockOut.createdById} placeholder="-" />
-                  </KeyValuePair>
-                  <KeyValuePair label={t("changed-by")}>
-                    <UserName userId={stockOut.changedById} placeholder="-" />
                   </KeyValuePair>
                 </KeyValueList>
               </Grid>

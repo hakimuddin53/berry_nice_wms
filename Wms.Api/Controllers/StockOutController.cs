@@ -21,19 +21,21 @@ namespace Wms.Api.Controllers
     {
         private readonly IService<StockOut> _service;
         private readonly IRunningNumberService _runningNumberService;
+        private readonly IStockReservationService _stockReservationService;
         private readonly IInventoryService _inventoryService;
         private readonly IMapper _autoMapperService;
         private readonly ApplicationDbContext _context;
 
         public StockOutController(IService<StockOut> service,
             IMapper autoMapperService, IRunningNumberService runningNumberService, IInventoryService inventoryService,
-            ApplicationDbContext context)
+            ApplicationDbContext context, IStockReservationService stockReservationService)
         {
             _service = service;
             _autoMapperService = autoMapperService;
             _runningNumberService = runningNumberService;
             _inventoryService = inventoryService;
             _context = context;
+            _stockReservationService = stockReservationService;
         }
 
         [HttpPost("search", Name = "SearchStockOutsAsync")]
@@ -92,6 +94,25 @@ namespace Wms.Api.Controllers
             await _service.AddAsync(stockOutDtos!, false);
 
             await _inventoryService.StockOutAsync(stockOutDtos!);
+
+            // 5) fulfill any linked reservation items
+            if (stockOutCreateUpdateDto.StockOutItems != null)
+            {
+                // find all non‐null reservationItemId values
+                var reservationItemIds = stockOutCreateUpdateDto.StockOutItems
+                    .Where(i => i.ReservationItemId.HasValue)
+                    .Select(i => i.ReservationItemId!.Value)
+                    .Distinct();
+
+                foreach (var itemId in reservationItemIds)
+                {
+                    // this method should:
+                    //  • reduce ReservedQuantity on the warehouse balance
+                    //  • mark the StockReservationItem as fulfilled
+                    //  • if all items in a reservation are fulfilled, set the parent StockReservation.Status = FULFILLED
+                    await _stockReservationService.FulfillAsync(itemId);
+                }
+            }
 
             return CreatedAtAction(nameof(GetById), new { id = stockOutDtos?.Id }, stockOutDtos);
         }

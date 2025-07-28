@@ -21,11 +21,11 @@ namespace Wms.Api.Services
                         var worksheet = workbook.Worksheet(1);
 
                         var expectedHeaders = new List<string>
-                {
-                    "Name", "ItemCode", "ClientCode", "StockGroup", "InboundQuantity",
-                    "Category", "Colour", "Design", "Size", "ListPrice", "QuantityPerCarton", "Threshold",
-                    "Rack", "Warehouse"
-                };
+                        {
+                            "Name", "ItemCode", "ClientCode", "StockGroup", "InboundQuantity",
+                            "Category", "Colour", "Design", "Size", "ListPrice", "QuantityPerCarton", "Threshold",
+                            "Rack", "Warehouse"
+                        };
 
                         var actualHeaders = worksheet.Row(1).Cells(1, expectedHeaders.Count)
                             .Select(cell => cell.GetString().Trim())

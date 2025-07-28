@@ -69,15 +69,6 @@ const StockTransferItemDetails: React.FC<{
                   placeholder="-"
                 />
               </KeyValuePair>
-              <KeyValuePair label={t("common:changed-at")}>
-                <UserDateTime date={stockTransferItem.changedAt} />
-              </KeyValuePair>
-              <KeyValuePair label={t("common:changed-by")}>
-                <UserName
-                  userId={stockTransferItem.changedById}
-                  placeholder="-"
-                />
-              </KeyValuePair>
             </KeyValueList>
           </PbTabPanel>
         </CardContent>

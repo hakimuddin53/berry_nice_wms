@@ -6,14 +6,17 @@ import { Box, CssBaseline, Hidden, Paper as MuiPaper } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { spacing } from "@mui/system";
+
 import {
   Archive,
   ArchiveX,
   ArrowLeft,
   ArrowLeftRight,
   ArrowRight,
+  BookOpenText,
   Box as BoxIcon,
   Database,
+  LogIn,
   Palette,
   PersonStanding,
   RotateCcw,
@@ -203,16 +206,16 @@ export const dashboardItems: SidebarItemsType[] = [
     children: [],
     requiredModule: ModuleEnum.STOCKTRANSFER, // <--- Link to STOCKTRANSFER module
   },
-  // {
-  //   id: 8,
-  //   href: "/stock-reservation",
-  //   itemType: "link",
-  //   title: "Stock Reservation",
-  //   icon: <RemoveShoppingCartIcon />,
-  //   type: "single",
-  //   children: [],
-  //   requiredModule: ModuleEnum.STOCKRESERVATION, // <--- Link to STOCKRESERVATION module
-  // },
+  {
+    id: 8,
+    href: "/stock-reservation",
+    itemType: "link",
+    title: "Stock Reservation",
+    icon: <LogIn size={20} />,
+    type: "single",
+    children: [],
+    requiredModule: ModuleEnum.STOCKRESERVATION, // <--- Link to STOCKRESERVATION module
+  },
   {
     id: 9,
     href: "/stock-adjustment",
@@ -239,6 +242,16 @@ export const dashboardItems: SidebarItemsType[] = [
     itemType: "link",
     title: "Inventory Summary",
     icon: <Store size={20} />,
+    type: "single",
+    children: [],
+    requiredModule: ModuleEnum.INVENTORY,
+  },
+  {
+    id: 11,
+    href: "/inventory-summary-product",
+    itemType: "link",
+    title: "Inventory Summary Product",
+    icon: <BookOpenText size={20} />,
     type: "single",
     children: [],
     requiredModule: ModuleEnum.INVENTORY,

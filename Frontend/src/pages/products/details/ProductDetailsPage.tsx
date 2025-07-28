@@ -138,7 +138,7 @@ function ProductDetailsPage() {
                     {product.design}
                   </KeyValuePair>
                   <KeyValuePair label={t("list-price")}>
-                    {product.listPrice}
+                    {product.unitPrice}
                   </KeyValuePair>
                   <KeyValuePair label={t("quantityPerCarton")}>
                     {product.quantityPerCarton}

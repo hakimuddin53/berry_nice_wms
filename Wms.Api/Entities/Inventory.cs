@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using Wms.Api.Model;
 
 namespace Wms.Api.Entities
@@ -36,6 +37,10 @@ namespace Wms.Api.Entities
         public int OldBalance { get; set; } // Balance before the transaction
 
         [Required]
-        public int NewBalance { get; set; } // Balance after the transaction  
+        public int NewBalance { get; set; } // Balance after the transaction
+
+        [Required]                           // 
+        [Column(TypeName = "decimal(18,4)")]
+        public decimal UnitPrice { get; set; } = 0m;
     }
 }

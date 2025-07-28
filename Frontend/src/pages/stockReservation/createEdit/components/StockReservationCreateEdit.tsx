@@ -1,13 +1,14 @@
-import { FormControl, FormHelperText, TextField } from "@mui/material";
+import { Chip, FormControl, FormHelperText, TextField } from "@mui/material";
 import DataList from "components/platbricks/shared/DataList";
 import FormikErrorMessage from "components/platbricks/shared/ErrorMessage";
 import SelectAsync2 from "components/platbricks/shared/SelectAsync2";
 import { FormikProps } from "formik";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useProductService } from "services/ProductService";
+import { useWarehouseService } from "services/WarehouseService";
 import { guid } from "types/guid";
 import { isRequiredField } from "utils/formikHelpers";
+import { getChipColor } from "../../../../constants";
 import {
   StockReservationCreateEditSchema,
   YupStockReservationCreateEdit,
@@ -18,7 +19,7 @@ const StockReservationCreateEdit = (props: {
 }) => {
   const { t } = useTranslation();
 
-  const ProductService = useProductService();
+  const WarehouseService = useWarehouseService();
   const formik = props.formik;
 
   return (
@@ -26,55 +27,35 @@ const StockReservationCreateEdit = (props: {
       hideDevider={true}
       data={[
         {
-          label: t("number"),
-          required: isRequiredField(StockReservationCreateEditSchema, "number"),
-          value: (
-            <TextField
-              fullWidth
-              id="number"
-              name="number"
-              size="small"
-              value={formik.values.number}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              error={formik.touched.number && Boolean(formik.errors.number)}
-              helperText={
-                <FormikErrorMessage
-                  touched={formik.touched.number}
-                  error={formik.errors.number}
-                  translatedFieldName={t("number")}
-                />
-              }
-            />
-          ),
-        },
-        {
-          label: t("product"),
+          label: t("warehouse"),
           required: isRequiredField(
             StockReservationCreateEditSchema,
-            "productId",
+            "warehouseId",
             formik.values
           ),
           value: (
             <FormControl
               fullWidth
               error={
-                formik.touched.productId && Boolean(formik.errors.productId)
+                formik.touched.warehouseId && Boolean(formik.errors.warehouseId)
               }
             >
               <SelectAsync2
-                name="productId"
+                name="warehouseId"
                 error={
-                  formik.touched.productId && Boolean(formik.errors.productId)
+                  formik.touched.warehouseId &&
+                  Boolean(formik.errors.warehouseId)
                 }
-                onBlur={() => formik.setFieldTouched("productId")}
+                onBlur={() => formik.setFieldTouched("warehouseId")}
                 ids={useMemo(
                   () =>
-                    formik.values.productId ? [formik.values.productId] : [],
-                  [formik.values.productId]
+                    formik.values.warehouseId
+                      ? [formik.values.warehouseId]
+                      : [],
+                  [formik.values.warehouseId]
                 )}
                 onSelectionChange={async (newOption) => {
-                  formik.setFieldValue("productId", newOption?.value || null);
+                  formik.setFieldValue("warehouseId", newOption?.value || null);
                 }}
                 asyncFunc={(
                   input: string,
@@ -82,70 +63,85 @@ const StockReservationCreateEdit = (props: {
                   pageSize: number,
                   ids?: guid[]
                 ) =>
-                  ProductService.getSelectOptions(input, page, pageSize, ids)
+                  WarehouseService.getSelectOptions(input, page, pageSize, ids)
                 }
               />
               <FormHelperText sx={{ color: "#d32f2f" }}>
                 <FormikErrorMessage
-                  touched={formik.touched.productId}
-                  error={formik.errors.productId}
-                  translatedFieldName={t("product")}
+                  touched={formik.touched.warehouseId}
+                  error={formik.errors.warehouseId}
+                  translatedFieldName={t("warehouse")}
                 />
               </FormHelperText>
             </FormControl>
           ),
         },
         {
-          label: t("quantity"),
+          label: t("reserved-at"),
           required: isRequiredField(
             StockReservationCreateEditSchema,
-            "quantity"
+            "reservedAt"
           ),
           value: (
             <TextField
               fullWidth
-              id="quantity"
-              name="quantity"
-              type="number"
+              id="reservedAt"
+              name="reservedAt"
               size="small"
-              value={formik.values.quantity}
+              disabled={true}
+              value={formik.values.reservedAt}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              error={formik.touched.quantity && Boolean(formik.errors.quantity)}
+              error={
+                formik.touched.reservedAt && Boolean(formik.errors.reservedAt)
+              }
               helperText={
                 <FormikErrorMessage
-                  touched={formik.touched.quantity}
-                  error={formik.errors.quantity}
-                  translatedFieldName={t("quantity")}
+                  touched={formik.touched.reservedAt}
+                  error={formik.errors.reservedAt}
+                  translatedFieldName={t("reserved-at")}
                 />
               }
             />
           ),
         },
         {
-          label: t("quantity"),
+          label: t("expires-at"),
           required: isRequiredField(
             StockReservationCreateEditSchema,
-            "quantity"
+            "expiresAt"
           ),
           value: (
             <TextField
               fullWidth
-              id="quantity"
-              name="quantity"
-              type="number"
+              id="expiresAt"
+              name="expiresAt"
               size="small"
-              value={formik.values.quantity}
+              disabled={true}
+              value={formik.values.expiresAt}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              error={formik.touched.quantity && Boolean(formik.errors.quantity)}
+              error={
+                formik.touched.expiresAt && Boolean(formik.errors.expiresAt)
+              }
               helperText={
                 <FormikErrorMessage
-                  touched={formik.touched.quantity}
-                  error={formik.errors.quantity}
-                  translatedFieldName={t("quantity")}
+                  touched={formik.touched.expiresAt}
+                  error={formik.errors.expiresAt}
+                  translatedFieldName={t("expires-at")}
                 />
               }
+            />
+          ),
+        },
+        {
+          label: t("status"),
+          required: isRequiredField(StockReservationCreateEditSchema, "status"),
+          value: (
+            <Chip
+              label={t(formik.values.status)}
+              color={getChipColor(formik.values.status)}
+              size="small"
             />
           ),
         },

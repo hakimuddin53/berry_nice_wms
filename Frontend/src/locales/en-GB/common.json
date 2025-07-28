@@ -230,6 +230,8 @@
   "stock-in-id": "Stock In Id",
   "stock-out": "Stock Out",
   "stock-out-id": "Stock Out Id",
+  "stock-reservation-id": "Stock Reservation Id",
+  "stock-reservations": "Stock Reservations",
   "stock-type": "Stock Type",
   "stock-usage": "Stock Usage",
   "street": "Street",

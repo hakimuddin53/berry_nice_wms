@@ -4,6 +4,7 @@ import * as yup from "yup";
 export const StockInCreateEditSchema = yup.object({
   number: yup.string().nullable(),
   poNumber: yup.string().required(),
+  jsNumber: yup.string().required(),
   fromLocation: yup.string().required(),
   warehouseId: yup.mixed<guid>().required(),
   stockInItems: yup
@@ -14,6 +15,7 @@ export const StockInCreateEditSchema = yup.object({
         productId: yup.mixed<guid>().required(),
         locationId: yup.mixed<guid>().required(),
         quantity: yup.number().required(),
+        unitPrice: yup.number().required(),
       })
     )
     .required(),

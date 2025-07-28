@@ -54,12 +54,6 @@ const StockInItemDetails: React.FC<{
               <KeyValuePair label={t("common:created-by")}>
                 <UserName userId={stockInItem.createdById} placeholder="-" />
               </KeyValuePair>
-              <KeyValuePair label={t("common:changed-at")}>
-                <UserDateTime date={stockInItem.changedAt} />
-              </KeyValuePair>
-              <KeyValuePair label={t("common:changed-by")}>
-                <UserName userId={stockInItem.changedById} placeholder="-" />
-              </KeyValuePair>
             </KeyValueList>
           </PbTabPanel>
         </CardContent>

@@ -11,6 +11,6 @@ export interface ProductCreateUpdateDto {
   designId: guid;
   cartonSizeId: guid;
   productPhotoUrl?: string | null;
-  listPrice: number;
+  unitPrice: number;
   threshold?: number | null;
 }

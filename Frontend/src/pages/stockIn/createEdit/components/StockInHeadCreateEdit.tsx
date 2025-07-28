@@ -49,6 +49,29 @@ const StockInHeadCreateEdit = (props: {
           ),
         },
         {
+          label: t("js-number"),
+          required: isRequiredField(StockInCreateEditSchema, "jsNumber"),
+          value: (
+            <TextField
+              fullWidth
+              id="jsNumber"
+              name="jsNumber"
+              size="small"
+              value={formik.values.jsNumber}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={formik.touched.jsNumber && Boolean(formik.errors.jsNumber)}
+              helperText={
+                <FormikErrorMessage
+                  touched={formik.touched.jsNumber}
+                  error={formik.errors.jsNumber}
+                  translatedFieldName={t("js-number")}
+                />
+              }
+            />
+          ),
+        },
+        {
           label: t("from-location"),
           required: isRequiredField(StockInCreateEditSchema, "fromLocation"),
           value: (

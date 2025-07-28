@@ -19,6 +19,11 @@ namespace Wms.Api.Entities
         public Guid LocationId { get; set; }
 
         [Required]
-        public int Quantity { get; set; } 
+        public int Quantity { get; set; }
+
+        [Required]
+        [Column(TypeName = "decimal(18,4)")]
+        public decimal UnitPrice { get; set; }
+
     }
 }

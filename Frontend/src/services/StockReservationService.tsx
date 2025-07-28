@@ -1,5 +1,8 @@
 import { StockReservationCreateUpdateDto } from "interfaces/v12/stockReservation/stockReservationCreateUpdate/stockReservationCreateUpdateDto";
-import { StockReservationDetailsDto } from "interfaces/v12/stockReservation/stockReservationDetails/stockReservationDetailsDto";
+import {
+  ActiveReservationItemDto,
+  StockReservationDetailsDto,
+} from "interfaces/v12/stockReservation/stockReservationDetails/stockReservationDetailsDto";
 import { StockReservationSearchDto } from "interfaces/v12/stockReservation/stockReservationSearch/stockReservationSearchDto";
 import React from "react";
 import { guid } from "../types/guid";
@@ -13,16 +16,19 @@ interface IStockReservationService {
   ) => Promise<StockReservationDetailsDto[]>;
   countStockReservations: (searchDto: any) => Promise<number>;
   getStockReservationById: (
-    stockInId: guid
+    stockReservationId: guid
   ) => Promise<StockReservationDetailsDto>;
   updateStockReservation: (
     id: guid,
-    stockIn: StockReservationCreateUpdateDto
+    stockReservation: StockReservationCreateUpdateDto
   ) => Promise<any>;
   createStockReservation: (
-    stockIn: StockReservationCreateUpdateDto
+    stockReservation: StockReservationCreateUpdateDto
   ) => Promise<string>;
-  deleteStockReservation: (stockInId: guid) => Promise<any>;
+  deleteStockReservation: (stockReservationId: guid) => Promise<any>;
+  approveCancelStockReservation: (stockReservationId: guid) => Promise<any>;
+  requestCancelStockReservation: (stockReservationId: guid) => Promise<any>;
+  getActiveReservations: (productId: guid, warehouseId: guid) => Promise<any>;
 }
 
 const StockReservationServiceContext = createContext(
@@ -37,23 +43,38 @@ export type StockReservationServiceProviderProps = {
   updateStockReservation?: any;
   createStockReservation?: any;
   deleteStockReservation?: any;
+  approveCancelStockReservation?: any;
+  requestCancelStockReservation?: any;
+  getActiveReservations?: any;
 };
 export const StockReservationServiceProvider: React.FC<
   StockReservationServiceProviderProps
 > = (props) => {
+  const getActiveReservations = (productId: guid, warehouseId: guid) => {
+    return axios
+      .get<ActiveReservationItemDto[]>("/stock-reservation/active", {
+        params: { productId, warehouseId },
+      })
+      .then((res) => res.data);
+  };
+
   const searchStockReservations = (searchDto: StockReservationSearchDto) => {
-    return axios.post("/stock-in/search", searchDto).then((res) => {
+    return axios.post("/stock-reservation/search", searchDto).then((res) => {
       return res.data.data;
     });
   };
 
   const countStockReservations = (searchDto: any) => {
-    return axios.post("/stock-in/count", searchDto).then((res) => res.data);
+    return axios
+      .post("/stock-reservation/count", searchDto)
+      .then((res) => res.data);
   };
 
-  const getStockReservationById = (stockInId: guid) => {
+  const getStockReservationById = (stockReservationId: guid) => {
     return axios
-      .get<StockReservationDetailsDto>("/stock-in/" + stockInId)
+      .get<StockReservationDetailsDto>(
+        "/stock-reservation/" + stockReservationId
+      )
       .then(async (res) => {
         return res.data;
       });
@@ -61,26 +82,41 @@ export const StockReservationServiceProvider: React.FC<
 
   const updateStockReservation = (
     id: guid,
-    stockIn: StockReservationCreateUpdateDto
+    stockReservation: StockReservationCreateUpdateDto
   ) => {
-    return axios.put("/stock-in/" + id, stockIn).then(async (res) => {
-      let result = res.data;
-      return result;
-    });
+    return axios
+      .put("/stock-reservation/" + id, stockReservation)
+      .then(async (res) => {
+        let result = res.data;
+        return result;
+      });
   };
 
-  const createStockReservation = (stockIn: StockReservationCreateUpdateDto) => {
-    return axios.post("/stock-in/", stockIn).then(async (res) => {
-      let result = res.data;
-      return result.id;
-    });
+  const createStockReservation = (
+    stockReservation: StockReservationCreateUpdateDto
+  ) => {
+    return axios
+      .post("/stock-reservation/", stockReservation)
+      .then(async (res) => {
+        let result = res.data;
+        return result.id;
+      });
   };
 
-  const deleteStockReservation = (stockInId: guid) => {
-    return axios.delete("/stock-in/" + stockInId).then(async (res) => {
-      let result = res.data;
-      return result.id;
-    });
+  const deleteStockReservation = (stockReservationId: guid) => {
+    return axios
+      .delete("/stock-reservation/" + stockReservationId)
+      .then(async (res) => {
+        let result = res.data;
+        return result.id;
+      });
+  };
+
+  const approveCancelStockReservation = (stockReservationId: guid) => {
+    axios.post("/stock-reservation/" + stockReservationId + "/approve-cancel");
+  };
+  const requestCancelStockReservation = (stockReservationId: guid) => {
+    axios.post("/stock-reservation/" + stockReservationId + "/request-cancel");
   };
 
   const value = {
@@ -96,6 +132,11 @@ export const StockReservationServiceProvider: React.FC<
       props.createStockReservation || createStockReservation,
     deleteStockReservation:
       props.deleteStockReservation || deleteStockReservation,
+    approveCancelStockReservation:
+      props.approveCancelStockReservation || approveCancelStockReservation,
+    requestCancelStockReservation:
+      props.requestCancelStockReservation || requestCancelStockReservation,
+    getActiveReservations: props.getActiveReservations || getActiveReservations,
   };
 
   return (

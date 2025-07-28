@@ -9,7 +9,7 @@ import { useStockReservationService } from "services/StockReservationService";
 import { useStockReservationTable } from "./datatables/useStockReservationTable";
 
 function StockReservationListPage() {
-  const { t } = useTranslation("stockReservation");
+  const { t } = useTranslation();
 
   const [stockReservationTable] = useStockReservationTable();
   const StockReservationService = useStockReservationService();
@@ -100,7 +100,7 @@ function StockReservationListPage() {
     >
       <DataTable
         title={t("stock-reservation")}
-        tableKey="StockReservationListPage-Inbound Deliveries"
+        tableKey="StockReservationListPage"
         headerCells={stockReservationTable}
         data={tableProps}
         dataKey="stockReservationId"

@@ -41,6 +41,13 @@ export const useStockInItemTable = () => {
           return row.quantity ? row.quantity.toString() : <span />;
         },
       },
+      {
+        id: "unitPrice",
+        label: t("unitPrice"),
+        render: (row) => {
+          return row.unitPrice ? row.unitPrice.toString() : <span />;
+        },
+      },
     ],
     [t]
   );

@@ -18,21 +18,14 @@ namespace Wms.Api.Controllers
     [ApiController]
     [Route("api/stock-reservation")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    public class StockReservationController : ControllerBase
+    public class StockReservationController(IService<StockReservation> service, IStockReservationService stockReservationService,
+        IMapper autoMapperService, ApplicationDbContext applicationDbContext, IRunningNumberService runningNumberService) : ControllerBase
     {
-        private readonly IService<StockReservation> _service;
-        private readonly IRunningNumberService _runningNumberService;
-        private readonly IMapper _autoMapperService;
-        private readonly ApplicationDbContext _context;
-
-        public StockReservationController(IService<StockReservation> service,
-            IMapper autoMapperService, ApplicationDbContext applicationDbContext, IRunningNumberService runningNumberService)
-        {
-            _service = service;
-            _autoMapperService = autoMapperService;
-            _runningNumberService = runningNumberService;
-            _context = applicationDbContext;
-        }
+        private readonly IService<StockReservation> _service = service;
+        private readonly IStockReservationService _stockReservationService = stockReservationService;
+        private readonly IRunningNumberService _runningNumberService = runningNumberService;
+        private readonly IMapper _autoMapperService = autoMapperService;
+        private readonly ApplicationDbContext _context = applicationDbContext;
 
         [HttpPost("search", Name = "SearchStockReservationsAsync")]
         public async Task<IActionResult> SearchStockReservationsAsync([FromBody] StockReservationSearchDto stockInSearch)
@@ -75,10 +68,24 @@ namespace Wms.Api.Controllers
 
             stockReservationCreateUpdateDto.Number = stockReservationNumber;
             var stockReservationDtos = _autoMapperService.Map<StockReservation>(stockReservationCreateUpdateDto);
-            
+
+            // Ensure StockReservationItems is initialized to avoid null reference
+            stockReservationDtos.StockReservationItems ??= new List<StockReservationItem>();
+
+            foreach (var item in stockReservationDtos.StockReservationItems)
+            {
+                await _stockReservationService.ReserveAsync(item.ProductId, stockReservationDtos.WarehouseId, item.Quantity);
+            }
 
             await _service.AddAsync(stockReservationDtos!);
+          
             return CreatedAtAction(nameof(GetById), new { id = stockReservationDtos?.Id }, stockReservationDtos);
+        }
+
+        [HttpGet("active")]
+        public async Task<IActionResult> GetActive([FromQuery] Guid productId, [FromQuery] Guid warehouseId)
+        {
+            return Ok(await _stockReservationService.GetActiveReservationAsync(productId, warehouseId));
         }
 
         [HttpPut("{id}")]
@@ -96,11 +103,21 @@ namespace Wms.Api.Controllers
             return NoContent();
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(Guid id)
+        [HttpPost("{id}/request-cancel")]
+        public async Task<IActionResult> RequestCancel(Guid id)
         {
-            await _service.DeleteAsync(id);
+            var user = User.Identity!.Name!;  
+            await _stockReservationService.RequestCancellationAsync(id, user, "");
             return NoContent();
         }
+
+        [HttpPost("{id}/approve-cancel")] 
+        public async Task<IActionResult> ApproveCancel(Guid id)
+        {
+            var user = User.Identity!.Name!;
+            await _stockReservationService.ApproveCancellationAsync(id, user);
+            return NoContent();
+        }
+
     }
 }

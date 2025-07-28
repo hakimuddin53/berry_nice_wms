@@ -18,6 +18,14 @@ export const ModuleEnum = {
   STOCKADJUSTMENT: "STOCKADJUSTMENT",
 };
 
+export const ReservationStatusEnum = {
+  ACTIVE: "ACTIVE",
+  FULFILLED: "FULFILLED",
+  CANCELREQUESTED: "CANCELREQUESTED",
+  CANCELLED: "CANCELLED",
+  RELEASED: "RELEASED",
+};
+
 export const MonthEnum = {
   JANUARY: "JANUARY",
   FEBRUARY: "FEBRUARY",
@@ -51,4 +59,6 @@ export type MenuItemTypeEnum =
   typeof MenuItemTypeEnum[keyof typeof MenuItemTypeEnum];
 export type UploadActionEnum =
   typeof UploadActionEnum[keyof typeof UploadActionEnum];
+export type ReservationStatusEnum =
+  typeof ReservationStatusEnum[keyof typeof ReservationStatusEnum];
 /* eslint-enable */

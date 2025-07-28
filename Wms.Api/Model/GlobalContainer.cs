@@ -1,6 +1,5 @@
 ﻿namespace Wms.Api.Model
-{
-     
+{     
     public enum OperationTypeEnum
     {
         STOCKIN = 0, 
@@ -41,4 +40,19 @@
         CLIENTCODE = 15,
         STOCKADJUSTMENT = 16,
     }
-}
+
+    public enum ReservationStatusEnum
+    {
+        ACTIVE = 0,         // just reserved
+        FULFILLED = 1,      // consumed by a stock-out
+        CANCELREQUESTED = 2,// someone asked to cancel (needs approval)
+        CANCELLED = 3,      // approved cancellation
+        RELEASED = 4        // expired or voided automatically
+    }
+
+    public enum ReservationItemStatusEnum
+    {
+        ACTIVE = 0,         // just reserved
+        FULFILLED = 1,      // consumed by a stock-out 
+    }
+} 

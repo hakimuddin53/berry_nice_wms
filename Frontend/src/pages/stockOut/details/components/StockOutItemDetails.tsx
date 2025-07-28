@@ -54,12 +54,6 @@ const StockOutItemDetails: React.FC<{
               <KeyValuePair label={t("common:created-by")}>
                 <UserName userId={stockOutItem.createdById} placeholder="-" />
               </KeyValuePair>
-              <KeyValuePair label={t("common:changed-at")}>
-                <UserDateTime date={stockOutItem.changedAt} />
-              </KeyValuePair>
-              <KeyValuePair label={t("common:changed-by")}>
-                <UserName userId={stockOutItem.changedById} placeholder="-" />
-              </KeyValuePair>
             </KeyValueList>
           </PbTabPanel>
         </CardContent>

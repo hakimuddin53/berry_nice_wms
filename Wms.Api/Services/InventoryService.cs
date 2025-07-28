@@ -33,6 +33,27 @@ namespace Wms.Api.Services
                         context.InventoryBalances.Add(inventoryBalance);
                     }
 
+                    var wh = await context.WarehouseInventoryBalances
+                                            .SingleOrDefaultAsync(w =>
+                                                w.ProductId == item.ProductId &&
+                                                w.WarehouseId == stockIn.WarehouseId);
+
+                    if (wh == null)
+                    {
+                        wh = new WarehouseInventoryBalance
+                        {
+                            Id = Guid.NewGuid(),
+                            ProductId = item.ProductId,
+                            WarehouseId = stockIn.WarehouseId
+                        };
+                        context.WarehouseInventoryBalances.Add(wh);
+                    }
+
+                    // update both on-hand and cost accumulators
+                    wh.OnHandQuantity += item.Quantity;
+                    wh.TotalQtyReceived += item.Quantity;
+                    wh.TotalCostAccumulated += item.Quantity * item.UnitPrice;
+
                     int oldBalance = inventoryBalance.Quantity;
                     int newBalance = oldBalance + item.Quantity;
                     inventoryBalance.Quantity = newBalance;
@@ -46,6 +67,7 @@ namespace Wms.Api.Services
                         CurrentLocationId = item.LocationId,
                         StockInId = item.StockInId,
                         QuantityIn = item.Quantity,
+                        UnitPrice = item.UnitPrice,
                         QuantityOut = 0,
                         OldBalance = oldBalance,
                         NewBalance = newBalance
@@ -68,7 +90,6 @@ namespace Wms.Api.Services
                 throw new Exception($"Stock In failed: {ex.Message}", ex);
             }
         }
-
         public async Task StockOutAsync(StockOut stockOut)
         {
             using var transaction = await context.Database.BeginTransactionAsync();
@@ -91,6 +112,19 @@ namespace Wms.Api.Services
                     int oldBalance = inventoryBalance.Quantity;
                     int newBalance = oldBalance - item.Quantity;
                     inventoryBalance.Quantity = newBalance;
+
+
+                    // warehouse-level
+                    var wh = await context.WarehouseInventoryBalances
+                        .SingleOrDefaultAsync(w =>
+                            w.ProductId == item.ProductId &&
+                            w.WarehouseId == stockOut.WarehouseId);
+
+                    if (wh == null)
+                        throw new InvalidOperationException("Warehouse balance missing—cannot stock out.");
+
+                    // just reduce on-hand; receipts stay untouched
+                    wh.OnHandQuantity -= item.Quantity;
 
                     var inventoryRecord = new Inventory
                     {
@@ -163,6 +197,19 @@ namespace Wms.Api.Services
                     int quantityIn = quantityDifference > 0 ? quantityDifference : 0;
                     int quantityOut = quantityDifference < 0 ? -quantityDifference : 0;
 
+
+                    // warehouse-level
+                    var wh = await context.WarehouseInventoryBalances
+                        .SingleOrDefaultAsync(w =>
+                            w.ProductId == item.ProductId &&
+                            w.WarehouseId == stockAdjustment.WarehouseId);
+
+                    if (wh == null)
+                        throw new InvalidOperationException("Warehouse balance missing—cannot adjust.");
+
+                    // only adjust on-hand; cost accumulators remain as before
+                    wh.OnHandQuantity += quantityDifference;
+
                     var inventoryRecord = new Inventory
                     {
                         Id = Guid.NewGuid(),
@@ -194,7 +241,6 @@ namespace Wms.Api.Services
                 throw new Exception($"Stock Adjustment failed: {ex.Message}", ex);
             }
         }
-
         public async Task StockTransferAsync(StockTransfer stockTransfer)
         {
             if (stockTransfer == null)
@@ -280,6 +326,32 @@ namespace Wms.Api.Services
 
                     context.Inventories.Add(sourceTransaction);
                     context.Inventories.Add(destinationTransaction);
+
+                    // warehouse-level source
+                    var srcWh = await context.WarehouseInventoryBalances
+                        .SingleOrDefaultAsync(w =>
+                            w.ProductId == item.ProductId &&
+                            w.WarehouseId == item.FromWarehouseId);
+                    if (srcWh == null)
+                        throw new InvalidOperationException("Source warehouse balance missing.");
+                    srcWh.OnHandQuantity -= item.QuantityTransferred;
+
+                    // warehouse-level destination
+                    var dstWh = await context.WarehouseInventoryBalances
+                        .SingleOrDefaultAsync(w =>
+                            w.ProductId == item.ProductId &&
+                            w.WarehouseId == item.ToWarehouseId);
+                    if (dstWh == null)
+                    {
+                        dstWh = new WarehouseInventoryBalance
+                        {
+                            Id = Guid.NewGuid(),
+                            ProductId = item.ProductId,
+                            WarehouseId = item.ToWarehouseId
+                        };
+                        context.WarehouseInventoryBalances.Add(dstWh);
+                    }
+                    dstWh.OnHandQuantity += item.QuantityTransferred;
                 }
 
                 await context.SaveChangesAsync();

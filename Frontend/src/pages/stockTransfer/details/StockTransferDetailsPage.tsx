@@ -124,18 +124,10 @@ function StockTransferDetailsPage() {
                   <KeyValuePair label={t("created-at")}>
                     <UserDateTime date={stockTransfer.createdAt} />
                   </KeyValuePair>
-                  <KeyValuePair label={t("changed-at")}>
-                    <UserDateTime date={stockTransfer.changedAt} />
-                  </KeyValuePair>
+
                   <KeyValuePair label={t("created-by")}>
                     <UserName
                       userId={stockTransfer.createdById}
-                      placeholder="-"
-                    />
-                  </KeyValuePair>
-                  <KeyValuePair label={t("changed-by")}>
-                    <UserName
-                      userId={stockTransfer.changedById}
                       placeholder="-"
                     />
                   </KeyValuePair>

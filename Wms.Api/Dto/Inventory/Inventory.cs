@@ -23,6 +23,10 @@ namespace Wms.Api.Dto.Inventory
         public int OldBalance { get; set; } // Balance before the transaction 
         public int NewBalance { get; set; } // Balance after the transaction  
 
+        public int ReservedQuantity { get; set; }
+        public int AvailableQuantity { get; set; }   // keep this as before
+        public int FreeQuantity { get; set; }   // ← new
+
         public string Product { get; set; }
         public string ClientCode { get; set; }
         public string StockGroup { get; set; }
@@ -45,7 +49,23 @@ namespace Wms.Api.Dto.Inventory
         public string CurrentLocation { get; set; }
         
         public string Size { get; set; }
-    } 
+    }
+
+    public class InventorySummaryByProductDetailsDto : CreatedChangedEntity
+    {
+        public Guid Id { get; set; }
+        public Guid ProductId { get; set; }
+        public Guid WarehouseId { get; set; } 
+        public int AvailableQuantity { get; set; }
+        public int ReservedQuantity { get; set; }
+        public int AvailableAfterReserved { get; set; }
+        public string Product { get; set; }
+        public string ClientCode { get; set; }
+        public string StockGroup { get; set; }
+        public string Warehouse { get; set; } 
+
+        public string Size { get; set; }
+    }
 
     public class InventorySearchDto : PagedRequestAbstractDto
     {
@@ -54,6 +74,5 @@ namespace Wms.Api.Dto.Inventory
         public string[]? ClientCodeId { get; set; } 
         public string[]? LocationId { get; set; }
 
-        public bool GroupByProduct { get; set; } = false;  
     }
 }

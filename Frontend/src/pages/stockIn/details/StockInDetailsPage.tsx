@@ -110,6 +110,9 @@ function StockInDetailsPage() {
                   <KeyValuePair label={t("po-number")}>
                     {stockIn.poNumber}
                   </KeyValuePair>
+                  <KeyValuePair label={t("js-number")}>
+                    {stockIn.jsNumber}
+                  </KeyValuePair>
                   <KeyValuePair label={t("from-location")}>
                     {stockIn.fromLocation}
                   </KeyValuePair>
@@ -119,14 +122,9 @@ function StockInDetailsPage() {
                   <KeyValuePair label={t("created-at")}>
                     <UserDateTime date={stockIn.createdAt} />
                   </KeyValuePair>
-                  <KeyValuePair label={t("changed-at")}>
-                    <UserDateTime date={stockIn.changedAt} />
-                  </KeyValuePair>
+
                   <KeyValuePair label={t("created-by")}>
                     <UserName userId={stockIn.createdById} placeholder="-" />
-                  </KeyValuePair>
-                  <KeyValuePair label={t("changed-by")}>
-                    <UserName userId={stockIn.changedById} placeholder="-" />
                   </KeyValuePair>
                 </KeyValueList>
               </Grid>

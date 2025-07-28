@@ -17,10 +17,6 @@ namespace Wms.Api.Entities
         public int Quantity { get; set; }
 
         [Required]
-        public DateTime ReservationDate { get; set; } // Date when the reservation was made
-
-        [Required]
-        public DateTime ExpirationDate { get; set; } // Date when the reservation expires
-
+        public ReservationItemStatusEnum Status { get; set; } = ReservationItemStatusEnum.ACTIVE;
     }
 }

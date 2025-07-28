@@ -59,7 +59,7 @@ const ProductCreateEditPage: React.FC = () => {
     designId: EMPTY_GUID as guid,
     cartonSizeId: EMPTY_GUID as guid,
     productPhotoUrl: "",
-    listPrice: 0,
+    unitPrice: 0,
     threshold: 0,
   });
 
@@ -528,30 +528,30 @@ const ProductCreateEditPage: React.FC = () => {
                     ),
                   },
                   {
-                    label: t("listPrice"),
+                    label: t("unitPrice"),
                     required: isRequiredField(
                       productCreateEditShema,
-                      "listPrice"
+                      "unitPrice"
                     ),
                     value: (
                       <TextField
                         fullWidth
-                        id="listPrice"
-                        name="listPrice"
+                        id="unitPrice"
+                        name="unitPrice"
                         type="number"
                         size="small"
-                        value={formik.values.listPrice}
+                        value={formik.values.unitPrice}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
                         error={
-                          formik.touched.listPrice &&
-                          Boolean(formik.errors.listPrice)
+                          formik.touched.unitPrice &&
+                          Boolean(formik.errors.unitPrice)
                         }
                         helperText={
                           <FormikErrorMessage
-                            touched={formik.touched.listPrice}
-                            error={formik.errors.listPrice}
-                            translatedFieldName={t("listPrice")}
+                            touched={formik.touched.unitPrice}
+                            error={formik.errors.unitPrice}
+                            translatedFieldName={t("unitPrice")}
                           />
                         }
                       />

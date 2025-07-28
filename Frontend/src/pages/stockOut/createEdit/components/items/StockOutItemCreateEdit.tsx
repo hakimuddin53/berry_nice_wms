@@ -2,6 +2,8 @@ import {
   CardContent,
   FormControl,
   FormHelperText,
+  MenuItem,
+  Select,
   TextField,
 } from "@mui/material";
 import {
@@ -15,7 +17,7 @@ import {
 import FormikErrorMessage from "components/platbricks/shared/ErrorMessage";
 import SelectAsync2 from "components/platbricks/shared/SelectAsync2";
 import { EntityCreateEditChildComponentProps } from "interfaces/general/createEditPage/createEditComponentInterfaces";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   formikObjectHasHeadTouchedErrors,
@@ -24,6 +26,7 @@ import {
 
 import { useLocationService } from "services/LocationService";
 import { useProductService } from "services/ProductService";
+import { useStockReservationService } from "services/StockReservationService";
 import {
   StockOutCreateEditSchema,
   YupStockOutItemsCreateEdit,
@@ -37,6 +40,34 @@ const StockOutItemCreateEdit: React.FC<
 
   const ProductService = useProductService();
   const LocationService = useLocationService();
+  const ReservationService = useStockReservationService();
+
+  const [reservationOptions, setReservationOptions] = useState<
+    { value: string; label: string }[]
+  >([]);
+
+  const warehouseId = props.formik.values.warehouseId;
+
+  // Whenever product or warehouse changes, fetch active reservations
+  useEffect(() => {
+    const productId = props.values.productId;
+    if (productId && warehouseId) {
+      ReservationService.getActiveReservations(productId, warehouseId)
+        .then((res) => {
+          setReservationOptions(
+            res.data.map((r: any) => ({
+              value: r.itemId, // the reservation‐item id
+              label: `${r.number} (${r.quantity} pcs) expires ${new Date(
+                r.expiresAt
+              ).toLocaleDateString()}`,
+            }))
+          );
+        })
+        .catch(() => setReservationOptions([]));
+    } else {
+      setReservationOptions([]);
+    }
+  }, [props.values.productId, warehouseId, ReservationService]);
 
   return (
     <PageSection title={t("common:items")}>
@@ -118,6 +149,53 @@ const StockOutItemCreateEdit: React.FC<
                     </FormControl>
                   ),
                 },
+                {
+                  label: t("reservation"),
+                  required: false,
+                  value: (
+                    <FormControl
+                      fullWidth
+                      size="small"
+                      error={
+                        props.touched.reservationItemId &&
+                        Boolean(props.errors.reservationItemId)
+                      }
+                    >
+                      <Select
+                        labelId={`reservation-label-${props.elementKey}`}
+                        id={`stockOutItems.${props.elementKey}.reservationItemId`}
+                        name={`stockOutItems.${props.elementKey}.reservationItemId`}
+                        label={t("reservation")}
+                        value={props.values.reservationItemId || ""}
+                        onChange={(e) =>
+                          props.formik.setFieldValue(
+                            `stockOutItems.${props.elementKey}.reservationItemId`,
+                            e.target.value
+                          )
+                        }
+                        onBlur={() =>
+                          props.formik.setFieldTouched(
+                            `stockOutItems.${props.elementKey}.reservationItemId`
+                          )
+                        }
+                      >
+                        {reservationOptions.map((opt) => (
+                          <MenuItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                      <FormHelperText>
+                        <FormikErrorMessage
+                          touched={props.touched.reservationItemId}
+                          error={props.errors.reservationItemId}
+                          translatedFieldName={t("reservation")}
+                        />
+                      </FormHelperText>
+                    </FormControl>
+                  ),
+                },
+
                 {
                   label: t("rack"),
                   required: isRequiredField(

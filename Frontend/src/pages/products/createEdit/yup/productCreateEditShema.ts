@@ -12,7 +12,7 @@ export const productCreateEditShema = yup.object({
   designId: yup.mixed<guid>().required(),
   cartonSizeId: yup.mixed<guid>().required(),
   productPhotoUrl: yup.string().nullable(),
-  listPrice: yup.number().required(),
+  unitPrice: yup.number().required(),
   threshold: yup.number().nullable(),
 });
 

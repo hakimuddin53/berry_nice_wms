@@ -37,6 +37,10 @@ export const useStockInTable = () => {
         label: t("po-number"),
       },
       {
+        id: "jsNumber",
+        label: t("js-number"),
+      },
+      {
         id: "fromLocation",
         label: t("from-location"),
       },

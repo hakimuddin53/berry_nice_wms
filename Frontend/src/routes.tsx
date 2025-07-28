@@ -37,6 +37,7 @@ import DesignCreateEditPage from "pages/design/createEdit/DesignCreateEditPage";
 import DesignDetailsPage from "pages/design/details/DesignDetailsPage";
 import DesignListPage from "pages/design/index/DesignListPage";
 import InventoryListPage from "pages/inventory/InventoryListPage";
+import InventorySummaryByProductListPage from "pages/inventoryByProductSummary/InventorySummaryByProductListPage";
 import InventorySummaryListPage from "pages/inventorySummary/InventorySummaryListPage";
 import LocationCreateEditPage from "pages/location/createEdit/LocationCreateEditPage";
 import LocationDetailsPage from "pages/location/details/LocationDetailsPage";
@@ -586,6 +587,19 @@ const routes = [
             element: (
               <ModuleGuard requiredModule={ModuleEnum.INVENTORY}>
                 <InventorySummaryListPage />
+              </ModuleGuard>
+            ),
+          },
+        ],
+      },
+      {
+        path: "inventory-summary-product",
+        children: [
+          {
+            index: true,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.INVENTORY}>
+                <InventorySummaryByProductListPage />
               </ModuleGuard>
             ),
           },

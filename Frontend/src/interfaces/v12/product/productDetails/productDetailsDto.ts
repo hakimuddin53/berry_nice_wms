@@ -22,6 +22,6 @@ export interface ProductDetailsDto extends CreatedChangedEntity {
   cartonSizeId: guid;
 
   productPhotoUrl: string | null;
-  listPrice: number;
+  unitPrice: number;
   threshold: number;
 }

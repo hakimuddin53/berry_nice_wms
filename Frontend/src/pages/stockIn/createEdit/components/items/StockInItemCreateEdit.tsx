@@ -207,6 +207,36 @@ const StockInItemCreateEdit: React.FC<
                     />
                   ),
                 },
+                {
+                  label: t("unitPrice"),
+                  required: isRequiredField(
+                    StockInCreateEditSchema,
+                    "stockInItems[].unitPrice"
+                  ),
+                  value: (
+                    <TextField
+                      fullWidth
+                      id={`stockInItems.${props.elementKey}.unitPrice`}
+                      name={`stockInItems.${props.elementKey}.unitPrice`}
+                      size="small"
+                      type="number"
+                      value={props.values.unitPrice}
+                      onChange={props.handleChange}
+                      onBlur={props.handleBlur}
+                      error={
+                        props.touched.unitPrice &&
+                        Boolean(props.errors.unitPrice)
+                      }
+                      helperText={
+                        <FormikErrorMessage
+                          touched={props.touched.unitPrice}
+                          error={props.errors.unitPrice}
+                          translatedFieldName={t("unitPrice")}
+                        />
+                      }
+                    />
+                  ),
+                },
               ]}
             ></DataList>
           </PbTabPanel>

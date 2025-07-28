@@ -60,15 +60,6 @@ const StockAdjustmentItemDetails: React.FC<{
                   placeholder="-"
                 />
               </KeyValuePair>
-              <KeyValuePair label={t("common:changed-at")}>
-                <UserDateTime date={stockAdjustmentItem.changedAt} />
-              </KeyValuePair>
-              <KeyValuePair label={t("common:changed-by")}>
-                <UserName
-                  userId={stockAdjustmentItem.changedById}
-                  placeholder="-"
-                />
-              </KeyValuePair>
             </KeyValueList>
           </PbTabPanel>
         </CardContent>

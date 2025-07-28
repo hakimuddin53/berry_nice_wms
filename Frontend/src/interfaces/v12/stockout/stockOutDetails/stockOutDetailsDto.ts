@@ -5,6 +5,7 @@ export interface StockOutDetailsDto extends CreatedChangedEntity {
   id: guid;
   number: string;
   doNumber: string;
+  soNumber: string;
   warehouseId: guid;
   toLocation: string;
   stockOutItems: StockOutItemDetailsDto[];

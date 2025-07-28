@@ -1,6 +1,7 @@
 import {
   InventoryDetailsDto,
   InventorySearchDto,
+  InventorySummaryByProductDetailsDto,
   InventorySummaryDetailsDto,
 } from "interfaces/v12/inventory/inventory";
 import React from "react";
@@ -16,6 +17,10 @@ interface IInventoryService {
   countInventorySummary: (searchDto: any) => Promise<number>;
   searchInventorys: (searchDto: any) => Promise<InventoryDetailsDto[]>;
   countInventorys: (searchDto: any) => Promise<number>;
+  searchInventorySummaryByProduct: (
+    searchDto: any
+  ) => Promise<InventorySummaryByProductDetailsDto[]>;
+  countInventorySummaryByProduct: (searchDto: any) => Promise<number>;
 }
 
 const InventoryServiceContext = createContext({} as IInventoryService);
@@ -26,6 +31,8 @@ export const InventoryServiceProvider: React.FC<{
   countInventorys?: any;
   searchInventorySummary?: any;
   countInventorySummary?: any;
+  searchInventorySummaryByProduct?: any;
+  countInventorySummaryByProduct?: any;
 
   getInventoryById?: any;
 }> = (props) => {
@@ -55,12 +62,30 @@ export const InventoryServiceProvider: React.FC<{
       .then((res) => res.data);
   };
 
+  const searchInventorySummaryByProduct = (searchDto: InventorySearchDto) => {
+    return axios
+      .post("/inventory/summary-product/search", searchDto)
+      .then((res) => {
+        return res.data.data;
+      });
+  };
+
+  const countInventorySummaryByProduct = (searchDto: any) => {
+    return axios
+      .post("/inventory/summary-product/count", searchDto)
+      .then((res) => res.data);
+  };
+
   const value = {
     searchInventorys: props.searchInventorys || searchInventorys,
     countInventorys: props.countInventorys || countInventorys,
     searchInventorySummary:
       props.searchInventorySummary || searchInventorySummary,
     countInventorySummary: props.countInventorySummary || countInventorySummary,
+    searchInventorySummaryByProduct:
+      props.searchInventorySummaryByProduct || searchInventorySummaryByProduct,
+    countInventorySummaryByProduct:
+      props.countInventorySummaryByProduct || countInventorySummaryByProduct,
     getInventoryById: props.getInventoryById || getInventoryById,
   };
 

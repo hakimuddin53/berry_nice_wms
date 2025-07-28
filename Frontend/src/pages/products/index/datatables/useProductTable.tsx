@@ -67,8 +67,8 @@ export const useProductTable = () => {
         label: t("design"),
       },
       {
-        id: "listPrice",
-        label: t("list-price"),
+        id: "unitPrice",
+        label: t("unitPrice"),
       },
       {
         id: "quantityPerCarton",

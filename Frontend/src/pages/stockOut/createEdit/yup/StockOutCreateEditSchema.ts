@@ -4,6 +4,7 @@ import * as yup from "yup";
 export const StockOutCreateEditSchema = yup.object({
   number: yup.string().nullable(),
   doNumber: yup.string().required(),
+  soNumber: yup.string().required(),
   toLocation: yup.string().required(),
   warehouseId: yup.mixed<guid>().required(),
   stockOutItems: yup
@@ -12,6 +13,7 @@ export const StockOutCreateEditSchema = yup.object({
       yup.object().shape({
         key: yup.string(),
         productId: yup.mixed<guid>().required(),
+        reservationItemId: yup.mixed<guid>().nullable(),
         locationId: yup.mixed<guid>().required(),
         quantity: yup.number().required(),
       })

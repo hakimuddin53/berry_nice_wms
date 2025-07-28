@@ -125,18 +125,10 @@ function StockAdjustmentDetailsPage() {
                   <KeyValuePair label={t("created-at")}>
                     <UserDateTime date={stockAdjustment.createdAt} />
                   </KeyValuePair>
-                  <KeyValuePair label={t("changed-at")}>
-                    <UserDateTime date={stockAdjustment.changedAt} />
-                  </KeyValuePair>
+
                   <KeyValuePair label={t("created-by")}>
                     <UserName
                       userId={stockAdjustment.createdById}
-                      placeholder="-"
-                    />
-                  </KeyValuePair>
-                  <KeyValuePair label={t("changed-by")}>
-                    <UserName
-                      userId={stockAdjustment.changedById}
                       placeholder="-"
                     />
                   </KeyValuePair>
