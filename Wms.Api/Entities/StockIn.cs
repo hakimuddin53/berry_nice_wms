@@ -14,6 +14,9 @@ namespace Wms.Api.Entities
         public required string PONumber { get; set; }
 
         [Required]
+        public required string JSNumber { get; set; }
+
+        [Required]
         public required string FromLocation { get; set; }
 
         [Required]

@@ -54,9 +54,17 @@ const StockOutItemCreateEdit: React.FC<
     if (productId && warehouseId) {
       ReservationService.getActiveReservations(productId, warehouseId)
         .then((res) => {
-          setReservationOptions(
-            res.data.map((r: any) => ({
+          console.log(
+            res.map((r: any) => ({
               value: r.itemId, // the reservation‐item id
+              label: `${r.number} (${r.quantity} pcs) expires ${new Date(
+                r.expiresAt
+              ).toLocaleDateString()}`,
+            }))
+          );
+          setReservationOptions(
+            res.map((r: any) => ({
+              value: r.reservationItemId, // the reservation‐item id
               label: `${r.number} (${r.quantity} pcs) expires ${new Date(
                 r.expiresAt
               ).toLocaleDateString()}`,
@@ -64,10 +72,15 @@ const StockOutItemCreateEdit: React.FC<
           );
         })
         .catch(() => setReservationOptions([]));
-    } else {
-      setReservationOptions([]);
     }
-  }, [props.values.productId, warehouseId, ReservationService]);
+  }, [
+    props.values.productId,
+    props.values.locationId,
+    warehouseId,
+    ReservationService,
+  ]);
+
+  console.log(reservationOptions);
 
   return (
     <PageSection title={t("common:items")}>
@@ -165,7 +178,6 @@ const StockOutItemCreateEdit: React.FC<
                         labelId={`reservation-label-${props.elementKey}`}
                         id={`stockOutItems.${props.elementKey}.reservationItemId`}
                         name={`stockOutItems.${props.elementKey}.reservationItemId`}
-                        label={t("reservation")}
                         value={props.values.reservationItemId || ""}
                         onChange={(e) =>
                           props.formik.setFieldValue(

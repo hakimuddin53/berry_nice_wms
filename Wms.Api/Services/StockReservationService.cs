@@ -1,6 +1,4 @@
-﻿using DocumentFormat.OpenXml.Vml;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Wms.Api.Context;
 using Wms.Api.Entities;
 using Wms.Api.Model;
@@ -73,22 +71,23 @@ namespace Wms.Api.Services
 
         public async Task<List<ActiveReservationItemDto>> GetActiveReservationAsync(Guid productId, Guid warehouseId)
         {
-            var active = await context.StockReservations
-                .Where(r => r.Status == ReservationStatusEnum.ACTIVE
-                         && r.WarehouseId == warehouseId)
-                .SelectMany(r => r.StockReservationItems ?? Enumerable.Empty<StockReservationItem>(),
-                    (r, item) => new { r, item })
-                .Where(x => x.item.ProductId == productId && x.item.Quantity > 0)
-                .Select(x => new ActiveReservationItemDto
-                {
-                    ReservationId = x.r.Id,
-                    Number = x.r.Number,
-                    ReservedAt = x.r.ReservedAt,
-                    ExpiresAt = x.r.ExpiresAt,
-                    ReservationItemId = x.item.Id,
-                    Quantity = x.item.Quantity
-                })
-                .ToListAsync();
+            var active = await (
+                          from r in context.StockReservations
+                          where r.Status == ReservationStatusEnum.ACTIVE
+                             && r.WarehouseId == warehouseId
+                          from item in r.StockReservationItems! // Use null-forgiving operator to suppress warning
+                          where item.ProductId == productId
+                             && item.Quantity > 0
+                          select new ActiveReservationItemDto
+                          {
+                              ReservationId = r.Id,
+                              Number = r.Number,
+                              ReservedAt = r.ReservedAt,
+                              ExpiresAt = r.ExpiresAt,
+                              ReservationItemId = item.Id,
+                              Quantity = item.Quantity
+                          }
+                      ).ToListAsync();
 
             return active;
         }
@@ -109,7 +108,7 @@ namespace Wms.Api.Services
 
             foreach (var r in expired)
             {
-                if (r.StockReservationItems != null && r.StockReservationItems.Any()) // Ensure StockReservationItems is not null and has items
+                if (r.StockReservationItems != null && r.StockReservationItems.Any())
                 {
                     foreach (var item in r.StockReservationItems)
                     {

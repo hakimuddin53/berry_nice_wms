@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Wms.Api.Entities;
 using Wms.Api.Services;
@@ -26,12 +25,11 @@ namespace Wms.Api.Context
         private void UpdateAuditEntities()
         {
             var entries = ChangeTracker.Entries<CreatedChangedEntity>();
-
-            var now = DateTime.UtcNow;
             var user = currentUserService.UserId();
 
             foreach (var entry in entries)
             {
+                var now = DateTime.UtcNow;
                 if (entry.State == EntityState.Added)
                 {
                     entry.Entity.CreatedAt = now;
@@ -43,6 +41,8 @@ namespace Wms.Api.Context
                     entry.Entity.ChangedAt = now;
                     entry.Entity.ChangedById = Guid.Parse(user);
                 }
+
+                _ = now.AddTicks(1);
             }
         }
 
@@ -56,10 +56,8 @@ namespace Wms.Api.Context
         public DbSet<Inventory> Inventories { get; set; }         
         public DbSet<StockReservation> StockReservations { get; set; }
         public DbSet<StockReservationItem> StockReservationItems { get; set; }
-
         public DbSet<StockTransfer> StockTransfers { get; set; }
         public DbSet<StockTransferItem> StockTransferItems { get; set; }
-
         public DbSet<RunningNumber> RunningNumbers { get; set; }
         public DbSet<Warehouse> Warehouses { get; set; }
         public DbSet<Category> Categories { get; set; }

@@ -5,6 +5,7 @@
         public Guid Id { get; set; }
         public required string Number { get; set; }
         public required string PONumber { get; set; }
+        public required string JSNumber { get; set; }
         public required string FromLocation { get; set; }
         public Guid WarehouseId { get; set; } 
 

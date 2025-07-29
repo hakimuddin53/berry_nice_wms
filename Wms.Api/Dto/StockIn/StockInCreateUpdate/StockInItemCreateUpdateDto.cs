@@ -8,7 +8,7 @@ namespace Wms.Api.Dto.StockIn.StockInCreateUpdate
         public Guid ProductId { get; set; }
         public Guid LocationId { get; set; }
         public int Quantity { get; set; }
-
+        public decimal UnitPrice { get; set; }
     }
 }
 
