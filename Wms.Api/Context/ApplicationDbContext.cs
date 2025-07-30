@@ -25,7 +25,17 @@ namespace Wms.Api.Context
         private void UpdateAuditEntities()
         {
             var entries = ChangeTracker.Entries<CreatedChangedEntity>();
-            var user = currentUserService.UserId();
+            string user = "df06e9cf-ab07-4e33-8004-2aad988eb251";
+            try
+            {
+                user = currentUserService.UserId();
+            }
+            catch (Exception)
+            {
+                // If the user is not authenticated, use a default user ID or handle accordingly.
+                // Here we are using a hardcoded GUID for demonstration purposes.
+                user = "df06e9cf-ab07-4e33-8004-2aad988eb251";
+            }
 
             foreach (var entry in entries)
             {
