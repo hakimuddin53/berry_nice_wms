@@ -11,9 +11,14 @@ export const useInventorySummaryTable = () => {
   >(
     () => [
       {
-        id: "product",
-        label: t("product"),
-        render: (row) => row.product,
+        id: "productName",
+        label: t("product-name"),
+        render: (row) => row.productName,
+      },
+      {
+        id: "productCode",
+        label: t("product-code"),
+        render: (row) => row.productCode,
       },
       {
         id: "warehouse",

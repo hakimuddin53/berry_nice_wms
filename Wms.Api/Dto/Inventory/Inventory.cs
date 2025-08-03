@@ -17,6 +17,7 @@ namespace Wms.Api.Dto.Inventory
         public Guid StockAdjustmentId { get; set; }
         
         public string TransactionNumber { get; set; } = string.Empty;
+        public string OrderNumber { get; set; } = string.Empty;
 
         public int QuantityIn { get; set; } // Quantity added in the transaction 
         public int QuantityOut { get; set; } // Quantity removed in the transaction 
@@ -42,7 +43,8 @@ namespace Wms.Api.Dto.Inventory
         public Guid WarehouseId { get; set; } 
         public Guid CurrentLocationId { get; set; } = Guid.Empty; // Default to empty if not set
         public int AvailableQuantity { get; set; } // Quantity available
-        public string Product { get; set; }
+        public string ProductName { get; set; }
+        public string ProductCode { get; set; }
         public string ClientCode { get; set; }
         public string StockGroup { get; set; }
         public string Warehouse { get; set; }

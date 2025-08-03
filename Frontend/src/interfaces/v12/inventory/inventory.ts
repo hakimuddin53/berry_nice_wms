@@ -15,6 +15,7 @@ export interface InventoryDetailsDto extends CreatedChangedEntity {
   warehouse: string;
   currentLocation: string;
   transactionNumber: string;
+  orderNumber: string;
   clientCode: string;
   stockGroup: string;
   size: string;
@@ -26,7 +27,8 @@ export interface InventorySummaryDetailsDto extends CreatedChangedEntity {
   warehouseId: guid;
   currentLocationId: guid;
   availableQuantity: number;
-  product: string;
+  productName: string;
+  productCode: string;
   warehouse: string;
   currentLocation: string;
   clientCode: string;

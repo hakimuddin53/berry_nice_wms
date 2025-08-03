@@ -30,7 +30,9 @@ namespace Wms.Api.Controllers
         {  
             var stockTransfers = await service.GetAllAsync(e => e.Number.Contains(stockTransferSearch.search));
 
-            var result = stockTransfers.Skip((stockTransferSearch.Page - 1) * stockTransferSearch.PageSize).Take(stockTransferSearch.PageSize).ToList();
+            var orderedstockTransfers = stockTransfers.OrderByDescending(e => e.CreatedAt);
+
+            var result = orderedstockTransfers.Skip((stockTransferSearch.Page - 1) * stockTransferSearch.PageSize).Take(stockTransferSearch.PageSize).ToList();
             PagedList<StockTransfer> pagedResult = new PagedList<StockTransfer>(result, stockTransferSearch.Page, stockTransferSearch.PageSize);
 
             var stockTransferDtos = autoMapperService.Map<PagedListDto<StockTransferDetailsDto>>(pagedResult); 

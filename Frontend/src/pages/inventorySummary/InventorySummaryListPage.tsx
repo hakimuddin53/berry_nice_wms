@@ -174,10 +174,10 @@ function InventorySummaryListPage() {
                   ),
                 },
                 {
-                  label: t("location"),
+                  label: t("rack"),
                   value: (
                     <ValueFilter
-                      placeholder={t("location")}
+                      placeholder={t("rack")}
                       dataType={DataType.GUID}
                       onFilterChange={(filter: FilterChangeParam) => {
                         searchRef.current.locationId = filter.valueMultiple.map(

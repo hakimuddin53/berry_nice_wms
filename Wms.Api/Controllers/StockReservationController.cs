@@ -28,37 +28,39 @@ namespace Wms.Api.Controllers
         private readonly ApplicationDbContext _context = applicationDbContext;
 
         [HttpPost("search", Name = "SearchStockReservationsAsync")]
-        public async Task<IActionResult> SearchStockReservationsAsync([FromBody] StockReservationSearchDto stockInSearch)
+        public async Task<IActionResult> SearchStockReservationsAsync([FromBody] StockReservationSearchDto stockReservationSearch)
         {  
-            var stockIns = await _service.GetAllAsync(e => e.Number.Contains(stockInSearch.search));
+            var stockReservations = await _service.GetAllAsync(e => e.Number.Contains(stockReservationSearch.search));
 
-            var result = stockIns.Skip((stockInSearch.Page - 1) * stockInSearch.PageSize).Take(stockInSearch.PageSize).ToList();
-            PagedList<StockReservation> pagedResult = new PagedList<StockReservation>(result, stockInSearch.Page, stockInSearch.PageSize);
+            var orderedstockReservations = stockReservations.OrderByDescending(e => e.CreatedAt);
 
-            var stockInDtos = _autoMapperService.Map<PagedListDto<StockReservationDetailsDto>>(pagedResult); 
-            return Ok(stockInDtos);
+            var result = orderedstockReservations.Skip((stockReservationSearch.Page - 1) * stockReservationSearch.PageSize).Take(stockReservationSearch.PageSize).ToList();
+            PagedList<StockReservation> pagedResult = new PagedList<StockReservation>(result, stockReservationSearch.Page, stockReservationSearch.PageSize);
+
+            var stockReservationDtos = _autoMapperService.Map<PagedListDto<StockReservationDetailsDto>>(pagedResult); 
+            return Ok(stockReservationDtos);
         }
          
         [HttpPost("count", Name = "CountStockReservationsAsync")]     
-        public async Task<IActionResult> CountStockReservationsAsync([FromBody] StockReservationSearchDto stockInSearch)
+        public async Task<IActionResult> CountStockReservationsAsync([FromBody] StockReservationSearchDto stockReservationSearch)
         {
-            var stockIns = await _service.GetAllAsync(e => e.Number.Contains(stockInSearch.search));
+            var stockReservations = await _service.GetAllAsync(e => e.Number.Contains(stockReservationSearch.search));
              
-            var stockInDtos = _autoMapperService.Map<List<StockReservationDetailsDto>>(stockIns);
-            return Ok(stockInDtos.Count);
+            var stockReservationDtos = _autoMapperService.Map<List<StockReservationDetailsDto>>(stockReservations);
+            return Ok(stockReservationDtos.Count);
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
-            var stockIn = await _service.GetByIdAsync(id);
-            if (stockIn == null)
+            var stockReservation = await _service.GetByIdAsync(id);
+            if (stockReservation == null)
                 return NotFound();
 
-            stockIn.StockReservationItems = _context.StockReservationItems.Where(x => x.StockReservationId == stockIn.Id).ToList();
+            stockReservation.StockReservationItems = _context.StockReservationItems.Where(x => x.StockReservationId == stockReservation.Id).ToList();
 
-            var stockInDtos = _autoMapperService.Map<StockReservationDetailsDto>(stockIn);
-            return Ok(stockInDtos);
+            var stockReservationDtos = _autoMapperService.Map<StockReservationDetailsDto>(stockReservation);
+            return Ok(stockReservationDtos);
         }
 
         [HttpPost]
@@ -89,17 +91,17 @@ namespace Wms.Api.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id, [FromBody] StockReservationCreateUpdateDto stockInCreateUpdate)
+        public async Task<IActionResult> Update(Guid id, [FromBody] StockReservationCreateUpdateDto stockReservationCreateUpdate)
         {
-            var stockIn = await _service.GetByIdAsync(id);
+            var stockReservation = await _service.GetByIdAsync(id);
 
-            var stockInDtos = _autoMapperService.Map<StockReservationDetailsDto>(stockIn);
-            if (stockInDtos == null)
+            var stockReservationDtos = _autoMapperService.Map<StockReservationDetailsDto>(stockReservation);
+            if (stockReservationDtos == null)
                 return NotFound();
 
-            _autoMapperService.Map(stockInCreateUpdate, stockIn);
+            _autoMapperService.Map(stockReservationCreateUpdate, stockReservation);
 
-            await _service.UpdateAsync(stockIn);
+            await _service.UpdateAsync(stockReservation);
             return NoContent();
         }
 

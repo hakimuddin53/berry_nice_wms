@@ -36,6 +36,10 @@ export const useInventoryTable = () => {
         label: t("transaction-number"),
       },
       {
+        id: "orderNumber",
+        label: t("order-number"),
+      },
+      {
         id: "currentLocation",
         label: t("location"),
       },

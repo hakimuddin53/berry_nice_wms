@@ -31,7 +31,8 @@ namespace Wms.Api.Controllers
         {    
             var stockAdjustments = await service.GetAllAsync(e => e.Number.Contains(stockAdjustmentSearch.search));
 
-            var result = stockAdjustments.Skip((stockAdjustmentSearch.Page - 1) * stockAdjustmentSearch.PageSize).Take(stockAdjustmentSearch.PageSize).ToList();
+            var orderedstockAdjustments = stockAdjustments.OrderByDescending(e => e.CreatedAt);
+            var result = orderedstockAdjustments.Skip((stockAdjustmentSearch.Page - 1) * stockAdjustmentSearch.PageSize).Take(stockAdjustmentSearch.PageSize).ToList();
             PagedList<StockAdjustment> pagedResult = new PagedList<StockAdjustment>(result, stockAdjustmentSearch.Page, stockAdjustmentSearch.PageSize);
 
             var stockAdjustmentDtos = autoMapperService.Map<PagedListDto<StockAdjustmentDetailsDto>>(pagedResult);

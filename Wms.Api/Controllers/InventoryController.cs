@@ -75,6 +75,10 @@ namespace Wms.Api.Controllers
                             .Where(s => s.Id == inventory.StockInId)
                             .Select(s => s.Number)
                             .FirstOrDefault() ?? "";
+                        inventory.OrderNumber = context.StockIns
+                            .Where(s => s.Id == inventory.StockInId)
+                            .Select(s => s.PONumber)
+                            .FirstOrDefault() ?? "";
                         break;
 
                     case TransactionTypeEnum.STOCKOUT:
@@ -82,6 +86,10 @@ namespace Wms.Api.Controllers
                             .Where(s => s.Id == inventory.StockOutId)
                             .Select(s => s.Number)
                             .FirstOrDefault() ?? "";
+                        inventory.OrderNumber = context.StockOuts
+                         .Where(s => s.Id == inventory.StockOutId)
+                         .Select(s => s.DONumber)
+                         .FirstOrDefault() ?? "";
                         break;
 
                     case TransactionTypeEnum.STOCKTRANSFERIN:
@@ -162,12 +170,20 @@ namespace Wms.Api.Controllers
                             .Where(s => s.Id == inventory.StockInId)
                             .Select(s => s.Number)
                             .FirstOrDefault() ?? "";
+                        inventory.OrderNumber = context.StockIns
+                            .Where(s => s.Id == inventory.StockInId)
+                            .Select(s => s.PONumber)
+                            .FirstOrDefault() ?? "";
                         break;
 
                     case TransactionTypeEnum.STOCKOUT:
                         inventory.TransactionNumber = context.StockOuts
                             .Where(s => s.Id == inventory.StockOutId)
                             .Select(s => s.Number)
+                            .FirstOrDefault() ?? "";
+                        inventory.OrderNumber = context.StockOuts
+                            .Where(s => s.Id == inventory.StockOutId)
+                            .Select(s => s.DONumber)
                             .FirstOrDefault() ?? "";
                         break;
 
@@ -208,8 +224,9 @@ namespace Wms.Api.Controllers
             worksheet.Cell(1, 9).Value = "Old Balance";
             worksheet.Cell(1, 10).Value = "Available Balance";
             worksheet.Cell(1, 11).Value = "Transaction Number";
-            worksheet.Cell(1, 12).Value = "Size";
-            worksheet.Cell(1, 13).Value = "Created At";
+            worksheet.Cell(1, 12).Value = "Order Number";
+            worksheet.Cell(1, 13).Value = "Size";
+            worksheet.Cell(1, 14).Value = "Created At";
 
             for (int i = 0; i < inventoryDtos.Count; i++)
             {
@@ -227,8 +244,9 @@ namespace Wms.Api.Controllers
                 worksheet.Cell(row, 9).Value = inventory.OldBalance;
                 worksheet.Cell(row, 10).Value = inventory.NewBalance;
                 worksheet.Cell(row, 11).Value = inventory.TransactionNumber;
-                worksheet.Cell(row, 12).Value = inventory.Size;
-                worksheet.Cell(row, 13).Value = inventory.CreatedAt;
+                worksheet.Cell(row, 12).Value = inventory.OrderNumber;
+                worksheet.Cell(row, 13).Value = inventory.Size;
+                worksheet.Cell(row, 14).Value = inventory.CreatedAt;
             }
 
             using var stream = new MemoryStream();
@@ -308,7 +326,8 @@ namespace Wms.Api.Controllers
                     AvailableQuantity = item.NewBalance,
                     CreatedAt = item.CreatedAt,
                     ChangedAt = item.ChangedAt,
-                    Product = product != null ? $"{product.Name} ({product.ItemCode})" : "",
+                    ProductName = product != null ? product.Name  : "",
+                    ProductCode = product != null ? product.ItemCode : "",
                     Warehouse = warehouse?.Name ?? "",
                     CurrentLocation = location?.Name ?? ""
                 };
@@ -428,7 +447,8 @@ namespace Wms.Api.Controllers
                     AvailableQuantity = item.AvailableQuantity,
                     CreatedAt = item.CreatedAt,
                     ChangedAt = item.ChangedAt,
-                    Product = product != null ? $"{product.Name} ({product.ItemCode})" : "",
+                    ProductName = product != null ? product.Name : "",
+                    ProductCode = product != null ? product.ItemCode : "",
                     Warehouse = warehouse?.Name ?? "",
                     CurrentLocation = location?.Name ?? ""
                 };
@@ -449,28 +469,30 @@ namespace Wms.Api.Controllers
 
             // Add headers
             worksheet.Cell(1, 1).Value = "Id";
-            worksheet.Cell(1, 2).Value = "Product";
-            worksheet.Cell(1, 3).Value = "Warehouse";
-            worksheet.Cell(1, 4).Value = "Current Location";
-            worksheet.Cell(1, 5).Value = "Available Quantity";
-            worksheet.Cell(1, 6).Value = "Stock Group";
-            worksheet.Cell(1, 7).Value = "Client Code";
-            worksheet.Cell(1, 8).Value = "Size";
-            worksheet.Cell(1, 9).Value = "Created At";
+            worksheet.Cell(1, 2).Value = "Product Name";
+            worksheet.Cell(1, 3).Value = "Product Code";
+            worksheet.Cell(1, 4).Value = "Warehouse";
+            worksheet.Cell(1, 5).Value = "Current Location";
+            worksheet.Cell(1, 6).Value = "Available Quantity";
+            worksheet.Cell(1, 7).Value = "Stock Group";
+            worksheet.Cell(1, 8).Value = "Client Code";
+            worksheet.Cell(1, 9).Value = "Size";
+            worksheet.Cell(1, 10).Value = "Created At";
             for (int i = 0; i < inventorySummaryDtos.Count; i++)
             {
                 var summary = inventorySummaryDtos[i];
                 var row = i + 2;
 
                 worksheet.Cell(row, 1).Value = summary.Id.ToString();
-                worksheet.Cell(row, 2).Value = summary.Product;
-                worksheet.Cell(row, 3).Value = summary.Warehouse;
-                worksheet.Cell(row, 4).Value = summary.CurrentLocation;
-                worksheet.Cell(row, 5).Value = summary.AvailableQuantity;
-                worksheet.Cell(row, 6).Value = summary.StockGroup;
-                worksheet.Cell(row, 7).Value = summary.ClientCode;
-                worksheet.Cell(row, 8).Value = summary.Size;
-                worksheet.Cell(row, 9).Value = summary.CreatedAt;
+                worksheet.Cell(row, 2).Value = summary.ProductName;
+                worksheet.Cell(row, 3).Value = summary.ProductCode;
+                worksheet.Cell(row, 4).Value = summary.Warehouse;
+                worksheet.Cell(row, 5).Value = summary.CurrentLocation;
+                worksheet.Cell(row, 6).Value = summary.AvailableQuantity;
+                worksheet.Cell(row, 7).Value = summary.StockGroup;
+                worksheet.Cell(row, 8).Value = summary.ClientCode;
+                worksheet.Cell(row, 9).Value = summary.Size;
+                worksheet.Cell(row, 10).Value = summary.CreatedAt;
             }
 
             using var stream = new MemoryStream();
@@ -494,6 +516,7 @@ namespace Wms.Api.Controllers
 
             // Base filtered query
             var filteredQuery = GetFilteredInventoryByProductQuery(inventorySearch, result.stockGroupIds, result.IsAdminRole);
+       
 
             var latestDatesPerGroup = filteredQuery
                 .GroupBy(i => new { i.ProductId, i.WarehouseId })
@@ -518,9 +541,15 @@ namespace Wms.Api.Controllers
                                    item.CreatedAt,
                                    item.ChangedAt
                                };
+            var sortedQuery =
+                          from grp in groupedQuery
+                          join prod in context.Products
+                            on grp.ProductId equals prod.Id
+                          orderby prod.Name ascending
+                          select grp;
 
 
-            var pagedGroupedData = await groupedQuery
+            var pagedGroupedData = await sortedQuery
                 .Skip((inventorySearch.Page - 1) * inventorySearch.PageSize)
                 .Take(inventorySearch.PageSize)
                 .ToListAsync();
@@ -560,6 +589,7 @@ namespace Wms.Api.Controllers
 
                 return dto;
             }).ToList();
+             
 
             var pagedListDto = new PagedListDto<InventorySummaryByProductDetailsDto>
             {
