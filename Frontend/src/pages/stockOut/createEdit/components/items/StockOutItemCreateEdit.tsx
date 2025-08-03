@@ -46,22 +46,18 @@ const StockOutItemCreateEdit: React.FC<
     { value: string; label: string }[]
   >([]);
 
+  const [locationOptions, setLocationOptions] = useState<
+    { value: string; label: string }[]
+  >([]);
+
   const warehouseId = props.formik.values.warehouseId;
 
-  // Whenever product or warehouse changes, fetch active reservations
+  // Whenever product or warehouse changes, fetch active reservations and locations
   useEffect(() => {
     const productId = props.values.productId;
     if (productId && warehouseId) {
       ReservationService.getActiveReservations(productId, warehouseId)
         .then((res) => {
-          console.log(
-            res.map((r: any) => ({
-              value: r.itemId, // the reservation‐item id
-              label: `${r.number} (${r.quantity} pcs) expires ${new Date(
-                r.expiresAt
-              ).toLocaleDateString()}`,
-            }))
-          );
           setReservationOptions(
             res.map((r: any) => ({
               value: r.reservationItemId, // the reservation‐item id
@@ -72,15 +68,25 @@ const StockOutItemCreateEdit: React.FC<
           );
         })
         .catch(() => setReservationOptions([]));
+
+      LocationService.getActiveLocations(productId, warehouseId)
+        .then((res) => {
+          setLocationOptions(
+            res.map((r: any) => ({
+              value: r.locationId, //
+              label: r.quantity > 0 ? `${r.name} (${r.quantity} pcs)` : r.name,
+            }))
+          );
+        })
+        .catch(() => setLocationOptions([]));
     }
   }, [
     props.values.productId,
     props.values.locationId,
     warehouseId,
+    LocationService,
     ReservationService,
   ]);
-
-  console.log(reservationOptions);
 
   return (
     <PageSection title={t("common:items")}>
@@ -207,62 +213,46 @@ const StockOutItemCreateEdit: React.FC<
                     </FormControl>
                   ),
                 },
-
                 {
-                  label: t("rack"),
-                  required: isRequiredField(
-                    StockOutCreateEditSchema,
-                    "stockOutItems[].locationId"
-                  ),
+                  label: t("location"),
+                  required: false,
                   value: (
                     <FormControl
                       fullWidth
+                      size="small"
                       error={
                         props.touched.locationId &&
                         Boolean(props.errors.locationId)
                       }
                     >
-                      <SelectAsync2
+                      <Select
+                        labelId={`location-label-${props.elementKey}`}
+                        id={`stockOutItems.${props.elementKey}.locationId`}
                         name={`stockOutItems.${props.elementKey}.locationId`}
-                        error={
-                          props.touched.locationId &&
-                          Boolean(props.errors.locationId)
-                        }
-                        onBlur={() =>
-                          props.formik.setFieldTouched("locationId")
-                        }
-                        ids={useMemo(
-                          () =>
-                            props.values.locationId
-                              ? [props.values.locationId]
-                              : [],
-                          [props.values.locationId]
-                        )}
-                        onSelectionChange={async (newOption) => {
+                        value={props.values.locationId || ""}
+                        onChange={(e) =>
                           props.formik.setFieldValue(
                             `stockOutItems.${props.elementKey}.locationId`,
-                            newOption?.value || null
-                          );
-                        }}
-                        asyncFunc={(
-                          input: string,
-                          page: number,
-                          pageSize: number,
-                          ids?: string[]
-                        ) =>
-                          LocationService.getSelectOptions(
-                            input,
-                            page,
-                            pageSize,
-                            ids
+                            e.target.value
                           )
                         }
-                      />
+                        onBlur={() =>
+                          props.formik.setFieldTouched(
+                            `stockOutItems.${props.elementKey}.locationId`
+                          )
+                        }
+                      >
+                        {locationOptions.map((opt) => (
+                          <MenuItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </MenuItem>
+                        ))}
+                      </Select>
                       <FormHelperText>
                         <FormikErrorMessage
                           touched={props.touched.locationId}
                           error={props.errors.locationId}
-                          translatedFieldName={t("rack")}
+                          translatedFieldName={t("location")}
                         />
                       </FormHelperText>
                     </FormControl>

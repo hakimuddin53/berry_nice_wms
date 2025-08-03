@@ -14,3 +14,9 @@ export interface LocationCreateUpdateDto {
 export interface LocationSearchDto extends PagedRequestAbstractDto {
   search: string;
 }
+
+export interface ActiveLocationDto {
+  locationId: guid;
+  name: string;
+  quantity: number;
+}

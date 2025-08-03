@@ -1,6 +1,7 @@
 import { SelectAsyncOption } from "components/platbricks/shared/SelectAsync";
 import { PagedListDto } from "interfaces/general/pagedList/PagedListDto";
 import {
+  ActiveLocationDto,
   LocationCreateUpdateDto,
   LocationDetailsDto,
   LocationSearchDto,
@@ -19,6 +20,7 @@ interface ILocationService {
   updateLocation: (id: guid, location: LocationCreateUpdateDto) => Promise<any>;
   createLocation: (location: LocationCreateUpdateDto) => Promise<string>;
   deleteLocation: (locationId: guid) => Promise<any>;
+  getActiveLocations: (productId: guid, warehouseId: guid) => Promise<any>;
   getSelectOptions: (
     label: string,
     resultPage: number,
@@ -59,7 +61,16 @@ export const LocationServiceProvider: React.FC<{
   getLocationById?: any;
   getSelectOptions?: any;
   getByParameters?: any;
+  getActiveLocations?: any;
 }> = (props) => {
+  const getActiveLocations = (productId: guid, warehouseId: guid) => {
+    return axios
+      .get<ActiveLocationDto[]>("/location/active", {
+        params: { productId, warehouseId },
+      })
+      .then((res) => res.data);
+  };
+
   const getLocationById = async (locationId: string) => {
     return await axios.get(`/location/${locationId}`).then((res) => res.data);
   };
@@ -122,6 +133,7 @@ export const LocationServiceProvider: React.FC<{
     getLocationById: props.getLocationById || getLocationById,
     getSelectOptions: props.getSelectOptions || getSelectOptions,
     getByParameters: props.getByParameters || getByParameters,
+    getActiveLocations: props.getActiveLocations || getActiveLocations,
   };
 
   return (

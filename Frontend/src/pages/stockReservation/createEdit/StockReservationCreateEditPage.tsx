@@ -19,7 +19,6 @@ import {
   formikObjectHasTouchedErrors,
   getFormikArrayElementErrors,
 } from "utils/formikHelpers";
-import { getReservationStatusName } from "utils/helper";
 import { useStockReservationItemTable } from "../datatables/useStockReservationItemTable";
 import StockReservationItemCreateEdit from "./components/items/StockReservationItemCreateEdit";
 import StockReservationCreateEdit from "./components/StockReservationCreateEdit";
@@ -78,11 +77,8 @@ const StockReservationCreateEditPage: React.FC = () => {
       values.expiresAt = new Date(
         now.getTime() + 3 * 24 * 60 * 60 * 1000
       ).toISOString();
-      console.log(getReservationStatusName(ReservationStatusEnum.ACTIVE));
       values.status = ReservationStatusEnum.ACTIVE;
       setPageBlocker(true);
-
-      console.log("Submitting values:", values);
 
       if (!id) {
         StockReservationService.createStockReservation(values)
@@ -151,7 +147,6 @@ const StockReservationCreateEditPage: React.FC = () => {
   }, [id, StockReservationService]);
 
   useEffect(() => {
-    console.log(formik);
     if (formik.submitCount > 0 && !formik.isSubmitting && !formik.isValid) {
       notificationService.handleErrorMessage(
         t("common:please-fix-the-errors-and-try-again")

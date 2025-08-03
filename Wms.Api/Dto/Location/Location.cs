@@ -22,4 +22,11 @@ namespace Wms.Api.Dto.Location
     {
         public Guid[] LocationIds { get; set; } = [];
     }
+
+    public class ActiveLocationDto  
+    {
+        public Guid LocationId { get; set; }
+        public string Name { get; set; }
+        public int Quantity { get; set; }
+    }
 }

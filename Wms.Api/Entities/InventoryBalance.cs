@@ -1,7 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 
 namespace Wms.Api.Entities
 {
+    [Index(nameof(ProductId), nameof(WarehouseId), nameof(Quantity))]
+    [Index(nameof(CurrentLocationId))]
     public class InventoryBalance
     {
         public Guid Id { get; set; }

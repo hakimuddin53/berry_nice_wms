@@ -12,7 +12,6 @@ export const THEMES = {
 export const getChipColor = (
   status: string
 ): "default" | "primary" | "secondary" | "error" => {
-  console.log("getChipColor called with status:", status);
   switch (status) {
     case "ACTIVE":
       return "primary";
