@@ -1,6 +1,7 @@
 import { CancelOutlined, CheckCircleOutlined } from "@mui/icons-material";
 import { Chip, IconButton, Link, Tooltip } from "@mui/material";
 import UserName from "components/platbricks/entities/UserName";
+import WarehouseName from "components/platbricks/entities/WarehouseName";
 import UserDateTime from "components/platbricks/shared/UserDateTime";
 import { ReservationStatusEnum } from "interfaces/enums/GlobalEnums";
 import { StockReservationDetailsDto } from "interfaces/v12/stockReservation/stockReservationDetails/stockReservationDetailsDto";
@@ -42,19 +43,24 @@ export const useStockReservationTable = () => {
       {
         id: "warehouseId",
         label: t("warehouse"),
-        render: (row) => row.warehouseId || "N/A",
+        render: (row) =>
+          row.warehouseId ? (
+            <WarehouseName warehouseId={row.warehouseId} />
+          ) : (
+            "N/A"
+          ),
       },
       {
         id: "reservedAt",
         label: t("reserved-at"),
         render: (row) =>
-          row.reservedAt ? new Date(row.reservedAt).toLocaleString() : "N/A",
+          row.reservedAt ? <UserDateTime date={row.reservedAt} /> : "N/A",
       },
       {
         id: "expiresAt",
         label: t("expires-at"),
         render: (row) =>
-          row.expiresAt ? new Date(row.expiresAt).toLocaleString() : "N/A",
+          row.expiresAt ? <UserDateTime date={row.expiresAt} /> : "N/A",
       },
       {
         id: "status",
@@ -78,9 +84,11 @@ export const useStockReservationTable = () => {
         id: "cancellationRequestedAt",
         label: t("cancellation-requested-at"),
         render: (row) =>
-          row.cancellationRequestedAt
-            ? new Date(row.cancellationRequestedAt).toLocaleString()
-            : "-",
+          row.cancellationRequestedAt ? (
+            <UserDateTime date={row.cancellationRequestedAt} />
+          ) : (
+            "-"
+          ),
       },
       {
         id: "cancellationApprovedBy",
@@ -91,9 +99,11 @@ export const useStockReservationTable = () => {
         id: "cancellationApprovedAt",
         label: t("cancellation-approved-at"),
         render: (row) =>
-          row.cancellationApprovedAt
-            ? new Date(row.cancellationApprovedAt).toLocaleString()
-            : "-",
+          row.cancellationApprovedAt ? (
+            <UserDateTime date={row.cancellationApprovedAt} />
+          ) : (
+            "-"
+          ),
       },
 
       {

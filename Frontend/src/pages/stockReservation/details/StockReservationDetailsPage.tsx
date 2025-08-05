@@ -17,7 +17,7 @@ import {
   StockReservationItemDetailsDto,
 } from "interfaces/v12/stockReservation/stockReservationDetails/stockReservationDetailsDto";
 
-import UserName from "components/platbricks/entities/UserName";
+import WarehouseName from "components/platbricks/entities/WarehouseName";
 import UserDateTime from "components/platbricks/shared/UserDateTime";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -117,7 +117,7 @@ function StockReservationDetailsPage() {
                     </EasyCopy>
                   </KeyValuePair>
                   <KeyValuePair label={t("warehouse")}>
-                    {stockReservation.warehouseId || "-"}
+                    <WarehouseName warehouseId={stockReservation.warehouseId} />
                   </KeyValuePair>
                   <KeyValuePair label={t("reserved-at")}>
                     {stockReservation.reservedAt ? (
@@ -143,14 +143,9 @@ function StockReservationDetailsPage() {
                     {stockReservation.cancellationRemark || "-"}
                   </KeyValuePair>
                   <KeyValuePair label={t("cancellation-requested-by")}>
-                    {stockReservation.cancellationRequestedBy ? (
-                      <UserName
-                        userId={stockReservation.cancellationRequestedBy}
-                        placeholder="-"
-                      />
-                    ) : (
-                      "-"
-                    )}
+                    {stockReservation.cancellationRequestedBy
+                      ? stockReservation.cancellationRequestedBy
+                      : "-"}
                   </KeyValuePair>
                   <KeyValuePair label={t("cancellation-requested-at")}>
                     {stockReservation.cancellationRequestedAt ? (
@@ -162,14 +157,9 @@ function StockReservationDetailsPage() {
                     )}
                   </KeyValuePair>
                   <KeyValuePair label={t("cancellation-approved-by")}>
-                    {stockReservation.cancellationApprovedBy ? (
-                      <UserName
-                        userId={stockReservation.cancellationApprovedBy}
-                        placeholder="-"
-                      />
-                    ) : (
-                      "-"
-                    )}
+                    {stockReservation.cancellationApprovedBy
+                      ? stockReservation.cancellationApprovedBy
+                      : "-"}
                   </KeyValuePair>
                   <KeyValuePair label={t("cancellation-approved-at")}>
                     {stockReservation.cancellationApprovedAt ? (
