@@ -71,11 +71,10 @@ namespace Wms.Api.Controllers
             stockTransferCreateUpdateDto.Number = stockTransferNumber;
             var stockTransferDtos = autoMapperService.Map<StockTransfer>(stockTransferCreateUpdateDto); 
               
-            await service.AddAsync(stockTransferDtos!);
+            await service.AddAsync(stockTransferDtos!, false);
 
             await inventoryService.StockTransferAsync(stockTransferDtos!);
              
-
             return CreatedAtAction(nameof(GetById), new { id = stockTransferDtos?.Id }, stockTransferDtos);
         }
 

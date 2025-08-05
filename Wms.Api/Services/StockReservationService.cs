@@ -25,7 +25,7 @@ namespace Wms.Api.Services
 
         public async Task ApproveCancellationAsync(Guid reservationId, string approvedBy)
         {
-            var r = await context.StockReservations.FindAsync(reservationId)
+            var r = await context.StockReservations.Include(x => x.StockReservationItems).Where(x => x.Id == reservationId).FirstOrDefaultAsync()
                     ?? throw new KeyNotFoundException("Reservation not found");
 
             if (r.Status != ReservationStatusEnum.CANCELREQUESTED)

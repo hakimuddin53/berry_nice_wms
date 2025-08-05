@@ -106,20 +106,24 @@ namespace Wms.Api.Controllers
         }
 
         [HttpPost("{id}/request-cancel")]
-        public async Task<IActionResult> RequestCancel(Guid id)
+        public async Task<IActionResult> RequestCancel(Guid id, [FromBody] CancelRequestDto dto)
         {
-            var user = User.Identity!.Name!;  
-            await _stockReservationService.RequestCancellationAsync(id, user, "");
+            await _stockReservationService.RequestCancellationAsync(id, dto.UserEmail, "");
             return NoContent();
         }
 
         [HttpPost("{id}/approve-cancel")] 
-        public async Task<IActionResult> ApproveCancel(Guid id)
+        public async Task<IActionResult> ApproveCancel(Guid id, [FromBody] CancelRequestDto dto)
         {
-            var user = User.Identity!.Name!;
-            await _stockReservationService.ApproveCancellationAsync(id, user);
+            await _stockReservationService.ApproveCancellationAsync(id, dto.UserEmail);
             return NoContent();
         }
 
     }
+}
+
+
+public class CancelRequestDto
+{
+    public string UserEmail { get; set; } = "";
 }

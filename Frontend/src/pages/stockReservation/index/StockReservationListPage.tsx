@@ -1,6 +1,7 @@
 import { DataTable } from "components/platbricks/shared";
 import Page from "components/platbricks/shared/Page";
 import { useDatatableControls } from "hooks/useDatatableControls";
+import { ReservationStatusEnum } from "interfaces/enums/GlobalEnums";
 import { StockReservationDetailsDto } from "interfaces/v12/stockReservation/stockReservationDetails/stockReservationDetailsDto";
 import { StockReservationSearchDto } from "interfaces/v12/stockReservation/stockReservationSearch/stockReservationSearchDto";
 import { useEffect } from "react";
@@ -46,7 +47,16 @@ function StockReservationListPage() {
     );
     return StockReservationService.searchStockReservations(searchOptions)
       .then((res: any) => {
-        return res;
+        return res.map((item: any) => ({
+          ...item,
+          status:
+            Object.keys(ReservationStatusEnum).find(
+              (key) =>
+                ReservationStatusEnum[
+                  key as keyof typeof ReservationStatusEnum
+                ] === item.status
+            ) ?? item.status,
+        }));
       })
       .catch((err: any) => {
         console.log(err);

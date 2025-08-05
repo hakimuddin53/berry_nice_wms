@@ -121,8 +121,17 @@ namespace Wms.Api.Services
                                     CurrentLocationId = rackId,
                                     Quantity = inboundQuantity
                                 };
-
                                 context.InventoryBalances.Add(inventoryBalance);
+
+                                var wh = new WarehouseInventoryBalance
+                                {
+                                    Id = Guid.NewGuid(),
+                                    ProductId = product.Id,
+                                    WarehouseId = warehouseId,
+                                    OnHandQuantity = inboundQuantity,
+                                    TotalQtyReceived = inboundQuantity,
+                                };
+                                context.WarehouseInventoryBalances.Add(wh);                               
                             }
                             else
                             {
@@ -176,6 +185,29 @@ namespace Wms.Api.Services
                                     existingBalance.Quantity += inboundQuantity;
                                     context.InventoryBalances.Update(existingBalance);
                                 }
+
+                                // Update or add warehouse inventory balance record
+                                var wh = await context.WarehouseInventoryBalances
+                                            .FirstOrDefaultAsync(w =>
+                                                w.ProductId == existingProduct.Id &&
+                                                w.WarehouseId == warehouseId);
+
+                                if (wh == null)
+                                {
+                                    wh = new WarehouseInventoryBalance
+                                    {
+                                        Id = Guid.NewGuid(),
+                                        ProductId = existingProduct.Id,
+                                        WarehouseId = warehouseId,
+                                        OnHandQuantity = inboundQuantity
+                                    };
+                                    context.WarehouseInventoryBalances.Add(wh);
+                                }
+                                else
+                                {
+                                    wh.OnHandQuantity += inboundQuantity;
+                                    context.WarehouseInventoryBalances.Update(wh);
+                                }                                 
                             }
 
                             await productRepository.SaveChangesAsync();

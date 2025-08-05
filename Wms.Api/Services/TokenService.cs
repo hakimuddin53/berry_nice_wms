@@ -15,12 +15,14 @@ namespace Wms.Api.Services
         public async Task<string> GenerateJwtTokenAsync(ApplicationUser? user)
         {
             var modules = "";
+            var userRoleName = "";
             if (user != null)
             {
                 var userRole = await _roleManager.FindByIdAsync(user.UserRoleId.ToString());
                 if (userRole != null)
                 {
-                    modules = userRole.Module;
+                    modules = userRole.Module ?? ""; // Ensure non-null value
+                    userRoleName = userRole.Name ?? ""; // Ensure non-null value
                 }
             }
 
@@ -28,11 +30,12 @@ namespace Wms.Api.Services
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user?.Email ?? ""),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(ClaimTypes.NameIdentifier, user?.Id.ToString() ?? ""),
-                new Claim(ClaimTypes.Email,user?.Email ?? ""),
-                new Claim("Modules", modules),
+                    new Claim(JwtRegisteredClaimNames.Sub, user?.Email ?? ""),
+                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                    new Claim(ClaimTypes.NameIdentifier, user?.Id.ToString() ?? ""),
+                    new Claim(ClaimTypes.Email, user?.Email ?? ""),
+                    new Claim("Modules", modules),
+                    new Claim("Role", userRoleName),
             };
 
             var token = new JwtSecurityToken(

@@ -156,7 +156,6 @@ const DataTable: React.FC<DataTableProps<any>> = (props) => {
         );
       }
     } catch (e) {
-      console.log(e);
       props.headerCells.forEach((cell) => {
         newHeaderCells.push({ ...cell });
       });
@@ -442,7 +441,7 @@ const DataTable: React.FC<DataTableProps<any>> = (props) => {
             )}
           </TableContainer>
           <TablePagination
-            rowsPerPageOptions={[5, 10, 100]}
+            rowsPerPageOptions={[5, 10, 25, 100]}
             component="div"
             count={Math.max(
               props.data.totalCount ?? 0,

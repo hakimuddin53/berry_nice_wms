@@ -26,8 +26,14 @@ interface IStockReservationService {
     stockReservation: StockReservationCreateUpdateDto
   ) => Promise<string>;
   deleteStockReservation: (stockReservationId: guid) => Promise<any>;
-  approveCancelStockReservation: (stockReservationId: guid) => Promise<any>;
-  requestCancelStockReservation: (stockReservationId: guid) => Promise<any>;
+  approveCancelStockReservation: (
+    stockReservationId: guid,
+    userEmail: string
+  ) => Promise<any>;
+  requestCancelStockReservation: (
+    stockReservationId: guid,
+    userEmail: string
+  ) => Promise<any>;
   getActiveReservations: (productId: guid, warehouseId: guid) => Promise<any>;
 }
 
@@ -112,11 +118,29 @@ export const StockReservationServiceProvider: React.FC<
       });
   };
 
-  const approveCancelStockReservation = (stockReservationId: guid) => {
-    axios.post("/stock-reservation/" + stockReservationId + "/approve-cancel");
+  const approveCancelStockReservation = (
+    stockReservationId: guid,
+    userEmail: string
+  ) => {
+    var dto: CancelRequestDto = {
+      UserEmail: userEmail,
+    };
+    return axios.post(
+      "/stock-reservation/" + stockReservationId + "/approve-cancel",
+      dto
+    );
   };
-  const requestCancelStockReservation = (stockReservationId: guid) => {
-    axios.post("/stock-reservation/" + stockReservationId + "/request-cancel");
+  const requestCancelStockReservation = (
+    stockReservationId: guid,
+    userEmail: string
+  ) => {
+    var dto: CancelRequestDto = {
+      UserEmail: userEmail,
+    };
+    return axios.post(
+      "/stock-reservation/" + stockReservationId + "/request-cancel",
+      dto
+    );
   };
 
   const value = {
@@ -149,3 +173,7 @@ export const StockReservationServiceProvider: React.FC<
 export const useStockReservationService = () => {
   return useContext(StockReservationServiceContext);
 };
+
+export interface CancelRequestDto {
+  UserEmail: string;
+}

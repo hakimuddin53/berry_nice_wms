@@ -88,8 +88,6 @@ const StockInCreateEditPage: React.FC = () => {
     onSubmit: (values, { resetForm }) => {
       setPageBlocker(true);
 
-      console.log(values);
-
       if (!id) {
         stockInService
           .createStockIn(values)

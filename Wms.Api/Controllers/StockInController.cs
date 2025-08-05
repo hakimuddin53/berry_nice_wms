@@ -77,8 +77,8 @@ namespace Wms.Api.Controllers
             var stockInDtos = autoMapperService.Map<StockIn>(stockInCreateUpdateDto); 
           
 
-            await service.AddAsync(stockInDtos!);
-             
+            await service.AddAsync(stockInDtos!, false);
+
 
             await inventoryService.StockInAsync(stockInDtos!);
 
