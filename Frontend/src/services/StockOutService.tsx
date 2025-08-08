@@ -14,6 +14,7 @@ interface IStockOutService {
   updateStockOut: (id: guid, stockOut: StockOutCreateUpdateDto) => Promise<any>;
   createStockOut: (stockOut: StockOutCreateUpdateDto) => Promise<string>;
   deleteStockOut: (stockOutId: guid) => Promise<any>;
+  cancelOrder: (stockOutId: guid) => Promise<any>;
 }
 
 const StockOutServiceContext = createContext({} as IStockOutService);
@@ -26,6 +27,7 @@ export type StockOutServiceProviderProps = {
   updateStockOut?: any;
   createStockOut?: any;
   deleteStockOut?: any;
+  cancelOrder?: any;
 };
 export const StockOutServiceProvider: React.FC<StockOutServiceProviderProps> = (
   props
@@ -69,6 +71,15 @@ export const StockOutServiceProvider: React.FC<StockOutServiceProviderProps> = (
     });
   };
 
+  const cancelOrder = (stockOutId: guid) => {
+    return axios
+      .post("/stock-out/" + stockOutId + "/cancel")
+      .then(async (res) => {
+        let result = res.data;
+        return result.id;
+      });
+  };
+
   const value = {
     searchStockOuts: props.searchStockOuts || searchStockOuts,
     countStockOuts: props.countStockOuts || countStockOuts,
@@ -76,6 +87,7 @@ export const StockOutServiceProvider: React.FC<StockOutServiceProviderProps> = (
     updateStockOut: props.updateStockOut || updateStockOut,
     createStockOut: props.createStockOut || createStockOut,
     deleteStockOut: props.deleteStockOut || deleteStockOut,
+    cancelOrder: props.cancelOrder || cancelOrder,
   };
 
   return (

@@ -90,6 +90,74 @@ namespace Wms.Api.Services
                 throw new Exception($"Stock In failed: {ex.Message}", ex);
             }
         }
+        public async Task CancelStockOutAsync(Guid stockOutId)
+        {
+            using var tx = await context.Database.BeginTransactionAsync();
+            try
+            {
+                var so = await context.StockOuts
+                    .Include(s => s.StockOutItems)
+                    .SingleOrDefaultAsync(s => s.Id == stockOutId);
+
+                if (so == null)
+                    throw new KeyNotFoundException($"StockOut {stockOutId} not found.");
+
+                if (so.Status != StockOutStatusEnum.COMPLETED)
+                    throw new InvalidOperationException("Only COMPLETED picks can be cancelled.");
+ 
+
+                // 2) reverse each line’s balances
+                foreach (var item in so.StockOutItems ?? Enumerable.Empty<StockOutItem>())
+                {
+                    var inventoryBalance = await context.InventoryBalances
+                          .SingleOrDefaultAsync(ib => ib.ProductId == item.ProductId &&
+                                                      ib.WarehouseId == so.WarehouseId &&
+                                                      ib.CurrentLocationId == item.LocationId);
+ 
+
+                    var wh = await context.WarehouseInventoryBalances
+                                            .SingleOrDefaultAsync(w =>
+                                                w.ProductId == item.ProductId &&
+                                                w.WarehouseId == so.WarehouseId);
+
+                    if (wh == null || inventoryBalance == null)
+                        throw new Exception();
+
+                    wh.OnHandQuantity += item.Quantity; 
+
+                    int oldBalance = inventoryBalance.Quantity;
+                    int newBalance = oldBalance + item.Quantity;
+                    inventoryBalance.Quantity = newBalance;
+
+                    var inventoryRecord = new Inventory
+                    {
+                        Id = Guid.NewGuid(),
+                        TransactionType = TransactionTypeEnum.STOCKOUTCANCEL,
+                        ProductId = item.ProductId,
+                        WarehouseId = so.WarehouseId,
+                        CurrentLocationId = item.LocationId,
+                        StockOutId = item.StockOutId,
+                        QuantityIn = item.Quantity, 
+                        QuantityOut = 0,
+                        OldBalance = oldBalance,
+                        NewBalance = newBalance
+                    };
+
+                    context.Inventories.Add(inventoryRecord);
+                }
+
+                // 3) mark cancelled
+                so.Status = StockOutStatusEnum.CANCELLED;
+
+                await context.SaveChangesAsync();
+                await tx.CommitAsync();
+            }
+            catch
+            {
+                await tx.RollbackAsync();
+                throw;
+            }
+        }
         public async Task StockOutAsync(StockOut stockOut)
         {
             using var transaction = await context.Database.BeginTransactionAsync();
@@ -203,12 +271,22 @@ namespace Wms.Api.Services
                         .SingleOrDefaultAsync(w =>
                             w.ProductId == item.ProductId &&
                             w.WarehouseId == stockAdjustment.WarehouseId);
-
+                     
                     if (wh == null)
-                        throw new InvalidOperationException("Warehouse balance missing—cannot adjust.");
-
-                    // only adjust on-hand; cost accumulators remain as before
-                    wh.OnHandQuantity += quantityDifference;
+                    {
+                        wh = new WarehouseInventoryBalance
+                        {
+                            Id = Guid.NewGuid(),
+                            ProductId = item.ProductId,
+                            WarehouseId = stockAdjustment.WarehouseId, 
+                            OnHandQuantity = newBalance
+                        };
+                        context.WarehouseInventoryBalances.Add(wh);
+                    }
+                    else
+                    {
+                        wh.OnHandQuantity += newBalance;
+                    }
 
                     var inventoryRecord = new Inventory
                     {

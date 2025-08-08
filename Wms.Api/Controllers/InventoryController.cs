@@ -82,6 +82,7 @@ namespace Wms.Api.Controllers
                         break;
 
                     case TransactionTypeEnum.STOCKOUT:
+                    case TransactionTypeEnum.STOCKOUTCANCEL:
                         inventory.TransactionNumber = context.StockOuts
                             .Where(s => s.Id == inventory.StockOutId)
                             .Select(s => s.Number)
@@ -177,6 +178,7 @@ namespace Wms.Api.Controllers
                         break;
 
                     case TransactionTypeEnum.STOCKOUT:
+                    case TransactionTypeEnum.STOCKOUTCANCEL:
                         inventory.TransactionNumber = context.StockOuts
                             .Where(s => s.Id == inventory.StockOutId)
                             .Select(s => s.Number)

@@ -24,6 +24,7 @@ import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { useStockOutService } from "services/StockOutService";
 import { guid } from "types/guid";
+import { getStockStatusName } from "utils/helper";
 import { useStockOutItemTable } from "../datatables/useStockOutItemTable";
 import StockOutItemDetails from "./components/StockOutItemDetails";
 
@@ -84,10 +85,19 @@ function StockOutDetailsPage() {
       ]}
       actions={[
         {
-          title: t("edit"),
-          to: "edit",
-          icon: "Edit",
-          pageConfigIdentifier: "edit",
+          title: t("common:cancel"),
+          onclick: () => {
+            OpenDeleteConfirmationDialog({
+              onConfirmDeletion: async () => {
+                await StockOutService.cancelOrder(id as guid);
+              },
+              setPageBlocker: setPageBlocker,
+              entity: "stock-out",
+              translationNamespace: "common",
+              redirectLink: "stock-out",
+            });
+          },
+          icon: "Delete",
         },
       ]}
     >
@@ -117,6 +127,9 @@ function StockOutDetailsPage() {
                     <EasyCopy clipboard={stockOut.number}>
                       {stockOut.number}
                     </EasyCopy>
+                  </KeyValuePair>
+                  <KeyValuePair label={t("status")}>
+                    {getStockStatusName(stockOut.status)}
                   </KeyValuePair>
                   <KeyValuePair label={t("doNumber")}>
                     {stockOut.doNumber}

@@ -118,7 +118,6 @@ namespace Wms.Api.Controllers
             await _stockReservationService.ApproveCancellationAsync(id, dto.UserEmail);
             return NoContent();
         }
-
     }
 }
 

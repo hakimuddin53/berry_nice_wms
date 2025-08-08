@@ -128,8 +128,14 @@ namespace Wms.Api.Controllers
 
             _autoMapperService.Map(stockOutCreateUpdate, stockOut);
 
-
             await _service.UpdateAsync(stockOut);
+            return NoContent();
+        }
+
+        [HttpPost("{id}/cancel")]
+        public async Task<IActionResult> Cancel(Guid id)
+        {
+            await _inventoryService.CancelStockOutAsync(id);
             return NoContent();
         }
 

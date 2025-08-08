@@ -18,6 +18,7 @@
         STOCKTRANSFEROUT = 3,
         STOCKADJUSTMENT = 4,
         BULKUPLOAD = 5,
+        STOCKOUTCANCEL = 6
     }
 
     public enum ModuleEnum
@@ -54,5 +55,11 @@
     {
         ACTIVE = 0,         // just reserved
         FULFILLED = 1,      // consumed by a stock-out 
+    }
+
+    public enum StockOutStatusEnum
+    { 
+        COMPLETED = 0,  
+        CANCELLED = 1     
     }
 } 

@@ -1,9 +1,10 @@
-import { Link } from "@mui/material";
+import { Chip, Link } from "@mui/material";
 import { useCreatedChangeDate } from "hooks/useCreatedChangeDate";
 import { StockOutDetailsDto } from "interfaces/v12/stockout/stockOutDetails/stockOutDetailsDto";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { NavLink } from "react-router-dom";
+import { getStockStatusName } from "utils/helper";
 import EasyCopy from "../../../../components/platbricks/shared/EasyCopy";
 import { DataTableHeaderCell } from "../../../../components/platbricks/shared/dataTable/DataTable";
 
@@ -30,6 +31,13 @@ export const useStockOutTable = () => {
             </Link>
           </EasyCopy>
         ),
+      },
+      {
+        id: "status",
+        label: t("status"),
+        render: (row) => {
+          return <Chip label={getStockStatusName(row.status)} />;
+        },
       },
       {
         id: "doNumber",

@@ -1,9 +1,11 @@
+import { StockOutStatusEnum } from "interfaces/enums/GlobalEnums";
 import { CreatedChangedEntity } from "interfaces/v12/CreatedChangedEntity";
 import { guid } from "types/guid";
 
 export interface StockOutDetailsDto extends CreatedChangedEntity {
   id: guid;
   number: string;
+  status: StockOutStatusEnum;
   doNumber: string;
   soNumber: string;
   warehouseId: guid;

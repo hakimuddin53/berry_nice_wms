@@ -2,6 +2,7 @@ import { SortableDataTableHeaderCell } from "components/platbricks/shared/dataTa
 import {
   ModuleEnum,
   ReservationStatusEnum,
+  StockOutStatusEnum,
 } from "interfaces/enums/GlobalEnums";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { baseURL } from "./axios";
@@ -180,10 +181,16 @@ export const getReservationStatusName = (reservationStatus: any) => {
   const moduleKey = Object.keys(ReservationStatusEnum).find((key) => {
     // Assuming the enum values are assigned sequentially starting from 1
 
-    console.log("fdf");
     return (
       Object.keys(ReservationStatusEnum).indexOf(key) === reservationStatus
     );
   });
   return moduleKey || reservationStatus;
+};
+
+export const getStockStatusName = (stockStatus: any) => {
+  const moduleKey = Object.keys(StockOutStatusEnum).find((key) => {
+    return Object.keys(StockOutStatusEnum).indexOf(key) === stockStatus;
+  });
+  return moduleKey || stockStatus;
 };
