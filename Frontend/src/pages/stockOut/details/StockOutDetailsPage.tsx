@@ -15,6 +15,7 @@ import {
 import UserDateTime from "components/platbricks/shared/UserDateTime";
 import SimpleDataTable from "components/platbricks/shared/dataTable/SimpleDataTable";
 import useDeleteConfirmationDialog from "hooks/useDeleteConfimationDialog";
+import { StockOutStatusEnum } from "interfaces/enums/GlobalEnums";
 import {
   StockOutDetailsDto,
   StockOutItemDetailsDto,
@@ -83,23 +84,27 @@ function StockOutDetailsPage() {
           label: stockOut.number,
         },
       ]}
-      actions={[
-        {
-          title: t("common:cancel"),
-          onclick: () => {
-            OpenDeleteConfirmationDialog({
-              onConfirmDeletion: async () => {
-                await StockOutService.cancelOrder(id as guid);
+      actions={
+        getStockStatusName(stockOut.status) === StockOutStatusEnum.COMPLETED
+          ? [
+              {
+                title: t("common:cancel"),
+                onclick: () => {
+                  OpenDeleteConfirmationDialog({
+                    onConfirmDeletion: async () => {
+                      await StockOutService.cancelOrder(id as guid);
+                    },
+                    setPageBlocker: setPageBlocker,
+                    entity: "stock-out",
+                    translationNamespace: "common",
+                    redirectLink: "stock-out",
+                  });
+                },
+                icon: "Delete",
               },
-              setPageBlocker: setPageBlocker,
-              entity: "stock-out",
-              translationNamespace: "common",
-              redirectLink: "stock-out",
-            });
-          },
-          icon: "Delete",
-        },
-      ]}
+            ]
+          : []
+      }
     >
       <PbCard px={2} pt={2}>
         <PbTabs
