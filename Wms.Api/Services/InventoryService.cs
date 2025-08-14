@@ -285,7 +285,7 @@ namespace Wms.Api.Services
                     }
                     else
                     {
-                        wh.OnHandQuantity += newBalance;
+                        wh.OnHandQuantity = newBalance;
                     }
 
                     var inventoryRecord = new Inventory
