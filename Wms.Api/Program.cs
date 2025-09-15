@@ -8,7 +8,9 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System;
 using System.Text;
+using System.Text.Json.Serialization;
 using Wms.Api.Context;
+using Wms.Api.Data.Seeding;
 using Wms.Api.Entities;
 using Wms.Api.Model;
 using Wms.Api.Profiles;
@@ -22,7 +24,13 @@ var defaultConn = builder.Configuration.GetConnectionString("DefaultConnection")
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(o =>
+    {
+        o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        // optional: case-insensitive is already default, but you can ensure it:
+        o.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+    });
 
 // Retrieve CORS origins from configuration
 var allowedOrigins = builder.Configuration.GetSection("CorsSettings:AllowedOrigins").Get<string[]>();
@@ -30,14 +38,7 @@ var allowedOrigins = builder.Configuration.GetSection("CorsSettings:AllowedOrigi
 builder.Services.AddAutoMapper(typeof(StockInProfile));
 builder.Services.AddAutoMapper(typeof(StockOutProfile));
 builder.Services.AddAutoMapper(typeof(ProductProfile));
-builder.Services.AddAutoMapper(typeof(CategoryProfile));
-builder.Services.AddAutoMapper(typeof(ColourProfile));
-builder.Services.AddAutoMapper(typeof(DesignProfile));
-builder.Services.AddAutoMapper(typeof(LocationProfile));
-builder.Services.AddAutoMapper(typeof(SizeProfile));
 builder.Services.AddAutoMapper(typeof(StockReservationProfile));
-builder.Services.AddAutoMapper(typeof(CartonSizeProfile));
-builder.Services.AddAutoMapper(typeof(WarehouseProfile));
 builder.Services.AddAutoMapper(typeof(StockTransferProfile));
 builder.Services.AddAutoMapper(typeof(GeneralProfile));
 
@@ -127,7 +128,7 @@ builder.Services.AddScoped<IInventoryService, InventoryService>();
 builder.Services.AddScoped<IRunningNumberService, RunningNumberService>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped(typeof(IService<>), typeof(Service<>));
-builder.Services.AddScoped<IProductService, ProductService>();
+//builder.Services.AddScoped<IProductService, ProductService>();
 
 builder.Services.AddScoped<IStockReservationService, StockReservationService>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
@@ -174,6 +175,28 @@ builder.Services.AddHangfireServer();
 
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var db = services.GetRequiredService<ApplicationDbContext>();
+        var logger = services.GetRequiredService<ILoggerFactory>().CreateLogger("LookupSeeder");
+
+        // Will run migrations (your seeder calls MigrateAsync) and insert only when missing
+        await LookupSeeder.SeedAsync(db, logger, app.Lifetime.ApplicationStopping);
+    }
+    catch (Exception ex)
+    {
+        var bootstrapLogger = services
+            .GetRequiredService<ILoggerFactory>()
+            .CreateLogger("Startup");
+        bootstrapLogger.LogError(ex, "An error occurred while seeding lookups.");
+        throw; // optional: rethrow to fail fast
+    }
+}
+
 
 // optional Hangfire dashboard
 app.UseHangfireDashboard("/hangfire");

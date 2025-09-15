@@ -16,6 +16,10 @@ export const ModuleEnum = {
   USERROLE: "USERROLE",
   CLIENTCODE: "CLIENTCODE",
   STOCKADJUSTMENT: "STOCKADJUSTMENT",
+  LOOKUP: "LOOKUP",
+  CUSTOMER: "CUSTOMER",
+  SUPPLIER: "SUPPLIER",
+  EXPENSE: "EXPENSE",
 };
 
 export const ReservationStatusEnum = {

@@ -18,15 +18,13 @@ import {
   Database,
   LogIn,
   Palette,
-  PersonStanding,
+  ReceiptText,
   RotateCcw,
   Ruler,
   Settings,
   ShoppingCart,
-  SquareScissors,
   Store,
   Users,
-  Warehouse,
 } from "lucide-react";
 
 import useAppTheme from "hooks/useTheme";
@@ -135,6 +133,162 @@ const Dashboard: React.FC<DashboardType> = ({ children }) => {
   );
 };
 
+// 1) Build the lookup children once (keeps things DRY)
+const lookupChildren: SidebarItemsType[] = [
+  {
+    id: 200,
+    href: "/lookups/CustomerType",
+    itemType: "link",
+    title: "Customer Type",
+    icon: <Users size={20} />,
+    type: "single",
+    children: [],
+    requiredModule: ModuleEnum.LOOKUP,
+  },
+  {
+    id: 201,
+    href: "/lookups/SalesType",
+    itemType: "link",
+    title: "Sales Type",
+    icon: <ArrowLeftRight size={20} />,
+    type: "single",
+    children: [],
+    requiredModule: ModuleEnum.LOOKUP,
+  },
+  {
+    id: 202,
+    href: "/lookups/PaymentType",
+    itemType: "link",
+    title: "Payment Type",
+    icon: <LogIn size={20} />,
+    type: "single",
+    children: [],
+    requiredModule: ModuleEnum.LOOKUP,
+  },
+  {
+    id: 203,
+    href: "/lookups/Location",
+    itemType: "link",
+    title: "Location",
+    icon: <ArchiveX size={20} />,
+    type: "single",
+    children: [],
+    requiredModule: ModuleEnum.LOOKUP,
+  },
+  {
+    id: 204,
+    href: "/lookups/Region",
+    itemType: "link",
+    title: "Region",
+    icon: <Store size={20} />,
+    type: "single",
+    children: [],
+    requiredModule: ModuleEnum.LOOKUP,
+  },
+  {
+    id: 205,
+    href: "/lookups/NewOrUsed",
+    itemType: "link",
+    title: "New / Used",
+    icon: <RotateCcw size={20} />,
+    type: "single",
+    children: [],
+    requiredModule: ModuleEnum.LOOKUP,
+  },
+  {
+    id: 206,
+    href: "/lookups/InventoryStatus",
+    itemType: "link",
+    title: "Inventory Status",
+    icon: <BoxIcon size={20} />,
+    type: "single",
+    children: [],
+    requiredModule: ModuleEnum.LOOKUP,
+  },
+  {
+    id: 207,
+    href: "/lookups/ProductCategory",
+    itemType: "link",
+    title: "Product Category",
+    icon: <Archive size={20} />,
+    type: "single",
+    children: [],
+    requiredModule: ModuleEnum.LOOKUP,
+  },
+  {
+    id: 208,
+    href: "/lookups/ExpenseCategory",
+    itemType: "link",
+    title: "Expense Category",
+    icon: <BookOpenText size={20} />,
+    type: "single",
+    children: [],
+    requiredModule: ModuleEnum.LOOKUP,
+  },
+  {
+    id: 210,
+    href: "/lookups/ScreenSize",
+    itemType: "link",
+    title: "Screen Size",
+    icon: <Ruler size={20} />,
+    type: "single",
+    children: [],
+    requiredModule: ModuleEnum.LOOKUP,
+  },
+  {
+    id: 211,
+    href: "/lookups/Color",
+    itemType: "link",
+    title: "Color",
+    icon: <Palette size={20} />,
+    type: "single",
+    children: [],
+    requiredModule: ModuleEnum.LOOKUP,
+  },
+  {
+    id: 212,
+    href: "/lookups/Storage",
+    itemType: "link",
+    title: "Storage",
+    icon: <BoxIcon size={20} />,
+    type: "single",
+    children: [],
+    requiredModule: ModuleEnum.LOOKUP,
+  },
+  {
+    id: 213,
+    href: "/lookups/Ram",
+    itemType: "link",
+    title: "RAM",
+    icon: <Ruler size={20} />,
+    type: "single",
+    children: [],
+    requiredModule: ModuleEnum.LOOKUP,
+  },
+  {
+    id: 214,
+    href: "/lookups/Processor",
+    itemType: "link",
+    title: "Processor",
+    icon: <Database size={20} />,
+    type: "single",
+    children: [],
+    requiredModule: ModuleEnum.LOOKUP,
+  },
+];
+
+// 2) Add a parent “Lookups” item that uses those as children
+const lookupsParent: SidebarItemsType = {
+  id: 199,
+  href: "#", // important: parent should not navigate
+  itemType: "link", // your renderer ignores this for parents
+  title: "Master Data",
+  icon: <Settings size={20} />, // pick any icon you like
+  type: "multi", // optional; not used by renderer
+  children: lookupChildren, // THIS enables collapse/expand
+  requiredModule: ModuleEnum.LOOKUP, // hide if user lacks permission
+};
+
 export const dashboardItems: SidebarItemsType[] = [
   {
     id: 1,
@@ -167,7 +321,37 @@ export const dashboardItems: SidebarItemsType[] = [
     requiredModule: ModuleEnum.USERROLE, // <--- Link to USERROLE module
   },
   {
-    id: 4,
+    id: 4, // shift existing IDs down or renumber accordingly
+    href: "/customer",
+    itemType: "link",
+    title: "Customer",
+    icon: <Users size={20} />,
+    type: "single",
+    children: [],
+    requiredModule: ModuleEnum.CUSTOMER, // make sure this exists
+  },
+  {
+    id: 5,
+    href: "/supplier",
+    itemType: "link",
+    title: "Supplier",
+    icon: <Store size={20} />,
+    type: "single",
+    children: [],
+    requiredModule: ModuleEnum.SUPPLIER, // make sure this exists
+  },
+  {
+    id: 6,
+    href: "/expenses",
+    itemType: "link",
+    title: "Expenses",
+    icon: <ReceiptText size={20} />,
+    type: "single",
+    children: [],
+    requiredModule: ModuleEnum.EXPENSE, // make sure this exists
+  },
+  {
+    id: 7,
     href: "/product",
     itemType: "link",
     title: "Product",
@@ -177,55 +361,26 @@ export const dashboardItems: SidebarItemsType[] = [
     requiredModule: ModuleEnum.PRODUCT, // <--- Link to PRODUCT module
   },
   {
-    id: 5,
+    id: 8,
     href: "/stock-in",
     itemType: "link",
-    title: "Stock In",
+    title: "Stock Recieve",
     icon: <ArrowRight size={20} />,
     type: "single",
     children: [],
     requiredModule: ModuleEnum.STOCKIN, // <--- Link to STOCKIN module
   },
   {
-    id: 6,
+    id: 9,
     href: "/stock-out",
     itemType: "link",
-    title: "Stock Out",
+    title: "Invoice",
     icon: <ArrowLeft size={20} />,
     type: "single",
     children: [],
     requiredModule: ModuleEnum.STOCKOUT, // <--- Link to STOCKOUT module
   },
-  {
-    id: 7,
-    href: "/stock-transfer",
-    itemType: "link",
-    title: "Stock Transfer",
-    icon: <ArrowLeftRight size={20} />,
-    type: "single",
-    children: [],
-    requiredModule: ModuleEnum.STOCKTRANSFER, // <--- Link to STOCKTRANSFER module
-  },
-  {
-    id: 8,
-    href: "/stock-reservation",
-    itemType: "link",
-    title: "Stock Reservation",
-    icon: <LogIn size={20} />,
-    type: "single",
-    children: [],
-    requiredModule: ModuleEnum.STOCKRESERVATION, // <--- Link to STOCKRESERVATION module
-  },
-  {
-    id: 9,
-    href: "/stock-adjustment",
-    itemType: "link",
-    title: "Stock Adjustment",
-    icon: <RotateCcw size={20} />,
-    type: "single",
-    children: [],
-    requiredModule: ModuleEnum.STOCKADJUSTMENT, // <--- Link to STOCKADJUSTMENT module
-  },
+
   {
     id: 10,
     href: "/inventory",
@@ -236,106 +391,8 @@ export const dashboardItems: SidebarItemsType[] = [
     children: [],
     requiredModule: ModuleEnum.INVENTORY,
   },
-  {
-    id: 11,
-    href: "/inventory-summary",
-    itemType: "link",
-    title: "Inventory Summary",
-    icon: <Store size={20} />,
-    type: "single",
-    children: [],
-    requiredModule: ModuleEnum.INVENTORY,
-  },
-  {
-    id: 11,
-    href: "/inventory-summary-product",
-    itemType: "link",
-    title: "Inventory Summary Product",
-    icon: <BookOpenText size={20} />,
-    type: "single",
-    children: [],
-    requiredModule: ModuleEnum.INVENTORY,
-  },
-  {
-    id: 12,
-    href: "/category",
-    itemType: "link",
-    title: "Category",
-    icon: <Archive size={20} />,
-    type: "single",
-    children: [],
-    requiredModule: ModuleEnum.CATEGORY,
-  },
-  {
-    id: 13,
-    href: "/colour",
-    itemType: "link",
-    title: "Colour",
-    icon: <Palette size={20} />,
-    type: "single",
-    children: [],
-    requiredModule: ModuleEnum.COLOUR,
-  },
-  {
-    id: 14,
-    href: "/design",
-    itemType: "link",
-    title: "Design",
-    icon: <SquareScissors size={20} />,
-    type: "single",
-    children: [],
-    requiredModule: ModuleEnum.DESIGN,
-  },
-  {
-    id: 15,
-    href: "/location",
-    itemType: "link",
-    title: "Rack",
-    icon: <ArchiveX size={20} />,
-    type: "single",
-    children: [],
-    requiredModule: ModuleEnum.LOCATION,
-  },
-  {
-    id: 16,
-    href: "/size",
-    itemType: "link",
-    title: "Size",
-    icon: <Ruler size={20} />,
-    type: "single",
-    children: [],
-    requiredModule: ModuleEnum.SIZE,
-  },
-  {
-    id: 17,
-    href: "/stock-group",
-    itemType: "link",
-    title: "Stock Group",
-    icon: <BoxIcon size={20} />,
-    type: "single",
-    children: [],
-    requiredModule: ModuleEnum.STOCKGROUP,
-  },
-  {
-    id: 18,
-    href: "/warehouse",
-    itemType: "link",
-    title: "Warehouse",
-    icon: <Warehouse size={20} />,
-    type: "single",
-    children: [],
-    requiredModule: ModuleEnum.WAREHOUSE,
-  },
-  {
-    id: 19,
-    href: "/client-code",
-    itemType: "link",
-    title: "Client Code",
-    icon: <PersonStanding size={20} />,
-    type: "single",
-    children: [],
-    requiredModule: ModuleEnum.CLIENTCODE,
-  },
+
+  lookupsParent,
 ];
 
 const navItems = [

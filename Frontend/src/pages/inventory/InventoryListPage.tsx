@@ -17,11 +17,8 @@ import {
 } from "interfaces/v12/inventory/inventory";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useClientCodeService } from "services/ClientCodeService";
 import { useInventoryService } from "services/InventoryService";
-import { useLocationService } from "services/LocationService";
 import { useProductService } from "services/ProductService";
-import { useWarehouseService } from "services/WarehouseService";
 import axios from "utils/axios";
 import { useInventoryTable } from "./datatables/useInventoryTable";
 
@@ -30,9 +27,6 @@ function InventoryListPage() {
   const [inventoryTable] = useInventoryTable();
   const InventoryService = useInventoryService();
   const ProductService = useProductService();
-  const WarehouseService = useWarehouseService();
-  const ClientCodeService = useClientCodeService();
-  const LocationService = useLocationService();
   const [pageBlocker, setPageBlocker] = useState(false);
 
   const searchRef = useRef<InventorySearchDto>({
@@ -150,71 +144,6 @@ function InventoryListPage() {
                         pageSize: number
                       ) =>
                         ProductService.getSelectOptions(input, page, pageSize)
-                      }
-                    />
-                  ),
-                },
-                {
-                  label: t("warehouse"),
-                  value: (
-                    <ValueFilter
-                      placeholder={t("warehouse")}
-                      dataType={DataType.GUID}
-                      onFilterChange={(filter: FilterChangeParam) => {
-                        searchRef.current.warehouseId =
-                          filter.valueMultiple.map((x) => x.value);
-                      }}
-                      inValuesAsync={(
-                        input: string,
-                        page: number,
-                        pageSize: number
-                      ) =>
-                        WarehouseService.getSelectOptions(input, page, pageSize)
-                      }
-                    />
-                  ),
-                },
-                {
-                  label: t("client-code"),
-                  value: (
-                    <ValueFilter
-                      placeholder={t("client-code")}
-                      dataType={DataType.GUID}
-                      onFilterChange={(filter: FilterChangeParam) => {
-                        searchRef.current.clientCodeId =
-                          filter.valueMultiple.map((x) => x.value);
-                      }}
-                      inValuesAsync={(
-                        input: string,
-                        page: number,
-                        pageSize: number
-                      ) =>
-                        ClientCodeService.getSelectOptions(
-                          input,
-                          page,
-                          pageSize
-                        )
-                      }
-                    />
-                  ),
-                },
-                {
-                  label: t("rack"),
-                  value: (
-                    <ValueFilter
-                      placeholder={t("rack")}
-                      dataType={DataType.GUID}
-                      onFilterChange={(filter: FilterChangeParam) => {
-                        searchRef.current.locationId = filter.valueMultiple.map(
-                          (x) => x.value
-                        );
-                      }}
-                      inValuesAsync={(
-                        input: string,
-                        page: number,
-                        pageSize: number
-                      ) =>
-                        LocationService.getSelectOptions(input, page, pageSize)
                       }
                     />
                   ),

@@ -23,58 +23,25 @@ import { ModuleEnum } from "interfaces/enums/GlobalEnums";
 import CartonSizeCreateEditPage from "pages/cartonSize/createEdit/CartonSizeCreateEditPage";
 import CartonSizeDetailsPage from "pages/cartonSize/details/CartonSizeDetailsPage";
 import CartonSizeListPage from "pages/cartonSize/index/CartonSizeListPage";
-import CategoryCreateEditPage from "pages/category/createEdit/CategoryCreateEditPage";
-import CategoryDetailsPage from "pages/category/details/CategoryDetailsPage";
-import CategoryListPage from "pages/category/index/CategoryListPage";
-import ClientCodeCreateEditPage from "pages/clientCode/createEdit/ClientCodeCreateEditPage";
-import ClientCodeDetailsPage from "pages/clientCode/details/ClientCodeDetailsPage";
-import ClientCodeListPage from "pages/clientCode/index/ClientCodeListPage";
-import ColourCreateEditPage from "pages/colour/createEdit/ColourCreateEditPage";
-import ColourDetailsPage from "pages/colour/details/ColourDetailsPage";
-import ColourListPage from "pages/colour/index/ColourListPage";
+
 import DashboardPage from "pages/dashboard/DashboardPage";
-import DesignCreateEditPage from "pages/design/createEdit/DesignCreateEditPage";
-import DesignDetailsPage from "pages/design/details/DesignDetailsPage";
-import DesignListPage from "pages/design/index/DesignListPage";
+
 import InventoryListPage from "pages/inventory/InventoryListPage";
-import InventorySummaryByProductListPage from "pages/inventoryByProductSummary/InventorySummaryByProductListPage";
-import InventorySummaryListPage from "pages/inventorySummary/InventorySummaryListPage";
-import LocationCreateEditPage from "pages/location/createEdit/LocationCreateEditPage";
-import LocationDetailsPage from "pages/location/details/LocationDetailsPage";
-import LocationListPage from "pages/location/index/LocationListPage";
+
+import LookupCreateEditPage from "pages/lookup/createEdit/LookupCreateEditPage";
+import LookupDetailsPage from "pages/lookup/details/LookupDetailsPage";
+import LookupListPage from "pages/lookup/index/LookupListPage";
 import ProductBulkUploadPage from "pages/products/bulkUpload/ProductBulkUploadPage";
 import ProductCreateEditPage from "pages/products/createEdit/ProductCreateEditPage";
 import ProductDetailsPage from "pages/products/details/ProductDetailsPage";
 import ProductListPage from "pages/products/index/ProductListPage";
-import SizeCreateEditPage from "pages/size/createEdit/SizeCreateEditPage";
-import SizeDetailsPage from "pages/size/details/SizeDetailsPage";
-import SizeListPage from "pages/size/index/SizeListPage";
-import StockAdjustmentCreateEditPage from "pages/stockAdjustment/createEdit/StockAdjustmentCreateEditPage";
-import StockAdjustmentDetailsPage from "pages/stockAdjustment/details/StockAdjustmentDetailsPage";
-import StockAdjustmentListPage from "pages/stockAdjustment/index/StockAdjustmentListPage";
-import StockInCreateEditPage from "pages/stockIn/createEdit/StockInCreateEditPage";
-import StockInDetailsPage from "pages/stockIn/details/StockInDetailsPage";
-import StockInListPage from "pages/stockIn/index/StockInListPage";
-import StockInPrintPage from "pages/stockIn/print/StockInPrintPage";
-import StockOutCreateEditPage from "pages/stockOut/createEdit/StockOutCreateEditPage";
-import StockOutDetailsPage from "pages/stockOut/details/StockOutDetailsPage";
-import StockOutListPage from "pages/stockOut/index/StockOutListPage";
-import StockOutPrintPage from "pages/stockOut/print/StockOutPrintPage";
-import StockReservationCreateEditPage from "pages/stockReservation/createEdit/StockReservationCreateEditPage";
-import StockReservationDetailsPage from "pages/stockReservation/details/StockReservationDetailsPage";
-import StockReservationListPage from "pages/stockReservation/index/StockReservationListPage";
-import StockTransferCreateEditPage from "pages/stockTransfer/createEdit/StockTransferCreateEditPage";
-import StockTransferDetailsPage from "pages/stockTransfer/details/StockTransferDetailsPage";
-import StockTransferListPage from "pages/stockTransfer/index/StockTransferListPage";
 import UserCreateEditPage from "pages/user/createEdit/UserCreateEditPage";
 import UserDetailsPage from "pages/user/details/UserDetailsPage";
 import UserListPage from "pages/user/index/UserListPage";
 import UserRoleCreateEditPage from "pages/userRoles/createEdit/UserRoleCreateEditPage";
 import UserRoleDetailsPage from "pages/userRoles/details/UserRoleDetailsPage";
 import UserRoleListPage from "pages/userRoles/index/UserRoleListPage";
-import WarehouseCreateEditPage from "pages/warehouse/createEdit/WarehouseCreateEditPage";
-import WarehouseDetailsPage from "pages/warehouse/details/WarehouseDetailsPage";
-import WarehouseListPage from "pages/warehouse/index/WarehouseListPage";
+
 import { Navigate } from "react-router-dom";
 
 // --- Routes Definition ---
@@ -173,355 +140,6 @@ const routes = [
         ],
       },
       {
-        path: "stock-in",
-        children: [
-          {
-            index: true,
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.STOCKIN}>
-                <StockInListPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: "new",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.STOCKIN}>
-                <StockInCreateEditPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: ":id",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.STOCKIN}>
-                <StockInDetailsPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: ":id/edit",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.STOCKIN}>
-                <StockInCreateEditPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: ":id/print",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.STOCKIN}>
-                <StockInPrintPage />
-              </ModuleGuard>
-            ),
-          },
-        ],
-      },
-      {
-        path: "stock-out",
-        children: [
-          {
-            index: true,
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.STOCKOUT}>
-                <StockOutListPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: "new",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.STOCKOUT}>
-                <StockOutCreateEditPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: ":id",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.STOCKOUT}>
-                <StockOutDetailsPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: ":id/edit",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.STOCKOUT}>
-                <StockOutCreateEditPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: ":id/print",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.STOCKOUT}>
-                <StockOutPrintPage />
-              </ModuleGuard>
-            ),
-          },
-        ],
-      },
-      {
-        path: "stock-adjustment",
-        children: [
-          {
-            index: true,
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.STOCKADJUSTMENT}>
-                <StockAdjustmentListPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: "new",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.STOCKADJUSTMENT}>
-                <StockAdjustmentCreateEditPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: ":id",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.STOCKADJUSTMENT}>
-                <StockAdjustmentDetailsPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: ":id/edit",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.STOCKADJUSTMENT}>
-                <StockAdjustmentCreateEditPage />
-              </ModuleGuard>
-            ),
-          },
-        ],
-      },
-      {
-        path: "stock-transfer",
-        children: [
-          {
-            index: true,
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.STOCKTRANSFER}>
-                <StockTransferListPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: "new",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.STOCKTRANSFER}>
-                <StockTransferCreateEditPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: ":id",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.STOCKTRANSFER}>
-                <StockTransferDetailsPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: ":id/edit",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.STOCKTRANSFER}>
-                <StockTransferCreateEditPage />
-              </ModuleGuard>
-            ),
-          },
-        ],
-      },
-      {
-        path: "stock-reservation",
-        children: [
-          {
-            index: true,
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.STOCKRESERVATION}>
-                <StockReservationListPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: "new",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.STOCKRESERVATION}>
-                <StockReservationCreateEditPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: ":id",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.STOCKRESERVATION}>
-                <StockReservationDetailsPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: ":id/edit",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.STOCKRESERVATION}>
-                <StockReservationCreateEditPage />
-              </ModuleGuard>
-            ),
-          },
-        ],
-      },
-      {
-        path: "category",
-        children: [
-          {
-            index: true,
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.CATEGORY}>
-                <CategoryListPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: "new",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.CATEGORY}>
-                <CategoryCreateEditPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: ":id",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.CATEGORY}>
-                <CategoryDetailsPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: ":id/edit",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.CATEGORY}>
-                <CategoryCreateEditPage />
-              </ModuleGuard>
-            ),
-          },
-        ],
-      },
-      {
-        path: "colour",
-        children: [
-          {
-            index: true,
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.COLOUR}>
-                <ColourListPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: "new",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.COLOUR}>
-                <ColourCreateEditPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: ":id",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.COLOUR}>
-                <ColourDetailsPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: ":id/edit",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.COLOUR}>
-                <ColourCreateEditPage />
-              </ModuleGuard>
-            ),
-          },
-        ],
-      },
-      {
-        path: "design",
-        children: [
-          {
-            index: true,
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.DESIGN}>
-                <DesignListPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: "new",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.DESIGN}>
-                <DesignCreateEditPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: ":id",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.DESIGN}>
-                <DesignDetailsPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: ":id/edit",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.DESIGN}>
-                <DesignCreateEditPage />
-              </ModuleGuard>
-            ),
-          },
-        ],
-      },
-      {
-        path: "location",
-        children: [
-          {
-            index: true,
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.LOCATION}>
-                <LocationListPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: "new",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.LOCATION}>
-                <LocationCreateEditPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: ":id",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.LOCATION}>
-                <LocationDetailsPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: ":id/edit",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.LOCATION}>
-                <LocationCreateEditPage />
-              </ModuleGuard>
-            ),
-          },
-        ],
-      },
-      {
         path: "product",
         children: [
           {
@@ -579,69 +197,7 @@ const routes = [
           },
         ],
       },
-      {
-        path: "inventory-summary",
-        children: [
-          {
-            index: true,
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.INVENTORY}>
-                <InventorySummaryListPage />
-              </ModuleGuard>
-            ),
-          },
-        ],
-      },
-      {
-        path: "inventory-summary-product",
-        children: [
-          {
-            index: true,
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.INVENTORY}>
-                <InventorySummaryByProductListPage />
-              </ModuleGuard>
-            ),
-          },
-        ],
-      },
-      {
-        path: "size",
-        children: [
-          {
-            index: true,
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.SIZE}>
-                <SizeListPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: "new",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.SIZE}>
-                <SizeCreateEditPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: ":id",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.SIZE}>
-                <SizeDetailsPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: ":id/edit",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.SIZE}>
-                <SizeCreateEditPage />
-              </ModuleGuard>
-            ),
-          },
-        ],
-      },
+
       {
         path: "stock-group", // Note: Maps to CartonSize components
         children: [
@@ -680,74 +236,46 @@ const routes = [
         ],
       },
       {
-        path: "warehouse",
+        path: "lookups",
         children: [
+          // optional: opening /lookups redirects to a default group
           {
             index: true,
             element: (
-              <ModuleGuard requiredModule={ModuleEnum.WAREHOUSE}>
-                <WarehouseListPage />
+              <ModuleGuard requiredModule={ModuleEnum.LOOKUP}>
+                <Navigate to="CustomerType" replace />
               </ModuleGuard>
             ),
           },
           {
-            path: "new",
+            path: ":groupKey",
             element: (
-              <ModuleGuard requiredModule={ModuleEnum.WAREHOUSE}>
-                <WarehouseCreateEditPage />
+              <ModuleGuard requiredModule={ModuleEnum.LOOKUP}>
+                <LookupListPage />
               </ModuleGuard>
             ),
           },
           {
-            path: ":id",
+            path: ":groupKey/new",
             element: (
-              <ModuleGuard requiredModule={ModuleEnum.WAREHOUSE}>
-                <WarehouseDetailsPage />
+              <ModuleGuard requiredModule={ModuleEnum.LOOKUP}>
+                <LookupCreateEditPage />
               </ModuleGuard>
             ),
           },
           {
-            path: ":id/edit",
+            path: ":groupKey/:id",
             element: (
-              <ModuleGuard requiredModule={ModuleEnum.WAREHOUSE}>
-                <WarehouseCreateEditPage />
-              </ModuleGuard>
-            ),
-          },
-        ],
-      },
-      {
-        path: "client-code",
-        children: [
-          {
-            index: true,
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.CLIENTCODE}>
-                <ClientCodeListPage />
+              <ModuleGuard requiredModule={ModuleEnum.LOOKUP}>
+                <LookupDetailsPage />
               </ModuleGuard>
             ),
           },
           {
-            path: "new",
+            path: ":groupKey/:id/edit",
             element: (
-              <ModuleGuard requiredModule={ModuleEnum.CLIENTCODE}>
-                <ClientCodeCreateEditPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: ":id",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.CLIENTCODE}>
-                <ClientCodeDetailsPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: ":id/edit",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.CLIENTCODE}>
-                <ClientCodeCreateEditPage />
+              <ModuleGuard requiredModule={ModuleEnum.LOOKUP}>
+                <LookupCreateEditPage />
               </ModuleGuard>
             ),
           },

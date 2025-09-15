@@ -57,7 +57,6 @@ namespace Wms.Api.Controllers
 
             var resultToList = await paginatedResult.ToListAsync();
             
-             
 
             PagedList<Product> pagedResult = new PagedList<Product>(resultToList, selectFilterV12Dto.Page, selectFilterV12Dto.PageSize);
 
@@ -78,12 +77,12 @@ namespace Wms.Api.Controllers
 
             foreach (var product in productDtos.Data)
             {
-                product.Category = context.Categories?.Where(x => x.Id == product.CategoryId)?.FirstOrDefault()?.Name ?? "";
-                product.Size = context.Sizes?.Where(x => x.Id == product.SizeId)?.FirstOrDefault()?.Name ?? "";
-                product.Colour = context.Colours?.Where(x => x.Id == product.ColourId)?.FirstOrDefault()?.Name ?? "";
-                product.Design = context.Designs?.Where(x => x.Id == product.DesignId)?.FirstOrDefault()?.Name ?? "";
-                product.CartonSize = context.CartonSizes?.Where(x => x.Id == product.CartonSizeId)?.FirstOrDefault()?.Name ?? "";
-                product.ClientCodeString = context.ClientCodes?.Where(x => x.Id == product.ClientCodeId)?.FirstOrDefault()?.Name ?? "";
+                //product.Category = context.Categories?.Where(x => x.Id == product.CategoryId)?.FirstOrDefault()?.Name ?? "";
+                //product.Size = context.Sizes?.Where(x => x.Id == product.SizeId)?.FirstOrDefault()?.Name ?? "";
+                //product.Colour = context.Colours?.Where(x => x.Id == product.ColourId)?.FirstOrDefault()?.Name ?? "";
+                //product.Design = context.Designs?.Where(x => x.Id == product.DesignId)?.FirstOrDefault()?.Name ?? "";
+                //product.CartonSize = context.CartonSizes?.Where(x => x.Id == product.CartonSizeId)?.FirstOrDefault()?.Name ?? "";
+                //product.ClientCodeString = context.ClientCodes?.Where(x => x.Id == product.ClientCodeId)?.FirstOrDefault()?.Name ?? "";
             }
             return Ok(productDtos);
         }
@@ -108,12 +107,12 @@ namespace Wms.Api.Controllers
              
             var productDetails = autoMapperService.Map<ProductDetailsDto>(product);
 
-            productDetails.Category = context.Categories?.Where(x => x.Id ==  productDetails.CategoryId)?.FirstOrDefault()?.Name ?? "";
-            productDetails.Size = context.Sizes?.Where(x => x.Id ==  productDetails.SizeId)?.FirstOrDefault()?.Name ?? "";
-            productDetails.Colour = context.Colours?.Where(x => x.Id ==  productDetails.ColourId)?.FirstOrDefault()?.Name ?? "";
-            productDetails.Design = context.Designs?.Where(x => x.Id ==  productDetails.DesignId)?.FirstOrDefault()?.Name ?? "";
-            productDetails.CartonSize = context.CartonSizes?.Where(x => x.Id ==  productDetails.CartonSizeId)?.FirstOrDefault()?.Name ?? "";
-            productDetails.ClientCodeString = context.ClientCodes?.Where(x => x.Id ==  productDetails.ClientCodeId)?.FirstOrDefault()?.Name ?? "";
+            //productDetails.Category = context.Categories?.Where(x => x.Id ==  productDetails.CategoryId)?.FirstOrDefault()?.Name ?? "";
+            //productDetails.Size = context.Sizes?.Where(x => x.Id ==  productDetails.SizeId)?.FirstOrDefault()?.Name ?? "";
+            //productDetails.Colour = context.Colours?.Where(x => x.Id ==  productDetails.ColourId)?.FirstOrDefault()?.Name ?? "";
+            //productDetails.Design = context.Designs?.Where(x => x.Id ==  productDetails.DesignId)?.FirstOrDefault()?.Name ?? "";
+            //productDetails.CartonSize = context.CartonSizes?.Where(x => x.Id ==  productDetails.CartonSizeId)?.FirstOrDefault()?.Name ?? "";
+            //productDetails.ClientCodeString = context.ClientCodes?.Where(x => x.Id ==  productDetails.ClientCodeId)?.FirstOrDefault()?.Name ?? "";
 
             return Ok(productDetails);
         }
@@ -188,7 +187,7 @@ namespace Wms.Api.Controllers
 
             foreach (var product in productDtos.Data)
             { 
-                product.Size = context.Sizes?.Where(x => x.Id == product.SizeId)?.FirstOrDefault()?.Name ?? ""; 
+                //product.Size = context.Sizes?.Where(x => x.Id == product.SizeId)?.FirstOrDefault()?.Name ?? ""; 
             }
 
             return Ok(productDtos);

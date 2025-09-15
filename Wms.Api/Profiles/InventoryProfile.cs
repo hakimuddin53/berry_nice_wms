@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Wms.Api.Dto.CartonSize;
+﻿using AutoMapper; 
 using Wms.Api.Dto.Inventory;
 using Wms.Api.Entities;
 

@@ -68,16 +68,9 @@ namespace Wms.Api.Context
         public DbSet<StockReservationItem> StockReservationItems { get; set; }
         public DbSet<StockTransfer> StockTransfers { get; set; }
         public DbSet<StockTransferItem> StockTransferItems { get; set; }
-        public DbSet<RunningNumber> RunningNumbers { get; set; }
-        public DbSet<Warehouse> Warehouses { get; set; }
-        public DbSet<Category> Categories { get; set; }
-        public DbSet<CartonSize> CartonSizes { get; set; }
-        public DbSet<Design> Designs { get; set; }
-        public DbSet<Colour> Colours { get; set; }
-        public DbSet<Size> Sizes { get; set; }
-        public DbSet<Location> Locations { get; set; } 
-        public DbSet<ClientCode> ClientCodes { get; set; }
+        public DbSet<RunningNumber> RunningNumbers { get; set; } 
         public DbSet<InventoryBalance> InventoryBalances { get; set; }
         public DbSet<WarehouseInventoryBalance> WarehouseInventoryBalances { get; set; }
+        public DbSet<Lookup> Lookups { get; set; }
     }
 }

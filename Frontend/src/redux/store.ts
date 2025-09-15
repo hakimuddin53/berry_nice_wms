@@ -1,9 +1,7 @@
 import { Action, ThunkAction, configureStore } from "@reduxjs/toolkit";
 import counterReducer from "./counter";
-import locationCacheReducer from "./slices/locationCache";
 import productCacheReducer from "./slices/productCache";
 import userCacheReducer from "./slices/userCache";
-import warehouseCacheReducer from "./slices/warehouseCache";
 
 import snackbarReducer from "./snackbar";
 
@@ -13,8 +11,6 @@ export const store = configureStore({
     snackbar: snackbarReducer,
     userCache: userCacheReducer,
     productCache: productCacheReducer,
-    locationCache: locationCacheReducer,
-    warehouseCache: warehouseCacheReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

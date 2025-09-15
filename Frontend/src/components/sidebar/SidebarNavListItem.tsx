@@ -189,7 +189,7 @@ const SidebarNavListItem: React.FC<SidebarNavListItemProps> = (props) => {
     return (
       <React.Fragment>
         <Item depth={depth} onClick={handleToggle}>
-          {/* {Icon} */}
+          {props.icon /* <-- RENDER THE ICON HERE */}
           <Title depth={depth}>
             {title}
             {badge && <Badge label={badge} />}

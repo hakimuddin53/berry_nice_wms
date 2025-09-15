@@ -62,4 +62,22 @@
         COMPLETED = 0,  
         CANCELLED = 1     
     }
+
+    public enum LookupGroupKey
+    {
+        CustomerType = 1,
+        SalesType = 2,
+        PaymentType = 3,
+        Location = 4,
+        Region = 5,
+        NewOrUsed = 6,
+        InventoryStatus = 7,
+        ProductCategory = 8,
+        ExpenseCategory = 9,
+        ScreenSize = 10,
+        Color = 11,
+        Storage = 12,
+        Ram = 13,  
+        Processor = 14,
+    }
 } 
