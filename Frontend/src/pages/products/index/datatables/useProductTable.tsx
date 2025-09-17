@@ -21,62 +21,68 @@ export const useProductTable = () => {
         hidden,
       },
       {
-        id: "name",
-        label: t("common:name"),
+        id: "sku",
+        label: t("sku"),
         render: (row) => (
-          <EasyCopy clipboard={row.name}>
-            <Link component={NavLink} to={`/product/${row.id}`}>
-              {row.name || "N/A"}
+          <EasyCopy clipboard={row.sku}>
+            <Link component={NavLink} to={`/product/${row.productId}`}>
+              {row.sku || "N/A"}
             </Link>
           </EasyCopy>
         ),
       },
       {
-        id: "serialNumber",
-        label: t("serial-number"),
-      },
-      {
-        id: "itemCode",
-        label: t("itemCode"),
-      },
-      {
-        id: "clientCodeString",
-        label: t("clientCode"),
-        render: (row) => (
-          <Chip size="small" label={t(row.clientCodeString)} color="default" />
-        ),
-      },
-      {
-        id: "cartonSize",
-        label: t("carton-size"),
+        id: "hasSerial",
+        label: t("hasSerial"),
+        render: (row) => (row.hasSerial ? t("yes") : t("no")),
       },
       {
         id: "category",
         label: t("category"),
       },
       {
-        id: "colour",
-        label: t("colour"),
+        id: "brand",
+        label: t("brand"),
       },
       {
-        id: "size",
-        label: t("size"),
+        id: "model",
+        label: t("model"),
       },
       {
-        id: "design",
-        label: t("design"),
+        id: "color",
+        label: t("color"),
       },
       {
-        id: "unitPrice",
-        label: t("unitPrice"),
+        id: "storage",
+        label: t("storage"),
       },
       {
-        id: "quantityPerCarton",
-        label: t("quantityPerCarton"),
+        id: "ram",
+        label: t("ram"),
       },
       {
-        id: "threshold",
-        label: t("threshold"),
+        id: "processor",
+        label: t("processor"),
+      },
+      {
+        id: "screenSize",
+        label: t("screenSize"),
+      },
+      {
+        id: "retailPrice",
+        label: t("retailPrice"),
+      },
+      {
+        id: "dealerPrice",
+        label: t("dealerPrice"),
+      },
+      {
+        id: "agentPrice",
+        label: t("agentPrice"),
+      },
+      {
+        id: "lowQty",
+        label: t("lowQty"),
       },
     ],
     [t]

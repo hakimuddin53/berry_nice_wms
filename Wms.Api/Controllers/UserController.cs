@@ -41,7 +41,7 @@ namespace Wms.Api.Controllers
 
             if (selectFilterV12Dto.Ids != null)
             {
-                predicate = predicate.And(user => selectFilterV12Dto.Ids.Contains(Guid.Parse(user.Id)));
+                predicate = predicate.And(user => selectFilterV12Dto.Ids.Contains(user.Id));
             }
 
             if (selectFilterV12Dto.SearchString != null)

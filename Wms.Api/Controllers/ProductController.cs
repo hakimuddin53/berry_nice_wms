@@ -14,6 +14,8 @@ using Wms.Api.Dto.Product.ProductSearch;
 using Wms.Api.Entities;
 using Wms.Api.Model;
 using Wms.Api.Services;
+using Wms.Api.Repositories.Interface;
+using Wms.Api.Repositories;
 
 namespace Wms.Api.Controllers
 {
@@ -24,8 +26,8 @@ namespace Wms.Api.Controllers
         IService<Product> service,
         IMapper autoMapperService,
         ApplicationDbContext context,
-        IRunningNumberService runningNumberService,
-        IProductService productService)
+        IProductService productService,
+        IProductRepository productRepository)
         : ControllerBase
     {
         [HttpGet("select-options")]
@@ -37,14 +39,14 @@ namespace Wms.Api.Controllers
 
             if (selectFilterV12Dto.Ids != null)
             {
-                predicate = predicate.And(product => selectFilterV12Dto.Ids.Contains(product.Id));
+                var productIds = selectFilterV12Dto.Ids.Select(id => Guid.TryParse(id, out var pid) ? pid : Guid.Empty).Where(pid => pid != Guid.Empty).ToArray();
+                predicate = predicate.And(product => productIds.Contains(product.ProductId));
             }
 
             if (selectFilterV12Dto.SearchString != null)
             {
                 predicate = predicate.And(product =>
-                    product.Name.Contains(selectFilterV12Dto.SearchString) ||
-                    product.ItemCode.Contains(selectFilterV12Dto.SearchString));
+                    product.Sku.Contains(selectFilterV12Dto.SearchString));
 
             }
 
@@ -56,18 +58,16 @@ namespace Wms.Api.Controllers
             });
 
             var resultToList = await paginatedResult.ToListAsync();
-            
+
 
             PagedList<Product> pagedResult = new PagedList<Product>(resultToList, selectFilterV12Dto.Page, selectFilterV12Dto.PageSize);
 
             var stockInDtos = autoMapperService.Map<PagedListDto<SelectOptionV12Dto>>(pagedResult);
             return Ok(stockInDtos);
-        }
-
-        [HttpPost("search", Name = "SearchProductsAsync")]
+        }        [HttpPost("search", Name = "SearchProductsAsync")]
         public async Task<IActionResult> SearchProductsAsync([FromBody] ProductSearchDto stockInSearch)
         {
-            var products = await service.GetAllAsync(e => e.Name.Contains(stockInSearch.search));
+            var products = await service.GetAllAsync(e => e.Sku.Contains(stockInSearch.search));
 
             var result = products.Skip((stockInSearch.Page - 1) * stockInSearch.PageSize).Take(stockInSearch.PageSize).ToList();
              
@@ -75,22 +75,13 @@ namespace Wms.Api.Controllers
 
             var productDtos = autoMapperService.Map<PagedListDto<ProductDetailsDto>>(pagedResult);
 
-            foreach (var product in productDtos.Data)
-            {
-                //product.Category = context.Categories?.Where(x => x.Id == product.CategoryId)?.FirstOrDefault()?.Name ?? "";
-                //product.Size = context.Sizes?.Where(x => x.Id == product.SizeId)?.FirstOrDefault()?.Name ?? "";
-                //product.Colour = context.Colours?.Where(x => x.Id == product.ColourId)?.FirstOrDefault()?.Name ?? "";
-                //product.Design = context.Designs?.Where(x => x.Id == product.DesignId)?.FirstOrDefault()?.Name ?? "";
-                //product.CartonSize = context.CartonSizes?.Where(x => x.Id == product.CartonSizeId)?.FirstOrDefault()?.Name ?? "";
-                //product.ClientCodeString = context.ClientCodes?.Where(x => x.Id == product.ClientCodeId)?.FirstOrDefault()?.Name ?? "";
-            }
             return Ok(productDtos);
         }
 
         [HttpPost("count", Name = "CountProductsAsync")]
         public async Task<IActionResult> CountProductsAsync([FromBody] ProductSearchDto stockInSearch)
         {
-            var stockIns = await service.GetAllAsync(e => e.Name.Contains(stockInSearch.search));
+            var stockIns = await service.GetAllAsync(e => e.Sku.Contains(stockInSearch.search));
 
             var stockInDtos = autoMapperService.Map<List<ProductDetailsDto>>(stockIns);
             return Ok(stockInDtos.Count);
@@ -99,20 +90,13 @@ namespace Wms.Api.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
-            var product = await service.GetByIdAsync(id);
+            var product = await productRepository.GetProductByIdWithLookupsAsync(id);
 
             if (product == null)
                 return NotFound();
 
              
             var productDetails = autoMapperService.Map<ProductDetailsDto>(product);
-
-            //productDetails.Category = context.Categories?.Where(x => x.Id ==  productDetails.CategoryId)?.FirstOrDefault()?.Name ?? "";
-            //productDetails.Size = context.Sizes?.Where(x => x.Id ==  productDetails.SizeId)?.FirstOrDefault()?.Name ?? "";
-            //productDetails.Colour = context.Colours?.Where(x => x.Id ==  productDetails.ColourId)?.FirstOrDefault()?.Name ?? "";
-            //productDetails.Design = context.Designs?.Where(x => x.Id ==  productDetails.DesignId)?.FirstOrDefault()?.Name ?? "";
-            //productDetails.CartonSize = context.CartonSizes?.Where(x => x.Id ==  productDetails.CartonSizeId)?.FirstOrDefault()?.Name ?? "";
-            //productDetails.ClientCodeString = context.ClientCodes?.Where(x => x.Id ==  productDetails.ClientCodeId)?.FirstOrDefault()?.Name ?? "";
 
             return Ok(productDetails);
         }
@@ -139,11 +123,9 @@ namespace Wms.Api.Controllers
         public async Task<IActionResult> Create([FromBody] ProductCreateUpdateDto productCreateUpdateDto)
         { 
             var product = autoMapperService.Map<Product>(productCreateUpdateDto);
-            string serialNumber = await runningNumberService.GenerateRunningNumberAsync(OperationTypeEnum.PRODUCT);
-            product.SerialNumber = serialNumber;
 
             await service.AddAsync(product);
-            return CreatedAtAction(nameof(GetById), new { id = product.Id }, product);
+            return CreatedAtAction(nameof(GetById), new { id = product.ProductId }, product);
         }
 
         [HttpPut("{id}")]
@@ -167,28 +149,26 @@ namespace Wms.Api.Controllers
         }
         
         [HttpGet(Name = "FindProductAsync")]
-        public async Task<IActionResult> FindProductAsync([FromQuery] ProductFindByParametersDto productFindByParametersDto)
+        public async Task<IActionResult> FindProductAsync([FromQuery] Guid[] productIds, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
-            var productIdsAsString = productFindByParametersDto.ProductIds.Select(id => id.ToString()).ToArray();
+            if (productIds == null || productIds.Length == 0)
+            {
+                return BadRequest("ProductIds are required");
+            }
 
-            var productsQuery = await service.GetAllAsync(e => productIdsAsString.Contains(e.Id.ToString()));
+            var productsQuery = await service.GetAllAsync(e => productIds.Contains(e.ProductId));
 
             var result = productsQuery
-                .Skip((productFindByParametersDto.Page - 1) * productFindByParametersDto.PageSize)
-                .Take(productFindByParametersDto.PageSize)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToList();
 
             PagedList<Product> pagedResult = new PagedList<Product>(
                 result, 
-                productFindByParametersDto.Page, 
-                productFindByParametersDto.PageSize);
+                page, 
+                pageSize);
 
             var productDtos = autoMapperService.Map<PagedListDto<ProductDetailsDto>>(pagedResult);
-
-            foreach (var product in productDtos.Data)
-            { 
-                //product.Size = context.Sizes?.Where(x => x.Id == product.SizeId)?.FirstOrDefault()?.Name ?? ""; 
-            }
 
             return Ok(productDtos);
         }

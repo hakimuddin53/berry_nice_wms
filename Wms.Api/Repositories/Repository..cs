@@ -17,16 +17,16 @@ namespace Wms.Api.Repositories
             _dbSet = _context.Set<T>();
         }
 
-        public async Task<IQueryable<T>> GetAllAsync(Expression<Func<T, bool>>? predicate = null)
+        public Task<IQueryable<T>> GetAllAsync(Expression<Func<T, bool>>? predicate = null)
         {
             if (predicate != null)
             {
-                return  _dbSet.Where(predicate);
+                return Task.FromResult(_dbSet.Where(predicate));
             }
-            return  _dbSet;
+            return Task.FromResult(_dbSet.AsQueryable());
         }
 
-        public async Task<T> GetByIdAsync(Guid id) => await _dbSet.FindAsync(id);
+        public async Task<T> GetByIdAsync(object id) => await _dbSet.FindAsync(id);
 
         public async Task AddAsync(T entity, bool saveChanges = true)
         {
@@ -43,7 +43,7 @@ namespace Wms.Api.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task DeleteAsync(Guid id)
+        public async Task DeleteAsync(object id)
         {
             var entity = await GetByIdAsync(id);
             if (entity != null)

@@ -24,6 +24,8 @@ namespace Wms.Api.Repositories
             Guid designId,
             Guid sizeId);
 
+        Task<Product?> GetProductByIdWithLookupsAsync(Guid productId);
+
         //Task<Guid> GetOrCreateClientCodeIdAsync(string clientCodeName);
 
         //Task<Guid> GetOrCreateRackIdAsync(string rackName);

@@ -5,9 +5,9 @@ namespace Wms.Api.Repositories.Interface
     public interface IRepository<T> where T : class
     {
         Task<IQueryable<T>> GetAllAsync(Expression<Func<T, bool>>? predicate = null);
-        Task<T> GetByIdAsync(Guid id);
+        Task<T> GetByIdAsync(object id);
         Task AddAsync(T entity, bool saveChanges = true);
         Task UpdateAsync(T entity);
-        Task DeleteAsync(Guid id);
+        Task DeleteAsync(object id);
     }
 }

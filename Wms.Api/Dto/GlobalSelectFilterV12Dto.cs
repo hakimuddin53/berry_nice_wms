@@ -3,6 +3,6 @@
     public class GlobalSelectFilterV12Dto : PagedRequestAbstractDto
     {
         public string? SearchString { get; set; }
-        public Guid[]? Ids { get; set; }
+        public string[]? Ids { get; set; }
     }
 }

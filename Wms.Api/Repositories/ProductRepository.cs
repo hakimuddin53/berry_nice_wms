@@ -107,7 +107,7 @@ namespace Wms.Api.Repositories
         //    return clientCode.Id;
         //}
         
-        public async Task<Product?> GetProductByAllCriteriaAsync(
+        public Task<Product?> GetProductByAllCriteriaAsync(
             string itemCode,
             Guid clientCodeId, 
             Guid cartonSizeId,
@@ -116,20 +116,14 @@ namespace Wms.Api.Repositories
             Guid designId,
             Guid sizeId)
         {
-            return await dbContext.Products
-                .Where(p => p.ItemCode == itemCode
-                            && p.ClientCodeId == clientCodeId 
-                            && p.CartonSizeId == cartonSizeId
-                            && p.CategoryId == categoryId
-                            && p.ColourId == colourId
-                            && p.DesignId == designId
-                            && p.SizeId == sizeId)
-                .FirstOrDefaultAsync();
+            // Since Product entity has changed to use string lookups instead of Guid references,
+            // this method is no longer applicable. Return null.
+            return Task.FromResult<Product?>(null);
         }
 
         public async Task<Product?> GetProductByItemCodeAsync(string itemCode)
         {
-            return await dbContext.Products.FirstOrDefaultAsync(p => p.ItemCode == itemCode);
+            return await dbContext.Products.FirstOrDefaultAsync(p => p.Sku == itemCode);
         }
 
         //public async Task<Guid> GetOrCreateWarehouseIdAsync(string warehouseName)
@@ -142,6 +136,20 @@ namespace Wms.Api.Repositories
         //    }
         //    return warehouse.Id;
         //}
+
+        public async Task<Product?> GetProductByIdWithLookupsAsync(Guid productId)
+        {
+            return await dbContext.Products
+                .Include(p => p.Category)
+                .Include(p => p.Brand)
+                .Include(p => p.Model)
+                .Include(p => p.Color)
+                .Include(p => p.Storage)
+                .Include(p => p.Ram)
+                .Include(p => p.Processor)
+                .Include(p => p.ScreenSize)
+                .FirstOrDefaultAsync(p => p.ProductId == productId);
+        }
 
         public async Task AddInventoryRecordAsync(Inventory inventory)
         {

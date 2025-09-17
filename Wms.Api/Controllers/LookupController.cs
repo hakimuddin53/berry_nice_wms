@@ -36,7 +36,17 @@ namespace Wms.Api.Controllers
             var predicate = PredicateBuilder.New<Lookup>(l => l.GroupKey == groupKey && l.IsActive);
 
             if (filter.Ids != null && filter.Ids.Any())
-                predicate = predicate.And(l => filter.Ids.Contains(l.Id));
+            {
+                var lookupIds = filter.Ids
+                    .Where(id => Guid.TryParse(id, out _))
+                    .Select(id => Guid.Parse(id))
+                    .ToArray();
+
+                if (lookupIds.Length > 0)
+                {
+                    predicate = predicate.And(l => lookupIds.Contains(l.Id));
+                }
+            }
 
             if (!string.IsNullOrWhiteSpace(filter.SearchString))
             {

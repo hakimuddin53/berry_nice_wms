@@ -79,5 +79,7 @@
         Storage = 12,
         Ram = 13,  
         Processor = 14,
+        Brand = 15,
+        Model = 16,
     }
 } 

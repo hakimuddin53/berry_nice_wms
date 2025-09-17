@@ -34,7 +34,7 @@ function ProductDetailsPage() {
   const [pageBlocker, setPageBlocker] = useState(false);
 
   const loadProduct = useCallback(() => {
-    ProductService.getProductById(id as guid)
+    ProductService.getProductById(id!)
       .then((product) => setProduct(product))
       .catch((err) => {});
   }, [ProductService, id]);
@@ -56,7 +56,7 @@ function ProductDetailsPage() {
   return (
     <Page
       title={t("product")}
-      subtitle={product.name}
+      subtitle={product.sku}
       showBackdrop={pageBlocker}
       hasSingleActionButton
       breadcrumbs={[
@@ -69,7 +69,7 @@ function ProductDetailsPage() {
           to: `/product`,
         },
         {
-          label: product.name,
+          label: product.sku,
         },
       ]}
       actions={[
@@ -110,58 +110,53 @@ function ProductDetailsPage() {
             <Grid container rowSpacing={100}>
               <Grid item xs={6}>
                 <KeyValueList gridTemplateColumns="2fr 4fr">
-                  <KeyValuePair label={t("name")}>
-                    <EasyCopy clipboard={product.name}>{product.name}</EasyCopy>
+                  <KeyValuePair label={t("sku")}>
+                    <EasyCopy clipboard={product.sku}>{product.sku}</EasyCopy>
                   </KeyValuePair>
-                  <KeyValuePair label={t("serial-number")}>
-                    <EasyCopy clipboard={product.serialNumber}>
-                      {product.serialNumber}
-                    </EasyCopy>
-                  </KeyValuePair>
-                  <KeyValuePair label={t("item-code")}>
-                    {product.itemCode}
-                  </KeyValuePair>
-                  <KeyValuePair label={t("clientCode")}>
-                    {product.clientCodeString}
-                  </KeyValuePair>
-                  <KeyValuePair label={t("carton-size")}>
-                    {product.cartonSize}
+                  <KeyValuePair label={t("hasSerial")}>
+                    {product.hasSerial ? t("yes") : t("no")}
                   </KeyValuePair>
                   <KeyValuePair label={t("category")}>
                     {product.category}
                   </KeyValuePair>
-                  <KeyValuePair label={t("colour")}>
-                    {product.colour}
+                  <KeyValuePair label={t("brand")}>
+                    {product.brand}
                   </KeyValuePair>
-                  <KeyValuePair label={t("size")}>{product.size}</KeyValuePair>
-                  <KeyValuePair label={t("design")}>
-                    {product.design}
+                  <KeyValuePair label={t("model")}>
+                    {product.model}
                   </KeyValuePair>
-                  <KeyValuePair label={t("list-price")}>
-                    {product.unitPrice}
+                  <KeyValuePair label={t("color")}>
+                    {product.color}
                   </KeyValuePair>
-                  <KeyValuePair label={t("quantityPerCarton")}>
-                    {product.quantityPerCarton}
+                  <KeyValuePair label={t("storage")}>
+                    {product.storage}
                   </KeyValuePair>
-                  <KeyValuePair label={t("threshold")}>
-                    {product.threshold}
+                  <KeyValuePair label={t("ram")}>{product.ram}</KeyValuePair>
+                  <KeyValuePair label={t("processor")}>
+                    {product.processor}
+                  </KeyValuePair>
+                  <KeyValuePair label={t("screenSize")}>
+                    {product.screenSize}
+                  </KeyValuePair>
+                  <KeyValuePair label={t("retailPrice")}>
+                    {product.retailPrice}
+                  </KeyValuePair>
+                  <KeyValuePair label={t("dealerPrice")}>
+                    {product.dealerPrice}
+                  </KeyValuePair>
+                  <KeyValuePair label={t("agentPrice")}>
+                    {product.agentPrice}
+                  </KeyValuePair>
+                  <KeyValuePair label={t("lowQty")}>
+                    {product.lowQty}
                   </KeyValuePair>
                   <KeyValuePair label={t("created-at")}>
-                    <UserDateTime date={product.createdAt} />
-                  </KeyValuePair>
-                  <KeyValuePair label={t("changed-at")}>
-                    <UserDateTime date={product.changedAt} />
-                  </KeyValuePair>
-                  <KeyValuePair label={t("created-by")}>
-                    <UserName userId={product.createdById} placeholder="-" />
-                  </KeyValuePair>
-                  <KeyValuePair label={t("changed-by")}>
-                    <UserName userId={product.changedById} placeholder="-" />
+                    <UserDateTime date={product.createdDate} />
                   </KeyValuePair>
                 </KeyValueList>
               </Grid>
               <Grid item xs={6}>
-                <QRCodeGenerator serialNumber={product.serialNumber} />
+                <QRCodeGenerator serialNumber={product.sku} />
               </Grid>
             </Grid>
             <br />

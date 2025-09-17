@@ -1,7 +1,10 @@
 import { CartonSizeServiceProvider } from "./CartonSizeService";
+import { CustomerServiceProvider } from "./CustomerService";
+import { ExpenseServiceProvider } from "./ExpenseService";
 import { InventoryServiceProvider } from "./InventoryService";
 import { LookupServiceProvider } from "./LookupService";
 import { ProductServiceProvider } from "./ProductService";
+import { SupplierServiceProvider } from "./SupplierService";
 import { UserRoleServiceProvider } from "./UserRoleService";
 import { UserServiceProvider } from "./UserService";
 
@@ -12,6 +15,9 @@ const serviceProviders = [
   InventoryServiceProvider,
   UserServiceProvider,
   UserRoleServiceProvider,
+  CustomerServiceProvider,
+  SupplierServiceProvider,
+  ExpenseServiceProvider,
 ];
 export type ServicesProviderProps = {
   children?: React.ReactNode;

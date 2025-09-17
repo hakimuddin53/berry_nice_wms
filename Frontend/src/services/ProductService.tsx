@@ -5,7 +5,6 @@ import { ProductDetailsDto } from "interfaces/v12/product/productDetails/product
 import { ProductSearchDto } from "interfaces/v12/product/productSearch/productSearchDto";
 import queryString from "query-string";
 import React from "react";
-import { guid } from "../types/guid";
 import axios from "../utils/axios";
 
 const { createContext, useContext } = React;
@@ -13,10 +12,10 @@ const { createContext, useContext } = React;
 interface IProductService {
   searchProducts: (searchDto: any) => Promise<ProductDetailsDto[]>;
   countProducts: (searchDto: any) => Promise<number>;
-  getProductById: (productId: guid) => Promise<ProductDetailsDto>;
-  updateProduct: (id: guid, product: ProductCreateUpdateDto) => Promise<any>;
+  getProductById: (productId: string) => Promise<ProductDetailsDto>;
+  updateProduct: (id: string, product: ProductCreateUpdateDto) => Promise<any>;
   createProduct: (product: ProductCreateUpdateDto) => Promise<string>;
-  deleteProduct: (productId: guid) => Promise<any>;
+  deleteProduct: (productId: string) => Promise<any>;
   getSelectOptions: (
     label: string,
     resultPage: number,
@@ -25,7 +24,7 @@ interface IProductService {
   ) => Promise<SelectAsyncOption[]>;
   bulkUploadProducts: (formData: FormData) => Promise<void>;
   getByParameters: (
-    userIds: guid[],
+    productIds: string[],
     resultPage?: number,
     resultSize?: number
   ) => Promise<PagedListDto<ProductDetailsDto>>;
@@ -34,7 +33,7 @@ interface IProductService {
 const ProductServiceContext = createContext({} as IProductService);
 
 const getByParameters = (
-  productIds: guid[],
+  productIds: string[],
   resultPage?: number,
   resultSize?: number
 ) => {
@@ -91,7 +90,7 @@ export const ProductServiceProvider: React.FC<ProductServiceProviderProps> = (
       .then((res) => res.data.data);
   };
 
-  const getProductById = (productId: guid) => {
+  const getProductById = (productId: string) => {
     return axios
       .get<ProductDetailsDto>("/product/" + productId)
       .then(async (res) => {
@@ -99,7 +98,7 @@ export const ProductServiceProvider: React.FC<ProductServiceProviderProps> = (
       });
   };
 
-  const updateProduct = (id: guid, product: ProductCreateUpdateDto) => {
+  const updateProduct = (id: string, product: ProductCreateUpdateDto) => {
     return axios.put("/product/" + id, product).then(async (res) => {
       let result = res.data;
       return result;
@@ -113,7 +112,7 @@ export const ProductServiceProvider: React.FC<ProductServiceProviderProps> = (
     });
   };
 
-  const deleteProduct = (productId: guid) => {
+  const deleteProduct = (productId: string) => {
     return axios.delete("/product/" + productId).then(async (res) => {
       let result = res.data;
       return result.id;

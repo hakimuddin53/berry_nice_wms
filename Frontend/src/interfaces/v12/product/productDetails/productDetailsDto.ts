@@ -1,27 +1,36 @@
-import { CreatedChangedEntity } from "interfaces/v12/CreatedChangedEntity";
 import { guid } from "types/guid";
 
-export interface ProductDetailsDto extends CreatedChangedEntity {
-  id: guid;
-  serialNumber: string;
-  name: string;
-  itemCode: string;
-  clientCodeId: guid;
-  clientCodeString: string;
-  quantityPerCarton: number;
-  category: string;
-  size: string;
-  colour: string;
-  design: string;
-  cartonSize: string;
+export interface ProductDetailsDto {
+  productId: guid;
+  sku: string;
 
+  // Foreign keys
   categoryId: guid;
-  sizeId: guid;
-  colourId: guid;
-  designId: guid;
-  cartonSizeId: guid;
+  brandId?: guid;
+  modelId?: guid;
+  colorId?: guid;
+  storageId?: guid;
+  ramId?: guid;
+  processorId?: guid;
+  screenSizeId?: guid;
 
-  productPhotoUrl: string | null;
-  unitPrice: number;
-  threshold: number;
+  // Display names from lookups
+  category: string;
+  brand?: string;
+  model?: string;
+  color?: string;
+  storage?: string;
+  ram?: string;
+  processor?: string;
+  screenSize?: string;
+
+  hasSerial: boolean;
+
+  // Embedded prices
+  retailPrice: number;
+  dealerPrice: number;
+  agentPrice: number;
+
+  lowQty: number;
+  createdDate: string;
 }

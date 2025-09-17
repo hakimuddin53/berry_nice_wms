@@ -18,6 +18,8 @@ export enum LookupGroupKey {
   Ram = "Ram",
   Processor = "Processor",
   Year = "Year",
+  Brand = "Brand",
+  Model = "Model",
 }
 
 export interface LookupDetailsDto {

@@ -342,7 +342,7 @@ export const dashboardItems: SidebarItemsType[] = [
   },
   {
     id: 6,
-    href: "/expenses",
+    href: "/expense",
     itemType: "link",
     title: "Expenses",
     icon: <ReceiptText size={20} />,

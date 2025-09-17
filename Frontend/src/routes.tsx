@@ -41,8 +41,17 @@ import UserListPage from "pages/user/index/UserListPage";
 import UserRoleCreateEditPage from "pages/userRoles/createEdit/UserRoleCreateEditPage";
 import UserRoleDetailsPage from "pages/userRoles/details/UserRoleDetailsPage";
 import UserRoleListPage from "pages/userRoles/index/UserRoleListPage";
+import CustomerCreateEditPage from "pages/customer/createEdit/CustomerCreateEditPage";
+import CustomerDetailsPage from "pages/customer/details/CustomerDetailsPage";
+import CustomerListPage from "pages/customer/index/CustomerListPage";
+import SupplierCreateEditPage from "pages/supplier/createEdit/SupplierCreateEditPage";
+import SupplierDetailsPage from "pages/supplier/details/SupplierDetailsPage";
+import SupplierListPage from "pages/supplier/index/SupplierListPage";
+import ExpenseCreateEditPage from "pages/expense/createEdit/ExpenseCreateEditPage";
+import ExpenseDetailsPage from "pages/expense/details/ExpenseDetailsPage";
 
 import { Navigate } from "react-router-dom";
+import ExpenseListPage from "pages/expense/index/ExpenseListPage";
 
 // --- Routes Definition ---
 const routes = [
@@ -192,6 +201,117 @@ const routes = [
             element: (
               <ModuleGuard requiredModule={ModuleEnum.INVENTORY}>
                 <InventoryListPage />
+              </ModuleGuard>
+            ),
+          },
+        ],
+      },
+      {
+        path: "customer",
+        children: [
+          {
+            index: true,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.CUSTOMER}>
+                <CustomerListPage />
+              </ModuleGuard>
+            ),
+          },
+          {
+            path: "new",
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.CUSTOMER}>
+                <CustomerCreateEditPage />
+              </ModuleGuard>
+            ),
+          },
+          {
+            path: ":id",
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.CUSTOMER}>
+                <CustomerDetailsPage />
+              </ModuleGuard>
+            ),
+          },
+          {
+            path: ":id/edit",
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.CUSTOMER}>
+                <CustomerCreateEditPage />
+              </ModuleGuard>
+            ),
+          },
+        ],
+      },
+      {
+        path: "supplier",
+        children: [
+          {
+            index: true,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.SUPPLIER}>
+                <SupplierListPage />
+              </ModuleGuard>
+            ),
+          },
+          {
+            path: "new",
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.SUPPLIER}>
+                <SupplierCreateEditPage />
+              </ModuleGuard>
+            ),
+          },
+          {
+            path: ":id",
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.SUPPLIER}>
+                <SupplierDetailsPage />
+              </ModuleGuard>
+            ),
+          },
+          {
+            path: ":id/edit",
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.SUPPLIER}>
+                <SupplierCreateEditPage />
+              </ModuleGuard>
+            ),
+          },
+        ],
+      },
+      {
+        path: "expense",
+        children: [
+          {
+            index: true,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.EXPENSE}>
+                <ExpenseListPage />
+              </ModuleGuard>
+            ),
+          },
+          {
+            path: "new",
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.EXPENSE}>
+                <ExpenseCreateEditPage />
+              </ModuleGuard>
+            ),
+          },
+          {
+            path: ":id",
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.EXPENSE}>
+                <ExpenseDetailsPage />
+              </ModuleGuard>
+            ),
+          },
+          {
+            path: ":id/edit",
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.EXPENSE}>
+                <ExpenseCreateEditPage />
               </ModuleGuard>
             ),
           },
