@@ -98,6 +98,7 @@ function CustomerListPage() {
         { label: t("common:dashboard"), to: "/" },
         { label: t("customer") },
       ]}
+      hasSingleActionButton
       actions={[{ title: t("new-customer"), icon: "Add", to: "new" }]}
     >
       <DataTable

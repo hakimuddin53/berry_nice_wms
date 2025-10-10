@@ -35,6 +35,9 @@ import ProductBulkUploadPage from "pages/products/bulkUpload/ProductBulkUploadPa
 import ProductCreateEditPage from "pages/products/createEdit/ProductCreateEditPage";
 import ProductDetailsPage from "pages/products/details/ProductDetailsPage";
 import ProductListPage from "pages/products/index/ProductListPage";
+import StockInCreateEditPage from "pages/stockIn/createEdit/StockInCreateEditPage";
+import StockInDetailsPage from "pages/stockIn/details/StockInDetailsPage";
+import StockInListPage from "pages/stockIn/index/StockInListPage";
 import UserCreateEditPage from "pages/user/createEdit/UserCreateEditPage";
 import UserDetailsPage from "pages/user/details/UserDetailsPage";
 import UserListPage from "pages/user/index/UserListPage";
@@ -188,6 +191,43 @@ const routes = [
             element: (
               <ModuleGuard requiredModule={ModuleEnum.PRODUCT}>
                 <ProductBulkUploadPage />
+              </ModuleGuard>
+            ),
+          },
+        ],
+      },
+      {
+        path: "stock-in",
+        children: [
+          {
+            index: true,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.STOCKIN}>
+                <StockInListPage />
+              </ModuleGuard>
+            ),
+          },
+          {
+            path: "new",
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.STOCKIN}>
+                <StockInCreateEditPage />
+              </ModuleGuard>
+            ),
+          },
+          {
+            path: ":id",
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.STOCKIN}>
+                <StockInDetailsPage />
+              </ModuleGuard>
+            ),
+          },
+          {
+            path: ":id/edit",
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.STOCKIN}>
+                <StockInCreateEditPage />
               </ModuleGuard>
             ),
           },

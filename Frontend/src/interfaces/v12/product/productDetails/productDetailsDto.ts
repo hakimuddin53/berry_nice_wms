@@ -2,12 +2,11 @@ import { guid } from "types/guid";
 
 export interface ProductDetailsDto {
   productId: guid;
-  sku: string;
+  productCode: string;
 
   // Foreign keys
   categoryId: guid;
   brandId?: guid;
-  modelId?: guid;
   colorId?: guid;
   storageId?: guid;
   ramId?: guid;
@@ -23,13 +22,6 @@ export interface ProductDetailsDto {
   ram?: string;
   processor?: string;
   screenSize?: string;
-
-  hasSerial: boolean;
-
-  // Embedded prices
-  retailPrice: number;
-  dealerPrice: number;
-  agentPrice: number;
 
   lowQty: number;
   createdDate: string;

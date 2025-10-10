@@ -50,12 +50,12 @@ namespace Wms.Api.Services
                     }
 
                     // update both on-hand and cost accumulators
-                    wh.OnHandQuantity += item.Quantity;
-                    wh.TotalQtyReceived += item.Quantity;
-                    wh.TotalCostAccumulated += item.Quantity * item.UnitPrice;
+                    wh.OnHandQuantity += item.ReceiveQuantity;
+                    wh.TotalQtyReceived += item.ReceiveQuantity;
+                    wh.TotalCostAccumulated += item.ReceiveQuantity * (item.Cost ?? 0);
 
                     int oldBalance = inventoryBalance.Quantity;
-                    int newBalance = oldBalance + item.Quantity;
+                    int newBalance = oldBalance + item.ReceiveQuantity;
                     inventoryBalance.Quantity = newBalance;
 
                     var inventoryRecord = new Inventory
@@ -66,8 +66,8 @@ namespace Wms.Api.Services
                         WarehouseId = stockIn.WarehouseId,
                         CurrentLocationId = item.LocationId,
                         StockInId = item.StockInId,
-                        QuantityIn = item.Quantity,
-                        UnitPrice = item.UnitPrice,
+                        QuantityIn = item.ReceiveQuantity,
+                        UnitPrice = item.Cost ?? 0,
                         QuantityOut = 0,
                         OldBalance = oldBalance,
                         NewBalance = newBalance

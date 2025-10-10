@@ -99,6 +99,7 @@ function SupplierListPage() {
         { label: t("supplier") },
       ]}
       actions={[{ title: t("new-supplier"), icon: "Add", to: "new" }]}
+      hasSingleActionButton
     >
       <DataTable
         title={t("supplier")}

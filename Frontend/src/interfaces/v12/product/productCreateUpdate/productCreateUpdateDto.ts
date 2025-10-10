@@ -1,24 +1,17 @@
 import { guid } from "types/guid";
 
 export interface ProductCreateUpdateDto {
-  sku: string;
+  productCode: string;
 
   // Foreign keys to Lookup table
   categoryId: guid;
   brandId?: guid;
-  modelId?: guid;
+  model?: string;
   colorId?: guid;
   storageId?: guid;
   ramId?: guid;
   processorId?: guid;
   screenSizeId?: guid;
-
-  hasSerial: boolean;
-
-  // Embedded prices
-  retailPrice: number;
-  dealerPrice: number;
-  agentPrice: number;
 
   lowQty: number;
 }

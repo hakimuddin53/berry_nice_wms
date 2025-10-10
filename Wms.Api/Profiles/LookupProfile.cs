@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Wms.Api.Dto;
 using Wms.Api.Dto.Lookup;
 using Wms.Api.Dto.StockIn.StockInCreateUpdate;
 using Wms.Api.Entities;
@@ -9,9 +10,12 @@ public class LookupProfile : Profile
 {
     public LookupProfile()
     { 
+        #region Lookup to DTO
         CreateMap<Lookup, LookupDetailsDto>();  
-         
-        CreateMap<LookupCreateUpdateDto, Lookup>(); 
+        #endregion
 
+        CreateMap<Lookup, SelectOptionV12Dto>()
+            .ForMember(x => x.Value, option => option.MapFrom(y => y.Id))
+            .ForMember(x => x.Label, option => option.MapFrom(y => y.Label));
     }
 }

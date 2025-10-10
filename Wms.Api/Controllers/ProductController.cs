@@ -26,7 +26,7 @@ namespace Wms.Api.Controllers
         IService<Product> service,
         IMapper autoMapperService,
         ApplicationDbContext context,
-        IProductService productService,
+        //IProductService productService,
         IProductRepository productRepository)
         : ControllerBase
     {
@@ -46,7 +46,7 @@ namespace Wms.Api.Controllers
             if (selectFilterV12Dto.SearchString != null)
             {
                 predicate = predicate.And(product =>
-                    product.Sku.Contains(selectFilterV12Dto.SearchString));
+                    product.ProductCode.Contains(selectFilterV12Dto.SearchString));
 
             }
 
@@ -67,7 +67,7 @@ namespace Wms.Api.Controllers
         }        [HttpPost("search", Name = "SearchProductsAsync")]
         public async Task<IActionResult> SearchProductsAsync([FromBody] ProductSearchDto stockInSearch)
         {
-            var products = await service.GetAllAsync(e => e.Sku.Contains(stockInSearch.search));
+            var products = await service.GetAllAsync(e => e.ProductCode.Contains(stockInSearch.search));
 
             var result = products.Skip((stockInSearch.Page - 1) * stockInSearch.PageSize).Take(stockInSearch.PageSize).ToList();
              
@@ -81,7 +81,7 @@ namespace Wms.Api.Controllers
         [HttpPost("count", Name = "CountProductsAsync")]
         public async Task<IActionResult> CountProductsAsync([FromBody] ProductSearchDto stockInSearch)
         {
-            var stockIns = await service.GetAllAsync(e => e.Sku.Contains(stockInSearch.search));
+            var stockIns = await service.GetAllAsync(e => e.ProductCode.Contains(stockInSearch.search));
 
             var stockInDtos = autoMapperService.Map<List<ProductDetailsDto>>(stockIns);
             return Ok(stockInDtos.Count);
@@ -101,23 +101,23 @@ namespace Wms.Api.Controllers
             return Ok(productDetails);
         }
 
-        [HttpPost("bulk-upload")]
-        public async Task<IActionResult> BulkUploadProducts(IFormFile file)
-        {
-            if (file == null || file.Length == 0)
-            {
-                return BadRequest("Please upload a valid file.");
-            }
+        //[HttpPost("bulk-upload")]
+        //public async Task<IActionResult> BulkUploadProducts(IFormFile file)
+        //{
+        //    if (file == null || file.Length == 0)
+        //    {
+        //        return BadRequest("Please upload a valid file.");
+        //    }
 
-            var result = await productService.BulkUploadProducts(file);
+        //    var result = await productService.BulkUploadProducts(file);
 
-            if (result.IsSuccess)
-            {
-                return Ok(new { message = "Products uploaded successfully." });
-            }
+        //    if (result.IsSuccess)
+        //    {
+        //        return Ok(new { message = "Products uploaded successfully." });
+        //    }
 
-            return BadRequest(result.ErrorMessage);
-        }
+        //    return BadRequest(result.ErrorMessage);
+        //}
 
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] ProductCreateUpdateDto productCreateUpdateDto)

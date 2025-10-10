@@ -1,4 +1,4 @@
-import { CardContent, TextField, Checkbox } from "@mui/material";
+import { CardContent, TextField } from "@mui/material";
 import {
   DataList,
   PbTab,
@@ -14,7 +14,6 @@ import { FormikProvider, setNestedObjectValues, useFormik } from "formik";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
-import { useCartonSizeService } from "services/CartonSizeService";
 
 import { useNotificationService } from "services/NotificationService";
 import { useProductService } from "services/ProductService";
@@ -34,7 +33,6 @@ const ProductCreateEditPage: React.FC = () => {
   const [tab, setTab] = useState(0);
 
   const ProductService = useProductService();
-  const CartonSizeService = useCartonSizeService();
   const LookupService = useLookupService();
 
   const notificationService = useNotificationService();
@@ -44,19 +42,15 @@ const ProductCreateEditPage: React.FC = () => {
   const [pageBlocker, setPageBlocker] = useState(false);
 
   const [product, setProduct] = useState<YupProductCreateEdit>({
-    sku: "",
+    productCode: "",
     categoryId: EMPTY_GUID as guid,
     brandId: undefined,
-    modelId: undefined,
+    model: undefined,
     colorId: undefined,
     storageId: undefined,
     ramId: undefined,
     processorId: undefined,
     screenSizeId: undefined,
-    hasSerial: false,
-    retailPrice: 0,
-    dealerPrice: 0,
-    agentPrice: 0,
     lowQty: 0,
   });
 
@@ -81,7 +75,7 @@ const ProductCreateEditPage: React.FC = () => {
         to: "/product",
       },
       {
-        label: product.sku as string,
+        label: product.productCode as string,
         to: "/product/" + id,
       },
       { label: t("common:edit") },
@@ -96,19 +90,15 @@ const ProductCreateEditPage: React.FC = () => {
 
       // Transform values to match ProductCreateUpdateDto
       const transformedValues: ProductCreateUpdateDto = {
-        sku: values.sku,
+        productCode: values.productCode,
         categoryId: values.categoryId!,
         brandId: values.brandId || undefined,
-        modelId: values.modelId || undefined,
+        model: values.model || undefined,
         colorId: values.colorId || undefined,
         storageId: values.storageId || undefined,
         ramId: values.ramId || undefined,
         processorId: values.processorId || undefined,
         screenSizeId: values.screenSizeId || undefined,
-        hasSerial: values.hasSerial,
-        retailPrice: values.retailPrice,
-        dealerPrice: values.dealerPrice,
-        agentPrice: values.agentPrice,
         lowQty: values.lowQty,
       };
 
@@ -154,7 +144,20 @@ const ProductCreateEditPage: React.FC = () => {
     if (id) {
       ProductService.getProductById(id)
         .then((product: any) => {
-          setProduct(product);
+          // Transform ProductDetailsDto to YupProductCreateEdit
+          const formProduct: YupProductCreateEdit = {
+            productCode: product.productCode,
+            categoryId: product.categoryId,
+            brandId: product.brandId,
+            model: product.model,
+            colorId: product.colorId,
+            storageId: product.storageId,
+            ramId: product.ramId,
+            processorId: product.processorId,
+            screenSizeId: product.screenSizeId,
+            lowQty: product.lowQty,
+          };
+          setProduct(formProduct);
 
           setPageReady(true);
         })
@@ -224,23 +227,29 @@ const ProductCreateEditPage: React.FC = () => {
                 hideDevider={true}
                 data={[
                   {
-                    label: t("sku"),
-                    required: isRequiredField(productCreateEditShema, "sku"),
+                    label: t("productCode"),
+                    required: isRequiredField(
+                      productCreateEditShema,
+                      "productCode"
+                    ),
                     value: (
                       <TextField
                         fullWidth
                         id="sku"
-                        name="sku"
+                        name="productCode"
                         size="small"
-                        value={formik.values.sku}
+                        value={formik.values.productCode}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
-                        error={formik.touched.sku && Boolean(formik.errors.sku)}
+                        error={
+                          formik.touched.productCode &&
+                          Boolean(formik.errors.productCode)
+                        }
                         helperText={
                           <FormikErrorMessage
-                            touched={formik.touched.sku}
-                            error={formik.errors.sku}
-                            translatedFieldName={t("sku")}
+                            touched={formik.touched.productCode}
+                            error={formik.errors.productCode}
+                            translatedFieldName={t("productCode")}
                           />
                         }
                       />
@@ -340,44 +349,18 @@ const ProductCreateEditPage: React.FC = () => {
                   },
                   {
                     label: t("model"),
-                    required: isRequiredField(
-                      productCreateEditShema,
-                      "modelId"
-                    ),
+                    required: isRequiredField(productCreateEditShema, "model"),
                     value: (
-                      <SelectAsync2
-                        name="modelId"
-                        ids={useMemo(
-                          () =>
-                            formik.values.modelId
-                              ? [formik.values.modelId]
-                              : [],
-                          [formik.values.modelId]
-                        )}
-                        onSelectionChange={async (newOption) => {
-                          formik.setFieldValue(
-                            "modelId",
-                            newOption?.value || null
-                          );
-                        }}
-                        asyncFunc={(
-                          input: string,
-                          page: number,
-                          pageSize: number,
-                          ids?: guid[]
-                        ) =>
-                          LookupService.getSelectOptions(
-                            LookupGroupKey.Model,
-                            input,
-                            page,
-                            pageSize,
-                            ids
-                          )
-                        }
+                      <TextField
+                        name="model"
+                        value={formik.values.model || ""}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        fullWidth
                         helperText={
                           <FormikErrorMessage
-                            touched={formik.touched.modelId}
-                            error={formik.errors.modelId}
+                            touched={formik.touched.model}
+                            error={formik.errors.model}
                             translatedFieldName={t("model")}
                           />
                         }
@@ -604,112 +587,6 @@ const ProductCreateEditPage: React.FC = () => {
                             touched={formik.touched.screenSizeId}
                             error={formik.errors.screenSizeId}
                             translatedFieldName={t("screenSize")}
-                          />
-                        }
-                      />
-                    ),
-                  },
-                  {
-                    label: t("hasSerial"),
-                    required: isRequiredField(
-                      productCreateEditShema,
-                      "hasSerial"
-                    ),
-                    value: (
-                      <Checkbox
-                        id="hasSerial"
-                        name="hasSerial"
-                        checked={formik.values.hasSerial}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                      />
-                    ),
-                  },
-                  {
-                    label: t("retailPrice"),
-                    required: isRequiredField(
-                      productCreateEditShema,
-                      "retailPrice"
-                    ),
-                    value: (
-                      <TextField
-                        fullWidth
-                        id="retailPrice"
-                        name="retailPrice"
-                        type="number"
-                        size="small"
-                        value={formik.values.retailPrice}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={
-                          formik.touched.retailPrice &&
-                          Boolean(formik.errors.retailPrice)
-                        }
-                        helperText={
-                          <FormikErrorMessage
-                            touched={formik.touched.retailPrice}
-                            error={formik.errors.retailPrice}
-                            translatedFieldName={t("retailPrice")}
-                          />
-                        }
-                      />
-                    ),
-                  },
-                  {
-                    label: t("dealerPrice"),
-                    required: isRequiredField(
-                      productCreateEditShema,
-                      "dealerPrice"
-                    ),
-                    value: (
-                      <TextField
-                        fullWidth
-                        id="dealerPrice"
-                        name="dealerPrice"
-                        type="number"
-                        size="small"
-                        value={formik.values.dealerPrice}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={
-                          formik.touched.dealerPrice &&
-                          Boolean(formik.errors.dealerPrice)
-                        }
-                        helperText={
-                          <FormikErrorMessage
-                            touched={formik.touched.dealerPrice}
-                            error={formik.errors.dealerPrice}
-                            translatedFieldName={t("dealerPrice")}
-                          />
-                        }
-                      />
-                    ),
-                  },
-                  {
-                    label: t("agentPrice"),
-                    required: isRequiredField(
-                      productCreateEditShema,
-                      "agentPrice"
-                    ),
-                    value: (
-                      <TextField
-                        fullWidth
-                        id="agentPrice"
-                        name="agentPrice"
-                        type="number"
-                        size="small"
-                        value={formik.values.agentPrice}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={
-                          formik.touched.agentPrice &&
-                          Boolean(formik.errors.agentPrice)
-                        }
-                        helperText={
-                          <FormikErrorMessage
-                            touched={formik.touched.agentPrice}
-                            error={formik.errors.agentPrice}
-                            translatedFieldName={t("agentPrice")}
                           />
                         }
                       />

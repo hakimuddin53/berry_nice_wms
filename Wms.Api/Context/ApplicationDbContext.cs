@@ -94,12 +94,6 @@ namespace Wms.Api.Context
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Product>()
-                .HasOne(p => p.Model)
-                .WithMany()
-                .HasForeignKey(p => p.ModelId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<Product>()
                 .HasOne(p => p.Color)
                 .WithMany()
                 .HasForeignKey(p => p.ColorId)

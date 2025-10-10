@@ -98,6 +98,7 @@ function ExpenseListPage() {
         { label: t("common:dashboard"), to: "/" },
         { label: t("expense") },
       ]}
+      hasSingleActionButton
       actions={[{ title: t("new-expense"), icon: "Add", to: "new" }]}
     >
       <DataTable

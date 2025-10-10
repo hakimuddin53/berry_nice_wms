@@ -11,15 +11,15 @@ import Page from "components/platbricks/shared/Page";
 import { PbCard } from "components/platbricks/shared/PbCard";
 import SelectAsync2 from "components/platbricks/shared/SelectAsync2";
 import { FormikProvider, setNestedObjectValues, useFormik } from "formik";
+import { LookupGroupKey } from "interfaces/v12/lookup/lookup";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
+import { useCustomerService } from "services/CustomerService";
 import { useLookupService } from "services/LookupService";
 import { useNotificationService } from "services/NotificationService";
-import { useCustomerService } from "services/CustomerService";
-import { EMPTY_GUID, guid } from "types/guid";
+import { guid } from "types/guid";
 import { isRequiredField } from "utils/formikHelpers";
-import { LookupGroupKey } from "interfaces/v12/lookup/lookup";
 import {
   customerCreateEditSchema,
   YupCustomerCreateEdit,
@@ -82,8 +82,14 @@ const CustomerCreateEditPage: React.FC = () => {
     onSubmit: (values, { resetForm }) => {
       setPageBlocker(true);
 
+      // Ensure phone is a string
+      const submitValues = {
+        ...values,
+        phone: String(values.phone || ""),
+      };
+
       if (!id) {
-        CustomerService.createCustomer(values)
+        CustomerService.createCustomer(submitValues)
           .then((result) => {
             resetForm({ values });
             setPageBlocker(false);
@@ -99,7 +105,7 @@ const CustomerCreateEditPage: React.FC = () => {
             notificationService.handleApiErrorMessage(err.data, "customer");
           });
       } else {
-        CustomerService.updateCustomer(id as guid, values)
+        CustomerService.updateCustomer(id as guid, submitValues)
           .then((result) => {
             resetForm({ values });
             setPageBlocker(false);
@@ -255,6 +261,7 @@ const CustomerCreateEditPage: React.FC = () => {
                         id="phone"
                         name="phone"
                         size="small"
+                        type="number"
                         value={formik.values.phone}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}

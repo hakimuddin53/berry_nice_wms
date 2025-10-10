@@ -1,4 +1,4 @@
-import { Chip, Link } from "@mui/material";
+import { Link } from "@mui/material";
 import { useCreatedChangeDate } from "hooks/useCreatedChangeDate";
 import { ProductDetailsDto } from "interfaces/v12/product/productDetails/productDetailsDto";
 import { useMemo } from "react";
@@ -21,20 +21,15 @@ export const useProductTable = () => {
         hidden,
       },
       {
-        id: "sku",
-        label: t("sku"),
+        id: "productCode",
+        label: t("productCode"),
         render: (row) => (
-          <EasyCopy clipboard={row.sku}>
+          <EasyCopy clipboard={row.productCode}>
             <Link component={NavLink} to={`/product/${row.productId}`}>
-              {row.sku || "N/A"}
+              {row.productCode || "N/A"}
             </Link>
           </EasyCopy>
         ),
-      },
-      {
-        id: "hasSerial",
-        label: t("hasSerial"),
-        render: (row) => (row.hasSerial ? t("yes") : t("no")),
       },
       {
         id: "category",
@@ -67,18 +62,6 @@ export const useProductTable = () => {
       {
         id: "screenSize",
         label: t("screenSize"),
-      },
-      {
-        id: "retailPrice",
-        label: t("retailPrice"),
-      },
-      {
-        id: "dealerPrice",
-        label: t("dealerPrice"),
-      },
-      {
-        id: "agentPrice",
-        label: t("agentPrice"),
       },
       {
         id: "lowQty",

@@ -6,6 +6,7 @@ using Wms.Api.Context;
 using Wms.Api.Dto;
 using Wms.Api.Dto.PagedList;
 using Wms.Api.Dto.StockIn.StockInCreateUpdate;
+using Wms.Api.Dto.StockIn.StockInDetails;
 using Wms.Api.Dto.StockIn.StockInSearch;
 using Wms.Api.Entities;
 using Wms.Api.Model;
@@ -29,7 +30,9 @@ namespace Wms.Api.Controllers
         {
             var stockIns = await service.GetAllAsync(e =>
                                                         e.Number.Contains(stockInSearch.search) ||
-                                                        e.PONumber.Contains(stockInSearch.search));
+                                                        e.SellerInfo.Contains(stockInSearch.search) ||
+                                                        e.Purchaser.Contains(stockInSearch.search) ||
+                                                        e.Location.Contains(stockInSearch.search));
 
             var orderedStockIns = stockIns.OrderByDescending(e => e.CreatedAt);
 
@@ -48,7 +51,9 @@ namespace Wms.Api.Controllers
         {
             var stockIns = await service.GetAllAsync(e =>
                                                         e.Number.Contains(stockInSearch.search) ||
-                                                        e.PONumber.Contains(stockInSearch.search));
+                                                        e.SellerInfo.Contains(stockInSearch.search) ||
+                                                        e.Purchaser.Contains(stockInSearch.search) ||
+                                                        e.Location.Contains(stockInSearch.search));
 
             var stockInDtos = autoMapperService.Map<List<StockInDetailsDto>>(stockIns);
             return Ok(stockInDtos.Count);

@@ -1,13 +1,14 @@
-﻿namespace Wms.Api.Dto.StockIn.StockInCreateUpdate
+﻿namespace Wms.Api.Dto.StockIn.StockInDetails
 {
     public class StockInDetailsDto
     {
         public Guid Id { get; set; }
         public required string Number { get; set; }
-        public required string PONumber { get; set; }
-        public required string JSNumber { get; set; }
-        public required string FromLocation { get; set; }
-        public Guid WarehouseId { get; set; } 
+        public required string SellerInfo { get; set; }
+        public required string Purchaser { get; set; }
+        public required string Location { get; set; }
+        public DateTime DateOfPurchase { get; set; }
+        public Guid WarehouseId { get; set; }
 
         public DateTime CreatedAt { get; set; }
         public required string CreatedById { get; set; }

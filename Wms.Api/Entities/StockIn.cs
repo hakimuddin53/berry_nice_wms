@@ -11,13 +11,16 @@ namespace Wms.Api.Entities
         public required string Number { get; set; }
 
         [Required]
-        public required string PONumber { get; set; }
+        public required string SellerInfo { get; set; }
 
         [Required]
-        public required string JSNumber { get; set; }
+        public required string Purchaser { get; set; }
 
         [Required]
-        public required string FromLocation { get; set; }
+        public required string Location { get; set; }
+
+        [Required]
+        public DateTime DateOfPurchase { get; set; }
 
         [Required]
         public Guid WarehouseId { get; set; }

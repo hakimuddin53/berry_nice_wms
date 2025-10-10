@@ -15,7 +15,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { useNotificationService } from "services/NotificationService";
 import { useSupplierService } from "services/SupplierService";
-import { EMPTY_GUID, guid } from "types/guid";
+import { guid } from "types/guid";
 import { isRequiredField } from "utils/formikHelpers";
 import {
   supplierCreateEditSchema,
@@ -175,7 +175,7 @@ const SupplierCreateEditPage: React.FC = () => {
           icon: "Save",
         },
       ]}
-      hasSingleActionButton={true}
+      hasSingleActionButton
     >
       <NavBlocker when={formik.dirty}></NavBlocker>
       <FormikProvider value={formik}>
@@ -338,6 +338,7 @@ const SupplierCreateEditPage: React.FC = () => {
                         fullWidth
                         id="contactNo"
                         name="contactNo"
+                        type="number"
                         size="small"
                         value={formik.values.contactNo}
                         onChange={formik.handleChange}

@@ -1,5 +1,4 @@
 import { CardContent, Grid, Typography } from "@mui/material";
-import UserName from "components/platbricks/entities/UserName";
 import {
   EasyCopy,
   KeyValueList,
@@ -19,7 +18,6 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { useProductService } from "services/ProductService";
-import { guid } from "types/guid";
 
 function ProductDetailsPage() {
   const { t } = useTranslation();
@@ -48,7 +46,7 @@ function ProductDetailsPage() {
       <Page
         pagename={t("product")}
         breadcrumbs={[]}
-        title={"Stock Not Found"}
+        title={t("product-not-found")}
       ></Page>
     );
   }
@@ -56,12 +54,12 @@ function ProductDetailsPage() {
   return (
     <Page
       title={t("product")}
-      subtitle={product.sku}
+      subtitle={product.productCode}
       showBackdrop={pageBlocker}
       hasSingleActionButton
       breadcrumbs={[
         {
-          label: t("dashboard"),
+          label: t("common:dashboard"),
           to: "/",
         },
         {
@@ -69,12 +67,12 @@ function ProductDetailsPage() {
           to: `/product`,
         },
         {
-          label: product.sku,
+          label: product.productCode,
         },
       ]}
       actions={[
         {
-          title: t("edit"),
+          title: t("common:edit"),
           to: "edit",
           icon: "Edit",
         },
@@ -103,18 +101,17 @@ function ProductDetailsPage() {
             setTab(newValue);
           }}
         >
-          <PbTab label={t("details")} />
+          <PbTab label={t("common:details")} />
         </PbTabs>
         <CardContent>
           <PbTabPanel value={tab} index={0}>
             <Grid container rowSpacing={100}>
               <Grid item xs={6}>
                 <KeyValueList gridTemplateColumns="2fr 4fr">
-                  <KeyValuePair label={t("sku")}>
-                    <EasyCopy clipboard={product.sku}>{product.sku}</EasyCopy>
-                  </KeyValuePair>
-                  <KeyValuePair label={t("hasSerial")}>
-                    {product.hasSerial ? t("yes") : t("no")}
+                  <KeyValuePair label={t("productCode")}>
+                    <EasyCopy clipboard={product.productCode}>
+                      {product.productCode}
+                    </EasyCopy>
                   </KeyValuePair>
                   <KeyValuePair label={t("category")}>
                     {product.category}
@@ -138,15 +135,6 @@ function ProductDetailsPage() {
                   <KeyValuePair label={t("screenSize")}>
                     {product.screenSize}
                   </KeyValuePair>
-                  <KeyValuePair label={t("retailPrice")}>
-                    {product.retailPrice}
-                  </KeyValuePair>
-                  <KeyValuePair label={t("dealerPrice")}>
-                    {product.dealerPrice}
-                  </KeyValuePair>
-                  <KeyValuePair label={t("agentPrice")}>
-                    {product.agentPrice}
-                  </KeyValuePair>
                   <KeyValuePair label={t("lowQty")}>
                     {product.lowQty}
                   </KeyValuePair>
@@ -156,7 +144,7 @@ function ProductDetailsPage() {
                 </KeyValueList>
               </Grid>
               <Grid item xs={6}>
-                <QRCodeGenerator serialNumber={product.sku} />
+                <QRCodeGenerator serialNumber={product.productCode} />
               </Grid>
             </Grid>
             <br />

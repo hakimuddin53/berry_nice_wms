@@ -123,7 +123,7 @@ namespace Wms.Api.Repositories
 
         public async Task<Product?> GetProductByItemCodeAsync(string itemCode)
         {
-            return await dbContext.Products.FirstOrDefaultAsync(p => p.Sku == itemCode);
+            return await dbContext.Products.FirstOrDefaultAsync(p => p.ProductCode == itemCode);
         }
 
         //public async Task<Guid> GetOrCreateWarehouseIdAsync(string warehouseName)

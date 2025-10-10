@@ -141,6 +141,21 @@ namespace Wms.Api.Data.Seeding
             // --- Ram
             foreach (var cap in new[] { "2GB", "3GB", "4GB", "6GB", "8GB", "12GB", "16GB", "24GB", "32GB", "64GB" })
                 list.Add(L(LookupGroupKey.Ram, cap, cap, list.Count));
+
+            // --- Processor
+            list.AddRange(new[]
+            {
+                L(LookupGroupKey.Processor,"INTEL_I5","Intel i5",1),
+                L(LookupGroupKey.Processor,"INTEL_I7","Intel i7",2),
+            });
+
+            // --- Brand
+            list.AddRange(new[]
+            {
+                L(LookupGroupKey.Brand,"ACER","Acer",1),
+                L(LookupGroupKey.Brand,"HONOR","Honor",2),
+                L(LookupGroupKey.Brand,"APPLE","Apple",3),
+            });
  
 
             return list;

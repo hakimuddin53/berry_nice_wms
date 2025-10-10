@@ -18,7 +18,7 @@ function LookupListPageInner({ group }: { group: LookupGroupKey }) {
   const breadcrumbs = useMemo(
     () => [
       { label: t("common:dashboard"), to: "/" },
-      { label: t("Title"), to: "/lookups" },
+      { label: t("lookups"), to: "/lookups" },
       { label: title },
     ],
     [t, title]

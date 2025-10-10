@@ -47,7 +47,7 @@ function ExpenseDetailsPage() {
       <Page
         pagename={t("expense")}
         breadcrumbs={[]}
-        title={"Expense Not Found"}
+        title={t("expense-not-found")}
       ></Page>
     );
   }
@@ -60,7 +60,7 @@ function ExpenseDetailsPage() {
       hasSingleActionButton
       breadcrumbs={[
         {
-          label: t("dashboard"),
+          label: t("common:dashboard"),
           to: "/",
         },
         {
@@ -73,7 +73,7 @@ function ExpenseDetailsPage() {
       ]}
       actions={[
         {
-          title: t("edit"),
+          title: t("common:edit"),
           to: "edit",
           icon: "Edit",
         },
@@ -102,7 +102,7 @@ function ExpenseDetailsPage() {
             setTab(newValue);
           }}
         >
-          <PbTab label={t("details")} />
+          <PbTab label={t("common:details")} />
         </PbTabs>
         <CardContent>
           <PbTabPanel value={tab} index={0}>

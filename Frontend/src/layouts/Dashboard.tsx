@@ -275,6 +275,16 @@ const lookupChildren: SidebarItemsType[] = [
     children: [],
     requiredModule: ModuleEnum.LOOKUP,
   },
+  {
+    id: 215,
+    href: "/lookups/Brand",
+    itemType: "link",
+    title: "Brand",
+    icon: <ShoppingCart size={20} />,
+    type: "single",
+    children: [],
+    requiredModule: ModuleEnum.LOOKUP,
+  },
 ];
 
 // 2) Add a parent “Lookups” item that uses those as children
