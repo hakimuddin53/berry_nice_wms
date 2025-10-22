@@ -38,6 +38,9 @@ import ProductListPage from "pages/products/index/ProductListPage";
 import StockInCreateEditPage from "pages/stockIn/createEdit/StockInCreateEditPage";
 import StockInDetailsPage from "pages/stockIn/details/StockInDetailsPage";
 import StockInListPage from "pages/stockIn/index/StockInListPage";
+import InvoiceCreateEditPage from "pages/invoice/createEdit/InvoiceCreateEditPage";
+import InvoiceDetailsPage from "pages/invoice/details/InvoiceDetailsPage";
+import InvoiceListPage from "pages/invoice/index/InvoiceListPage";
 import UserCreateEditPage from "pages/user/createEdit/UserCreateEditPage";
 import UserDetailsPage from "pages/user/details/UserDetailsPage";
 import UserListPage from "pages/user/index/UserListPage";
@@ -228,6 +231,43 @@ const routes = [
             element: (
               <ModuleGuard requiredModule={ModuleEnum.STOCKIN}>
                 <StockInCreateEditPage />
+              </ModuleGuard>
+            ),
+          },
+        ],
+      },
+      {
+        path: "invoice",
+        children: [
+          {
+            index: true,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.INVOICE}>
+                <InvoiceListPage />
+              </ModuleGuard>
+            ),
+          },
+          {
+            path: "new",
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.INVOICE}>
+                <InvoiceCreateEditPage />
+              </ModuleGuard>
+            ),
+          },
+          {
+            path: ":id",
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.INVOICE}>
+                <InvoiceDetailsPage />
+              </ModuleGuard>
+            ),
+          },
+          {
+            path: ":id/edit",
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.INVOICE}>
+                <InvoiceCreateEditPage />
               </ModuleGuard>
             ),
           },

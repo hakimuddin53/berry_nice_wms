@@ -382,9 +382,19 @@ export const dashboardItems: SidebarItemsType[] = [
   },
   {
     id: 9,
-    href: "/stock-out",
+    href: "/invoice",
     itemType: "link",
     title: "Invoice",
+    icon: <ReceiptText size={20} />,
+    type: "single",
+    children: [],
+    requiredModule: ModuleEnum.INVOICE,
+  },
+  {
+    id: 10,
+    href: "/stock-out",
+    itemType: "link",
+    title: "Stock Out",
     icon: <ArrowLeft size={20} />,
     type: "single",
     children: [],
@@ -392,7 +402,7 @@ export const dashboardItems: SidebarItemsType[] = [
   },
 
   {
-    id: 10,
+    id: 11,
     href: "/inventory",
     itemType: "link",
     title: "Inventory",
@@ -401,7 +411,6 @@ export const dashboardItems: SidebarItemsType[] = [
     children: [],
     requiredModule: ModuleEnum.INVENTORY,
   },
-
   lookupsParent,
 ];
 

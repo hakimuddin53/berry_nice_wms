@@ -57,24 +57,19 @@ namespace Wms.Api.Context
         }
 
         public DbSet<Product> Products { get; set; }
-        public DbSet<StockAdjustment> StockAdjustments { get; set; }
-        public DbSet<StockAdjustmentItem> StockAdjustmentItems { get; set; }
         public DbSet<StockIn> StockIns { get; set; }
         public DbSet<StockInItem> StockInItems { get; set; }
+        public DbSet<StockInItemRemark> StockInItemRemarks { get; set; }
         public DbSet<StockOut> StockOuts { get; set; }
         public DbSet<StockOutItem> StockOutItems { get; set; }
-        public DbSet<Inventory> Inventories { get; set; }         
-        public DbSet<StockReservation> StockReservations { get; set; }
-        public DbSet<StockReservationItem> StockReservationItems { get; set; }
-        public DbSet<StockTransfer> StockTransfers { get; set; }
-        public DbSet<StockTransferItem> StockTransferItems { get; set; }
+        public DbSet<Inventory> Inventories { get; set; }
         public DbSet<RunningNumber> RunningNumbers { get; set; } 
-        public DbSet<InventoryBalance> InventoryBalances { get; set; }
-        public DbSet<WarehouseInventoryBalance> WarehouseInventoryBalances { get; set; }
         public DbSet<Lookup> Lookups { get; set; }
         public DbSet<Customer> Customers { get; set; }
         public DbSet<Supplier> Suppliers { get; set; }
         public DbSet<Expense> Expenses { get; set; }
+        public DbSet<Invoice> Invoices { get; set; }
+        public DbSet<InvoiceItem> InvoiceItems { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -122,6 +117,18 @@ namespace Wms.Api.Context
                 .WithMany()
                 .HasForeignKey(p => p.ScreenSizeId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<StockInItemRemark>()
+                .HasOne(r => r.StockInItem)
+                .WithMany(i => i.StockInItemRemarks)
+                .HasForeignKey(r => r.StockInItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<InvoiceItem>()
+                .HasOne(ii => ii.Invoice)
+                .WithMany(i => i.InvoiceItems)
+                .HasForeignKey(ii => ii.InvoiceId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

@@ -8,6 +8,7 @@
         STOCKTRANSFER = 3, 
         PRODUCT = 4,
         STOCKADJUSTMENT = 5, 
+        INVOICE = 6
     }
 
     public enum TransactionTypeEnum
@@ -40,6 +41,7 @@
         USERROLE = 14, 
         CLIENTCODE = 15,
         STOCKADJUSTMENT = 16,
+        INVOICE = 17
     }
 
     public enum ReservationStatusEnum

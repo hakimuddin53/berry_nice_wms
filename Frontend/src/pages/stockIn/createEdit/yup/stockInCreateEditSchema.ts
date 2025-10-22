@@ -11,8 +11,23 @@ export interface YupStockInCreateEdit {
   stockInItems: YupStockInItemCreateEdit[];
 }
 
+export interface YupStockInItemRemarkCreateEdit {
+  id?: guid;
+  stockInItemId?: guid;
+  remark: string;
+}
+
 export interface YupStockInItemCreateEdit {
   productId: guid;
+  productCode: string;
+  categoryId: guid;
+  brandId?: guid;
+  model?: string;
+  colorId?: guid;
+  storageId?: guid;
+  ramId?: guid;
+  processorId?: guid;
+  screenSizeId?: guid;
   locationId: guid;
   primarySerialNumber?: string;
   manufactureSerialNumber?: string;
@@ -22,10 +37,16 @@ export interface YupStockInItemCreateEdit {
   dealerSellingPrice?: number;
   agentSellingPrice?: number;
   cost?: number;
-  remarks?: string;
+  stockInItemRemarks: YupStockInItemRemarkCreateEdit[];
   itemsIncluded?: string;
   receiveQuantity: number;
 }
+
+const stockInItemRemarkSchema = yup.object().shape({
+  id: yup.string().nullable(),
+  stockInItemId: yup.string().nullable(),
+  remark: yup.string().trim().required(),
+});
 
 export const stockInCreateEditSchema = yup.object().shape({
   number: yup.string().required(),
@@ -39,7 +60,17 @@ export const stockInCreateEditSchema = yup.object().shape({
     .of(
       yup.object().shape({
         productId: yup.string().required(),
+        productCode: yup.string().required(),
+        categoryId: yup.string().required(),
+        brandId: yup.string().nullable(),
+        model: yup.string().nullable(),
+        colorId: yup.string().nullable(),
+        storageId: yup.string().nullable(),
+        ramId: yup.string().nullable(),
+        processorId: yup.string().nullable(),
+        screenSizeId: yup.string().nullable(),
         locationId: yup.string().required(),
+        stockInItemRemarks: yup.array().of(stockInItemRemarkSchema).default([]),
         receiveQuantity: yup.number().min(1).required(),
       })
     )

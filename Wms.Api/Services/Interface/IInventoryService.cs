@@ -7,8 +7,6 @@ namespace Wms.Api.Services
     {
         Task StockOutAsync(StockOut stockOut);
         Task StockInAsync(StockIn stockIn);
-        Task StockTransferAsync(StockTransfer stockTransfer);
-        Task StockAdjustmentAsync(StockAdjustment stockAdjustment);
         Task CancelStockOutAsync(Guid stockOutId);
     }
 }

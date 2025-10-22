@@ -14,15 +14,20 @@ public class StockInProfile : Profile
             .ForMember(dest => dest.StockInItems, opt => opt.MapFrom(src => src.StockInItems));
 
         CreateMap<StockInItem, StockInItemDetailsDto>()
-            .ForMember(dest => dest.ProductCode, opt => opt.MapFrom(src => src.Product != null ? src.Product.ProductCode : null))
-            .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product != null ? src.Product.ProductCode : null));
+            .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Model))
+            .ForMember(dest => dest.StockInItemRemarks, opt => opt.MapFrom(src => src.StockInItemRemarks));
+
+        CreateMap<StockInItemRemark, StockInItemRemarkDetailsDto>();
         #endregion
 
         #region CreateUpdateV12Dto
         CreateMap<StockInCreateUpdateDto, StockIn>()
             .ForMember(dest => dest.StockInItems, opt => opt.MapFrom(src => src.StockInItems));
 
-        CreateMap<StockInItemCreateUpdateDto, StockInItem>();
+        CreateMap<StockInItemCreateUpdateDto, StockInItem>()
+            .ForMember(dest => dest.StockInItemRemarks, opt => opt.MapFrom(src => src.StockInItemRemarks));
+
+        CreateMap<StockInItemRemarkCreateUpdateDto, StockInItemRemark>();
         #endregion
 
     }

@@ -1,11 +1,37 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace Wms.Api.Dto.StockIn.StockInCreateUpdate
 {
     public class StockInItemCreateUpdateDto
     {
+        /// <summary>
+        /// Product reference used to pre-fill metadata; not persisted with the entity.
+        /// </summary>
+        [Required]
         public Guid ProductId { get; set; }
+
+        [Required]
+        [MaxLength(64)]
+        public string ProductCode { get; set; } = default!;
+
+        [Required]
+        public Guid CategoryId { get; set; }
+
+        public Guid? BrandId { get; set; }
+
+        public string? Model { get; set; }
+
+        public Guid? ColorId { get; set; }
+
+        public Guid? StorageId { get; set; }
+
+        public Guid? RamId { get; set; }
+
+        public Guid? ProcessorId { get; set; }
+
+        public Guid? ScreenSizeId { get; set; }
+
         public Guid LocationId { get; set; }
         public string? PrimarySerialNumber { get; set; }
         public string? ManufactureSerialNumber { get; set; }
@@ -15,9 +41,10 @@ namespace Wms.Api.Dto.StockIn.StockInCreateUpdate
         public decimal? DealerSellingPrice { get; set; }
         public decimal? AgentSellingPrice { get; set; }
         public decimal? Cost { get; set; }
-        public string? Remarks { get; set; }
+
+        public ICollection<StockInItemRemarkCreateUpdateDto>? StockInItemRemarks { get; set; }
+
         public string? ItemsIncluded { get; set; }
         public int ReceiveQuantity { get; set; }
     }
 }
-

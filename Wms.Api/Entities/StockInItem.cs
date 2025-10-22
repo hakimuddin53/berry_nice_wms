@@ -11,8 +11,29 @@ namespace Wms.Api.Entities
         [Required]
         public Guid StockInId { get; set; }
 
-        [Required]
-        public Guid ProductId { get; set; }
+    [NotMapped]
+    public Guid? ProductId { get; set; }
+
+    [Required]
+    [MaxLength(64)]
+    public string ProductCode { get; set; } = default!;
+
+    [Required]
+    public Guid CategoryId { get; set; }
+
+        public Guid? BrandId { get; set; }
+
+        public string? Model { get; set; }
+
+        public Guid? ColorId { get; set; }
+
+        public Guid? StorageId { get; set; }
+
+        public Guid? RamId { get; set; }
+
+        public Guid? ProcessorId { get; set; }
+
+        public Guid? ScreenSizeId { get; set; }
 
         [Required]
         public Guid LocationId { get; set; }
@@ -37,8 +58,6 @@ namespace Wms.Api.Entities
         [Column(TypeName = "decimal(18,4)")]
         public decimal? Cost { get; set; }
 
-        public string? Remarks { get; set; }
-
         public string? ItemsIncluded { get; set; }
 
         [Required]
@@ -48,7 +67,6 @@ namespace Wms.Api.Entities
         [ForeignKey("StockInId")]
         public StockIn? StockIn { get; set; }
 
-        [ForeignKey("ProductId")]
-        public Product? Product { get; set; }
+        public ICollection<StockInItemRemark>? StockInItemRemarks { get; set; }
     }
 }

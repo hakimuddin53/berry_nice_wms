@@ -21,8 +21,10 @@ const Root = styled.div`
 const PageWrapper = styled.div`
   width: 100vw;
   height: 100vh;
-  background: url("/static/img/backgrounds/bg_main.jpg") no-repeat;
+  background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
+    url("/static/img/backgrounds/bg_main_1.jpg") no-repeat;
   background-size: cover;
+  background-position: center;
 `;
 
 const SideBrandBox = styled(Box)`

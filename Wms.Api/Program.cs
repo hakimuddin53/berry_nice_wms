@@ -37,10 +37,9 @@ var allowedOrigins = builder.Configuration.GetSection("CorsSettings:AllowedOrigi
 
 builder.Services.AddAutoMapper(typeof(StockInProfile));
 builder.Services.AddAutoMapper(typeof(StockOutProfile));
-builder.Services.AddAutoMapper(typeof(ProductProfile));
-builder.Services.AddAutoMapper(typeof(StockReservationProfile));
-builder.Services.AddAutoMapper(typeof(StockTransferProfile));
+builder.Services.AddAutoMapper(typeof(ProductProfile)); 
 builder.Services.AddAutoMapper(typeof(GeneralProfile));
+builder.Services.AddAutoMapper(typeof(InvoiceProfile));
 
 
 builder.Services.AddAuthentication(options =>
@@ -129,8 +128,7 @@ builder.Services.AddScoped<IRunningNumberService, RunningNumberService>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped(typeof(IService<>), typeof(Service<>));
 //builder.Services.AddScoped<IProductService, ProductService>();
-
-builder.Services.AddScoped<IStockReservationService, StockReservationService>();
+ 
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -200,13 +198,6 @@ using (var scope = app.Services.CreateScope())
 
 // optional Hangfire dashboard
 app.UseHangfireDashboard("/hangfire");
-
-// schedule the expiration job daily at 2am
-RecurringJob.AddOrUpdate<IStockReservationService>(
-    "release-expired-reservations",
-    svc => svc.ReleaseExpiredReservationsAsync(),
-    "0 2 * * *"   // Cron daily at 02:00
-);
 
 
 app.UseCors("AllowReactApp"); // Apply the CORS policy

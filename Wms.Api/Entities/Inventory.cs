@@ -20,12 +20,19 @@ namespace Wms.Api.Entities
 
         public Guid CurrentLocationId { get; set; }
 
-        public Guid StockInId { get; set; }
-        public Guid StockOutId { get; set; }
-        public Guid StockTransferId { get; set; }
-        public Guid StockAdjustmentId { get; set; }
-
         public string? Remark { get; set; }
+
+    [Required]
+    public Guid StockInId { get; set; }
+
+    [Required]
+    public Guid StockOutId { get; set; }
+
+    [Required]
+    public Guid StockTransferId { get; set; }
+
+    [Required]
+    public Guid StockAdjustmentId { get; set; }
 
         [Required]
         public int QuantityIn { get; set; } // Quantity added in the transaction

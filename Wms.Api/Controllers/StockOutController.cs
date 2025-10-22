@@ -20,22 +20,20 @@ namespace Wms.Api.Controllers
     public class StockOutController : ControllerBase
     {
         private readonly IService<StockOut> _service;
-        private readonly IRunningNumberService _runningNumberService;
-        private readonly IStockReservationService _stockReservationService;
+        private readonly IRunningNumberService _runningNumberService; 
         private readonly IInventoryService _inventoryService;
         private readonly IMapper _autoMapperService;
         private readonly ApplicationDbContext _context;
 
         public StockOutController(IService<StockOut> service,
             IMapper autoMapperService, IRunningNumberService runningNumberService, IInventoryService inventoryService,
-            ApplicationDbContext context, IStockReservationService stockReservationService)
+            ApplicationDbContext context)
         {
             _service = service;
             _autoMapperService = autoMapperService;
             _runningNumberService = runningNumberService;
             _inventoryService = inventoryService;
-            _context = context;
-            _stockReservationService = stockReservationService;
+            _context = context; 
         }
 
         [HttpPost("search", Name = "SearchStockOutsAsync")]
@@ -90,6 +88,20 @@ namespace Wms.Api.Controllers
 
             stockOutCreateUpdateDto.Number = stockOutNumber;
             var stockOutDtos = _autoMapperService.Map<StockOut>(stockOutCreateUpdateDto);
+            stockOutDtos.Id = Guid.NewGuid();
+
+            if (stockOutDtos.StockOutItems != null)
+            {
+                foreach (var item in stockOutDtos.StockOutItems)
+                {
+                    if (item.Id == Guid.Empty)
+                    {
+                        item.Id = Guid.NewGuid();
+                    }
+
+                    item.StockOutId = stockOutDtos.Id;
+                }
+            }
 
             await _service.AddAsync(stockOutDtos!, false);
 
@@ -104,14 +116,14 @@ namespace Wms.Api.Controllers
                     .Select(i => i.ReservationItemId!.Value)
                     .Distinct();
 
-                foreach (var itemId in reservationItemIds)
-                {
-                    // this method should:
-                    //  • reduce ReservedQuantity on the warehouse balance
-                    //  • mark the StockReservationItem as fulfilled
-                    //  • if all items in a reservation are fulfilled, set the parent StockReservation.Status = FULFILLED
-                    await _stockReservationService.FulfillAsync(itemId);
-                }
+                // foreach (var itemId in reservationItemIds)
+                // {
+                //     // this method should:
+                //     //  • reduce ReservedQuantity on the warehouse balance
+                //     //  • mark the StockReservationItem as fulfilled
+                //     //  • if all items in a reservation are fulfilled, set the parent StockReservation.Status = FULFILLED
+                //     await _stockReservationService.FulfillAsync(itemId);
+                // }
             }
 
             return CreatedAtAction(nameof(GetById), new { id = stockOutDtos?.Id }, stockOutDtos);

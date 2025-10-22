@@ -1,450 +1,223 @@
-﻿using Microsoft.EntityFrameworkCore; 
+﻿using System.Collections.Generic;
+using System.Linq;
+using Microsoft.EntityFrameworkCore;
 using Wms.Api.Context;
 using Wms.Api.Entities;
-using Wms.Api.Model; 
+using Wms.Api.Model;
 
 namespace Wms.Api.Services
 {
-    public class InventoryService(ApplicationDbContext context) : IInventoryService
-    {
-        public async Task StockInAsync(StockIn stockIn)
-        {
-            using var transaction = await context.Database.BeginTransactionAsync();
+	public class InventoryService : IInventoryService
+	{
+		private readonly ApplicationDbContext _context;
 
-            try
-            {
-                foreach (var item in stockIn.StockInItems ?? Enumerable.Empty<StockInItem>())
-                {
-                    var inventoryBalance = await context.InventoryBalances
-                        .SingleOrDefaultAsync(ib => ib.ProductId == item.ProductId &&
-                                                    ib.WarehouseId == stockIn.WarehouseId &&
-                                                    ib.CurrentLocationId == item.LocationId);
+		public InventoryService(ApplicationDbContext context)
+		{
+			_context = context;
+		}
 
-                    if (inventoryBalance == null)
-                    {
-                        inventoryBalance = new InventoryBalance
-                        {
-                            Id = Guid.NewGuid(),
-                            ProductId = item.ProductId,
-                            WarehouseId = stockIn.WarehouseId,
-                            CurrentLocationId = item.LocationId,
-                            Quantity = 0
-                        };
-                        context.InventoryBalances.Add(inventoryBalance);
-                    }
+		public async Task StockInAsync(StockIn stockIn)
+		{
+			ArgumentNullException.ThrowIfNull(stockIn);
 
-                    var wh = await context.WarehouseInventoryBalances
-                                            .SingleOrDefaultAsync(w =>
-                                                w.ProductId == item.ProductId &&
-                                                w.WarehouseId == stockIn.WarehouseId);
+			if (stockIn.StockInItems is null || stockIn.StockInItems.Count == 0)
+			{
+				await _context.SaveChangesAsync();
+				return;
+			}
 
-                    if (wh == null)
-                    {
-                        wh = new WarehouseInventoryBalance
-                        {
-                            Id = Guid.NewGuid(),
-                            ProductId = item.ProductId,
-                            WarehouseId = stockIn.WarehouseId
-                        };
-                        context.WarehouseInventoryBalances.Add(wh);
-                    }
+			await using var transaction = await _context.Database.BeginTransactionAsync();
 
-                    // update both on-hand and cost accumulators
-                    wh.OnHandQuantity += item.ReceiveQuantity;
-                    wh.TotalQtyReceived += item.ReceiveQuantity;
-                    wh.TotalCostAccumulated += item.ReceiveQuantity * (item.Cost ?? 0);
+			try
+			{
+				var balanceCache = new Dictionary<(Guid ProductId, Guid WarehouseId, Guid LocationId), int>();
 
-                    int oldBalance = inventoryBalance.Quantity;
-                    int newBalance = oldBalance + item.ReceiveQuantity;
-                    inventoryBalance.Quantity = newBalance;
+				foreach (var item in stockIn.StockInItems)
+				{
+					if (item.ProductId is null || item.ProductId == Guid.Empty)
+					{
+						throw new InvalidOperationException("Product information is required for inventory transactions.");
+					}
 
-                    var inventoryRecord = new Inventory
-                    {
-                        Id = Guid.NewGuid(),
-                        TransactionType = TransactionTypeEnum.STOCKIN,
-                        ProductId = item.ProductId,
-                        WarehouseId = stockIn.WarehouseId,
-                        CurrentLocationId = item.LocationId,
-                        StockInId = item.StockInId,
-                        QuantityIn = item.ReceiveQuantity,
-                        UnitPrice = item.Cost ?? 0,
-                        QuantityOut = 0,
-                        OldBalance = oldBalance,
-                        NewBalance = newBalance
-                    };
+					var key = (ProductId: item.ProductId.Value, WarehouseId: stockIn.WarehouseId, LocationId: item.LocationId);
+					if (!balanceCache.TryGetValue(key, out var oldBalance))
+					{
+						oldBalance = await GetCurrentBalanceAsync(key.ProductId, key.WarehouseId, key.LocationId);
+					}
 
-                    context.Inventories.Add(inventoryRecord);
-                }
+					var newBalance = checked(oldBalance + item.ReceiveQuantity);
+					balanceCache[key] = newBalance;
 
-                await context.SaveChangesAsync();
-                await transaction.CommitAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                await transaction.RollbackAsync();
-                throw new Exception("Concurrent update detected during Stock In, please retry.");
-            }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync();
-                throw new Exception($"Stock In failed: {ex.Message}", ex);
-            }
-        }
-        public async Task CancelStockOutAsync(Guid stockOutId)
-        {
-            using var tx = await context.Database.BeginTransactionAsync();
-            try
-            {
-                var so = await context.StockOuts
-                    .Include(s => s.StockOutItems)
-                    .SingleOrDefaultAsync(s => s.Id == stockOutId);
+					var inventoryRecord = new Inventory
+					{
+						Id = Guid.NewGuid(),
+						TransactionType = TransactionTypeEnum.STOCKIN,
+						ProductId = key.ProductId,
+						WarehouseId = key.WarehouseId,
+						CurrentLocationId = key.LocationId,
+						StockInId = stockIn.Id,
+						StockOutId = Guid.Empty,
+						StockTransferId = Guid.Empty,
+						StockAdjustmentId = Guid.Empty,
+						QuantityIn = item.ReceiveQuantity,
+						QuantityOut = 0,
+						OldBalance = oldBalance,
+						NewBalance = newBalance,
+						UnitPrice = item.Cost ?? 0,
+						Remark = item.StockInItemRemarks?.FirstOrDefault()?.Remark
+					};
 
-                if (so == null)
-                    throw new KeyNotFoundException($"StockOut {stockOutId} not found.");
+					_context.Inventories.Add(inventoryRecord);
+				}
 
-                if (so.Status != StockOutStatusEnum.COMPLETED)
-                    throw new InvalidOperationException("Only COMPLETED picks can be cancelled.");
- 
+				await _context.SaveChangesAsync();
+				await transaction.CommitAsync();
+			}
+			catch
+			{
+				await transaction.RollbackAsync();
+				throw;
+			}
+		}
 
-                // 2) reverse each line’s balances
-                foreach (var item in so.StockOutItems ?? Enumerable.Empty<StockOutItem>())
-                {
-                    var inventoryBalance = await context.InventoryBalances
-                          .SingleOrDefaultAsync(ib => ib.ProductId == item.ProductId &&
-                                                      ib.WarehouseId == so.WarehouseId &&
-                                                      ib.CurrentLocationId == item.LocationId);
- 
+		public async Task StockOutAsync(StockOut stockOut)
+		{
+			ArgumentNullException.ThrowIfNull(stockOut);
 
-                    var wh = await context.WarehouseInventoryBalances
-                                            .SingleOrDefaultAsync(w =>
-                                                w.ProductId == item.ProductId &&
-                                                w.WarehouseId == so.WarehouseId);
+			if (stockOut.StockOutItems is null || stockOut.StockOutItems.Count == 0)
+			{
+				await _context.SaveChangesAsync();
+				return;
+			}
 
-                    if (wh == null || inventoryBalance == null)
-                        throw new Exception();
+			await using var transaction = await _context.Database.BeginTransactionAsync();
 
-                    wh.OnHandQuantity += item.Quantity; 
+			try
+			{
+				var balanceCache = new Dictionary<(Guid ProductId, Guid WarehouseId, Guid LocationId), int>();
 
-                    int oldBalance = inventoryBalance.Quantity;
-                    int newBalance = oldBalance + item.Quantity;
-                    inventoryBalance.Quantity = newBalance;
+				foreach (var item in stockOut.StockOutItems)
+				{
+					var key = (ProductId: item.ProductId, WarehouseId: stockOut.WarehouseId, LocationId: item.LocationId);
+					if (!balanceCache.TryGetValue(key, out var oldBalance))
+					{
+						oldBalance = await GetCurrentBalanceAsync(key.ProductId, key.WarehouseId, key.LocationId);
+					}
 
-                    var inventoryRecord = new Inventory
-                    {
-                        Id = Guid.NewGuid(),
-                        TransactionType = TransactionTypeEnum.STOCKOUTCANCEL,
-                        ProductId = item.ProductId,
-                        WarehouseId = so.WarehouseId,
-                        CurrentLocationId = item.LocationId,
-                        StockOutId = item.StockOutId,
-                        QuantityIn = item.Quantity, 
-                        QuantityOut = 0,
-                        OldBalance = oldBalance,
-                        NewBalance = newBalance
-                    };
+					if (oldBalance < item.Quantity)
+					{
+						throw new InvalidOperationException(
+							$"Insufficient stock for product {item.ProductId}. Required: {item.Quantity}, Available: {oldBalance}.");
+					}
 
-                    context.Inventories.Add(inventoryRecord);
-                }
+					var newBalance = oldBalance - item.Quantity;
+					balanceCache[key] = newBalance;
 
-                // 3) mark cancelled
-                so.Status = StockOutStatusEnum.CANCELLED;
+					var inventoryRecord = new Inventory
+					{
+						Id = Guid.NewGuid(),
+						TransactionType = TransactionTypeEnum.STOCKOUT,
+						ProductId = key.ProductId,
+						WarehouseId = key.WarehouseId,
+						CurrentLocationId = key.LocationId,
+						StockInId = Guid.Empty,
+						StockOutId = stockOut.Id,
+						StockTransferId = Guid.Empty,
+						StockAdjustmentId = Guid.Empty,
+						QuantityIn = 0,
+						QuantityOut = item.Quantity,
+						OldBalance = oldBalance,
+						NewBalance = newBalance,
+						UnitPrice = 0,
+						Remark = null
+					};
 
-                await context.SaveChangesAsync();
-                await tx.CommitAsync();
-            }
-            catch
-            {
-                await tx.RollbackAsync();
-                throw;
-            }
-        }
-        public async Task StockOutAsync(StockOut stockOut)
-        {
-            using var transaction = await context.Database.BeginTransactionAsync();
+					_context.Inventories.Add(inventoryRecord);
+				}
 
-            try
-            {
-                foreach (var item in stockOut.StockOutItems ?? Enumerable.Empty<StockOutItem>())
-                {
-                    var inventoryBalance = await context.InventoryBalances
-                        .SingleOrDefaultAsync(ib => ib.ProductId == item.ProductId &&
-                                                    ib.WarehouseId == stockOut.WarehouseId &&
-                                                    ib.CurrentLocationId == item.LocationId);
+				await _context.SaveChangesAsync();
+				await transaction.CommitAsync();
+			}
+			catch
+			{
+				await transaction.RollbackAsync();
+				throw;
+			}
+		}
 
-                    if (inventoryBalance == null || inventoryBalance.Quantity < item.Quantity)
-                    {
-                        throw new InvalidOperationException(
-                            $"Insufficient stock for ProductId {item.ProductId}. Required: {item.Quantity}, Available: {inventoryBalance?.Quantity ?? 0}.");
-                    }
+		public async Task CancelStockOutAsync(Guid stockOutId)
+		{
+			await using var transaction = await _context.Database.BeginTransactionAsync();
 
-                    int oldBalance = inventoryBalance.Quantity;
-                    int newBalance = oldBalance - item.Quantity;
-                    inventoryBalance.Quantity = newBalance;
+			try
+			{
+				var stockOut = await _context.StockOuts
+					.Include(s => s.StockOutItems)
+					.SingleOrDefaultAsync(s => s.Id == stockOutId);
 
+				if (stockOut is null)
+				{
+					throw new KeyNotFoundException($"Stock out {stockOutId} not found.");
+				}
 
-                    // warehouse-level
-                    var wh = await context.WarehouseInventoryBalances
-                        .SingleOrDefaultAsync(w =>
-                            w.ProductId == item.ProductId &&
-                            w.WarehouseId == stockOut.WarehouseId);
+				var balanceCache = new Dictionary<(Guid ProductId, Guid WarehouseId, Guid LocationId), int>();
 
-                    if (wh == null)
-                        throw new InvalidOperationException("Warehouse balance missing—cannot stock out.");
+				foreach (var item in stockOut.StockOutItems ?? Enumerable.Empty<StockOutItem>())
+				{
+					var key = (ProductId: item.ProductId, WarehouseId: stockOut.WarehouseId, LocationId: item.LocationId);
+					if (!balanceCache.TryGetValue(key, out var oldBalance))
+					{
+						oldBalance = await GetCurrentBalanceAsync(key.ProductId, key.WarehouseId, key.LocationId);
+					}
 
-                    // just reduce on-hand; receipts stay untouched
-                    wh.OnHandQuantity -= item.Quantity;
+					var newBalance = checked(oldBalance + item.Quantity);
+					balanceCache[key] = newBalance;
 
-                    var inventoryRecord = new Inventory
-                    {
-                        Id = Guid.NewGuid(),
-                        TransactionType = TransactionTypeEnum.STOCKOUT,
-                        ProductId = item.ProductId,
-                        WarehouseId = stockOut.WarehouseId,
-                        CurrentLocationId = item.LocationId,
-                        StockOutId = stockOut.Id,
-                        QuantityIn = 0,
-                        QuantityOut = item.Quantity,
-                        OldBalance = oldBalance,
-                        NewBalance = newBalance
-                    };
+					var inventoryRecord = new Inventory
+					{
+						Id = Guid.NewGuid(),
+						TransactionType = TransactionTypeEnum.STOCKOUTCANCEL,
+						ProductId = key.ProductId,
+						WarehouseId = key.WarehouseId,
+						CurrentLocationId = key.LocationId,
+						StockInId = Guid.Empty,
+						StockOutId = stockOut.Id,
+						StockTransferId = Guid.Empty,
+						StockAdjustmentId = Guid.Empty,
+						QuantityIn = item.Quantity,
+						QuantityOut = 0,
+						OldBalance = oldBalance,
+						NewBalance = newBalance,
+						UnitPrice = 0,
+						Remark = "Cancellation adjustment"
+					};
 
-                    context.Inventories.Add(inventoryRecord);
-                }
+					_context.Inventories.Add(inventoryRecord);
+				}
 
-                await context.SaveChangesAsync();
-                await transaction.CommitAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                await transaction.RollbackAsync();
-                throw new Exception("Concurrent update detected during Stock Out, please retry.");
-            }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync();
-                throw new Exception($"Stock Out failed: {ex.Message}", ex);
-            }
-        }
-        public async Task StockAdjustmentAsync(StockAdjustment stockAdjustment)
-        {
-            using var transaction = await context.Database.BeginTransactionAsync();
+				stockOut.Status = StockOutStatusEnum.CANCELLED;
 
-            try
-            {
-                foreach (var item in stockAdjustment.StockAdjustmentItems ?? Enumerable.Empty<StockAdjustmentItem>())
-                {
-                    var inventoryBalance = await context.InventoryBalances
-                        .SingleOrDefaultAsync(ib => ib.ProductId == item.ProductId &&
-                                                    ib.WarehouseId == stockAdjustment.WarehouseId &&
-                                                    ib.CurrentLocationId == item.LocationId);
+				await _context.SaveChangesAsync();
+				await transaction.CommitAsync();
+			}
+			catch
+			{
+				await transaction.RollbackAsync();
+				throw;
+			}
+		}
 
-                    int oldBalance = inventoryBalance?.Quantity ?? 0;
-                    int newBalance = item.Quantity;
+		private async Task<int> GetCurrentBalanceAsync(Guid productId, Guid warehouseId, Guid locationId)
+		{
+			var latestRecord = await _context.Inventories
+				.Where(i => i.ProductId == productId &&
+							i.WarehouseId == warehouseId &&
+							i.CurrentLocationId == locationId)
+				.OrderByDescending(i => i.CreatedAt)
+				.ThenByDescending(i => i.Id)
+				.FirstOrDefaultAsync();
 
-                    if (newBalance < 0)
-                        throw new InvalidOperationException($"Invalid new balance for ProductId {item.ProductId}. Quantity cannot be negative.");
-
-                    if (inventoryBalance == null)
-                    {
-                        inventoryBalance = new InventoryBalance
-                        {
-                            Id = Guid.NewGuid(),
-                            ProductId = item.ProductId,
-                            WarehouseId = stockAdjustment.WarehouseId,
-                            CurrentLocationId = item.LocationId,
-                            Quantity = newBalance
-                        };
-                        context.InventoryBalances.Add(inventoryBalance);
-                    }
-                    else
-                    {
-                        inventoryBalance.Quantity = newBalance;
-                    }
-
-                    int quantityDifference = newBalance - oldBalance;
-                    int quantityIn = quantityDifference > 0 ? quantityDifference : 0;
-                    int quantityOut = quantityDifference < 0 ? -quantityDifference : 0;
-
-
-                    // warehouse-level
-                    var wh = await context.WarehouseInventoryBalances
-                        .SingleOrDefaultAsync(w =>
-                            w.ProductId == item.ProductId &&
-                            w.WarehouseId == stockAdjustment.WarehouseId);
-                     
-                    if (wh == null)
-                    {
-                        wh = new WarehouseInventoryBalance
-                        {
-                            Id = Guid.NewGuid(),
-                            ProductId = item.ProductId,
-                            WarehouseId = stockAdjustment.WarehouseId, 
-                            OnHandQuantity = newBalance
-                        };
-                        context.WarehouseInventoryBalances.Add(wh);
-                    }
-                    else
-                    {
-                        wh.OnHandQuantity = newBalance;
-                    }
-
-                    var inventoryRecord = new Inventory
-                    {
-                        Id = Guid.NewGuid(),
-                        TransactionType = TransactionTypeEnum.STOCKADJUSTMENT,
-                        ProductId = item.ProductId,
-                        WarehouseId = stockAdjustment.WarehouseId,
-                        CurrentLocationId = item.LocationId,
-                        StockAdjustmentId = stockAdjustment.Id,
-                        QuantityIn = quantityIn,
-                        QuantityOut = quantityOut,
-                        OldBalance = oldBalance,
-                        NewBalance = newBalance
-                    };
-
-                    context.Inventories.Add(inventoryRecord);
-                }
-
-                await context.SaveChangesAsync();
-                await transaction.CommitAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                await transaction.RollbackAsync();
-                throw new Exception("Concurrent update detected during Stock Adjustment, please retry.");
-            }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync();
-                throw new Exception($"Stock Adjustment failed: {ex.Message}", ex);
-            }
-        }
-        public async Task StockTransferAsync(StockTransfer stockTransfer)
-        {
-            if (stockTransfer == null)
-                throw new ArgumentNullException(nameof(stockTransfer));
-
-            if (stockTransfer.StockTransferItems == null || !stockTransfer.StockTransferItems.Any())
-                throw new ArgumentException("StockTransferItems cannot be null or empty.", nameof(stockTransfer));
-
-            using var transaction = await context.Database.BeginTransactionAsync();
-
-            try
-            {
-                foreach (var item in stockTransfer.StockTransferItems)
-                {
-                    var sourceBalance = await context.InventoryBalances
-                        .SingleOrDefaultAsync(ib => ib.ProductId == item.ProductId &&
-                                                    ib.WarehouseId == item.FromWarehouseId &&
-                                                    ib.CurrentLocationId == item.FromLocationId);
-
-                    if (sourceBalance == null || sourceBalance.Quantity < item.QuantityTransferred)
-                        throw new InvalidOperationException($"Insufficient stock for product {item.ProductId} in source warehouse/location.");
-
-                    var destinationBalance = await context.InventoryBalances
-                        .SingleOrDefaultAsync(ib => ib.ProductId == item.ProductId &&
-                                                    ib.WarehouseId == item.ToWarehouseId &&
-                                                    ib.CurrentLocationId == item.ToLocationId);
-
-                    int sourceOldBalance = sourceBalance.Quantity;
-                    int sourceNewBalance = sourceOldBalance - item.QuantityTransferred;
-                    sourceBalance.Quantity = sourceNewBalance;
-
-                    int destinationOldBalance = destinationBalance?.Quantity ?? 0;
-                    int destinationNewBalance = destinationOldBalance + item.QuantityTransferred;
-
-                    if (destinationBalance == null)
-                    {
-                        destinationBalance = new InventoryBalance
-                        {
-                            Id = Guid.NewGuid(),
-                            ProductId = item.ProductId,
-                            WarehouseId = item.ToWarehouseId,
-                            CurrentLocationId = item.ToLocationId,
-                            Quantity = destinationNewBalance
-                        };
-                        context.InventoryBalances.Add(destinationBalance);
-                    }
-                    else
-                    {
-                        destinationBalance.Quantity = destinationNewBalance;
-                    }
-
-                    var stockTransferId = stockTransfer.Id;
-
-                    var sourceTransaction = new Inventory
-                    {
-                        Id = Guid.NewGuid(),
-                        TransactionType = TransactionTypeEnum.STOCKTRANSFEROUT,
-                        ProductId = item.ProductId,
-                        WarehouseId = item.FromWarehouseId,
-                        CurrentLocationId = item.FromLocationId,
-                        StockTransferId = stockTransferId,
-                        QuantityIn = 0,
-                        QuantityOut = item.QuantityTransferred,
-                        OldBalance = sourceOldBalance,
-                        NewBalance = sourceNewBalance,
-                        CreatedAt = DateTime.UtcNow
-                    };
-
-                    var destinationTransaction = new Inventory
-                    {
-                        Id = Guid.NewGuid(),
-                        TransactionType = TransactionTypeEnum.STOCKTRANSFERIN,
-                        ProductId = item.ProductId,
-                        WarehouseId = item.ToWarehouseId,
-                        CurrentLocationId = item.ToLocationId,
-                        StockTransferId = stockTransferId,
-                        QuantityIn = item.QuantityTransferred,
-                        QuantityOut = 0,
-                        OldBalance = destinationOldBalance,
-                        NewBalance = destinationNewBalance,
-                        CreatedAt = DateTime.UtcNow
-                    };
-
-                    context.Inventories.Add(sourceTransaction);
-                    context.Inventories.Add(destinationTransaction);
-
-                    // warehouse-level source
-                    var srcWh = await context.WarehouseInventoryBalances
-                        .SingleOrDefaultAsync(w =>
-                            w.ProductId == item.ProductId &&
-                            w.WarehouseId == item.FromWarehouseId);
-                    if (srcWh == null)
-                        throw new InvalidOperationException("Source warehouse balance missing.");
-                    srcWh.OnHandQuantity -= item.QuantityTransferred;
-
-                    // warehouse-level destination
-                    var dstWh = await context.WarehouseInventoryBalances
-                        .SingleOrDefaultAsync(w =>
-                            w.ProductId == item.ProductId &&
-                            w.WarehouseId == item.ToWarehouseId);
-                    if (dstWh == null)
-                    {
-                        dstWh = new WarehouseInventoryBalance
-                        {
-                            Id = Guid.NewGuid(),
-                            ProductId = item.ProductId,
-                            WarehouseId = item.ToWarehouseId
-                        };
-                        context.WarehouseInventoryBalances.Add(dstWh);
-                    }
-                    dstWh.OnHandQuantity += item.QuantityTransferred;
-                }
-
-                await context.SaveChangesAsync();
-                await transaction.CommitAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                await transaction.RollbackAsync();
-                throw new Exception("Concurrent update detected during Stock Transfer, please retry.");
-            }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync();
-                throw new Exception($"Stock Transfer failed: {ex.Message}", ex);
-            }
-        }
-    }
+			return latestRecord?.NewBalance ?? 0;
+		}
+	}
 }
