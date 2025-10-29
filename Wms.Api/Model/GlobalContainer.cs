@@ -83,5 +83,6 @@
         Processor = 14,
         Brand = 15,
         Model = 16,
+        Warehouse = 17,
     }
 } 

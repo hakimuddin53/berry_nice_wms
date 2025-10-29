@@ -21,7 +21,6 @@ import { EMPTY_GUID, guid } from "types/guid";
 import {
   formikObjectHasHeadTouchedErrors,
   formikObjectHasTouchedErrors,
-  getFormikArrayElementErrors,
 } from "utils/formikHelpers";
 import { useStockInItemTable } from "../datatables/useStockInItemTable";
 import StockInHeadCreateEdit from "./components/StockInHeadCreateEdit";
@@ -33,7 +32,6 @@ import {
 } from "./yup/stockInCreateEditSchema";
 
 const createDefaultItem = (): YupStockInItemCreateEdit => ({
-  productId: EMPTY_GUID as guid,
   productCode: "",
   categoryId: EMPTY_GUID as guid,
   brandId: undefined,
@@ -44,21 +42,44 @@ const createDefaultItem = (): YupStockInItemCreateEdit => ({
   processorId: undefined,
   screenSizeId: undefined,
   locationId: EMPTY_GUID as guid,
+  locationName: "",
   primarySerialNumber: "",
   manufactureSerialNumber: "",
   region: "",
-  condition: "",
+  newOrUsed: "",
   retailSellingPrice: undefined,
   dealerSellingPrice: undefined,
   agentSellingPrice: undefined,
   cost: undefined,
   stockInItemRemarks: [],
-  itemsIncluded: "",
   receiveQuantity: 1,
+  productName: "",
 });
 
+const buildStockInPayload = (values: YupStockInCreateEdit) => {
+  const stockInItems = values.stockInItems.map((item) => {
+    const sanitized: any = {
+      ...item,
+      stockInItemRemarks: (item.stockInItemRemarks ?? []).map((remark) => ({
+        ...remark,
+      })),
+    };
+
+    delete sanitized.key;
+    delete sanitized.locationName;
+    delete sanitized.productName;
+
+    return sanitized;
+  });
+
+  return {
+    ...values,
+    stockInItems,
+  };
+};
+
 const StockInCreateEditPage: React.FC = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation("common");
   const { id } = useParams();
   const [tab, setTab] = useState(0);
 
@@ -70,7 +91,6 @@ const StockInCreateEditPage: React.FC = () => {
     number: "",
     sellerInfo: "",
     purchaser: "",
-    location: "",
     dateOfPurchase: new Date().toISOString().split("T")[0],
     warehouseId: EMPTY_GUID as guid,
     stockInItems: [],
@@ -102,10 +122,11 @@ const StockInCreateEditPage: React.FC = () => {
     validationSchema: stockInCreateEditSchema,
     onSubmit: (values, { resetForm }) => {
       setPageBlocker(true);
+      const payload = buildStockInPayload(values);
 
       if (!id) {
         stockInService
-          .createStockIn(values)
+          .createStockIn(payload)
           .then((result) => {
             setPageBlocker(false);
             resetForm({ values });
@@ -124,7 +145,7 @@ const StockInCreateEditPage: React.FC = () => {
           });
       } else {
         stockInService
-          .updateStockIn(id as guid, values as any)
+          .updateStockIn(id as guid, payload as any)
           .then(() => {
             setPageBlocker(false);
             resetForm({ values });
@@ -167,6 +188,8 @@ const StockInCreateEditPage: React.FC = () => {
       return {
         ...rest,
         key: index,
+        locationName: rest.locationName ?? "",
+        productName: rest.productName ?? "",
         stockInItemRemarks,
       };
     });
@@ -218,15 +241,14 @@ const StockInCreateEditPage: React.FC = () => {
     selectionMode: "single",
   });
 
-  const handleBlur = (...args: any) => {
+  useEffect(() => {
     updateStockInItemsTableControls({
       data: formik.values.stockInItems.map((a, b) => ({
         ...a,
         key: b,
       })),
     });
-    formik.handleBlur.apply(null, args);
-  };
+  }, [formik.values.stockInItems, updateStockInItemsTableControls]);
 
   const {
     addHandler: addStockInItemHandler,

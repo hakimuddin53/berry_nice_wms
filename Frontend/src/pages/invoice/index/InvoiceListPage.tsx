@@ -75,4 +75,3 @@ function InvoiceListPage() {
 }
 
 export default InvoiceListPage;
-

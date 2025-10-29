@@ -6,17 +6,16 @@ import {
   PbTabs,
 } from "components/platbricks/shared";
 import FormikErrorMessage from "components/platbricks/shared/ErrorMessage";
+import LookupAutocomplete from "components/platbricks/shared/LookupAutocomplete";
 import { NavBlocker } from "components/platbricks/shared/NavBlocker";
 import Page from "components/platbricks/shared/Page";
 import { PbCard } from "components/platbricks/shared/PbCard";
-import SelectAsync2 from "components/platbricks/shared/SelectAsync2";
 import { FormikProvider, setNestedObjectValues, useFormik } from "formik";
 import { LookupGroupKey } from "interfaces/v12/lookup/lookup";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCustomerService } from "services/CustomerService";
-import { useLookupService } from "services/LookupService";
 import { useNotificationService } from "services/NotificationService";
 import { guid } from "types/guid";
 import { isRequiredField } from "utils/formikHelpers";
@@ -31,8 +30,6 @@ const CustomerCreateEditPage: React.FC = () => {
   const [tab, setTab] = useState(0);
 
   const CustomerService = useCustomerService();
-  const LookupService = useLookupService();
-
   const notificationService = useNotificationService();
   const navigate = useNavigate();
 
@@ -316,34 +313,17 @@ const CustomerCreateEditPage: React.FC = () => {
                       "customerType"
                     ),
                     value: (
-                      <SelectAsync2
+                      <LookupAutocomplete
+                        groupKey={LookupGroupKey.CustomerType}
                         name="customerType"
-                        ids={useMemo(
-                          () =>
-                            formik.values.customerType
-                              ? [formik.values.customerType]
-                              : [],
-                          [formik.values.customerType]
-                        )}
-                        onSelectionChange={async (newOption) => {
-                          formik.setFieldValue(
-                            "customerType",
-                            newOption?.value || ""
-                          );
-                        }}
-                        asyncFunc={(
-                          input: string,
-                          page: number,
-                          pageSize: number,
-                          ids?: string[]
-                        ) =>
-                          LookupService.getSelectOptions(
-                            LookupGroupKey.CustomerType,
-                            input,
-                            page,
-                            pageSize,
-                            ids
-                          )
+                        value={formik.values.customerType}
+                        onChange={(newValue) =>
+                          formik.setFieldValue("customerType", newValue || "")
+                        }
+                        onBlur={() => formik.setFieldTouched("customerType")}
+                        error={
+                          formik.touched.customerType &&
+                          Boolean(formik.errors.customerType)
                         }
                         helperText={
                           <FormikErrorMessage

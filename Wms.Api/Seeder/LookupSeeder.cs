@@ -85,6 +85,13 @@ namespace Wms.Api.Data.Seeding
                 L(LookupGroupKey.Location,"CLAIM","CLAIM",9,               "{\"isSellable\":false}"),
             });
 
+            // --- Warehouse
+            list.AddRange(new[]
+            {
+                L(LookupGroupKey.Warehouse,"BERRY_NICE_LSH33","BerryNice LSH33",1),
+                L(LookupGroupKey.Warehouse,"BERRY_NICE_SRI_RAMPAI","BerryNice Sri Rampai",2),
+            });
+
             // --- Region / Condition
             list.Add(L(LookupGroupKey.Region, "MY/A", "MY/A", 1));
             list.Add(L(LookupGroupKey.NewOrUsed, "NEW", "NEW", 1));

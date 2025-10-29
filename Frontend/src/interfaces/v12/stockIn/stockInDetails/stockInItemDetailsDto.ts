@@ -4,7 +4,6 @@ import { StockInItemRemarkDetailsDto } from "./stockInItemRemarkDetailsDto";
 export interface StockInItemDetailsDto {
   id: guid;
   stockInId: guid;
-  productId?: guid;
   productCode: string;
   categoryId: guid;
   brandId?: guid;
@@ -18,13 +17,12 @@ export interface StockInItemDetailsDto {
   primarySerialNumber?: string;
   manufactureSerialNumber?: string;
   region?: string;
-  condition?: string;
+  newOrUsed?: string;
   retailSellingPrice?: number;
   dealerSellingPrice?: number;
   agentSellingPrice?: number;
   cost?: number;
   stockInItemRemarks?: StockInItemRemarkDetailsDto[];
-  itemsIncluded?: string;
   receiveQuantity: number;
 
   // Display fields

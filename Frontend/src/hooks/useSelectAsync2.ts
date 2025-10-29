@@ -23,9 +23,8 @@ const useSelectAsync2 = (
   >([]);
 
   const [loading, setLoading] = React.useState(false);
-  const [optionsIfEmpty, setOptionsIfEmpty] = React.useState<
-    SelectAsyncOption[]
-  >([]);
+  const [optionsIfEmpty, setOptionsIfEmpty] =
+    React.useState<SelectAsyncOption[]>();
 
   const loadSuggestionsIfEmpty =
     settings && settings.loadSuggestionsIfEmpty !== undefined
@@ -43,6 +42,13 @@ const useSelectAsync2 = (
       let newOptions = await asyncFunc(label, 1, pageSize, ids);
       if (newOptions) {
         setOptions([...newOptions]);
+        if (
+          loadSuggestionsIfEmpty &&
+          label === "" &&
+          (!ids || ids.length === 0)
+        ) {
+          setOptionsIfEmpty([...newOptions]);
+        }
       }
       if (ids && ids.length > 0) {
         setInitialSelection([...newOptions]);
@@ -78,7 +84,7 @@ const useSelectAsync2 = (
   /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
     if (searchValue === "") {
-      if (optionsIfEmpty) {
+      if (optionsIfEmpty && optionsIfEmpty.length > 0) {
         setOptions(optionsIfEmpty);
         return undefined;
       }

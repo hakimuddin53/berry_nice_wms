@@ -15,7 +15,7 @@ import { useParams } from "react-router-dom";
 import { useStockInService } from "services/StockInService";
 
 function StockInDetailsPage() {
-  const { t } = useTranslation();
+  const { t } = useTranslation("common");
   const { id } = useParams();
 
   const stockInService = useStockInService();
@@ -68,8 +68,8 @@ function StockInDetailsPage() {
                 <KeyValuePair label={t("purchaser")}>
                   {stockIn.purchaser}
                 </KeyValuePair>
-                <KeyValuePair label={t("location")}>
-                  {stockIn.location}
+                <KeyValuePair label={t("warehouse")}>
+                  {stockIn.warehouseLabel || "-"}
                 </KeyValuePair>
                 <KeyValuePair label={t("date-of-purchase")}>
                   {new Date(stockIn.dateOfPurchase).toLocaleDateString()}

@@ -32,14 +32,54 @@ namespace Wms.Api.Services
 			{
 				var balanceCache = new Dictionary<(Guid ProductId, Guid WarehouseId, Guid LocationId), int>();
 
+                var productCodeLookup = stockIn.StockInItems
+                    .Select(i => i.ProductCode?.Trim())
+                    .Where(code => !string.IsNullOrWhiteSpace(code))
+                    .Distinct(System.StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+                var productCodeSet = new HashSet<string>(productCodeLookup, System.StringComparer.OrdinalIgnoreCase);
+
+                if (productCodeLookup.Count == 0)
+                {
+                    throw new InvalidOperationException("Each stock-in item must include a product code.");
+                }
+
+                var productIdsByCode = await _context.Products
+                    .Where(p => productCodeLookup.Contains(p.ProductCode))
+                    .Select(p => new { p.ProductCode, p.ProductId })
+                    .ToDictionaryAsync(
+                        p => p.ProductCode,
+                        p => p.ProductId,
+                        System.StringComparer.OrdinalIgnoreCase);
+
+                var newProducts = _context.ChangeTracker
+                    .Entries<Product>()
+                    .Where(e => e.State == EntityState.Added && e.Entity.ProductCode != null)
+                    .Select(e => e.Entity)
+                    .Where(p => productCodeSet.Contains(p.ProductCode))
+                    .ToList();
+
+                foreach (var product in newProducts)
+                {
+                    productIdsByCode[product.ProductCode] = product.ProductId;
+                }
+
 				foreach (var item in stockIn.StockInItems)
 				{
-					if (item.ProductId is null || item.ProductId == Guid.Empty)
-					{
-						throw new InvalidOperationException("Product information is required for inventory transactions.");
-					}
+                    if (string.IsNullOrWhiteSpace(item.ProductCode))
+                    {
+                        throw new InvalidOperationException("Product code is required for inventory transactions.");
+                    }
 
-					var key = (ProductId: item.ProductId.Value, WarehouseId: stockIn.WarehouseId, LocationId: item.LocationId);
+                    var normalizedCode = item.ProductCode.Trim();
+
+                    if (!productIdsByCode.TryGetValue(normalizedCode, out var productId))
+                    {
+                        throw new InvalidOperationException($"Product code '{item.ProductCode}' does not exist.");
+                    }
+
+					var key = (ProductId: productId, WarehouseId: stockIn.WarehouseId, LocationId: item.LocationId);
 					if (!balanceCache.TryGetValue(key, out var oldBalance))
 					{
 						oldBalance = await GetCurrentBalanceAsync(key.ProductId, key.WarehouseId, key.LocationId);

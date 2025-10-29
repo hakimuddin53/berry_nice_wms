@@ -137,6 +137,8 @@ const UserCreateEdit = (props: {
           value: (
             <SelectAsync2
               name="userRoleId"
+              readOnly
+              suggestionsIfEmpty
               ids={useMemo(
                 () =>
                   formik.values.userRoleId ? [formik.values.userRoleId] : [],

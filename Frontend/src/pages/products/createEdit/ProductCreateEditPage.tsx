@@ -6,26 +6,25 @@ import {
   PbTabs,
 } from "components/platbricks/shared";
 import FormikErrorMessage from "components/platbricks/shared/ErrorMessage";
+import LookupAutocomplete from "components/platbricks/shared/LookupAutocomplete";
 import { NavBlocker } from "components/platbricks/shared/NavBlocker";
 import Page from "components/platbricks/shared/Page";
 import { PbCard } from "components/platbricks/shared/PbCard";
-import SelectAsync2 from "components/platbricks/shared/SelectAsync2";
 import { FormikProvider, setNestedObjectValues, useFormik } from "formik";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 
+import { LookupGroupKey } from "interfaces/v12/lookup/lookup";
+import { ProductCreateUpdateDto } from "interfaces/v12/product/productCreateUpdate/productCreateUpdateDto";
 import { useNotificationService } from "services/NotificationService";
 import { useProductService } from "services/ProductService";
-import { useLookupService } from "services/LookupService";
 import { EMPTY_GUID, guid } from "types/guid";
 import { isRequiredField } from "utils/formikHelpers";
 import {
   productCreateEditShema,
   YupProductCreateEdit,
 } from "./yup/productCreateEditShema";
-import { ProductCreateUpdateDto } from "interfaces/v12/product/productCreateUpdate/productCreateUpdateDto";
-import { LookupGroupKey } from "interfaces/v12/lookup/lookup";
 
 const ProductCreateEditPage: React.FC = () => {
   const { t } = useTranslation();
@@ -33,8 +32,6 @@ const ProductCreateEditPage: React.FC = () => {
   const [tab, setTab] = useState(0);
 
   const ProductService = useProductService();
-  const LookupService = useLookupService();
-
   const notificationService = useNotificationService();
   const navigate = useNavigate();
 
@@ -262,34 +259,17 @@ const ProductCreateEditPage: React.FC = () => {
                       "categoryId"
                     ),
                     value: (
-                      <SelectAsync2
+                      <LookupAutocomplete
+                        groupKey={LookupGroupKey.ProductCategory}
                         name="categoryId"
-                        ids={useMemo(
-                          () =>
-                            formik.values.categoryId
-                              ? [formik.values.categoryId]
-                              : [],
-                          [formik.values.categoryId]
-                        )}
-                        onSelectionChange={async (newOption) => {
-                          formik.setFieldValue(
-                            "categoryId",
-                            newOption?.value || null
-                          );
-                        }}
-                        asyncFunc={(
-                          input: string,
-                          page: number,
-                          pageSize: number,
-                          ids?: guid[]
-                        ) =>
-                          LookupService.getSelectOptions(
-                            LookupGroupKey.ProductCategory,
-                            input,
-                            page,
-                            pageSize,
-                            ids
-                          )
+                        value={formik.values.categoryId ?? ""}
+                        onChange={(newValue) =>
+                          formik.setFieldValue("categoryId", newValue || null)
+                        }
+                        onBlur={() => formik.setFieldTouched("categoryId")}
+                        error={
+                          formik.touched.categoryId &&
+                          Boolean(formik.errors.categoryId)
                         }
                         helperText={
                           <FormikErrorMessage
@@ -308,34 +288,17 @@ const ProductCreateEditPage: React.FC = () => {
                       "brandId"
                     ),
                     value: (
-                      <SelectAsync2
+                      <LookupAutocomplete
+                        groupKey={LookupGroupKey.Brand}
                         name="brandId"
-                        ids={useMemo(
-                          () =>
-                            formik.values.brandId
-                              ? [formik.values.brandId]
-                              : [],
-                          [formik.values.brandId]
-                        )}
-                        onSelectionChange={async (newOption) => {
-                          formik.setFieldValue(
-                            "brandId",
-                            newOption?.value || null
-                          );
-                        }}
-                        asyncFunc={(
-                          input: string,
-                          page: number,
-                          pageSize: number,
-                          ids?: guid[]
-                        ) =>
-                          LookupService.getSelectOptions(
-                            LookupGroupKey.Brand,
-                            input,
-                            page,
-                            pageSize,
-                            ids
-                          )
+                        value={formik.values.brandId ?? ""}
+                        onChange={(newValue) =>
+                          formik.setFieldValue("brandId", newValue || null)
+                        }
+                        onBlur={() => formik.setFieldTouched("brandId")}
+                        error={
+                          formik.touched.brandId &&
+                          Boolean(formik.errors.brandId)
                         }
                         helperText={
                           <FormikErrorMessage
@@ -374,34 +337,17 @@ const ProductCreateEditPage: React.FC = () => {
                       "colorId"
                     ),
                     value: (
-                      <SelectAsync2
+                      <LookupAutocomplete
+                        groupKey={LookupGroupKey.Color}
                         name="colorId"
-                        ids={useMemo(
-                          () =>
-                            formik.values.colorId
-                              ? [formik.values.colorId]
-                              : [],
-                          [formik.values.colorId]
-                        )}
-                        onSelectionChange={async (newOption) => {
-                          formik.setFieldValue(
-                            "colorId",
-                            newOption?.value || null
-                          );
-                        }}
-                        asyncFunc={(
-                          input: string,
-                          page: number,
-                          pageSize: number,
-                          ids?: guid[]
-                        ) =>
-                          LookupService.getSelectOptions(
-                            LookupGroupKey.Color,
-                            input,
-                            page,
-                            pageSize,
-                            ids
-                          )
+                        value={formik.values.colorId ?? ""}
+                        onChange={(newValue) =>
+                          formik.setFieldValue("colorId", newValue || null)
+                        }
+                        onBlur={() => formik.setFieldTouched("colorId")}
+                        error={
+                          formik.touched.colorId &&
+                          Boolean(formik.errors.colorId)
                         }
                         helperText={
                           <FormikErrorMessage
@@ -420,34 +366,17 @@ const ProductCreateEditPage: React.FC = () => {
                       "storageId"
                     ),
                     value: (
-                      <SelectAsync2
+                      <LookupAutocomplete
+                        groupKey={LookupGroupKey.Storage}
                         name="storageId"
-                        ids={useMemo(
-                          () =>
-                            formik.values.storageId
-                              ? [formik.values.storageId]
-                              : [],
-                          [formik.values.storageId]
-                        )}
-                        onSelectionChange={async (newOption) => {
-                          formik.setFieldValue(
-                            "storageId",
-                            newOption?.value || null
-                          );
-                        }}
-                        asyncFunc={(
-                          input: string,
-                          page: number,
-                          pageSize: number,
-                          ids?: guid[]
-                        ) =>
-                          LookupService.getSelectOptions(
-                            LookupGroupKey.Storage,
-                            input,
-                            page,
-                            pageSize,
-                            ids
-                          )
+                        value={formik.values.storageId ?? ""}
+                        onChange={(newValue) =>
+                          formik.setFieldValue("storageId", newValue || null)
+                        }
+                        onBlur={() => formik.setFieldTouched("storageId")}
+                        error={
+                          formik.touched.storageId &&
+                          Boolean(formik.errors.storageId)
                         }
                         helperText={
                           <FormikErrorMessage
@@ -463,32 +392,16 @@ const ProductCreateEditPage: React.FC = () => {
                     label: t("ram"),
                     required: isRequiredField(productCreateEditShema, "ramId"),
                     value: (
-                      <SelectAsync2
+                      <LookupAutocomplete
+                        groupKey={LookupGroupKey.Ram}
                         name="ramId"
-                        ids={useMemo(
-                          () =>
-                            formik.values.ramId ? [formik.values.ramId] : [],
-                          [formik.values.ramId]
-                        )}
-                        onSelectionChange={async (newOption) => {
-                          formik.setFieldValue(
-                            "ramId",
-                            newOption?.value || null
-                          );
-                        }}
-                        asyncFunc={(
-                          input: string,
-                          page: number,
-                          pageSize: number,
-                          ids?: guid[]
-                        ) =>
-                          LookupService.getSelectOptions(
-                            LookupGroupKey.Ram,
-                            input,
-                            page,
-                            pageSize,
-                            ids
-                          )
+                        value={formik.values.ramId ?? ""}
+                        onChange={(newValue) =>
+                          formik.setFieldValue("ramId", newValue || null)
+                        }
+                        onBlur={() => formik.setFieldTouched("ramId")}
+                        error={
+                          formik.touched.ramId && Boolean(formik.errors.ramId)
                         }
                         helperText={
                           <FormikErrorMessage
@@ -507,34 +420,17 @@ const ProductCreateEditPage: React.FC = () => {
                       "processorId"
                     ),
                     value: (
-                      <SelectAsync2
+                      <LookupAutocomplete
+                        groupKey={LookupGroupKey.Processor}
                         name="processorId"
-                        ids={useMemo(
-                          () =>
-                            formik.values.processorId
-                              ? [formik.values.processorId]
-                              : [],
-                          [formik.values.processorId]
-                        )}
-                        onSelectionChange={async (newOption) => {
-                          formik.setFieldValue(
-                            "processorId",
-                            newOption?.value || null
-                          );
-                        }}
-                        asyncFunc={(
-                          input: string,
-                          page: number,
-                          pageSize: number,
-                          ids?: guid[]
-                        ) =>
-                          LookupService.getSelectOptions(
-                            LookupGroupKey.Processor,
-                            input,
-                            page,
-                            pageSize,
-                            ids
-                          )
+                        value={formik.values.processorId ?? ""}
+                        onChange={(newValue) =>
+                          formik.setFieldValue("processorId", newValue || null)
+                        }
+                        onBlur={() => formik.setFieldTouched("processorId")}
+                        error={
+                          formik.touched.processorId &&
+                          Boolean(formik.errors.processorId)
                         }
                         helperText={
                           <FormikErrorMessage
@@ -553,34 +449,17 @@ const ProductCreateEditPage: React.FC = () => {
                       "screenSizeId"
                     ),
                     value: (
-                      <SelectAsync2
+                      <LookupAutocomplete
+                        groupKey={LookupGroupKey.ScreenSize}
                         name="screenSizeId"
-                        ids={useMemo(
-                          () =>
-                            formik.values.screenSizeId
-                              ? [formik.values.screenSizeId]
-                              : [],
-                          [formik.values.screenSizeId]
-                        )}
-                        onSelectionChange={async (newOption) => {
-                          formik.setFieldValue(
-                            "screenSizeId",
-                            newOption?.value || null
-                          );
-                        }}
-                        asyncFunc={(
-                          input: string,
-                          page: number,
-                          pageSize: number,
-                          ids?: guid[]
-                        ) =>
-                          LookupService.getSelectOptions(
-                            LookupGroupKey.ScreenSize,
-                            input,
-                            page,
-                            pageSize,
-                            ids
-                          )
+                        value={formik.values.screenSizeId ?? ""}
+                        onChange={(newValue) =>
+                          formik.setFieldValue("screenSizeId", newValue || null)
+                        }
+                        onBlur={() => formik.setFieldTouched("screenSizeId")}
+                        error={
+                          formik.touched.screenSizeId &&
+                          Boolean(formik.errors.screenSizeId)
                         }
                         helperText={
                           <FormikErrorMessage

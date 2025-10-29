@@ -5,12 +5,6 @@ namespace Wms.Api.Dto.StockIn.StockInCreateUpdate
 {
     public class StockInItemCreateUpdateDto
     {
-        /// <summary>
-        /// Product reference used to pre-fill metadata; not persisted with the entity.
-        /// </summary>
-        [Required]
-        public Guid ProductId { get; set; }
-
         [Required]
         [MaxLength(64)]
         public string ProductCode { get; set; } = default!;
@@ -36,15 +30,13 @@ namespace Wms.Api.Dto.StockIn.StockInCreateUpdate
         public string? PrimarySerialNumber { get; set; }
         public string? ManufactureSerialNumber { get; set; }
         public string? Region { get; set; }
-        public string? Condition { get; set; }
+        public string? NewOrUsed { get; set; }
         public decimal? RetailSellingPrice { get; set; }
         public decimal? DealerSellingPrice { get; set; }
         public decimal? AgentSellingPrice { get; set; }
         public decimal? Cost { get; set; }
 
         public ICollection<StockInItemRemarkCreateUpdateDto>? StockInItemRemarks { get; set; }
-
-        public string? ItemsIncluded { get; set; }
         public int ReceiveQuantity { get; set; }
     }
 }

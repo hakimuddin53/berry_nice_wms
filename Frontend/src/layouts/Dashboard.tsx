@@ -10,7 +10,6 @@ import { spacing } from "@mui/system";
 import {
   Archive,
   ArchiveX,
-  ArrowLeft,
   ArrowLeftRight,
   ArrowRight,
   BookOpenText,
@@ -285,6 +284,16 @@ const lookupChildren: SidebarItemsType[] = [
     children: [],
     requiredModule: ModuleEnum.LOOKUP,
   },
+  {
+    id: 216,
+    href: "/lookups/Warehouse",
+    itemType: "link",
+    title: "Warehouse",
+    icon: <Store size={20} />,
+    type: "single",
+    children: [],
+    requiredModule: ModuleEnum.LOOKUP,
+  },
 ];
 
 // 2) Add a parent “Lookups” item that uses those as children
@@ -361,16 +370,6 @@ export const dashboardItems: SidebarItemsType[] = [
     requiredModule: ModuleEnum.EXPENSE, // make sure this exists
   },
   {
-    id: 7,
-    href: "/product",
-    itemType: "link",
-    title: "Product",
-    icon: <ShoppingCart size={20} />,
-    type: "single",
-    children: [],
-    requiredModule: ModuleEnum.PRODUCT, // <--- Link to PRODUCT module
-  },
-  {
     id: 8,
     href: "/stock-in",
     itemType: "link",
@@ -389,16 +388,6 @@ export const dashboardItems: SidebarItemsType[] = [
     type: "single",
     children: [],
     requiredModule: ModuleEnum.INVOICE,
-  },
-  {
-    id: 10,
-    href: "/stock-out",
-    itemType: "link",
-    title: "Stock Out",
-    icon: <ArrowLeft size={20} />,
-    type: "single",
-    children: [],
-    requiredModule: ModuleEnum.STOCKOUT, // <--- Link to STOCKOUT module
   },
 
   {

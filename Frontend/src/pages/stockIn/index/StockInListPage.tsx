@@ -11,7 +11,7 @@ import { useStockInService } from "services/StockInService";
 import { useStockInTable } from "./datatables/useStockInTable";
 
 function StockInListPage() {
-  const { t } = useTranslation();
+  const { t } = useTranslation("common");
 
   const [stockInTable] = useStockInTable();
   const stockInService = useStockInService();
@@ -101,6 +101,7 @@ function StockInListPage() {
         { label: t("stock-in") },
       ]}
       actions={[{ title: t("new-stock-in"), icon: "Add", to: "new" }]}
+      hasSingleActionButton
     >
       <DataTable
         title={t("stock-in")}

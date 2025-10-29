@@ -2,7 +2,6 @@ import { guid } from "types/guid";
 import { StockInItemRemarkCreateUpdateDto } from "./stockInItemRemarkCreateUpdateDto";
 
 export interface StockInItemCreateUpdateDto {
-  productId: guid;
   productCode: string;
   categoryId: guid;
   brandId?: guid;
@@ -16,12 +15,11 @@ export interface StockInItemCreateUpdateDto {
   primarySerialNumber?: string;
   manufactureSerialNumber?: string;
   region?: string;
-  condition?: string;
+  newOrUsed?: string;
   retailSellingPrice?: number;
   dealerSellingPrice?: number;
   agentSellingPrice?: number;
   cost?: number;
   stockInItemRemarks?: StockInItemRemarkCreateUpdateDto[];
-  itemsIncluded?: string;
   receiveQuantity: number;
 }

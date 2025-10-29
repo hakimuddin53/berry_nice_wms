@@ -6,9 +6,9 @@ export interface StockInDetailsDto {
   number: string;
   sellerInfo: string;
   purchaser: string;
-  location: string;
   dateOfPurchase: string;
   warehouseId: guid;
+  warehouseLabel: string;
 
   createdAt: string;
   createdById: string;

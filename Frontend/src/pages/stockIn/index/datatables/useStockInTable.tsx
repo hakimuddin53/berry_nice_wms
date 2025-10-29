@@ -10,7 +10,7 @@ import { DataTableHeaderCell } from "../../../../components/platbricks/shared/da
 const hidden = true;
 
 export const useStockInTable = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation("common");
 
   /* eslint-disable react-hooks/exhaustive-deps */
   const stockInData = useMemo<DataTableHeaderCell<StockInDetailsDto>[]>(
@@ -40,8 +40,9 @@ export const useStockInTable = () => {
         label: t("purchaser"),
       },
       {
-        id: "location",
-        label: t("location"),
+        id: "warehouseLabel",
+        label: t("warehouse"),
+        render: (row) => row.warehouseLabel || "-",
       },
       {
         id: "dateOfPurchase",

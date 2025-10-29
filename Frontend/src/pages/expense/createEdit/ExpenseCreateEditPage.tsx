@@ -9,15 +9,14 @@ import FormikErrorMessage from "components/platbricks/shared/ErrorMessage";
 import { NavBlocker } from "components/platbricks/shared/NavBlocker";
 import Page from "components/platbricks/shared/Page";
 import { PbCard } from "components/platbricks/shared/PbCard";
-import SelectAsync2 from "components/platbricks/shared/SelectAsync2";
+import LookupAutocomplete from "components/platbricks/shared/LookupAutocomplete";
 import { FormikProvider, setNestedObjectValues, useFormik } from "formik";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
-import { useLookupService } from "services/LookupService";
 import { useNotificationService } from "services/NotificationService";
 import { useExpenseService } from "services/ExpenseService";
-import { EMPTY_GUID, guid } from "types/guid";
+import { guid } from "types/guid";
 import { isRequiredField } from "utils/formikHelpers";
 import { LookupGroupKey } from "interfaces/v12/lookup/lookup";
 import {
@@ -31,8 +30,6 @@ const ExpenseCreateEditPage: React.FC = () => {
   const [tab, setTab] = useState(0);
 
   const ExpenseService = useExpenseService();
-  const LookupService = useLookupService();
-
   const notificationService = useNotificationService();
   const navigate = useNavigate();
 
@@ -258,34 +255,17 @@ const ExpenseCreateEditPage: React.FC = () => {
                       "category"
                     ),
                     value: (
-                      <SelectAsync2
+                      <LookupAutocomplete
+                        groupKey={LookupGroupKey.ExpenseCategory}
                         name="category"
-                        ids={useMemo(
-                          () =>
-                            formik.values.category
-                              ? [formik.values.category]
-                              : [],
-                          [formik.values.category]
-                        )}
-                        onSelectionChange={async (newOption) => {
-                          formik.setFieldValue(
-                            "category",
-                            newOption?.value || ""
-                          );
-                        }}
-                        asyncFunc={(
-                          input: string,
-                          page: number,
-                          pageSize: number,
-                          ids?: string[]
-                        ) =>
-                          LookupService.getSelectOptions(
-                            LookupGroupKey.ExpenseCategory,
-                            input,
-                            page,
-                            pageSize,
-                            ids
-                          )
+                        value={formik.values.category ?? ""}
+                        onChange={(newValue) =>
+                          formik.setFieldValue("category", newValue || "")
+                        }
+                        onBlur={() => formik.setFieldTouched("category")}
+                        error={
+                          formik.touched.category &&
+                          Boolean(formik.errors.category)
                         }
                         helperText={
                           <FormikErrorMessage

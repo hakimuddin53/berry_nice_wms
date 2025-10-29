@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Linq;
 using Wms.Api.Context;
 using Wms.Api.Dto;
 using Wms.Api.Dto.PagedList;
@@ -32,8 +34,7 @@ namespace Wms.Api.Controllers
             var stockIns = await service.GetAllAsync(e =>
                                                         e.Number.Contains(stockInSearch.search) ||
                                                         e.SellerInfo.Contains(stockInSearch.search) ||
-                                                        e.Purchaser.Contains(stockInSearch.search) ||
-                                                        e.Location.Contains(stockInSearch.search));
+                                                        e.Purchaser.Contains(stockInSearch.search));
 
             var orderedStockIns = stockIns.OrderByDescending(e => e.CreatedAt);
 
@@ -43,6 +44,7 @@ namespace Wms.Api.Controllers
             PagedList<StockIn> pagedResult = new PagedList<StockIn>(result, stockInSearch.Page, stockInSearch.PageSize);
 
             var stockInDtos = autoMapperService.Map<PagedListDto<StockInDetailsDto>>(pagedResult);
+            await AssignWarehouseLabelsAsync(stockInDtos.Data);
             
             return Ok(stockInDtos);
         }
@@ -53,8 +55,7 @@ namespace Wms.Api.Controllers
             var stockIns = await service.GetAllAsync(e =>
                                                         e.Number.Contains(stockInSearch.search) ||
                                                         e.SellerInfo.Contains(stockInSearch.search) ||
-                                                        e.Purchaser.Contains(stockInSearch.search) ||
-                                                        e.Location.Contains(stockInSearch.search));
+                                                        e.Purchaser.Contains(stockInSearch.search));
 
             var stockInDtos = autoMapperService.Map<List<StockInDetailsDto>>(stockIns);
             return Ok(stockInDtos.Count);
@@ -74,7 +75,8 @@ namespace Wms.Api.Controllers
 
             await EnrichStockInItemsAsync(stockIn, allowLookupByCode: true);
 
-            var stockInDtos = autoMapperService.Map<StockInDetailsDto>(stockIn);   
+            var stockInDtos = autoMapperService.Map<StockInDetailsDto>(stockIn);
+            await AssignWarehouseLabelsAsync(new[] { stockInDtos });
 
             return Ok(stockInDtos);
         }
@@ -87,10 +89,12 @@ namespace Wms.Api.Controllers
             stockInCreateUpdateDto.Number = stockInNumber;
             var stockInDtos = autoMapperService.Map<StockIn>(stockInCreateUpdateDto);
             stockInDtos.Id = Guid.NewGuid();
+            stockInDtos.Location = string.Empty;
 
             NormalizeStockInItems(stockInDtos);
 
-            await EnrichStockInItemsAsync(stockInDtos);
+            await EnrichStockInItemsAsync(stockInDtos, allowLookupByCode: true);
+            await EnsureProductsForStockInAsync(stockInDtos);
 
             await service.AddAsync(stockInDtos!, false);
 
@@ -113,10 +117,11 @@ namespace Wms.Api.Controllers
                 return NotFound();
 
             autoMapperService.Map(stockInCreateUpdate, stockIn);
+            stockIn.Location = string.Empty;
 
             NormalizeStockInItems(stockIn);
 
-            await EnrichStockInItemsAsync(stockIn);
+            await EnrichStockInItemsAsync(stockIn, allowLookupByCode: true);
 
             await service.UpdateAsync(stockIn);
             return NoContent();
@@ -129,92 +134,82 @@ namespace Wms.Api.Controllers
             return NoContent();
         }
 
-        private async Task EnrichStockInItemsAsync(StockIn? stockIn, bool allowLookupByCode = false)
+        private async Task AssignWarehouseLabelsAsync(IEnumerable<StockInDetailsDto> stockIns)
         {
-            if (stockIn?.StockInItems == null || stockIn.StockInItems.Count == 0)
+            if (stockIns == null)
             {
                 return;
             }
 
-            var productIds = stockIn.StockInItems
-                .Where(item => item.ProductId.HasValue && item.ProductId.Value != Guid.Empty)
-                .Select(item => item.ProductId!.Value)
+            var stockInList = stockIns.Where(s => s != null).ToList();
+            if (stockInList.Count == 0)
+            {
+                return;
+            }
+
+            var warehouseIds = stockInList
+                .Select(s => s.WarehouseId)
+                .Where(id => id != Guid.Empty)
                 .Distinct()
                 .ToList();
 
-            var productCodes = allowLookupByCode
-                ? stockIn.StockInItems
-                    .Where(item => (!item.ProductId.HasValue || item.ProductId.Value == Guid.Empty) && !string.IsNullOrWhiteSpace(item.ProductCode))
-                    .Select(item => item.ProductCode)
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
-                    .ToList()
-                : new List<string>();
+            var lookupLabels = warehouseIds.Count == 0
+                ? new Dictionary<Guid, string>()
+                : await context.Lookups
+                    .Where(l => warehouseIds.Contains(l.Id))
+                    .ToDictionaryAsync(l => l.Id, l => l.Label);
+
+            foreach (var dto in stockInList)
+            {
+                dto.WarehouseLabel = lookupLabels.TryGetValue(dto.WarehouseId, out var label)
+                    ? label
+                    : string.Empty;
+            }
+        }
+
+        private async Task EnrichStockInItemsAsync(StockIn? stockIn, bool allowLookupByCode = false)
+        {
+            if (stockIn?.StockInItems == null || stockIn.StockInItems.Count == 0 || !allowLookupByCode)
+            {
+                return;
+            }
+
+            var productCodes = stockIn.StockInItems
+                .Select(item => item.ProductCode)
+                .Where(code => !string.IsNullOrWhiteSpace(code))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (productCodes.Count == 0)
+            {
+                return;
+            }
 
             var query = context.Products.AsQueryable();
 
-            Dictionary<Guid, ProductSnapshot> productsById = new();
-            if (productIds.Count > 0)
-            {
-                productsById = await query
-                    .Where(p => productIds.Contains(p.ProductId))
-                    .Select(p => new ProductSnapshot(
-                        p.ProductId,
-                        p.ProductCode,
-                        p.CategoryId,
-                        p.BrandId,
-                        p.Model,
-                        p.ColorId,
-                        p.StorageId,
-                        p.RamId,
-                        p.ProcessorId,
-                        p.ScreenSizeId))
-                    .ToDictionaryAsync(p => p.ProductId);
-            }
+            var products = await query
+                .Where(p => productCodes.Contains(p.ProductCode))
+                .Select(p => new ProductSnapshot(
+                    p.ProductCode,
+                    p.CategoryId,
+                    p.BrandId,
+                    p.Model,
+                    p.ColorId,
+                    p.StorageId,
+                    p.RamId,
+                    p.ProcessorId,
+                    p.ScreenSizeId))
+                .ToListAsync();
 
-            Dictionary<string, ProductSnapshot> productsByCode = new(StringComparer.OrdinalIgnoreCase);
-
-            if (allowLookupByCode && productCodes.Count > 0)
-            {
-                var products = await query
-                    .Where(p => productCodes.Contains(p.ProductCode))
-                    .Select(p => new ProductSnapshot(
-                        p.ProductId,
-                        p.ProductCode,
-                        p.CategoryId,
-                        p.BrandId,
-                        p.Model,
-                        p.ColorId,
-                        p.StorageId,
-                        p.RamId,
-                        p.ProcessorId,
-                        p.ScreenSizeId))
-                    .ToListAsync();
-
-                foreach (var product in products)
-                {
-                    productsByCode[product.ProductCode] = product;
-                }
-            }
+            var productsByCode = products.ToDictionary(p => p.ProductCode, StringComparer.OrdinalIgnoreCase);
 
             foreach (var item in stockIn.StockInItems)
             {
-                ProductSnapshot? product = null;
-
-                if (item.ProductId.HasValue && productsById.TryGetValue(item.ProductId.Value, out var byId))
-                {
-                    product = byId;
-                }
-                else if (allowLookupByCode && productsByCode.TryGetValue(item.ProductCode, out var byCode))
-                {
-                    product = byCode;
-                }
-
-                if (product is null)
+                if (!productsByCode.TryGetValue(item.ProductCode, out var product))
                 {
                     continue;
                 }
 
-                item.ProductId = product.ProductId;
                 item.ProductCode = product.ProductCode;
                 item.CategoryId = product.CategoryId;
                 item.BrandId = product.BrandId;
@@ -228,7 +223,6 @@ namespace Wms.Api.Controllers
         }
 
         private record ProductSnapshot(
-            Guid ProductId,
             string ProductCode,
             Guid CategoryId,
             Guid? BrandId,
@@ -275,6 +269,63 @@ namespace Wms.Api.Controllers
 
                     remark.StockInItemId = item.Id;
                 }
+            }
+        }
+
+        private async Task EnsureProductsForStockInAsync(StockIn? stockIn)
+        {
+            if (stockIn?.StockInItems == null || stockIn.StockInItems.Count == 0)
+            {
+                return;
+            }
+
+            var productCodes = stockIn.StockInItems
+                .Select(item => item.ProductCode?.Trim())
+                .Where(code => !string.IsNullOrWhiteSpace(code))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (productCodes.Count == 0)
+            {
+                throw new InvalidOperationException("Each stock-in item must include a product code.");
+            }
+
+            var existingProducts = await context.Products
+                .Where(p => productCodes.Contains(p.ProductCode))
+                .ToDictionaryAsync(p => p.ProductCode, StringComparer.OrdinalIgnoreCase);
+
+            foreach (var item in stockIn.StockInItems)
+            {
+                var normalizedCode = item.ProductCode?.Trim();
+                if (string.IsNullOrWhiteSpace(normalizedCode))
+                {
+                    throw new InvalidOperationException("Each stock-in item must include a product code.");
+                }
+
+                item.ProductCode = normalizedCode;
+
+                if (existingProducts.ContainsKey(normalizedCode))
+                {
+                    continue;
+                }
+
+                var product = new Product
+                {
+                    ProductId = Guid.NewGuid(),
+                    ProductCode = normalizedCode,
+                    CategoryId = item.CategoryId,
+                    BrandId = item.BrandId,
+                    Model = item.Model,
+                    ColorId = item.ColorId,
+                    StorageId = item.StorageId,
+                    RamId = item.RamId,
+                    ProcessorId = item.ProcessorId,
+                    ScreenSizeId = item.ScreenSizeId,
+                    CreatedDate = DateTime.UtcNow
+                };
+
+                await context.Products.AddAsync(product);
+                existingProducts[normalizedCode] = product;
             }
         }
     }

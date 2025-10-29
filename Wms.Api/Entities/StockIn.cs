@@ -17,7 +17,7 @@ namespace Wms.Api.Entities
         public required string Purchaser { get; set; }
 
         [Required]
-        public required string Location { get; set; }
+        public string Location { get; set; } = string.Empty;
 
         [Required]
         public DateTime DateOfPurchase { get; set; }

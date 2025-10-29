@@ -28,36 +28,32 @@ import DashboardPage from "pages/dashboard/DashboardPage";
 
 import InventoryListPage from "pages/inventory/InventoryListPage";
 
-import LookupCreateEditPage from "pages/lookup/createEdit/LookupCreateEditPage";
-import LookupDetailsPage from "pages/lookup/details/LookupDetailsPage";
-import LookupListPage from "pages/lookup/index/LookupListPage";
-import ProductBulkUploadPage from "pages/products/bulkUpload/ProductBulkUploadPage";
-import ProductCreateEditPage from "pages/products/createEdit/ProductCreateEditPage";
-import ProductDetailsPage from "pages/products/details/ProductDetailsPage";
-import ProductListPage from "pages/products/index/ProductListPage";
-import StockInCreateEditPage from "pages/stockIn/createEdit/StockInCreateEditPage";
-import StockInDetailsPage from "pages/stockIn/details/StockInDetailsPage";
-import StockInListPage from "pages/stockIn/index/StockInListPage";
+import CustomerCreateEditPage from "pages/customer/createEdit/CustomerCreateEditPage";
+import CustomerDetailsPage from "pages/customer/details/CustomerDetailsPage";
+import CustomerListPage from "pages/customer/index/CustomerListPage";
+import ExpenseCreateEditPage from "pages/expense/createEdit/ExpenseCreateEditPage";
+import ExpenseDetailsPage from "pages/expense/details/ExpenseDetailsPage";
 import InvoiceCreateEditPage from "pages/invoice/createEdit/InvoiceCreateEditPage";
 import InvoiceDetailsPage from "pages/invoice/details/InvoiceDetailsPage";
 import InvoiceListPage from "pages/invoice/index/InvoiceListPage";
+import LookupCreateEditPage from "pages/lookup/createEdit/LookupCreateEditPage";
+import LookupDetailsPage from "pages/lookup/details/LookupDetailsPage";
+import LookupListPage from "pages/lookup/index/LookupListPage";
+import StockInCreateEditPage from "pages/stockIn/createEdit/StockInCreateEditPage";
+import StockInDetailsPage from "pages/stockIn/details/StockInDetailsPage";
+import StockInListPage from "pages/stockIn/index/StockInListPage";
+import SupplierCreateEditPage from "pages/supplier/createEdit/SupplierCreateEditPage";
+import SupplierDetailsPage from "pages/supplier/details/SupplierDetailsPage";
+import SupplierListPage from "pages/supplier/index/SupplierListPage";
 import UserCreateEditPage from "pages/user/createEdit/UserCreateEditPage";
 import UserDetailsPage from "pages/user/details/UserDetailsPage";
 import UserListPage from "pages/user/index/UserListPage";
 import UserRoleCreateEditPage from "pages/userRoles/createEdit/UserRoleCreateEditPage";
 import UserRoleDetailsPage from "pages/userRoles/details/UserRoleDetailsPage";
 import UserRoleListPage from "pages/userRoles/index/UserRoleListPage";
-import CustomerCreateEditPage from "pages/customer/createEdit/CustomerCreateEditPage";
-import CustomerDetailsPage from "pages/customer/details/CustomerDetailsPage";
-import CustomerListPage from "pages/customer/index/CustomerListPage";
-import SupplierCreateEditPage from "pages/supplier/createEdit/SupplierCreateEditPage";
-import SupplierDetailsPage from "pages/supplier/details/SupplierDetailsPage";
-import SupplierListPage from "pages/supplier/index/SupplierListPage";
-import ExpenseCreateEditPage from "pages/expense/createEdit/ExpenseCreateEditPage";
-import ExpenseDetailsPage from "pages/expense/details/ExpenseDetailsPage";
 
-import { Navigate } from "react-router-dom";
 import ExpenseListPage from "pages/expense/index/ExpenseListPage";
+import { Navigate } from "react-router-dom";
 
 // --- Routes Definition ---
 const routes = [
@@ -154,51 +150,51 @@ const routes = [
           },
         ],
       },
-      {
-        path: "product",
-        children: [
-          {
-            index: true,
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.PRODUCT}>
-                <ProductListPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: "new",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.PRODUCT}>
-                <ProductCreateEditPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: ":id",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.PRODUCT}>
-                <ProductDetailsPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: ":id/edit",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.PRODUCT}>
-                <ProductCreateEditPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: "bulk-upload",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.PRODUCT}>
-                <ProductBulkUploadPage />
-              </ModuleGuard>
-            ),
-          },
-        ],
-      },
+      // {
+      //   path: "product",
+      //   children: [
+      //     {
+      //       index: true,
+      //       element: (
+      //         <ModuleGuard requiredModule={ModuleEnum.PRODUCT}>
+      //           <ProductListPage />
+      //         </ModuleGuard>
+      //       ),
+      //     },
+      //     {
+      //       path: "new",
+      //       element: (
+      //         <ModuleGuard requiredModule={ModuleEnum.PRODUCT}>
+      //           <ProductCreateEditPage />
+      //         </ModuleGuard>
+      //       ),
+      //     },
+      //     {
+      //       path: ":id",
+      //       element: (
+      //         <ModuleGuard requiredModule={ModuleEnum.PRODUCT}>
+      //           <ProductDetailsPage />
+      //         </ModuleGuard>
+      //       ),
+      //     },
+      //     {
+      //       path: ":id/edit",
+      //       element: (
+      //         <ModuleGuard requiredModule={ModuleEnum.PRODUCT}>
+      //           <ProductCreateEditPage />
+      //         </ModuleGuard>
+      //       ),
+      //     },
+      //     {
+      //       path: "bulk-upload",
+      //       element: (
+      //         <ModuleGuard requiredModule={ModuleEnum.PRODUCT}>
+      //           <ProductBulkUploadPage />
+      //         </ModuleGuard>
+      //       ),
+      //     },
+      //   ],
+      // },
       {
         path: "stock-in",
         children: [

@@ -5,7 +5,6 @@ export interface StockInCreateUpdateDto {
   number: string;
   sellerInfo: string;
   purchaser: string;
-  location: string;
   dateOfPurchase: string;
   warehouseId: guid;
   stockInItems?: StockInItemCreateUpdateDto[];

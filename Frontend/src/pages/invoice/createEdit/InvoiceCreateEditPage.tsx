@@ -1,26 +1,26 @@
 import { Box, Button, Grid, Stack, TextField, Typography } from "@mui/material";
+import { Page, PageSection, PbCard } from "components/platbricks/shared";
+import FormikErrorMessage from "components/platbricks/shared/ErrorMessage";
+import LookupAutocomplete from "components/platbricks/shared/LookupAutocomplete";
 import SelectAsync2, {
   SelectAsyncOption,
 } from "components/platbricks/shared/SelectAsync2";
-import { FormikProvider, FieldArray, useFormik } from "formik";
+import { FieldArray, FormikProvider, useFormik } from "formik";
+import { InvoiceCreateUpdateDto } from "interfaces/v12/invoice/invoiceCreateUpdateDto";
+import { LookupGroupKey } from "interfaces/v12/lookup/lookup";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCustomerService } from "services/CustomerService";
 import { useInvoiceService } from "services/InvoiceService";
-import { useLookupService } from "services/LookupService";
 import { useNotificationService } from "services/NotificationService";
 import { useUserService } from "services/UserService";
-import { guid, EMPTY_GUID } from "types/guid";
-import { LookupGroupKey } from "interfaces/v12/lookup/lookup";
-import { Page, PbCard, PageSection } from "components/platbricks/shared";
-import FormikErrorMessage from "components/platbricks/shared/ErrorMessage";
+import { EMPTY_GUID, guid } from "types/guid";
 import {
   invoiceCreateEditSchema,
   YupInvoiceCreateEdit,
   YupInvoiceItemCreateEdit,
 } from "./yup/invoiceCreateEditSchema";
-import { InvoiceCreateUpdateDto } from "interfaces/v12/invoice/invoiceCreateUpdateDto";
 
 const createEmptyItem = (): YupInvoiceItemCreateEdit => ({
   id: undefined,
@@ -73,7 +73,6 @@ const InvoiceCreateEditPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const invoiceService = useInvoiceService();
-  const lookupService = useLookupService();
   const customerService = useCustomerService();
   const userService = useUserService();
   const notificationService = useNotificationService();
@@ -211,22 +210,6 @@ const InvoiceCreateEditPage = () => {
     [formik.values.salesPersonId]
   );
 
-  const salesTypeIds = useMemo(
-    () =>
-      formik.values.salesTypeId
-        ? [formik.values.salesTypeId as unknown as string]
-        : [],
-    [formik.values.salesTypeId]
-  );
-
-  const paymentTypeIds = useMemo(
-    () =>
-      formik.values.paymentTypeId
-        ? [formik.values.paymentTypeId as unknown as string]
-        : [],
-    [formik.values.paymentTypeId]
-  );
-
   const getItemError = (
     index: number,
     field: keyof YupInvoiceItemCreateEdit
@@ -276,6 +259,13 @@ const InvoiceCreateEditPage = () => {
                     name="customerId"
                     label={t("customer")}
                     placeholder={t("customer")}
+                    readOnly
+                    suggestionsIfEmpty
+                    error={
+                      formik.touched.customerId &&
+                      Boolean(formik.errors.customerId)
+                    }
+                    onBlur={() => formik.setFieldTouched("customerId")}
                     ids={customerIds}
                     asyncFunc={(
                       input: string,
@@ -345,6 +335,13 @@ const InvoiceCreateEditPage = () => {
                   <SelectAsync2
                     name="salesPersonId"
                     label={t("sales-person")}
+                    readOnly
+                    suggestionsIfEmpty
+                    error={
+                      formik.touched.salesPersonId &&
+                      Boolean(formik.errors.salesPersonId)
+                    }
+                    onBlur={() => formik.setFieldTouched("salesPersonId")}
                     ids={salesPersonIds}
                     asyncFunc={(
                       input: string,
@@ -376,56 +373,51 @@ const InvoiceCreateEditPage = () => {
                   />
                 </Grid>
                 <Grid item xs={12} md={4}>
-                  <SelectAsync2
+                  <LookupAutocomplete
+                    groupKey={LookupGroupKey.SalesType}
                     name="salesTypeId"
                     label={t("sales-type")}
-                    ids={salesTypeIds}
-                    asyncFunc={(
-                      input: string,
-                      page: number,
-                      pageSize: number,
-                      ids?: string[]
-                    ) =>
-                      lookupService.getSelectOptions(
-                        LookupGroupKey.SalesType,
-                        input,
-                        page,
-                        pageSize,
-                        ids
-                      )
+                    value={formik.values.salesTypeId ?? ""}
+                    onChange={(newValue) =>
+                      formik.setFieldValue("salesTypeId", newValue || undefined)
                     }
-                    onSelectionChange={(option) =>
-                      formik.setFieldValue(
-                        "salesTypeId",
-                        option?.value ?? undefined
-                      )
+                    onBlur={() => formik.setFieldTouched("salesTypeId")}
+                    error={
+                      formik.touched.salesTypeId &&
+                      Boolean(formik.errors.salesTypeId)
+                    }
+                    helperText={
+                      <FormikErrorMessage
+                        touched={formik.touched.salesTypeId}
+                        error={formik.errors.salesTypeId}
+                        translatedFieldName={t("sales-type")}
+                      />
                     }
                   />
                 </Grid>
                 <Grid item xs={12} md={4}>
-                  <SelectAsync2
+                  <LookupAutocomplete
+                    groupKey={LookupGroupKey.PaymentType}
                     name="paymentTypeId"
                     label={t("payment-type")}
-                    ids={paymentTypeIds}
-                    asyncFunc={(
-                      input: string,
-                      page: number,
-                      pageSize: number,
-                      ids?: string[]
-                    ) =>
-                      lookupService.getSelectOptions(
-                        LookupGroupKey.PaymentType,
-                        input,
-                        page,
-                        pageSize,
-                        ids
-                      )
-                    }
-                    onSelectionChange={(option) =>
+                    value={formik.values.paymentTypeId ?? ""}
+                    onChange={(newValue) =>
                       formik.setFieldValue(
                         "paymentTypeId",
-                        option?.value ?? undefined
+                        newValue || undefined
                       )
+                    }
+                    onBlur={() => formik.setFieldTouched("paymentTypeId")}
+                    error={
+                      formik.touched.paymentTypeId &&
+                      Boolean(formik.errors.paymentTypeId)
+                    }
+                    helperText={
+                      <FormikErrorMessage
+                        touched={formik.touched.paymentTypeId}
+                        error={formik.errors.paymentTypeId}
+                        translatedFieldName={t("payment-type")}
+                      />
                     }
                   />
                 </Grid>
@@ -670,4 +662,3 @@ const InvoiceCreateEditPage = () => {
 };
 
 export default InvoiceCreateEditPage;
-

@@ -1,4 +1,3 @@
-import ProductName from "components/platbricks/entities/ProductName";
 import { DataTableHeaderCell } from "components/platbricks/shared/dataTable/DataTable";
 import { useCreatedChangeDate } from "hooks/useCreatedChangeDate";
 import { useMemo } from "react";
@@ -8,7 +7,7 @@ import { YupStockInItemCreateEdit } from "../createEdit/yup/stockInCreateEditSch
 const hidden = true;
 
 export const useStockInItemTable = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation("common");
 
   const stockInItemData = useMemo<
     DataTableHeaderCell<YupStockInItemCreateEdit>[]
@@ -22,27 +21,43 @@ export const useStockInItemTable = () => {
       {
         id: "product",
         label: t("product"),
-        render: (row) => <ProductName productId={row.productId} />,
+        render: (row) => row.model || row.productCode || "-",
       },
       {
-        id: "productCode",
-        label: t("product-code"),
-        render: (row) => row.productCode || "-",
+        id: "model",
+        label: t("model"),
+        render: (row) => row.model || "-",
       },
       {
-        id: "primarySerialNumber",
-        label: t("primary-serial-number"),
-        render: (row) => row.primarySerialNumber || "-",
+        id: "manufactureSerialNumber",
+        label: t("manufacture-serial-number"),
+        render: (row) => row.manufactureSerialNumber || "-",
       },
       {
         id: "locationId",
         label: t("location"),
-        render: (row) => row.locationId || "-",
+        render: (row) => row.locationName || row.locationId || "-",
       },
       {
         id: "cost",
         label: t("cost"),
         render: (row) => (row.cost !== undefined ? row.cost.toString() : "-"),
+      },
+      {
+        id: "retailSellingPrice",
+        label: t("retail-selling-price"),
+        render: (row) =>
+          row.retailSellingPrice !== undefined
+            ? row.retailSellingPrice.toString()
+            : "-",
+      },
+      {
+        id: "dealerSellingPrice",
+        label: t("dealer-selling-price"),
+        render: (row) =>
+          row.dealerSellingPrice !== undefined
+            ? row.dealerSellingPrice.toString()
+            : "-",
       },
       {
         id: "receiveQuantity",

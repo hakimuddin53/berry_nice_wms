@@ -11,9 +11,6 @@ namespace Wms.Api.Entities
         [Required]
         public Guid StockInId { get; set; }
 
-    [NotMapped]
-    public Guid? ProductId { get; set; }
-
     [Required]
     [MaxLength(64)]
     public string ProductCode { get; set; } = default!;
@@ -44,7 +41,8 @@ namespace Wms.Api.Entities
 
         public string? Region { get; set; }
 
-        public string? Condition { get; set; }
+        [Column("Condition")]
+        public string? NewOrUsed { get; set; }
 
         [Column(TypeName = "decimal(18,4)")]
         public decimal? RetailSellingPrice { get; set; }

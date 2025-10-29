@@ -1,11 +1,10 @@
-import { guid } from "types/guid";
+import { EMPTY_GUID, guid } from "types/guid";
 import * as yup from "yup";
 
 export interface YupStockInCreateEdit {
   number: string;
   sellerInfo: string;
   purchaser: string;
-  location: string;
   dateOfPurchase: string;
   warehouseId: guid;
   stockInItems: YupStockInItemCreateEdit[];
@@ -18,7 +17,6 @@ export interface YupStockInItemRemarkCreateEdit {
 }
 
 export interface YupStockInItemCreateEdit {
-  productId: guid;
   productCode: string;
   categoryId: guid;
   brandId?: guid;
@@ -29,17 +27,18 @@ export interface YupStockInItemCreateEdit {
   processorId?: guid;
   screenSizeId?: guid;
   locationId: guid;
+  locationName?: string;
   primarySerialNumber?: string;
   manufactureSerialNumber?: string;
   region?: string;
-  condition?: string;
+  newOrUsed?: string;
   retailSellingPrice?: number;
   dealerSellingPrice?: number;
   agentSellingPrice?: number;
   cost?: number;
   stockInItemRemarks: YupStockInItemRemarkCreateEdit[];
-  itemsIncluded?: string;
   receiveQuantity: number;
+  productName?: string;
 }
 
 const stockInItemRemarkSchema = yup.object().shape({
@@ -52,14 +51,12 @@ export const stockInCreateEditSchema = yup.object().shape({
   number: yup.string().required(),
   sellerInfo: yup.string().required(),
   purchaser: yup.string().required(),
-  location: yup.string().required(),
   dateOfPurchase: yup.string().required(),
   warehouseId: yup.string().required(),
   stockInItems: yup
     .array()
     .of(
       yup.object().shape({
-        productId: yup.string().required(),
         productCode: yup.string().required(),
         categoryId: yup.string().required(),
         brandId: yup.string().nullable(),
@@ -69,7 +66,16 @@ export const stockInCreateEditSchema = yup.object().shape({
         ramId: yup.string().nullable(),
         processorId: yup.string().nullable(),
         screenSizeId: yup.string().nullable(),
-        locationId: yup.string().required(),
+        locationId: yup
+          .string()
+          .test(
+            "not-empty-guid",
+            "required",
+            (value) => !!value && value !== EMPTY_GUID
+          )
+          .required(),
+        region: yup.string().nullable(),
+        newOrUsed: yup.string().nullable(),
         stockInItemRemarks: yup.array().of(stockInItemRemarkSchema).default([]),
         receiveQuantity: yup.number().min(1).required(),
       })

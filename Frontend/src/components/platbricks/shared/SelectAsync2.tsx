@@ -177,6 +177,9 @@ const SelectAsync2 = (props: SingleProps | MultiProps) => {
       onClose={() => {
         setOpen(false);
       }}
+      getOptionLabel={(option) =>
+        Array.isArray(option) ? "" : option?.label ?? ""
+      }
       isOptionEqualToValue={isOptionEqualToValue}
       options={options}
       loading={loading}
@@ -234,30 +237,6 @@ const SelectAsync2 = (props: SingleProps | MultiProps) => {
       disableClearable={props.disableClearable}
     />
   );
-};
-
-type SelectAsyncAllSingleProps = Omit<SingleProps, "suggestionsIfEmpty"> & {
-  allowSearch?: boolean;
-};
-
-type SelectAsyncAllMultiProps = Omit<MultiProps, "suggestionsIfEmpty"> & {
-  allowSearch?: boolean;
-};
-
-export type SelectAsyncAllProps =
-  | SelectAsyncAllSingleProps
-  | SelectAsyncAllMultiProps;
-
-export const SelectAsyncAll = (props: SelectAsyncAllProps) => {
-  const { allowSearch = false, ...rest } = props;
-
-  const finalProps = {
-    ...rest,
-    suggestionsIfEmpty: true,
-    readOnly: allowSearch ? rest.readOnly : true,
-  } as SingleProps | MultiProps;
-
-  return <SelectAsync2 {...finalProps} />;
 };
 
 export default SelectAsync2;

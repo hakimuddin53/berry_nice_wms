@@ -1,7 +1,9 @@
 import { TextField } from "@mui/material";
 import DataList from "components/platbricks/shared/DataList";
 import FormikErrorMessage from "components/platbricks/shared/ErrorMessage";
+import LookupAutocomplete from "components/platbricks/shared/LookupAutocomplete";
 import { FormikProps } from "formik";
+import { LookupGroupKey } from "interfaces/v12/lookup/lookup";
 import { useTranslation } from "react-i18next";
 import { isRequiredField } from "utils/formikHelpers";
 import {
@@ -12,7 +14,7 @@ import {
 const StockInHeadCreateEdit = (props: {
   formik: FormikProps<YupStockInCreateEdit>;
 }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation("common");
   const formik = props.formik;
 
   return (
@@ -105,33 +107,6 @@ const StockInHeadCreateEdit = (props: {
           ),
         },
         {
-          label: t("location"),
-          required: isRequiredField(
-            stockInCreateEditSchema,
-            "location",
-            formik.values
-          ),
-          value: (
-            <TextField
-              fullWidth
-              id="location"
-              name="location"
-              size="small"
-              value={formik.values.location}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              error={formik.touched.location && Boolean(formik.errors.location)}
-              helperText={
-                <FormikErrorMessage
-                  touched={formik.touched.location}
-                  error={formik.errors.location}
-                  translatedFieldName={t("location")}
-                />
-              }
-            />
-          ),
-        },
-        {
           label: t("date-of-purchase"),
           required: isRequiredField(
             stockInCreateEditSchema,
@@ -171,14 +146,12 @@ const StockInHeadCreateEdit = (props: {
             formik.values
           ),
           value: (
-            <TextField
-              fullWidth
-              id="warehouseId"
+            <LookupAutocomplete
+              groupKey={LookupGroupKey.Warehouse}
               name="warehouseId"
-              size="small"
               value={formik.values.warehouseId}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
+              onChange={(value) => formik.setFieldValue("warehouseId", value)}
+              onBlur={() => formik.setFieldTouched("warehouseId", true)}
               error={
                 formik.touched.warehouseId && Boolean(formik.errors.warehouseId)
               }

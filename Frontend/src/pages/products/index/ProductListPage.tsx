@@ -98,14 +98,8 @@ function ProductListPage() {
         { label: t("common:dashboard"), to: "/" },
         { label: t("product") },
       ]}
-      actions={[
-        { title: t("new-product"), icon: "Add", to: "new" },
-        {
-          title: t("bulk-upload"),
-          icon: "Upload",
-          onclick: () => navigate("/product/bulk-upload"),
-        },
-      ]}
+      hasSingleActionButton
+      actions={[{ title: t("new-product"), icon: "Add", to: "new" }]}
     >
       <DataTable
         title={t("product")}
