@@ -12,10 +12,12 @@ namespace Wms.Api.Entities
         public Guid StockInItemId { get; set; }
 
         [Required]
-        [Column(TypeName = "nvarchar(max)")]
-        public string Remark { get; set; } = string.Empty;
+        public Guid ProductRemarkId { get; set; }
 
         [ForeignKey(nameof(StockInItemId))]
         public StockInItem? StockInItem { get; set; }
+
+        [ForeignKey(nameof(ProductRemarkId))]
+        public ProductRemark? ProductRemark { get; set; }
     }
 }

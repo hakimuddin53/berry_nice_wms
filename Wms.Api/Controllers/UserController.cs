@@ -34,6 +34,7 @@ namespace Wms.Api.Controllers
 
 
         [HttpGet("select-options")]
+        [HttpGet("~/api/v12/user/select-options")]
         [ProducesResponseType(typeof(PagedListDto<SelectOptionV12Dto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetSelectOptionsAsync([FromQuery] GlobalSelectFilterV12Dto selectFilterV12Dto)
         {

@@ -47,7 +47,7 @@ function StockInDetailsPage() {
       title={t("stock-in")}
       breadcrumbs={[
         { label: t("common:dashboard"), to: "/" },
-        { label: t("stock-in"), to: "/stockin" },
+        { label: t("stock-in"), to: "/stock-in" },
         { label: stockIn.number },
       ]}
       actions={[{ title: t("edit"), icon: "Edit", to: "edit" }]}

@@ -14,7 +14,8 @@ public class PagedListConverter<TSource, TDestination> : ITypeConverter<PagedLis
         {
             Data = collection,
             CurrentPage = source.CurrentPage,
-            PageSize = source.PageSize
+            PageSize = source.PageSize,
+            TotalCount = source.Count
         };
     }
 }

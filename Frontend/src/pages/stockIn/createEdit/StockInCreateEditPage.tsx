@@ -51,7 +51,8 @@ const createDefaultItem = (): YupStockInItemCreateEdit => ({
   dealerSellingPrice: undefined,
   agentSellingPrice: undefined,
   cost: undefined,
-  stockInItemRemarks: [],
+  remark: "",
+  internalRemark: "",
   receiveQuantity: 1,
   productName: "",
 });
@@ -60,9 +61,6 @@ const buildStockInPayload = (values: YupStockInCreateEdit) => {
   const stockInItems = values.stockInItems.map((item) => {
     const sanitized: any = {
       ...item,
-      stockInItemRemarks: (item.stockInItemRemarks ?? []).map((remark) => ({
-        ...remark,
-      })),
     };
 
     delete sanitized.key;
@@ -87,8 +85,8 @@ const StockInCreateEditPage: React.FC = () => {
   const notificationService = useNotificationService();
   const navigate = useNavigate();
 
+  const [stockInNumber, setStockInNumber] = useState<string>("");
   const [stockIn, setStockIn] = useState<YupStockInCreateEdit>({
-    number: "",
     sellerInfo: "",
     purchaser: "",
     dateOfPurchase: new Date().toISOString().split("T")[0],
@@ -112,7 +110,7 @@ const StockInCreateEditPage: React.FC = () => {
     breadcrumbs = [
       { label: t("common:dashboard"), to: "/" },
       { label: t("stock-in"), to: "/stock-in" },
-      { label: stockIn.number as string, to: "/stock-in/" + id },
+      { label: stockInNumber || "", to: "/stock-in/" + id },
       { label: t("common:edit") },
     ];
   }
@@ -171,26 +169,27 @@ const StockInCreateEditPage: React.FC = () => {
   /* eslint-disable react-hooks/exhaustive-deps */
   const normalizeStockInItems = (items: any[] = []) =>
     items.map((item: any, index: number) => {
-      const { remarks: legacyRemark, ...rest } = item;
+      const { remarks: legacyRemark, stockInItemRemarks, ...rest } = item;
 
-      const rawRemarks = Array.isArray(item.stockInItemRemarks)
-        ? item.stockInItemRemarks
-        : legacyRemark
-        ? [{ remark: legacyRemark }]
-        : [];
-
-      const stockInItemRemarks = rawRemarks.map((remark: any) => ({
-        id: remark.id,
-        stockInItemId: remark.stockInItemId,
-        remark: remark.remark ?? remark.text ?? "",
-      }));
+      // Prefer the new single remark; else fallback to joining any legacy list/fields
+      const remarkText =
+        (typeof rest.remark === "string" && rest.remark) ||
+        (Array.isArray(stockInItemRemarks)
+          ? stockInItemRemarks
+              .map((r: any) => r?.remark ?? r?.text)
+              .filter((x: any) => typeof x === "string" && x.trim().length > 0)
+              .join(", ")
+          : typeof legacyRemark === "string"
+          ? legacyRemark
+          : "");
 
       return {
         ...rest,
         key: index,
         locationName: rest.locationName ?? "",
         productName: rest.productName ?? "",
-        stockInItemRemarks,
+        remark: remarkText,
+        internalRemark: rest.internalRemark ?? "",
       };
     });
 
@@ -202,10 +201,12 @@ const StockInCreateEditPage: React.FC = () => {
           const stockInItems = normalizeStockInItems(
             stockInData.stockInItems ?? []
           );
+          const { number: fetchedNumber, ...rest } = stockInData;
           setStockIn({
-            ...stockInData,
+            ...(rest as YupStockInCreateEdit),
             stockInItems,
           });
+          setStockInNumber(fetchedNumber ?? "");
 
           updateStockInItemsTableControls({
             data: stockInItems,
@@ -299,7 +300,7 @@ const StockInCreateEditPage: React.FC = () => {
     <Page
       breadcrumbs={breadcrumbs}
       title={title}
-      subtitle={id ? stockIn?.number?.toString() : ""}
+      subtitle={id ? stockInNumber : ""}
       showLoading={!pageReady}
       showBackdrop={pageBlocker}
       actions={[

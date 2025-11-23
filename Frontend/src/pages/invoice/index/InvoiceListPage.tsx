@@ -61,6 +61,7 @@ function InvoiceListPage() {
         { label: t("invoice") },
       ]}
       actions={[{ title: t("create-invoice"), icon: "Add", to: "new" }]}
+      hasSingleActionButton
     >
       <DataTable
         title={t("invoices")}

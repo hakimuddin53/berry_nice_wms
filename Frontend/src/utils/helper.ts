@@ -2,7 +2,6 @@ import { SortableDataTableHeaderCell } from "components/platbricks/shared/dataTa
 import {
   ModuleEnum,
   ReservationStatusEnum,
-  StockOutStatusEnum,
 } from "interfaces/enums/GlobalEnums";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { baseURL } from "./axios";
@@ -186,11 +185,4 @@ export const getReservationStatusName = (reservationStatus: any) => {
     );
   });
   return moduleKey || reservationStatus;
-};
-
-export const getStockStatusName = (stockStatus: any) => {
-  const moduleKey = Object.keys(StockOutStatusEnum).find((key) => {
-    return Object.keys(StockOutStatusEnum).indexOf(key) === stockStatus;
-  });
-  return moduleKey || stockStatus;
 };

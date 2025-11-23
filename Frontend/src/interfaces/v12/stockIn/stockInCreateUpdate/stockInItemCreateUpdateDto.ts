@@ -1,7 +1,7 @@
 import { guid } from "types/guid";
-import { StockInItemRemarkCreateUpdateDto } from "./stockInItemRemarkCreateUpdateDto";
 
 export interface StockInItemCreateUpdateDto {
+  productId?: guid;
   productCode: string;
   categoryId: guid;
   brandId?: guid;
@@ -20,6 +20,8 @@ export interface StockInItemCreateUpdateDto {
   dealerSellingPrice?: number;
   agentSellingPrice?: number;
   cost?: number;
-  stockInItemRemarks?: StockInItemRemarkCreateUpdateDto[];
+  // Free-text, comma-delimited remark(s)
+  remark?: string;
+  internalRemark?: string;
   receiveQuantity: number;
 }

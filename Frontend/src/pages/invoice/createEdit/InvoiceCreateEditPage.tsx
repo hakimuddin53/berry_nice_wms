@@ -1,21 +1,30 @@
-import { Box, Button, Grid, Stack, TextField, Typography } from "@mui/material";
-import { Page, PageSection, PbCard } from "components/platbricks/shared";
-import FormikErrorMessage from "components/platbricks/shared/ErrorMessage";
-import LookupAutocomplete from "components/platbricks/shared/LookupAutocomplete";
-import SelectAsync2, {
-  SelectAsyncOption,
-} from "components/platbricks/shared/SelectAsync2";
-import { FieldArray, FormikProvider, useFormik } from "formik";
+import { CardContent, Stack, Typography } from "@mui/material";
+import {
+  BadgeText,
+  DataTable,
+  NavBlocker,
+  Page,
+  PbCard,
+  PbTab,
+  PbTabPanel,
+  PbTabs,
+} from "components/platbricks/shared";
+import { FormikProvider, setNestedObjectValues, useFormik } from "formik";
+import { useDatatableControls } from "hooks/useDatatableControls";
+import { useFormikDatatable } from "hooks/useFormikDatatable";
 import { InvoiceCreateUpdateDto } from "interfaces/v12/invoice/invoiceCreateUpdateDto";
-import { LookupGroupKey } from "interfaces/v12/lookup/lookup";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
-import { useCustomerService } from "services/CustomerService";
 import { useInvoiceService } from "services/InvoiceService";
 import { useNotificationService } from "services/NotificationService";
-import { useUserService } from "services/UserService";
-import { EMPTY_GUID, guid } from "types/guid";
+import {
+  formikObjectHasHeadTouchedErrors,
+  formikObjectHasTouchedErrors,
+} from "utils/formikHelpers";
+import { useInvoiceItemTable } from "../datatables/useInvoiceItemTable";
+import InvoiceHeadCreateEdit from "./InvoiceHeadCreateEdit";
+import InvoiceItemCreateEdit from "./InvoiceItemCreateEdit";
 import {
   invoiceCreateEditSchema,
   YupInvoiceCreateEdit,
@@ -24,12 +33,11 @@ import {
 
 const createEmptyItem = (): YupInvoiceItemCreateEdit => ({
   id: undefined,
-  productId: EMPTY_GUID as guid,
+  productId: undefined,
   productCode: "",
   description: "",
   primarySerialNumber: "",
   manufactureSerialNumber: "",
-  imei: "",
   warrantyDurationMonths: 0,
   unitOfMeasure: "",
   quantity: 1,
@@ -72,10 +80,10 @@ const InvoiceCreateEditPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams();
+  const [tab, setTab] = useState(0);
   const invoiceService = useInvoiceService();
-  const customerService = useCustomerService();
-  const userService = useUserService();
   const notificationService = useNotificationService();
+  const [invoiceNumber, setInvoiceNumber] = useState<string>("");
   const [initialValues, setInitialValues] = useState<YupInvoiceCreateEdit>({
     customerId: undefined,
     customerName: "",
@@ -88,17 +96,14 @@ const InvoiceCreateEditPage = () => {
     remark: "",
     invoiceItems: [],
   });
-  const [loading, setLoading] = useState(true);
+  const [pageBlocker, setPageBlocker] = useState(false);
+  const [pageReady, setPageReady] = useState<boolean>(() => !id);
+
+  const [invoiceItemTable] = useInvoiceItemTable();
 
   useEffect(() => {
     if (!id) {
-      setInitialValues((current) => ({
-        ...current,
-        invoiceItems: current.invoiceItems.length
-          ? current.invoiceItems
-          : [createEmptyItem()],
-      }));
-      setLoading(false);
+      setPageReady(true);
       return;
     }
 
@@ -106,6 +111,7 @@ const InvoiceCreateEditPage = () => {
       .getInvoiceById(id)
       .then((invoice) => {
         const formValue = mapDetailsToForm(invoice);
+        setInvoiceNumber(invoice.number ?? "");
         if (formValue.invoiceItems.length === 0) {
           formValue.invoiceItems = [createEmptyItem()];
         }
@@ -115,7 +121,7 @@ const InvoiceCreateEditPage = () => {
         notificationService.handleApiErrorMessage(err.data, "common");
         navigate("/invoice");
       })
-      .finally(() => setLoading(false));
+      .finally(() => setPageReady(true));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
@@ -124,6 +130,7 @@ const InvoiceCreateEditPage = () => {
     enableReinitialize: true,
     validationSchema: invoiceCreateEditSchema,
     onSubmit: async (values, helpers) => {
+      setPageBlocker(true);
       const payload: InvoiceCreateUpdateDto = {
         customerId: values.customerId || undefined,
         customerName: values.customerName || undefined,
@@ -173,6 +180,7 @@ const InvoiceCreateEditPage = () => {
         notificationService.handleApiErrorMessage(error.data, "common");
       } finally {
         helpers.setSubmitting(false);
+        setPageBlocker(false);
       }
     },
   });
@@ -197,465 +205,154 @@ const InvoiceCreateEditPage = () => {
 
   const pageTitle = id ? t("edit-invoice") : t("create-invoice");
 
-  const customerIds = useMemo(
-    () =>
-      formik.values.customerId
-        ? [formik.values.customerId as unknown as string]
-        : [],
-    [formik.values.customerId]
+  const breadcrumbs = id
+    ? [
+        { label: t("dashboard"), to: "/" },
+        { label: t("invoice"), to: "/invoice" },
+        { label: invoiceNumber || "", to: `/invoice/${id}` },
+        { label: t("edit") },
+      ]
+    : [
+        { label: t("dashboard"), to: "/" },
+        { label: t("invoice"), to: "/invoice" },
+        { label: t("create") },
+      ];
+
+  const {
+    updateDatatableControls: updateInvoiceItemsTableControls,
+    tableProps: invoiceItemsTableProps,
+  } = useDatatableControls({
+    selectionMode: "single",
+  });
+
+  useEffect(() => {
+    updateInvoiceItemsTableControls({
+      data: formik.values.invoiceItems.map((a, b) => ({
+        ...a,
+        key: b,
+      })),
+    });
+  }, [formik.values.invoiceItems, updateInvoiceItemsTableControls]);
+
+  const {
+    addHandler: addInvoiceItemHandler,
+    removeHandler: removeInvoiceItemHandler,
+  } = useFormikDatatable(
+    formik,
+    invoiceItemsTableProps.pageSize,
+    updateInvoiceItemsTableControls,
+    "invoiceItems",
+    (newValue?: any) => {
+      formik.setTouched({
+        ...formik.touched,
+        invoiceItems:
+          newValue ??
+          formik.values.invoiceItems.map((_, i) => ({
+            ...(formik.touched.invoiceItems?.[i] as any),
+          })),
+      });
+    },
+    createEmptyItem
   );
 
-  const salesPersonIds = useMemo(
-    () => (formik.values.salesPersonId ? [formik.values.salesPersonId] : []),
-    [formik.values.salesPersonId]
-  );
-
-  const getItemError = (
-    index: number,
-    field: keyof YupInvoiceItemCreateEdit
-  ): string | undefined => {
-    const errors = formik.errors.invoiceItems;
-    if (!Array.isArray(errors)) {
-      return typeof errors === "string" ? errors : undefined;
-    }
-
-    const itemError = errors[index];
-    if (!itemError || typeof itemError === "string") {
-      return itemError ?? undefined;
-    }
-
-    const fieldError = itemError[field];
-    return typeof fieldError === "string" ? fieldError : undefined;
+  const setAllFieldsTouched = async () => {
+    const validationErrors = await formik.validateForm();
+    formik.setTouched(setNestedObjectValues(validationErrors, true));
   };
 
-  const getItemTouched = (
-    index: number,
-    field: keyof YupInvoiceItemCreateEdit
-  ): boolean => Boolean(formik.touched.invoiceItems?.[index]?.[field]);
-
-  if (loading) {
-    return null;
-  }
-
-  const handleSelectChange = (
-    field: string,
-    option?: SelectAsyncOption | SelectAsyncOption[]
-  ) => {
-    if (Array.isArray(option)) {
-      return;
-    }
-    formik.setFieldValue(field, option?.value ?? "");
+  const changeTab = (val: number) => {
+    setAllFieldsTouched();
+    setTab(val);
   };
+
+  const selectedInvoiceItem = invoiceItemsTableProps.selections[0];
 
   return (
-    <Page title={pageTitle}>
+    <Page
+      title={pageTitle}
+      subtitle={id ? invoiceNumber : ""}
+      breadcrumbs={breadcrumbs}
+      showLoading={!pageReady}
+      showBackdrop={pageBlocker}
+      actions={[
+        {
+          title: t("save"),
+          onclick: formik.handleSubmit,
+          icon: "Save",
+        },
+      ]}
+      hasSingleActionButton
+    >
+      <NavBlocker when={formik.dirty}></NavBlocker>
       <FormikProvider value={formik}>
-        <form onSubmit={formik.handleSubmit} noValidate>
-          <Stack spacing={3}>
-            <PageSection title={t("invoice")}>
-              <Grid container spacing={2}>
-                <Grid item xs={12} md={6}>
-                  <SelectAsync2
-                    name="customerId"
-                    label={t("customer")}
-                    placeholder={t("customer")}
-                    readOnly
-                    suggestionsIfEmpty
-                    error={
-                      formik.touched.customerId &&
-                      Boolean(formik.errors.customerId)
-                    }
-                    onBlur={() => formik.setFieldTouched("customerId")}
-                    ids={customerIds}
-                    asyncFunc={(
-                      input: string,
-                      page: number,
-                      pageSize: number,
-                      ids?: string[]
-                    ) =>
-                      customerService.getSelectOptions(
-                        input,
-                        page,
-                        pageSize,
-                        ids
-                      )
-                    }
-                    onSelectionChange={(option) => {
-                      formik.setFieldValue(
-                        "customerId",
-                        option?.value ?? undefined
-                      );
-                      formik.setFieldValue("customerName", option?.label ?? "");
-                    }}
-                    helperText={
-                      <FormikErrorMessage
-                        touched={formik.touched.customerId}
-                        error={formik.errors.customerId}
-                        translatedFieldName={t("customer")}
-                      />
-                    }
-                  />
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    id="customerName"
-                    name="customerName"
-                    label={t("customer") + " (" + t("name") + ")"}
-                    value={formik.values.customerName}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                  />
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <TextField
-                    fullWidth
-                    id="dateOfSale"
-                    name="dateOfSale"
-                    type="date"
-                    label={t("date-of-sale")}
-                    value={formik.values.dateOfSale}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    InputLabelProps={{ shrink: true }}
-                    error={
-                      formik.touched.dateOfSale &&
-                      Boolean(formik.errors.dateOfSale)
-                    }
-                    helperText={
-                      <FormikErrorMessage
-                        touched={formik.touched.dateOfSale}
-                        error={formik.errors.dateOfSale}
-                        translatedFieldName={t("date-of-sale")}
-                      />
-                    }
-                  />
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <SelectAsync2
-                    name="salesPersonId"
-                    label={t("sales-person")}
-                    readOnly
-                    suggestionsIfEmpty
-                    error={
-                      formik.touched.salesPersonId &&
-                      Boolean(formik.errors.salesPersonId)
-                    }
-                    onBlur={() => formik.setFieldTouched("salesPersonId")}
-                    ids={salesPersonIds}
-                    asyncFunc={(
-                      input: string,
-                      page: number,
-                      pageSize: number,
-                      ids?: string[]
-                    ) => userService.getSelectOptions(input, page, pageSize)}
-                    onSelectionChange={(option) =>
-                      handleSelectChange("salesPersonId", option)
-                    }
-                    helperText={
-                      <FormikErrorMessage
-                        touched={formik.touched.salesPersonId}
-                        error={formik.errors.salesPersonId}
-                        translatedFieldName={t("sales-person")}
-                      />
-                    }
-                  />
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <TextField
-                    fullWidth
-                    id="eOrderNumber"
-                    name="eOrderNumber"
-                    label={t("e-order-number")}
-                    value={formik.values.eOrderNumber}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                  />
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <LookupAutocomplete
-                    groupKey={LookupGroupKey.SalesType}
-                    name="salesTypeId"
-                    label={t("sales-type")}
-                    value={formik.values.salesTypeId ?? ""}
-                    onChange={(newValue) =>
-                      formik.setFieldValue("salesTypeId", newValue || undefined)
-                    }
-                    onBlur={() => formik.setFieldTouched("salesTypeId")}
-                    error={
-                      formik.touched.salesTypeId &&
-                      Boolean(formik.errors.salesTypeId)
-                    }
-                    helperText={
-                      <FormikErrorMessage
-                        touched={formik.touched.salesTypeId}
-                        error={formik.errors.salesTypeId}
-                        translatedFieldName={t("sales-type")}
-                      />
-                    }
-                  />
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <LookupAutocomplete
-                    groupKey={LookupGroupKey.PaymentType}
-                    name="paymentTypeId"
-                    label={t("payment-type")}
-                    value={formik.values.paymentTypeId ?? ""}
-                    onChange={(newValue) =>
-                      formik.setFieldValue(
-                        "paymentTypeId",
-                        newValue || undefined
-                      )
-                    }
-                    onBlur={() => formik.setFieldTouched("paymentTypeId")}
-                    error={
-                      formik.touched.paymentTypeId &&
-                      Boolean(formik.errors.paymentTypeId)
-                    }
-                    helperText={
-                      <FormikErrorMessage
-                        touched={formik.touched.paymentTypeId}
-                        error={formik.errors.paymentTypeId}
-                        translatedFieldName={t("payment-type")}
-                      />
-                    }
-                  />
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <TextField
-                    fullWidth
-                    id="paymentReference"
-                    name="paymentReference"
-                    label={t("payment-reference")}
-                    value={formik.values.paymentReference ?? ""}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    id="remark"
-                    name="remark"
-                    label={t("remark")}
-                    value={formik.values.remark ?? ""}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    multiline
-                    minRows={2}
-                  />
-                </Grid>
-              </Grid>
-            </PageSection>
-
-            <PageSection title={t("invoice-items")}>
-              <FieldArray name="invoiceItems">
-                {({ push, remove }) => (
-                  <Stack spacing={2}>
-                    {formik.values.invoiceItems.map((item, index) => {
-                      const fieldName = (
-                        name: keyof YupInvoiceItemCreateEdit
-                      ) => `invoiceItems[${index}].${name}`;
-                      return (
-                        <PbCard key={item.id ?? index}>
-                          <Grid container spacing={2}>
-                            <Grid item xs={12} md={3}>
-                              <TextField
-                                fullWidth
-                                id={fieldName("productCode")}
-                                name={fieldName("productCode")}
-                                label={t("product-code")}
-                                value={item.productCode ?? ""}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                              />
-                            </Grid>
-                            <Grid item xs={12} md={3}>
-                              <TextField
-                                fullWidth
-                                id={fieldName("description")}
-                                name={fieldName("description")}
-                                label={t("description")}
-                                value={item.description ?? ""}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                              />
-                            </Grid>
-                            <Grid item xs={12} md={3}>
-                              <TextField
-                                fullWidth
-                                id={fieldName("primarySerialNumber")}
-                                name={fieldName("primarySerialNumber")}
-                                label={t("primary-serial-number")}
-                                value={item.primarySerialNumber ?? ""}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                              />
-                            </Grid>
-                            <Grid item xs={12} md={3}>
-                              <TextField
-                                fullWidth
-                                id={fieldName("manufactureSerialNumber")}
-                                name={fieldName("manufactureSerialNumber")}
-                                label={t("manufacture-serial-number")}
-                                value={item.manufactureSerialNumber ?? ""}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                              />
-                            </Grid>
-                            <Grid item xs={12} md={3}>
-                              <TextField
-                                fullWidth
-                                id={fieldName("imei")}
-                                name={fieldName("imei")}
-                                label={t("imei")}
-                                value={item.imei ?? ""}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                              />
-                            </Grid>
-                            <Grid item xs={12} md={3}>
-                              <TextField
-                                fullWidth
-                                id={fieldName("unitOfMeasure")}
-                                name={fieldName("unitOfMeasure")}
-                                label={t("uom")}
-                                value={item.unitOfMeasure ?? ""}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                              />
-                            </Grid>
-                            <Grid item xs={12} md={2}>
-                              <TextField
-                                fullWidth
-                                type="number"
-                                id={fieldName("quantity")}
-                                name={fieldName("quantity")}
-                                label={t("quantity")}
-                                value={item.quantity}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                error={
-                                  getItemTouched(index, "quantity") &&
-                                  Boolean(getItemError(index, "quantity"))
-                                }
-                                helperText={
-                                  <FormikErrorMessage
-                                    touched={getItemTouched(index, "quantity")}
-                                    error={getItemError(index, "quantity")}
-                                    translatedFieldName={t("quantity")}
-                                  />
-                                }
-                              />
-                            </Grid>
-                            <Grid item xs={12} md={2}>
-                              <TextField
-                                fullWidth
-                                type="number"
-                                id={fieldName("unitPrice")}
-                                name={fieldName("unitPrice")}
-                                label={t("unit-price-sold")}
-                                value={item.unitPrice}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                error={
-                                  getItemTouched(index, "unitPrice") &&
-                                  Boolean(getItemError(index, "unitPrice"))
-                                }
-                                helperText={
-                                  <FormikErrorMessage
-                                    touched={getItemTouched(index, "unitPrice")}
-                                    error={getItemError(index, "unitPrice")}
-                                    translatedFieldName={t("unit-price-sold")}
-                                  />
-                                }
-                              />
-                            </Grid>
-                            <Grid item xs={12} md={2}>
-                              <TextField
-                                fullWidth
-                                type="number"
-                                id={fieldName("totalPrice")}
-                                name={fieldName("totalPrice")}
-                                label={t("total-price")}
-                                value={item.totalPrice ?? 0}
-                                InputProps={{ readOnly: true }}
-                              />
-                            </Grid>
-                            <Grid item xs={12} md={2}>
-                              <TextField
-                                fullWidth
-                                type="number"
-                                id={fieldName("warrantyDurationMonths")}
-                                name={fieldName("warrantyDurationMonths")}
-                                label={t("warranty-duration-months")}
-                                value={item.warrantyDurationMonths ?? 0}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                              />
-                            </Grid>
-                            <Grid item xs={12} md={2}>
-                              <TextField
-                                fullWidth
-                                id={fieldName("status")}
-                                name={fieldName("status")}
-                                label={t("status")}
-                                value={item.status ?? ""}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                              />
-                            </Grid>
-                            <Grid item xs={12}>
-                              <Box display="flex" justifyContent="flex-end">
-                                <Button
-                                  color="error"
-                                  variant="outlined"
-                                  onClick={() => remove(index)}
-                                  disabled={
-                                    formik.values.invoiceItems.length === 1
-                                  }
-                                >
-                                  {t("remove-invoice-item")}
-                                </Button>
-                              </Box>
-                            </Grid>
-                          </Grid>
-                        </PbCard>
-                      );
-                    })}
-                    <Button
-                      variant="outlined"
-                      onClick={() => push(createEmptyItem())}
-                    >
-                      {t("add-invoice-item")}
-                    </Button>
-                  </Stack>
-                )}
-              </FieldArray>
-              <Box display="flex" justifyContent="flex-end" mt={2}>
+        <PbCard px={2} pt={2}>
+          <PbTabs
+            value={tab}
+            onChange={(event: React.SyntheticEvent, newValue: number) => {
+              changeTab(newValue);
+            }}
+          >
+            <PbTab
+              label={t("details")}
+              haserror={formikObjectHasHeadTouchedErrors(
+                formik.errors,
+                formik.touched
+              )}
+            />
+            <PbTab
+              label={
+                <BadgeText
+                  number={formik.values.invoiceItems.length}
+                  label={t("invoice-items")}
+                />
+              }
+              haserror={formikObjectHasTouchedErrors(
+                formik.errors.invoiceItems,
+                formik.touched.invoiceItems
+              )}
+            />
+          </PbTabs>
+          <CardContent>
+            <PbTabPanel value={tab} index={0}>
+              <InvoiceHeadCreateEdit formik={formik} />
+            </PbTabPanel>
+            <PbTabPanel value={tab} index={1}>
+              <DataTable
+                title={t("invoice-items")}
+                tableKey="InvoiceCreateEditPage-Items"
+                headerCells={invoiceItemTable}
+                data={invoiceItemsTableProps}
+                onAdd={addInvoiceItemHandler}
+                onDelete={(d) => removeInvoiceItemHandler(d)}
+                dataKey="key"
+                paddingEnabled={false}
+              />
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+                mt={2}
+              >
+                <Typography variant="body2" color="text.secondary">
+                  {t("select-row-to-edit")}
+                </Typography>
                 <Typography variant="h6">
-                  {t("grand-total")}:{" "}
+                  {t("grand-total")}: {""}
                   {formik.values.invoiceItems
                     .reduce((sum, item) => sum + (item.totalPrice ?? 0), 0)
                     .toFixed(2)}
                 </Typography>
-              </Box>
-            </PageSection>
+              </Stack>
+            </PbTabPanel>
+          </CardContent>
+        </PbCard>
 
-            <Stack direction="row" justifyContent="flex-end" spacing={2}>
-              <Button variant="outlined" onClick={() => navigate(-1)}>
-                {t("cancel")}
-              </Button>
-              <Button
-                type="submit"
-                variant="contained"
-                disabled={formik.isSubmitting}
-              >
-                {t("save")}
-              </Button>
-            </Stack>
-          </Stack>
-        </form>
+        {tab === 1 && selectedInvoiceItem !== undefined && (
+          <InvoiceItemCreateEdit
+            formik={formik}
+            itemIndex={selectedInvoiceItem}
+          />
+        )}
       </FormikProvider>
     </Page>
   );

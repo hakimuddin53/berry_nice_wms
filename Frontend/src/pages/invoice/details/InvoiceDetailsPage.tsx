@@ -13,7 +13,6 @@ import {
   KeyValuePair,
   Page,
   PbCard,
-  PageSection,
 } from "components/platbricks/shared";
 import UserDateTime from "components/platbricks/shared/UserDateTime";
 import { InvoiceDetailsDto } from "interfaces/v12/invoice/invoiceDetailsDto";
@@ -100,47 +99,54 @@ const InvoiceDetailsPage = () => {
         </CardContent>
       </PbCard>
 
-      <PageSection title={t("invoice-items")}>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>{t("product-code")}</TableCell>
-              <TableCell>{t("description")}</TableCell>
-              <TableCell>{t("primary-serial-number")}</TableCell>
-              <TableCell>{t("manufacture-serial-number")}</TableCell>
-              <TableCell>{t("imei")}</TableCell>
-              <TableCell align="right">{t("quantity")}</TableCell>
-              <TableCell align="right">{t("unit-price-sold")}</TableCell>
-              <TableCell align="right">{t("total-price")}</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {invoice.invoiceItems.map((item) => (
-              <TableRow key={item.id as unknown as string}>
-                <TableCell>{item.productCode || "-"}</TableCell>
-                <TableCell>{item.description || "-"}</TableCell>
-                <TableCell>{item.primarySerialNumber || "-"}</TableCell>
-                <TableCell>{item.manufactureSerialNumber || "-"}</TableCell>
-                <TableCell>{item.imei || "-"}</TableCell>
-                <TableCell align="right">{item.quantity}</TableCell>
-                <TableCell align="right">{item.unitPrice.toFixed(2)}</TableCell>
-                <TableCell align="right">
-                  {item.totalPrice.toFixed(2)}
-                </TableCell>
-              </TableRow>
-            ))}
-            {invoice.invoiceItems.length === 0 && (
+      <PbCard sx={{ mt: 2 }}>
+        <CardContent>
+          <Typography variant="h6" gutterBottom>
+            {t("invoice-items")}
+          </Typography>
+          <Table size="small">
+            <TableHead>
               <TableRow>
-                <TableCell colSpan={8}>
-                  <Typography variant="body2" color="text.secondary">
-                    {t("no-items-added")}
-                  </Typography>
-                </TableCell>
+                <TableCell>{t("product-code")}</TableCell>
+                <TableCell>{t("description")}</TableCell>
+                <TableCell>{t("primary-serial-number")}</TableCell>
+                <TableCell>{t("manufacture-serial-number")}</TableCell>
+                <TableCell>{t("imei")}</TableCell>
+                <TableCell align="right">{t("quantity")}</TableCell>
+                <TableCell align="right">{t("unit-price-sold")}</TableCell>
+                <TableCell align="right">{t("total-price")}</TableCell>
               </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </PageSection>
+            </TableHead>
+            <TableBody>
+              {invoice.invoiceItems.map((item) => (
+                <TableRow key={item.id as unknown as string}>
+                  <TableCell>{item.productCode || "-"}</TableCell>
+                  <TableCell>{item.description || "-"}</TableCell>
+                  <TableCell>{item.primarySerialNumber || "-"}</TableCell>
+                  <TableCell>{item.manufactureSerialNumber || "-"}</TableCell>
+                  <TableCell>{item.imei || "-"}</TableCell>
+                  <TableCell align="right">{item.quantity}</TableCell>
+                  <TableCell align="right">
+                    {item.unitPrice.toFixed(2)}
+                  </TableCell>
+                  <TableCell align="right">
+                    {item.totalPrice.toFixed(2)}
+                  </TableCell>
+                </TableRow>
+              ))}
+              {invoice.invoiceItems.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={8}>
+                    <Typography variant="body2" color="text.secondary">
+                      {t("no-items-added")}
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </PbCard>
     </Page>
   );
 };

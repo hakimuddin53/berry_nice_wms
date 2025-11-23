@@ -32,54 +32,35 @@ namespace Wms.Api.Services
 			{
 				var balanceCache = new Dictionary<(Guid ProductId, Guid WarehouseId, Guid LocationId), int>();
 
-                var productCodeLookup = stockIn.StockInItems
-                    .Select(i => i.ProductCode?.Trim())
-                    .Where(code => !string.IsNullOrWhiteSpace(code))
-                    .Distinct(System.StringComparer.OrdinalIgnoreCase)
-                    .ToList();
+				var productIds = stockIn.StockInItems
+					.Select(i => i.ProductId)
+					.Where(id => id != Guid.Empty)
+					.Distinct()
+					.ToList();
 
-                var productCodeSet = new HashSet<string>(productCodeLookup, System.StringComparer.OrdinalIgnoreCase);
+				var productCostMap = productIds.Count == 0
+					? new Dictionary<Guid, decimal?>()
+					: await _context.Products
+						.Where(p => productIds.Contains(p.ProductId))
+						.Select(p => new { p.ProductId, p.CostPrice })
+						.ToDictionaryAsync(p => p.ProductId, p => p.CostPrice);
 
-                if (productCodeLookup.Count == 0)
-                {
-                    throw new InvalidOperationException("Each stock-in item must include a product code.");
-                }
+				foreach (var entry in _context.ChangeTracker.Entries<Product>().Where(e => e.Entity != null))
+				{
+					var product = entry.Entity;
+					productCostMap[product.ProductId] = product.CostPrice;
+				}
 
-                var productIdsByCode = await _context.Products
-                    .Where(p => productCodeLookup.Contains(p.ProductCode))
-                    .Select(p => new { p.ProductCode, p.ProductId })
-                    .ToDictionaryAsync(
-                        p => p.ProductCode,
-                        p => p.ProductId,
-                        System.StringComparer.OrdinalIgnoreCase);
-
-                var newProducts = _context.ChangeTracker
-                    .Entries<Product>()
-                    .Where(e => e.State == EntityState.Added && e.Entity.ProductCode != null)
-                    .Select(e => e.Entity)
-                    .Where(p => productCodeSet.Contains(p.ProductCode))
-                    .ToList();
-
-                foreach (var product in newProducts)
-                {
-                    productIdsByCode[product.ProductCode] = product.ProductId;
-                }
+				// Remarks are now simple strings per item; no lookup table required.
 
 				foreach (var item in stockIn.StockInItems)
 				{
-                    if (string.IsNullOrWhiteSpace(item.ProductCode))
-                    {
-                        throw new InvalidOperationException("Product code is required for inventory transactions.");
-                    }
+					if (item.ProductId == Guid.Empty)
+					{
+						throw new InvalidOperationException("Product reference is required for inventory transactions.");
+					}
 
-                    var normalizedCode = item.ProductCode.Trim();
-
-                    if (!productIdsByCode.TryGetValue(normalizedCode, out var productId))
-                    {
-                        throw new InvalidOperationException($"Product code '{item.ProductCode}' does not exist.");
-                    }
-
-					var key = (ProductId: productId, WarehouseId: stockIn.WarehouseId, LocationId: item.LocationId);
+					var key = (ProductId: item.ProductId, WarehouseId: stockIn.WarehouseId, LocationId: item.LocationId);
 					if (!balanceCache.TryGetValue(key, out var oldBalance))
 					{
 						oldBalance = await GetCurrentBalanceAsync(key.ProductId, key.WarehouseId, key.LocationId);
@@ -96,15 +77,14 @@ namespace Wms.Api.Services
 						WarehouseId = key.WarehouseId,
 						CurrentLocationId = key.LocationId,
 						StockInId = stockIn.Id,
-						StockOutId = Guid.Empty,
 						StockTransferId = Guid.Empty,
 						StockAdjustmentId = Guid.Empty,
 						QuantityIn = item.ReceiveQuantity,
 						QuantityOut = 0,
 						OldBalance = oldBalance,
 						NewBalance = newBalance,
-						UnitPrice = item.Cost ?? 0,
-						Remark = item.StockInItemRemarks?.FirstOrDefault()?.Remark
+						UnitPrice = productCostMap.TryGetValue(item.ProductId, out var unitCost) ? unitCost ?? 0 : 0,
+						Remark = item.Remark
 					};
 
 					_context.Inventories.Add(inventoryRecord);
@@ -120,132 +100,7 @@ namespace Wms.Api.Services
 			}
 		}
 
-		public async Task StockOutAsync(StockOut stockOut)
-		{
-			ArgumentNullException.ThrowIfNull(stockOut);
 
-			if (stockOut.StockOutItems is null || stockOut.StockOutItems.Count == 0)
-			{
-				await _context.SaveChangesAsync();
-				return;
-			}
-
-			await using var transaction = await _context.Database.BeginTransactionAsync();
-
-			try
-			{
-				var balanceCache = new Dictionary<(Guid ProductId, Guid WarehouseId, Guid LocationId), int>();
-
-				foreach (var item in stockOut.StockOutItems)
-				{
-					var key = (ProductId: item.ProductId, WarehouseId: stockOut.WarehouseId, LocationId: item.LocationId);
-					if (!balanceCache.TryGetValue(key, out var oldBalance))
-					{
-						oldBalance = await GetCurrentBalanceAsync(key.ProductId, key.WarehouseId, key.LocationId);
-					}
-
-					if (oldBalance < item.Quantity)
-					{
-						throw new InvalidOperationException(
-							$"Insufficient stock for product {item.ProductId}. Required: {item.Quantity}, Available: {oldBalance}.");
-					}
-
-					var newBalance = oldBalance - item.Quantity;
-					balanceCache[key] = newBalance;
-
-					var inventoryRecord = new Inventory
-					{
-						Id = Guid.NewGuid(),
-						TransactionType = TransactionTypeEnum.STOCKOUT,
-						ProductId = key.ProductId,
-						WarehouseId = key.WarehouseId,
-						CurrentLocationId = key.LocationId,
-						StockInId = Guid.Empty,
-						StockOutId = stockOut.Id,
-						StockTransferId = Guid.Empty,
-						StockAdjustmentId = Guid.Empty,
-						QuantityIn = 0,
-						QuantityOut = item.Quantity,
-						OldBalance = oldBalance,
-						NewBalance = newBalance,
-						UnitPrice = 0,
-						Remark = null
-					};
-
-					_context.Inventories.Add(inventoryRecord);
-				}
-
-				await _context.SaveChangesAsync();
-				await transaction.CommitAsync();
-			}
-			catch
-			{
-				await transaction.RollbackAsync();
-				throw;
-			}
-		}
-
-		public async Task CancelStockOutAsync(Guid stockOutId)
-		{
-			await using var transaction = await _context.Database.BeginTransactionAsync();
-
-			try
-			{
-				var stockOut = await _context.StockOuts
-					.Include(s => s.StockOutItems)
-					.SingleOrDefaultAsync(s => s.Id == stockOutId);
-
-				if (stockOut is null)
-				{
-					throw new KeyNotFoundException($"Stock out {stockOutId} not found.");
-				}
-
-				var balanceCache = new Dictionary<(Guid ProductId, Guid WarehouseId, Guid LocationId), int>();
-
-				foreach (var item in stockOut.StockOutItems ?? Enumerable.Empty<StockOutItem>())
-				{
-					var key = (ProductId: item.ProductId, WarehouseId: stockOut.WarehouseId, LocationId: item.LocationId);
-					if (!balanceCache.TryGetValue(key, out var oldBalance))
-					{
-						oldBalance = await GetCurrentBalanceAsync(key.ProductId, key.WarehouseId, key.LocationId);
-					}
-
-					var newBalance = checked(oldBalance + item.Quantity);
-					balanceCache[key] = newBalance;
-
-					var inventoryRecord = new Inventory
-					{
-						Id = Guid.NewGuid(),
-						TransactionType = TransactionTypeEnum.STOCKOUTCANCEL,
-						ProductId = key.ProductId,
-						WarehouseId = key.WarehouseId,
-						CurrentLocationId = key.LocationId,
-						StockInId = Guid.Empty,
-						StockOutId = stockOut.Id,
-						StockTransferId = Guid.Empty,
-						StockAdjustmentId = Guid.Empty,
-						QuantityIn = item.Quantity,
-						QuantityOut = 0,
-						OldBalance = oldBalance,
-						NewBalance = newBalance,
-						UnitPrice = 0,
-						Remark = "Cancellation adjustment"
-					};
-
-					_context.Inventories.Add(inventoryRecord);
-				}
-
-				stockOut.Status = StockOutStatusEnum.CANCELLED;
-
-				await _context.SaveChangesAsync();
-				await transaction.CommitAsync();
-			}
-			catch
-			{
-				await transaction.RollbackAsync();
-				throw;
-			}
-		}
 
 		private async Task<int> GetCurrentBalanceAsync(Guid productId, Guid warehouseId, Guid locationId)
 		{

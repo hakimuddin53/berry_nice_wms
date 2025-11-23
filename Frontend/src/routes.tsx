@@ -26,7 +26,8 @@ import CartonSizeListPage from "pages/cartonSize/index/CartonSizeListPage";
 
 import DashboardPage from "pages/dashboard/DashboardPage";
 
-import InventoryListPage from "pages/inventory/InventoryListPage";
+import InventoryAuditPage from "pages/inventory/InventoryAuditPage";
+import InventorySummaryPage from "pages/inventory/InventorySummaryPage";
 
 import CustomerCreateEditPage from "pages/customer/createEdit/CustomerCreateEditPage";
 import CustomerDetailsPage from "pages/customer/details/CustomerDetailsPage";
@@ -150,51 +151,6 @@ const routes = [
           },
         ],
       },
-      // {
-      //   path: "product",
-      //   children: [
-      //     {
-      //       index: true,
-      //       element: (
-      //         <ModuleGuard requiredModule={ModuleEnum.PRODUCT}>
-      //           <ProductListPage />
-      //         </ModuleGuard>
-      //       ),
-      //     },
-      //     {
-      //       path: "new",
-      //       element: (
-      //         <ModuleGuard requiredModule={ModuleEnum.PRODUCT}>
-      //           <ProductCreateEditPage />
-      //         </ModuleGuard>
-      //       ),
-      //     },
-      //     {
-      //       path: ":id",
-      //       element: (
-      //         <ModuleGuard requiredModule={ModuleEnum.PRODUCT}>
-      //           <ProductDetailsPage />
-      //         </ModuleGuard>
-      //       ),
-      //     },
-      //     {
-      //       path: ":id/edit",
-      //       element: (
-      //         <ModuleGuard requiredModule={ModuleEnum.PRODUCT}>
-      //           <ProductCreateEditPage />
-      //         </ModuleGuard>
-      //       ),
-      //     },
-      //     {
-      //       path: "bulk-upload",
-      //       element: (
-      //         <ModuleGuard requiredModule={ModuleEnum.PRODUCT}>
-      //           <ProductBulkUploadPage />
-      //         </ModuleGuard>
-      //       ),
-      //     },
-      //   ],
-      // },
       {
         path: "stock-in",
         children: [
@@ -276,7 +232,23 @@ const routes = [
             index: true,
             element: (
               <ModuleGuard requiredModule={ModuleEnum.INVENTORY}>
-                <InventoryListPage />
+                <InventoryAuditPage />
+              </ModuleGuard>
+            ),
+          },
+          {
+            path: "audit",
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.INVENTORY}>
+                <InventoryAuditPage />
+              </ModuleGuard>
+            ),
+          },
+          {
+            path: "summary",
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.INVENTORY}>
+                <InventorySummaryPage />
               </ModuleGuard>
             ),
           },

@@ -26,9 +26,6 @@ namespace Wms.Api.Entities
     public Guid StockInId { get; set; }
 
     [Required]
-    public Guid StockOutId { get; set; }
-
-    [Required]
     public Guid StockTransferId { get; set; }
 
     [Required]

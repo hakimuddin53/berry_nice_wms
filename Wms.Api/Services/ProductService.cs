@@ -1,227 +1,174 @@
-//using ClosedXML.Excel;
-//using Wms.Api.Entities;
-//using Wms.Api.Repositories;
-//using Wms.Api.Model;
-//using Wms.Api.Context;
-//using Microsoft.EntityFrameworkCore;
+using System;
+using System.Linq;
+using AutoMapper;
+using LinqKit;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using Wms.Api.Context;
+using Wms.Api.Dto;
+using Wms.Api.Dto.PagedList;
+using Wms.Api.Dto.Product.ProductCreateUpdate;
+using Wms.Api.Dto.Product.ProductDetails;
+using Wms.Api.Dto.Product.ProductSearch;
+using Wms.Api.Entities;
+using Wms.Api.Model;
 
-//namespace Wms.Api.Services
-//{
-//    public class ProductService(IProductRepository productRepository, IRunningNumberService runningNumberService, ApplicationDbContext context) : IProductService
-//    {
-//        public async Task<(bool IsSuccess, string ErrorMessage)> BulkUploadProducts(IFormFile file)
-//        {
-//            try
-//            {
-//                using (var stream = new MemoryStream())
-//                {
-//                    await file.CopyToAsync(stream);
-//                    using (var workbook = new XLWorkbook(stream))
-//                    {
-//                        var worksheet = workbook.Worksheet(1);
+namespace Wms.Api.Services
+{
+    public class ProductService : IProductService
+    {
+        private readonly ApplicationDbContext _context;
+        private readonly IMapper _mapper;
+        private readonly IService<Product> _service;
+        private readonly IRunningNumberService _runningNumberService;
 
-//                        var expectedHeaders = new List<string>
-//                        {
-//                            "Name", "ItemCode", "ClientCode", "StockGroup", "InboundQuantity",
-//                            "Category", "Colour", "Design", "Size", "ListPrice", "QuantityPerCarton", "Threshold",
-//                            "Rack", "Warehouse"
-//                        };
+        public ProductService(
+            ApplicationDbContext context,
+            IMapper mapper,
+            IService<Product> service,
+            IRunningNumberService runningNumberService)
+        {
+            _context = context;
+            _mapper = mapper;
+            _service = service;
+            _runningNumberService = runningNumberService;
+        }
 
-//                        var actualHeaders = worksheet.Row(1).Cells(1, expectedHeaders.Count)
-//                            .Select(cell => cell.GetString().Trim())
-//                            .ToList();
+        public async Task<PagedListDto<SelectOptionV12Dto>> GetSelectOptionsAsync(GlobalSelectFilterV12Dto selectFilterV12Dto)
+        {
+            var predicate = BuildProductFilter(selectFilterV12Dto.SearchString, selectFilterV12Dto.Ids);
 
-//                        if (!expectedHeaders.SequenceEqual(actualHeaders))
-//                        {
-//                            throw new Exception("Invalid file format. Please check the file headers.");
-//                        }
+            var paginatedResult = await QueryWithLookups()
+                .Where(predicate)
+                .OrderBy(p => p.ProductCode)
+                .Skip((selectFilterV12Dto.Page - 1) * selectFilterV12Dto.PageSize)
+                .Take(selectFilterV12Dto.PageSize)
+                .ToListAsync();
 
-//                        var rowCount = worksheet.RowsUsed().Count();
+            var pagedResult = new PagedList<Product>(paginatedResult, selectFilterV12Dto.Page, selectFilterV12Dto.PageSize);
+            return _mapper.Map<PagedListDto<SelectOptionV12Dto>>(pagedResult);
+        }
 
-//                        for (int row = 2; row <= rowCount; row++)
-//                        {
-//                            var clientCodeName = worksheet.Cell(row, 3).GetString();
-//                            var stockGroupName = worksheet.Cell(row, 4).GetString();
-//                            var categoryName = worksheet.Cell(row, 6).GetString();
-//                            var colourName = worksheet.Cell(row, 7).GetString();
-//                            var designName = worksheet.Cell(row, 8).GetString();
-//                            var sizeName = worksheet.Cell(row, 9).GetString();
-//                            var rackName = worksheet.Cell(row, 13).GetString();
-//                            var warehouseName = worksheet.Cell(row, 14).GetString();
-//                            var inboundQuantity = worksheet.Cell(row, 5).GetValue<int>();
+        public async Task<PagedListDto<ProductDetailsDto>> SearchProductsAsync(ProductSearchDto productSearchDto)
+        {
+            var predicate = BuildProductFilter(productSearchDto.search);
 
-//                            //var categoryId = await productRepository.GetOrCreateCategoryIdAsync(categoryName);
-//                            //var sizeId = await productRepository.GetOrCreateSizeIdAsync(sizeName);
-//                            //var colourId = await productRepository.GetOrCreateColourIdAsync(colourName);
-//                            //var designId = await productRepository.GetOrCreateDesignIdAsync(designName);
-//                            //var cartonSizeId = await productRepository.GetOrCreateCartonSizeIdAsync(stockGroupName);
-//                            //var rackId = await productRepository.GetOrCreateRackIdAsync(rackName);
-//                            //var clientCodeId = await productRepository.GetOrCreateClientCodeIdAsync(clientCodeName);
-//                            //var warehouseId = await productRepository.GetOrCreateWarehouseIdAsync(warehouseName);
+            var products = await QueryWithLookups()
+                .Where(predicate)
+                .OrderBy(p => p.ProductCode)
+                .Skip((productSearchDto.Page - 1) * productSearchDto.PageSize)
+                .Take(productSearchDto.PageSize)
+                .ToListAsync();
 
-//                            var productName = worksheet.Cell(row, 1).GetString();
-//                            var itemCode = worksheet.Cell(row, 2).GetString();
-//                            var listPrice = worksheet.Cell(row, 10).GetValue<decimal>();
-//                            var quantityPerCarton = worksheet.Cell(row, 11).GetValue<int>();
-//                            var threshold = worksheet.Cell(row, 12).GetValue<int>();
+            var pagedResult = new PagedList<Product>(products, productSearchDto.Page, productSearchDto.PageSize);
+            return _mapper.Map<PagedListDto<ProductDetailsDto>>(pagedResult);
+        }
 
-//                            // Check if product exists by all criteria
-//                            var existingProduct = await productRepository.GetProductByAllCriteriaAsync(
-//                                itemCode: itemCode,
-//                                clientCodeId: clientCodeId,
-//                                cartonSizeId: cartonSizeId,
-//                                categoryId: categoryId,
-//                                colourId: colourId,
-//                                designId: designId,
-//                                sizeId: sizeId);
+        public async Task<int> CountProductsAsync(ProductSearchDto productSearchDto)
+        {
+            var predicate = BuildProductFilter(productSearchDto.search);
+            return await QueryWithLookups().Where(predicate).CountAsync();
+        }
 
-//                            if (existingProduct == null)
-//                            {
-//                                // Create product
-//                                var product = new Product
-//                                {
-//                                    Name = productName,
-//                                    ItemCode = itemCode,
-//                                    ClientCodeId = clientCodeId,
-//                                    QuantityPerCarton = quantityPerCarton,
-//                                    CategoryId = categoryId,
-//                                    SizeId = sizeId,
-//                                    ColourId = colourId,
-//                                    DesignId = designId,
-//                                    CartonSizeId = cartonSizeId,
-//                                    ListPrice = listPrice,
-//                                    Threshold = threshold,
-//                                    SerialNumber =
-//                                        await runningNumberService.GenerateRunningNumberAsync(
-//                                            OperationTypeEnum.PRODUCT)
-//                                };
+        public async Task<ProductDetailsDto?> GetProductByIdAsync(Guid id)
+        {
+            var product = await QueryWithLookups(false)
+                .FirstOrDefaultAsync(p => p.ProductId == id);
 
-//                                await productRepository.AddProductAsync(product);
+            return product == null ? null : _mapper.Map<ProductDetailsDto>(product);
+        }
 
-//                                // Add initial inventory record
-//                                var inventory = new Inventory
-//                                {
-//                                    ProductId = product.Id,
-//                                    TransactionType = TransactionTypeEnum.BULKUPLOAD,
-//                                    CurrentLocationId = rackId,
-//                                    WarehouseId = warehouseId,
-//                                    QuantityIn = inboundQuantity,
-//                                    NewBalance = inboundQuantity,
-//                                    Remark = "Uploaded by bulk"
-//                                };
+        public async Task<Product> CreateAsync(ProductCreateUpdateDto productCreateUpdateDto)
+        {
+            var product = _mapper.Map<Product>(productCreateUpdateDto);
+            product.ProductCode = await _runningNumberService.GenerateRunningNumberAsync(OperationTypeEnum.PRODUCT);
 
-//                                await productRepository.AddInventoryRecordAsync(inventory);
+            await _service.AddAsync(product);
+            return product;
+        }
 
-//                                // Add inventory balance record for new product
-//                                var inventoryBalance = new InventoryBalance
-//                                {
-//                                    Id = Guid.NewGuid(),
-//                                    ProductId = product.Id,
-//                                    WarehouseId = warehouseId,
-//                                    CurrentLocationId = rackId,
-//                                    Quantity = inboundQuantity
-//                                };
-//                                context.InventoryBalances.Add(inventoryBalance);
+        public async Task<bool> UpdateAsync(Guid id, ProductCreateUpdateDto productCreateUpdateDto)
+        {
+            var product = await _service.GetByIdAsync(id);
+            if (product == null)
+            {
+                return false;
+            }
 
-//                                var wh = new WarehouseInventoryBalance
-//                                {
-//                                    Id = Guid.NewGuid(),
-//                                    ProductId = product.Id,
-//                                    WarehouseId = warehouseId,
-//                                    OnHandQuantity = inboundQuantity,
-//                                    TotalQtyReceived = inboundQuantity,
-//                                };
-//                                context.WarehouseInventoryBalances.Add(wh);                               
-//                            }
-//                            else
-//                            {
-//                                // Retrieve the existing inventory record for the product and warehouse/rack (latest)
-//                                var existingInventory = await context.Inventories
-//                                    .Where(i => i.ProductId == existingProduct.Id && i.WarehouseId == warehouseId && i.CurrentLocationId == rackId)
-//                                    .OrderByDescending(i => i.CreatedAt)
-//                                    .FirstOrDefaultAsync();
+            var existingProductCode = product.ProductCode;
+            _mapper.Map(productCreateUpdateDto, product);
+            product.ProductCode = existingProductCode;
 
-//                                // Calculate old and new balances
-//                                int oldBalance = existingInventory != null ? existingInventory.NewBalance : 0;
-//                                int newBalance = oldBalance + inboundQuantity;
+            await _service.UpdateAsync(product);
+            return true;
+        }
 
-//                                var inventory = new Inventory
-//                                {
-//                                    Id = Guid.NewGuid(),
-//                                    TransactionType = TransactionTypeEnum.BULKUPLOAD,
-//                                    ProductId = existingProduct.Id,
-//                                    CurrentLocationId = rackId,
-//                                    WarehouseId = warehouseId,
-//                                    QuantityIn = inboundQuantity,
-//                                    QuantityOut = 0,
-//                                    OldBalance = oldBalance,
-//                                    NewBalance = newBalance,
-//                                    Remark = "Bulk upload adjustment"
-//                                };
+        public async Task DeleteAsync(Guid id)
+        {
+            await _service.DeleteAsync(id);
+        }
 
-//                                await productRepository.AddInventoryRecordAsync(inventory);
+        public async Task<PagedListDto<ProductDetailsDto>> FindProductsByIdsAsync(Guid[] productIds, int page, int pageSize)
+        {
+            var products = await QueryWithLookups()
+                .Where(product => productIds.Contains(product.ProductId))
+                .OrderBy(p => p.ProductCode)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
 
-//                                // Update or add inventory balance record
-//                                var existingBalance = await context.InventoryBalances
-//                                    .FirstOrDefaultAsync(b =>
-//                                        b.ProductId == existingProduct.Id &&
-//                                        b.WarehouseId == warehouseId &&
-//                                        b.CurrentLocationId == rackId);
+            var pagedResult = new PagedList<Product>(products, page, pageSize);
+            return _mapper.Map<PagedListDto<ProductDetailsDto>>(pagedResult);
+        }
 
-//                                if (existingBalance == null)
-//                                {
-//                                    var newBalanceRecord = new InventoryBalance
-//                                    {
-//                                        Id = Guid.NewGuid(),
-//                                        ProductId = existingProduct.Id,
-//                                        WarehouseId = warehouseId,
-//                                        CurrentLocationId = rackId,
-//                                        Quantity = inboundQuantity
-//                                    };
-//                                    context.InventoryBalances.Add(newBalanceRecord);
-//                                }
-//                                else
-//                                {
-//                                    existingBalance.Quantity += inboundQuantity;
-//                                    context.InventoryBalances.Update(existingBalance);
-//                                }
+        public Task<(bool IsSuccess, string ErrorMessage)> BulkUploadProducts(IFormFile file)
+        {
+            // Bulk upload is not implemented for the current product model.
+            return Task.FromResult((false, "Bulk upload is not supported for this product version."));
+        }
 
-//                                // Update or add warehouse inventory balance record
-//                                var wh = await context.WarehouseInventoryBalances
-//                                            .FirstOrDefaultAsync(w =>
-//                                                w.ProductId == existingProduct.Id &&
-//                                                w.WarehouseId == warehouseId);
+        private IQueryable<Product> QueryWithLookups(bool asNoTracking = true)
+        {
+            var query = _context.Products
+                .Include(p => p.Category)
+                .Include(p => p.Brand)
+                .Include(p => p.Color)
+                .Include(p => p.Storage)
+                .Include(p => p.Ram)
+                .Include(p => p.Processor)
+                .Include(p => p.ScreenSize);
 
-//                                if (wh == null)
-//                                {
-//                                    wh = new WarehouseInventoryBalance
-//                                    {
-//                                        Id = Guid.NewGuid(),
-//                                        ProductId = existingProduct.Id,
-//                                        WarehouseId = warehouseId,
-//                                        OnHandQuantity = inboundQuantity
-//                                    };
-//                                    context.WarehouseInventoryBalances.Add(wh);
-//                                }
-//                                else
-//                                {
-//                                    wh.OnHandQuantity += inboundQuantity;
-//                                    context.WarehouseInventoryBalances.Update(wh);
-//                                }                                 
-//                            }
+            return asNoTracking ? query.AsNoTracking() : query;
+        }
 
-//                            await productRepository.SaveChangesAsync();
-//                            await context.SaveChangesAsync();
-//                        }
-//                    }
-//                }
+        private static ExpressionStarter<Product> BuildProductFilter(string? searchTerm, string[]? ids = null)
+        {
+            var predicate = PredicateBuilder.New<Product>(true);
 
-//                return (true, "");
-//            }
-//            catch (Exception ex)
-//            {
-//                return (false, ex.Message);
-//            }
-//        }
-//    }
-//}
+            if (ids != null && ids.Length > 0)
+            {
+                var productIds = ids
+                    .Select(id => Guid.TryParse(id, out var parsedId) ? parsedId : Guid.Empty)
+                    .Where(id => id != Guid.Empty)
+                    .ToArray();
+
+                if (productIds.Length > 0)
+                {
+                    predicate = predicate.And(product => productIds.Contains(product.ProductId));
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                var search = searchTerm.Trim();
+                predicate = predicate.And(product =>
+                    product.ProductCode.Contains(search) ||
+                    (product.Model != null && product.Model.Contains(search)) ||
+                    (product.PrimarySerialNumber != null && product.PrimarySerialNumber.Contains(search)) ||
+                    (product.ManufactureSerialNumber != null && product.ManufactureSerialNumber.Contains(search)));
+            }
+
+            return predicate;
+        }
+    }
+}

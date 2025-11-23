@@ -1,92 +1,68 @@
+import { PagedListDto } from "interfaces/general/pagedList/PagedListDto";
 import {
-  InventoryDetailsDto,
-  InventorySearchDto,
-  InventorySummaryByProductDetailsDto,
-  InventorySummaryDetailsDto,
-} from "interfaces/v12/inventory/inventory";
+  InventoryAuditDto,
+  InventoryAuditSearchDto,
+} from "interfaces/v12/inventory/inventoryAuditDto";
+import {
+  InventorySummaryRowDto,
+  InventorySummarySearchDto,
+} from "interfaces/v12/inventory/inventorySummaryDto";
+import { UpdateProductPricingDto } from "interfaces/v12/inventory/updateProductPricingDto";
 import React from "react";
 import axios from "../utils/axios";
 
 const { createContext, useContext } = React;
 
 interface IInventoryService {
-  getInventoryById: (inventoryId: string) => Promise<InventoryDetailsDto>;
-  searchInventorySummary: (
-    searchDto: any
-  ) => Promise<InventorySummaryDetailsDto[]>;
-  countInventorySummary: (searchDto: any) => Promise<number>;
-  searchInventorys: (searchDto: any) => Promise<InventoryDetailsDto[]>;
-  countInventorys: (searchDto: any) => Promise<number>;
-  searchInventorySummaryByProduct: (
-    searchDto: any
-  ) => Promise<InventorySummaryByProductDetailsDto[]>;
-  countInventorySummaryByProduct: (searchDto: any) => Promise<number>;
+  searchAudit: (
+    dto: InventoryAuditSearchDto
+  ) => Promise<PagedListDto<InventoryAuditDto>>;
+  searchSummary: (
+    dto: InventorySummarySearchDto
+  ) => Promise<PagedListDto<InventorySummaryRowDto>>;
+  updatePricing: (
+    productId: string,
+    dto: UpdateProductPricingDto
+  ) => Promise<void>;
 }
 
 const InventoryServiceContext = createContext({} as IInventoryService);
 
-export const InventoryServiceProvider: React.FC<{
+export type InventoryServiceProviderProps = {
   children?: React.ReactNode;
-  searchInventorys?: any;
-  countInventorys?: any;
-  searchInventorySummary?: any;
-  countInventorySummary?: any;
-  searchInventorySummaryByProduct?: any;
-  countInventorySummaryByProduct?: any;
+  searchAudit?: (
+    dto: InventoryAuditSearchDto
+  ) => Promise<PagedListDto<InventoryAuditDto>>;
+  searchSummary?: (
+    dto: InventorySummarySearchDto
+  ) => Promise<PagedListDto<InventorySummaryRowDto>>;
+  updatePricing?: (
+    productId: string,
+    dto: UpdateProductPricingDto
+  ) => Promise<void>;
+};
 
-  getInventoryById?: any;
-}> = (props) => {
-  const getInventoryById = async (inventoryId: string) => {
-    return await axios.get(`/inventory/${inventoryId}`).then((res) => res.data);
+export const InventoryServiceProvider: React.FC<
+  InventoryServiceProviderProps
+> = (props) => {
+  const searchAudit = (dto: InventoryAuditSearchDto) => {
+    return axios.post("/inventory/audit", dto).then((res) => res.data);
   };
 
-  const searchInventorys = (searchDto: InventorySearchDto) => {
-    return axios.post("/inventory/search", searchDto).then((res) => {
-      return res.data.data;
-    });
+  const searchSummary = (dto: InventorySummarySearchDto) => {
+    return axios.post("/inventory/summary", dto).then((res) => res.data);
   };
 
-  const countInventorys = (searchDto: any) => {
-    return axios.post("/inventory/count", searchDto).then((res) => res.data);
-  };
-
-  const searchInventorySummary = (searchDto: InventorySearchDto) => {
-    return axios.post("/inventory/summary/search", searchDto).then((res) => {
-      return res.data.data;
-    });
-  };
-
-  const countInventorySummary = (searchDto: any) => {
+  const updatePricing = (productId: string, dto: UpdateProductPricingDto) => {
     return axios
-      .post("/inventory/summary/count", searchDto)
-      .then((res) => res.data);
+      .put(`/inventory/summary/${productId}/pricing`, dto)
+      .then(() => undefined);
   };
 
-  const searchInventorySummaryByProduct = (searchDto: InventorySearchDto) => {
-    return axios
-      .post("/inventory/summary-product/search", searchDto)
-      .then((res) => {
-        return res.data.data;
-      });
-  };
-
-  const countInventorySummaryByProduct = (searchDto: any) => {
-    return axios
-      .post("/inventory/summary-product/count", searchDto)
-      .then((res) => res.data);
-  };
-
-  const value = {
-    searchInventorys: props.searchInventorys || searchInventorys,
-    countInventorys: props.countInventorys || countInventorys,
-    searchInventorySummary:
-      props.searchInventorySummary || searchInventorySummary,
-    countInventorySummary: props.countInventorySummary || countInventorySummary,
-    searchInventorySummaryByProduct:
-      props.searchInventorySummaryByProduct || searchInventorySummaryByProduct,
-    countInventorySummaryByProduct:
-      props.countInventorySummaryByProduct || countInventorySummaryByProduct,
-    getInventoryById: props.getInventoryById || getInventoryById,
+  const value: IInventoryService = {
+    searchAudit: props.searchAudit || searchAudit,
+    searchSummary: props.searchSummary || searchSummary,
+    updatePricing: props.updatePricing || updatePricing,
   };
 
   return (
@@ -96,6 +72,4 @@ export const InventoryServiceProvider: React.FC<{
   );
 };
 
-export const useInventoryService = () => {
-  return useContext(InventoryServiceContext);
-};
+export const useInventoryService = () => useContext(InventoryServiceContext);

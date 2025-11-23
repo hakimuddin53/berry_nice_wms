@@ -2,7 +2,6 @@
 {
     public class StockInCreateUpdateDto
     {
-        public required string Number { get; set; }
         public required string SellerInfo { get; set; }
         public required string Purchaser { get; set; }
         public DateTime DateOfPurchase { get; set; }

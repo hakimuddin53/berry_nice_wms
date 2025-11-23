@@ -1,13 +1,17 @@
-import AddIcon from "@mui/icons-material/Add";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import {
   Box,
-  Button,
-  IconButton,
+  Checkbox,
+  Chip,
+  FormControl,
+  FormHelperText,
+  InputLabel,
+  MenuItem,
+  OutlinedInput,
+  Select,
   Stack,
   TextField,
-  Typography,
 } from "@mui/material";
+import { SelectChangeEvent } from "@mui/material/Select";
 import {
   DataList,
   PageSection,
@@ -20,15 +24,38 @@ import FormikErrorMessage from "components/platbricks/shared/ErrorMessage";
 import LookupAutocomplete from "components/platbricks/shared/LookupAutocomplete";
 import { FormikErrors, FormikProps } from "formik";
 import { LookupGroupKey } from "interfaces/v12/lookup/lookup";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { EMPTY_GUID } from "types/guid";
 import { isRequiredField } from "utils/formikHelpers";
 import {
   stockInCreateEditSchema,
   YupStockInCreateEdit,
-  YupStockInItemRemarkCreateEdit,
 } from "../yup/stockInCreateEditSchema";
+
+const PRESET_REMARK_OPTIONS = [
+  "Faulty",
+  "Screen Crack",
+  "No Dispaly",
+  "Battery rosak",
+  "Motherboard faulty",
+  "Power adapter issue",
+];
+
+const parseRemarkSelections = (value?: string) => {
+  if (!value) {
+    return [];
+  }
+
+  return Array.from(
+    new Set(
+      value
+        .split(",")
+        .map((option) => option.trim())
+        .filter((option) => option.length > 0)
+    )
+  );
+};
 
 const StockInItemCreateEdit = (props: {
   formik: FormikProps<YupStockInCreateEdit>;
@@ -42,7 +69,7 @@ const StockInItemCreateEdit = (props: {
 
   const item = formik.values.stockInItems[itemIndex];
   type ItemField = keyof typeof item;
-  type SimpleItemField = Exclude<ItemField, "stockInItemRemarks">;
+  type SimpleItemField = ItemField;
 
   const fieldName = (field: ItemField) => `stockInItems[${itemIndex}].${field}`;
 
@@ -69,63 +96,53 @@ const StockInItemCreateEdit = (props: {
     return errors[field] as string | FormikErrors<any> | undefined;
   };
 
-  const remarks: YupStockInItemRemarkCreateEdit[] =
-    item.stockInItemRemarks ?? [];
+  const selectedRemarks = useMemo(
+    () => parseRemarkSelections(item.remark),
+    [item.remark]
+  );
 
-  const remarksFieldName = (remarkIndex: number) =>
-    `stockInItems[${itemIndex}].stockInItemRemarks[${remarkIndex}].remark`;
+  const remarkOptions = useMemo(() => {
+    const additionalSelections = selectedRemarks.filter(
+      (option) => !PRESET_REMARK_OPTIONS.includes(option)
+    );
 
-  const getRemarkTouched = (remarkIndex: number): boolean => {
-    const touchedItem = formik.touched.stockInItems?.[itemIndex] as any;
-    const touchedRemarks = touchedItem?.stockInItemRemarks;
-    if (!Array.isArray(touchedRemarks)) return false;
-    const touchedRemark = touchedRemarks[remarkIndex];
-    if (!touchedRemark) return false;
-    if (typeof touchedRemark === "boolean") return touchedRemark;
-    return Boolean(touchedRemark.remark);
+    return [...PRESET_REMARK_OPTIONS, ...additionalSelections];
+  }, [selectedRemarks]);
+
+  const updateRemarkSelections = (selections: string[]) => {
+    formik.setFieldTouched(fieldName("remark"), true, false);
+    formik.setFieldValue(fieldName("remark"), selections.join(", "));
   };
 
-  const getRemarkError = (remarkIndex: number) => {
-    const itemErrors = formik.errors.stockInItems?.[itemIndex] as any;
-    if (!itemErrors || typeof itemErrors === "string") {
-      return itemErrors;
-    }
+  const handleRemarkSelectionChange = (
+    event: SelectChangeEvent<typeof selectedRemarks>
+  ) => {
+    const {
+      target: { value },
+    } = event;
+    const selections =
+      typeof value === "string"
+        ? value
+            .split(",")
+            .map((option) => option.trim())
+            .filter((option) => option.length > 0)
+        : value;
 
-    const remarksErrors = itemErrors.stockInItemRemarks;
-    if (Array.isArray(remarksErrors)) {
-      const remarkError = remarksErrors[remarkIndex];
-      if (!remarkError) return undefined;
-      if (typeof remarkError === "string") return remarkError;
-      if (remarkError && typeof remarkError === "object") {
-        if ("remark" in remarkError) {
-          return remarkError.remark;
-        }
-      }
-      return remarkError;
-    }
-
-    if (remarksErrors && typeof remarksErrors === "object") {
-      if ("remark" in remarksErrors) {
-        return remarksErrors.remark;
-      }
-    }
-
-    return remarksErrors;
+    const uniqueSelections = Array.from(new Set(selections));
+    updateRemarkSelections(uniqueSelections);
   };
 
-  const setRemarksValue = (nextRemarks: YupStockInItemRemarkCreateEdit[]) => {
-    formik.setFieldValue(fieldName("stockInItemRemarks"), nextRemarks);
+  const handleRemarkBlur = () => {
+    formik.setFieldTouched(fieldName("remark"), true, false);
   };
 
-  const addRemark = () => {
-    const newRemark: YupStockInItemRemarkCreateEdit = { remark: "" };
-    setRemarksValue([...remarks, newRemark]);
+  const handleRemarkChipDelete = (chipValue: string) => {
+    const filtered = selectedRemarks.filter((value) => value !== chipValue);
+    updateRemarkSelections(filtered);
   };
 
-  const removeRemark = (remarkIndex: number) => {
-    const nextRemarks = remarks.filter((_, idx) => idx !== remarkIndex);
-    setRemarksValue(nextRemarks);
-  };
+  const remarkHasError =
+    fieldTouched("remark") && Boolean(fieldError("remark"));
 
   return (
     <PageSection title={t("common:items")}>
@@ -705,65 +722,71 @@ const StockInItemCreateEdit = (props: {
 
         <PbTabPanel value={activeTab} index={2}>
           <Box mt={6}>
-            <Stack spacing={2}>
-              {remarks.length === 0 && (
-                <Typography color="text.secondary">
-                  {t("no-remarks")}
-                </Typography>
-              )}
-
-              {remarks.map((remark, remarkIndex) => (
-                <Stack
-                  key={
-                    remark.id ??
-                    remark.stockInItemId ??
-                    `${itemIndex}-${remarkIndex}`
-                  }
-                  direction="row"
-                  spacing={1}
-                  alignItems="flex-start"
-                >
-                  <TextField
-                    fullWidth
-                    multiline
-                    minRows={2}
-                    id={remarksFieldName(remarkIndex)}
-                    name={remarksFieldName(remarkIndex)}
-                    value={remark.remark ?? ""}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={
-                      getRemarkTouched(remarkIndex) &&
-                      Boolean(getRemarkError(remarkIndex))
-                    }
-                    helperText={
-                      <FormikErrorMessage
-                        touched={getRemarkTouched(remarkIndex)}
-                        error={getRemarkError(remarkIndex)}
-                        translatedFieldName={t("remark")}
+            <FormControl fullWidth error={remarkHasError}>
+              <InputLabel id={`${fieldName("remark")}-label`}>
+                {t("remark")}
+              </InputLabel>
+              <Select
+                labelId={`${fieldName("remark")}-label`}
+                id={fieldName("remark")}
+                multiple
+                value={selectedRemarks}
+                onChange={handleRemarkSelectionChange}
+                onBlur={handleRemarkBlur}
+                input={<OutlinedInput label={t("remark")} />}
+                renderValue={(selected) => (
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                    {(selected as string[]).map((value) => (
+                      <Chip
+                        key={value}
+                        label={value}
+                        size="small"
+                        onMouseDown={(event) => event.stopPropagation()}
+                        onDelete={() => handleRemarkChipDelete(value)}
                       />
-                    }
-                  />
-                  <IconButton
-                    aria-label={t("remove-remark")}
-                    onClick={() => removeRemark(remarkIndex)}
-                    color="error"
-                    size="small"
-                  >
-                    <DeleteOutlineIcon fontSize="small" />
-                  </IconButton>
-                </Stack>
-              ))}
-
-              <Button
-                variant="outlined"
-                startIcon={<AddIcon />}
-                onClick={addRemark}
-                size="small"
+                    ))}
+                  </Box>
+                )}
               >
-                {t("add-remark")}
-              </Button>
-            </Stack>
+                {remarkOptions.map((option) => (
+                  <MenuItem key={option} value={option}>
+                    <Checkbox checked={selectedRemarks.indexOf(option) > -1} />
+                    {option}
+                  </MenuItem>
+                ))}
+              </Select>
+              <FormHelperText>
+                <FormikErrorMessage
+                  touched={fieldTouched("remark")}
+                  error={fieldError("remark")}
+                  translatedFieldName={t("remark")}
+                />
+              </FormHelperText>
+            </FormControl>
+            <TextField
+              sx={{ mt: 3 }}
+              fullWidth
+              multiline
+              minRows={3}
+              id={fieldName("internalRemark")}
+              name={fieldName("internalRemark")}
+              label={t("internal-remark")}
+              placeholder={t("enter-internal-remark")}
+              value={item.internalRemark ?? ""}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={
+                fieldTouched("internalRemark") &&
+                Boolean(fieldError("internalRemark"))
+              }
+              helperText={
+                <FormikErrorMessage
+                  touched={fieldTouched("internalRemark")}
+                  error={fieldError("internalRemark")}
+                  translatedFieldName={t("internal-remark")}
+                />
+              }
+            />
           </Box>
         </PbTabPanel>
       </PbCard>

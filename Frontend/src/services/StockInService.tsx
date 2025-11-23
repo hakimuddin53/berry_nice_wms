@@ -29,7 +29,7 @@ const getByParameters = (
   resultSize?: number
 ) => {
   return axios
-    .get("/stockin", {
+    .get("/stock-in", {
       params: { stockInIds, page: resultPage, pageSize: resultSize },
       paramsSerializer: (params) => {
         return queryString.stringify(params);
@@ -53,39 +53,39 @@ export const StockInServiceProvider: React.FC<StockInServiceProviderProps> = (
   props
 ) => {
   const searchStockIns = (searchDto: any) => {
-    return axios.post("/stockin/search", searchDto).then((res) => {
+    return axios.post("/stock-in/search", searchDto).then((res) => {
       return res.data.data;
     });
   };
 
   const countStockIns = (searchDto: any) => {
-    return axios.post("/stockin/count", searchDto).then((res) => res.data);
+    return axios.post("/stock-in/count", searchDto).then((res) => res.data);
   };
 
   const getStockInById = (stockInId: string) => {
     return axios
-      .get<StockInDetailsDto>("/stockin/" + stockInId)
+      .get<StockInDetailsDto>("/stock-in/" + stockInId)
       .then(async (res) => {
         return res.data;
       });
   };
 
   const updateStockIn = (id: string, stockIn: StockInCreateUpdateDto) => {
-    return axios.put("/stockin/" + id, stockIn).then(async (res) => {
+    return axios.put("/stock-in/" + id, stockIn).then(async (res) => {
       let result = res.data;
       return result;
     });
   };
 
   const createStockIn = (stockIn: StockInCreateUpdateDto) => {
-    return axios.post("/stockin/", stockIn).then(async (res) => {
+    return axios.post("/stock-in/", stockIn).then(async (res) => {
       let result = res.data;
       return result.id;
     });
   };
 
   const deleteStockIn = (stockInId: string) => {
-    return axios.delete("/stockin/" + stockInId).then(async (res) => {
+    return axios.delete("/stock-in/" + stockInId).then(async (res) => {
       let result = res.data;
       return result.id;
     });

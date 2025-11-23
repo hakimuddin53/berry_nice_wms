@@ -24,7 +24,8 @@ public class ProductProfile : Profile
         #endregion
 
         #region CreateUpdateV12Dto
-        CreateMap<ProductCreateUpdateDto, Product>();
+        CreateMap<ProductCreateUpdateDto, Product>()
+            .ForMember(dest => dest.ProductCode, opt => opt.Ignore());
         #endregion
 
         CreateMap<Product, SelectOptionV12Dto>()

@@ -3,6 +3,22 @@
 
 const webpack = require("webpack");
 
+// Node 20+ exposes a localStorage getter that throws unless a --localstorage-file
+// flag is provided; stub it out so build-time tooling (like HtmlWebpackPlugin
+// template evaluation) does not crash when it checks for localStorage.
+const globalRef = typeof globalThis !== "undefined" ? globalThis : global;
+const localStorageDescriptor = Object.getOwnPropertyDescriptor(
+  globalRef,
+  "localStorage"
+);
+if (localStorageDescriptor?.get) {
+  Object.defineProperty(globalRef, "localStorage", {
+    value: undefined,
+    writable: true,
+    configurable: true,
+  });
+}
+
 module.exports = {
   babel: {
     plugins: [
@@ -32,6 +48,7 @@ module.exports = {
           process: require.resolve("process/browser"),
           stream: require.resolve("stream-browserify"),
           util: require.resolve("util"),
+          vm: require.resolve("vm-browserify"),
         },
       },
       plugins: [

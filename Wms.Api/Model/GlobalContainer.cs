@@ -3,7 +3,6 @@
     public enum OperationTypeEnum
     {
         STOCKIN = 0, 
-        STOCKOUT = 1, 
         STOCKRESERVATION = 2, 
         STOCKTRANSFER = 3, 
         PRODUCT = 4,
@@ -14,18 +13,15 @@
     public enum TransactionTypeEnum
     {
         STOCKIN = 0,
-        STOCKOUT = 1,
         STOCKTRANSFERIN = 2,
         STOCKTRANSFEROUT = 3,
         STOCKADJUSTMENT = 4,
-        BULKUPLOAD = 5,
-        STOCKOUTCANCEL = 6
+        BULKUPLOAD = 5
     }
 
     public enum ModuleEnum
     {
         STOCKIN = 0,
-        STOCKOUT = 1,
         STOCKTRANSFER = 2,
         STOCKRESERVATION = 3,
         CATEGORY = 4,
@@ -46,23 +42,17 @@
 
     public enum ReservationStatusEnum
     {
-        ACTIVE = 0,         // just reserved
-        FULFILLED = 1,      // consumed by a stock-out
-        CANCELREQUESTED = 2,// someone asked to cancel (needs approval)
-        CANCELLED = 3,      // approved cancellation
-        RELEASED = 4        // expired or voided automatically
+        ACTIVE = 0,
+        FULFILLED = 1,
+        CANCELREQUESTED = 2,
+        CANCELLED = 3,
+        RELEASED = 4
     }
 
     public enum ReservationItemStatusEnum
     {
-        ACTIVE = 0,         // just reserved
-        FULFILLED = 1,      // consumed by a stock-out 
-    }
-
-    public enum StockOutStatusEnum
-    { 
-        COMPLETED = 0,  
-        CANCELLED = 1     
+        ACTIVE = 0,
+        FULFILLED = 1
     }
 
     public enum LookupGroupKey

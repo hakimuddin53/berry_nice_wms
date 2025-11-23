@@ -125,6 +125,7 @@ namespace Wms.Api.Controllers
             NormalizeInvoice(invoice);
 
             await invoiceService.AddAsync(invoice);
+            await UpdateProductPricingFromInvoiceAsync(invoice.InvoiceItems);
 
             var dto = mapper.Map<InvoiceDetailsDto>(invoice);
             return CreatedAtAction(nameof(GetByIdAsync), new { id = invoice.Id }, dto);
@@ -184,6 +185,7 @@ namespace Wms.Api.Controllers
             invoice.GrandTotal = newItems.Sum(i => i.TotalPrice);
 
             await context.SaveChangesAsync();
+            await UpdateProductPricingFromInvoiceAsync(invoice.InvoiceItems);
 
             return NoContent();
         }
@@ -205,6 +207,50 @@ namespace Wms.Api.Controllers
             await context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        private async Task UpdateProductPricingFromInvoiceAsync(IEnumerable<InvoiceItem>? items)
+        {
+            if (items == null)
+            {
+                return;
+            }
+
+            var productIds = items
+                .Where(i => i.ProductId.HasValue && i.ProductId.Value != Guid.Empty)
+                .Select(i => i.ProductId!.Value)
+                .Distinct()
+                .ToList();
+
+            if (productIds.Count == 0)
+            {
+                return;
+            }
+
+            var products = await context.Products
+                .Where(p => productIds.Contains(p.ProductId))
+                .ToListAsync();
+
+            foreach (var item in items)
+            {
+                if (!item.ProductId.HasValue || item.ProductId.Value == Guid.Empty)
+                {
+                    continue;
+                }
+
+                var product = products.FirstOrDefault(p => p.ProductId == item.ProductId.Value);
+                if (product == null)
+                {
+                    continue;
+                }
+
+                // Use invoice selling price to keep price references current.
+                product.RetailPrice = item.UnitPrice;
+                product.DealerPrice ??= item.UnitPrice;
+                product.AgentPrice ??= item.UnitPrice;
+            }
+
+            await context.SaveChangesAsync();
         }
 
         private static void NormalizeInvoice(Invoice invoice)

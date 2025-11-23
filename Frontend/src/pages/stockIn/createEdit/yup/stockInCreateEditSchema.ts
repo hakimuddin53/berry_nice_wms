@@ -2,18 +2,11 @@ import { EMPTY_GUID, guid } from "types/guid";
 import * as yup from "yup";
 
 export interface YupStockInCreateEdit {
-  number: string;
   sellerInfo: string;
   purchaser: string;
   dateOfPurchase: string;
   warehouseId: guid;
   stockInItems: YupStockInItemCreateEdit[];
-}
-
-export interface YupStockInItemRemarkCreateEdit {
-  id?: guid;
-  stockInItemId?: guid;
-  remark: string;
 }
 
 export interface YupStockInItemCreateEdit {
@@ -36,19 +29,14 @@ export interface YupStockInItemCreateEdit {
   dealerSellingPrice?: number;
   agentSellingPrice?: number;
   cost?: number;
-  stockInItemRemarks: YupStockInItemRemarkCreateEdit[];
+  // Free-text, comma-delimited remark(s)
+  remark?: string;
+  internalRemark?: string;
   receiveQuantity: number;
   productName?: string;
 }
 
-const stockInItemRemarkSchema = yup.object().shape({
-  id: yup.string().nullable(),
-  stockInItemId: yup.string().nullable(),
-  remark: yup.string().trim().required(),
-});
-
 export const stockInCreateEditSchema = yup.object().shape({
-  number: yup.string().required(),
   sellerInfo: yup.string().required(),
   purchaser: yup.string().required(),
   dateOfPurchase: yup.string().required(),
@@ -76,7 +64,8 @@ export const stockInCreateEditSchema = yup.object().shape({
           .required(),
         region: yup.string().nullable(),
         newOrUsed: yup.string().nullable(),
-        stockInItemRemarks: yup.array().of(stockInItemRemarkSchema).default([]),
+        remark: yup.string().nullable(),
+        internalRemark: yup.string().nullable(),
         receiveQuantity: yup.number().min(1).required(),
       })
     )

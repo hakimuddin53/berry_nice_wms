@@ -6,6 +6,7 @@ namespace Wms.Api.Dto.StockIn.StockInDetails
     {
         public Guid Id { get; set; }
         public Guid StockInId { get; set; }
+        public Guid ProductId { get; set; }
         public string ProductCode { get; set; } = default!;
         public Guid CategoryId { get; set; }
         public Guid? BrandId { get; set; }
@@ -24,9 +25,11 @@ namespace Wms.Api.Dto.StockIn.StockInDetails
         public decimal? DealerSellingPrice { get; set; }
         public decimal? AgentSellingPrice { get; set; }
         public decimal? Cost { get; set; }
-        public int ReceiveQuantity { get; set; }
+    public int ReceiveQuantity { get; set; }
 
-        public ICollection<StockInItemRemarkDetailsDto>? StockInItemRemarks { get; set; }
+    // Aggregated, free-text remark(s)
+    public string? Remark { get; set; }
+    public string? InternalRemark { get; set; }
 
         public string? ProductName { get; set; }
     }

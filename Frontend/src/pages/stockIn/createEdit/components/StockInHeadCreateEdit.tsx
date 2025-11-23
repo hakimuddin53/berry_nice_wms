@@ -2,9 +2,15 @@ import { TextField } from "@mui/material";
 import DataList from "components/platbricks/shared/DataList";
 import FormikErrorMessage from "components/platbricks/shared/ErrorMessage";
 import LookupAutocomplete from "components/platbricks/shared/LookupAutocomplete";
+import SelectAsync2, {
+  SelectAsyncOption,
+} from "components/platbricks/shared/SelectAsync2";
 import { FormikProps } from "formik";
 import { LookupGroupKey } from "interfaces/v12/lookup/lookup";
+import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { useSupplierService } from "services/SupplierService";
+import { useUserService } from "services/UserService";
 import { isRequiredField } from "utils/formikHelpers";
 import {
   stockInCreateEditSchema,
@@ -16,38 +22,77 @@ const StockInHeadCreateEdit = (props: {
 }) => {
   const { t } = useTranslation("common");
   const formik = props.formik;
+  const supplierService = useSupplierService();
+  const userService = useUserService();
+
+  const sellerInfoIds = useMemo(
+    () => (formik.values.sellerInfo?.trim() ? [formik.values.sellerInfo] : []),
+    [formik.values.sellerInfo]
+  );
+
+  const purchaserIds = useMemo(
+    () => (formik.values.purchaser?.trim() ? [formik.values.purchaser] : []),
+    [formik.values.purchaser]
+  );
+
+  const createStaticOptions = useCallback((ids?: string[]) => {
+    if (!ids || ids.length === 0) {
+      return [] as SelectAsyncOption[];
+    }
+
+    return ids
+      .filter((value) => !!value)
+      .map(
+        (value) =>
+          ({
+            label: value,
+            value,
+          } as SelectAsyncOption)
+      );
+  }, []);
+
+  const normalizeOptions = useCallback((options: SelectAsyncOption[] = []) => {
+    return options.map(
+      (option) =>
+        ({
+          label: option.label ?? "",
+          value: option.label ?? "",
+        } as SelectAsyncOption)
+    );
+  }, []);
+
+  const supplierAsync = useCallback(
+    async (input: string, page: number, pageSize: number, ids?: string[]) => {
+      if (ids && ids.length > 0) {
+        return createStaticOptions(ids);
+      }
+
+      const options = await supplierService.getSelectOptions(
+        input,
+        page,
+        pageSize
+      );
+      return normalizeOptions(options);
+    },
+    [createStaticOptions, normalizeOptions, supplierService]
+  );
+
+  const userAsync = useCallback(
+    async (input: string, page: number, pageSize: number, ids?: string[]) => {
+      if (ids && ids.length > 0) {
+        return createStaticOptions(ids);
+      }
+
+      const options = await userService.getSelectOptions(input, page, pageSize);
+      return normalizeOptions(options);
+    },
+    [createStaticOptions, normalizeOptions, userService]
+  );
 
   return (
     <DataList
       hideDevider={true}
       data={[
-        {
-          label: t("number"),
-          required: isRequiredField(
-            stockInCreateEditSchema,
-            "number",
-            formik.values
-          ),
-          value: (
-            <TextField
-              fullWidth
-              id="number"
-              name="number"
-              size="small"
-              value={formik.values.number}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              error={formik.touched.number && Boolean(formik.errors.number)}
-              helperText={
-                <FormikErrorMessage
-                  touched={formik.touched.number}
-                  error={formik.errors.number}
-                  translatedFieldName={t("number")}
-                />
-              }
-            />
-          ),
-        },
         {
           label: t("seller-info"),
           required: isRequiredField(
@@ -56,14 +101,16 @@ const StockInHeadCreateEdit = (props: {
             formik.values
           ),
           value: (
-            <TextField
-              fullWidth
-              id="sellerInfo"
+            <SelectAsync2
               name="sellerInfo"
-              size="small"
-              value={formik.values.sellerInfo}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
+              placeholder={t("seller-info")}
+              ids={sellerInfoIds}
+              asyncFunc={supplierAsync}
+              suggestionsIfEmpty
+              onSelectionChange={(option?: SelectAsyncOption) =>
+                formik.setFieldValue("sellerInfo", option?.value ?? "")
+              }
+              onBlur={() => formik.setFieldTouched("sellerInfo", true)}
               error={
                 formik.touched.sellerInfo && Boolean(formik.errors.sellerInfo)
               }
@@ -85,14 +132,16 @@ const StockInHeadCreateEdit = (props: {
             formik.values
           ),
           value: (
-            <TextField
-              fullWidth
-              id="purchaser"
+            <SelectAsync2
               name="purchaser"
-              size="small"
-              value={formik.values.purchaser}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
+              placeholder={t("purchaser")}
+              ids={purchaserIds}
+              asyncFunc={userAsync}
+              suggestionsIfEmpty
+              onSelectionChange={(option?: SelectAsyncOption) =>
+                formik.setFieldValue("purchaser", option?.value ?? "")
+              }
+              onBlur={() => formik.setFieldTouched("purchaser", true)}
               error={
                 formik.touched.purchaser && Boolean(formik.errors.purchaser)
               }

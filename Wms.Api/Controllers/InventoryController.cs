@@ -1,958 +1,213 @@
-﻿//using AutoMapper;
-//using Microsoft.AspNetCore.Mvc;
-//using Wms.Api.Dto;
-//using Wms.Api.Dto.PagedList;
-//using Wms.Api.Entities;
-//using Wms.Api.Services;
-//using Wms.Api.Dto.Inventory;
-//using Microsoft.AspNetCore.Authentication.JwtBearer;
-//using Microsoft.AspNetCore.Authorization;
-//using Wms.Api.Context;
-//using System.ComponentModel;
-//using Wms.Api.Model;
-//using Microsoft.AspNetCore.Identity;
-//using Microsoft.EntityFrameworkCore;
-//using ClosedXML.Excel;
-
-//namespace Wms.Api.Controllers
-//{
-//    [ApiController]
-//    [Route("api/[controller]")]
-//    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-//    public class InventoryController(
-//        IService<Inventory> service,
-//        ApplicationDbContext context,
-//        IMapper autoMapperService,
-//        RoleManager<ApplicationRole> roleManager,
-//        UserManager<ApplicationUser> userManager)
-//        : ControllerBase
-//    {
-//        [HttpPost("search", Name = "SearchInventorysAsync")]
-//        public async Task<IActionResult> SearchInventorysAsync([FromBody] InventorySearchDto inventorySearch)
-//        {
-//            var userInfo = await GetUserInformationAsync();
-//            if (!userInfo.Success)
-//            {
-//                return userInfo.ErrorResult!;
-//            }
-
-//            // 1. Get the base-filtered query
-//            var filteredQuery = GetFilteredInventoryQuery(inventorySearch, userInfo.stockGroupIds, userInfo.IsAdminRole);
-
-//            filteredQuery = filteredQuery.OrderByDescending(i => i.CreatedAt);
-
-//            var result = filteredQuery.Skip((inventorySearch.Page - 1) * inventorySearch.PageSize)
-//                .Take(inventorySearch.PageSize).ToList();
-//            var pagedResult = new PagedList<Inventory>(result, inventorySearch.Page, inventorySearch.PageSize);
-
-//            var inventoryDtos = autoMapperService.Map<PagedListDto<InventoryDetailsDto>>(pagedResult);
-
-//            foreach (var inventory in inventoryDtos.Data)
-//            {
-//                var product = context.Products?.Where(x => x.Id == inventory.ProductId)?.FirstOrDefault();
-//                inventory.Product = product != null ? $"{product.Name} - {product.ItemCode}" : "";
-
-//                //inventory.Warehouse = context.Warehouses?.Where(x => x.Id == inventory.WarehouseId)?.FirstOrDefault()?.Name ?? "";
-//                //inventory.CurrentLocation = context.Locations?.Where(x => x.Id == inventory.CurrentLocationId)
-//                //    ?.FirstOrDefault()?.Name ?? "";
-
-//                if (product != null)
-//                {
-//                    //inventory.StockGroup = context.CartonSizes?.Where(x => x.Id == product.CartonSizeId)
-//                    //    ?.FirstOrDefault()?.Name ?? "";
-//                    //inventory.ClientCode = context.ClientCodes?.Where(x => x.Id == product.ClientCodeId)
-//                    //    ?.FirstOrDefault()?.Name ?? ""; 
-//                    //inventory.Size = context.Sizes?.Where(x => x.Id == product.SizeId)
-//                    //    ?.FirstOrDefault()?.Name ?? ""; 
-//                }
-                
-//                // Set transaction number based on TransactionType
-//                switch (inventory.TransactionType)
-//                {
-//                    case TransactionTypeEnum.STOCKIN:
-//                        inventory.TransactionNumber = context.StockIns
-//                            .Where(s => s.Id == inventory.StockInId)
-//                            .Select(s => s.Number)
-//                            .FirstOrDefault() ?? "";
-//                        inventory.OrderNumber = context.StockIns
-//                            .Where(s => s.Id == inventory.StockInId)
-//                            .Select(s => s.PONumber)
-//                            .FirstOrDefault() ?? "";
-//                        break;
-
-//                    case TransactionTypeEnum.STOCKOUT:
-//                    case TransactionTypeEnum.STOCKOUTCANCEL:
-//                        inventory.TransactionNumber = context.StockOuts
-//                            .Where(s => s.Id == inventory.StockOutId)
-//                            .Select(s => s.Number)
-//                            .FirstOrDefault() ?? "";
-//                        inventory.OrderNumber = context.StockOuts
-//                         .Where(s => s.Id == inventory.StockOutId)
-//                         .Select(s => s.DONumber)
-//                         .FirstOrDefault() ?? "";
-//                        break;
-
-//                    case TransactionTypeEnum.STOCKTRANSFERIN:
-//                    case TransactionTypeEnum.STOCKTRANSFEROUT:
-//                        inventory.TransactionNumber = context.StockTransfers
-//                            .Where(s => s.Id == inventory.StockTransferId)
-//                            .Select(s => s.Number)
-//                            .FirstOrDefault() ?? "";
-//                        break;
-
-//                    case TransactionTypeEnum.STOCKADJUSTMENT:
-//                        inventory.TransactionNumber = context.StockAdjustments
-//                            .Where(s => s.Id == inventory.StockAdjustmentId)
-//                            .Select(s => s.Number)
-//                            .FirstOrDefault() ?? "";
-//                        break;
-
-//                    default:
-//                        inventory.TransactionNumber = "";
-//                        break;
-//                }
-
-//            }
-
-//            return Ok(inventoryDtos);
-//        }
-
-//        [HttpPost("count", Name = "CountInventorysAsync")]
-//        public async Task<IActionResult> CountInventorysAsync([FromBody] InventorySearchDto inventorySearch)
-//        {
-//            var result = await GetUserInformationAsync();
-//            if (!result.Success)
-//            {
-//                return result.ErrorResult!;
-//            }
-            
-//            var filteredQuery = GetFilteredInventoryQuery(inventorySearch,result.stockGroupIds, result.IsAdminRole);
-
-//            var inventoryDtos = autoMapperService.Map<List<InventoryDetailsDto>>(filteredQuery);
-//            return Ok(inventoryDtos.Count);
-//        }
-
-//        [HttpPost("export", Name = "ExportInventoryAsync")]
-//        public async Task<IActionResult> ExportInventoryAsync([FromBody] InventorySearchDto inventorySearch)
-//        {
-//            var result = await GetUserInformationAsync();
-//            if (!result.Success)
-//            {
-//                return result.ErrorResult!;
-//            }
-
-//            // Get full filtered query without pagination
-//            var filteredQuery = GetFilteredInventoryQuery(inventorySearch, result.stockGroupIds, result.IsAdminRole)
-//                .OrderByDescending(i => i.CreatedAt);
-
-//            var inventoryDtos = autoMapperService.Map<List<InventoryDetailsDto>>(filteredQuery.ToList());
-
-//            foreach (var inventory in inventoryDtos)
-//            {
-//                var product = context.Products?.FirstOrDefault(x => x.Id == inventory.ProductId);
-//                inventory.Product = product != null ? $"{product.Name} - {product.ItemCode}" : "";
-//                //inventory.Warehouse = context.Warehouses?.FirstOrDefault(x => x.Id == inventory.WarehouseId)?.Name ?? "";
-//                //inventory.CurrentLocation = context.Locations?.FirstOrDefault(x => x.Id == inventory.CurrentLocationId)?.Name ?? "";
-
-//                if (product != null)
-//                {
-//                    //inventory.StockGroup = context.CartonSizes?.FirstOrDefault(x => x.Id == product.CartonSizeId)?.Name ?? "";
-//                    //inventory.ClientCode = context.ClientCodes?.FirstOrDefault(x => x.Id == product.ClientCodeId)?.Name ?? "";
-//                    //inventory.Size = context.Sizes?.Where(x => x.Id == product.SizeId)
-//                    //    ?.FirstOrDefault()?.Name ?? "";
-//                }
-
-//                // If you want transaction number here as well, replicate logic from SearchInventorysAsync
-//                switch (inventory.TransactionType)
-//                {
-//                    case TransactionTypeEnum.STOCKIN:
-//                        inventory.TransactionNumber = context.StockIns
-//                            .Where(s => s.Id == inventory.StockInId)
-//                            .Select(s => s.Number)
-//                            .FirstOrDefault() ?? "";
-//                        inventory.OrderNumber = context.StockIns
-//                            .Where(s => s.Id == inventory.StockInId)
-//                            .Select(s => s.PONumber)
-//                            .FirstOrDefault() ?? "";
-//                        break;
-
-//                    case TransactionTypeEnum.STOCKOUT:
-//                    case TransactionTypeEnum.STOCKOUTCANCEL:
-//                        inventory.TransactionNumber = context.StockOuts
-//                            .Where(s => s.Id == inventory.StockOutId)
-//                            .Select(s => s.Number)
-//                            .FirstOrDefault() ?? "";
-//                        inventory.OrderNumber = context.StockOuts
-//                            .Where(s => s.Id == inventory.StockOutId)
-//                            .Select(s => s.DONumber)
-//                            .FirstOrDefault() ?? "";
-//                        break;
-
-//                    case TransactionTypeEnum.STOCKTRANSFERIN:
-//                    case TransactionTypeEnum.STOCKTRANSFEROUT:
-//                        inventory.TransactionNumber = context.StockTransfers
-//                            .Where(s => s.Id == inventory.StockTransferId)
-//                            .Select(s => s.Number)
-//                            .FirstOrDefault() ?? "";
-//                        break;
-
-//                    case TransactionTypeEnum.STOCKADJUSTMENT:
-//                        inventory.TransactionNumber = context.StockAdjustments
-//                            .Where(s => s.Id == inventory.StockAdjustmentId)
-//                            .Select(s => s.Number)
-//                            .FirstOrDefault() ?? "";
-//                        break;
-
-//                    default:
-//                        inventory.TransactionNumber = "";
-//                        break;
-//                }
-//            }
-
-//            using var workbook = new XLWorkbook();
-//            var worksheet = workbook.Worksheets.Add("Inventory");
-
-//            // Add headers
-//            worksheet.Cell(1, 1).Value = "Id";
-//            worksheet.Cell(1, 2).Value = "Product";
-//            worksheet.Cell(1, 3).Value = "Warehouse";
-//            worksheet.Cell(1, 4).Value = "Current Location";
-
-//            worksheet.Cell(1, 5).Value = "Stock Group";
-//            worksheet.Cell(1, 6).Value = "Client Code";
-//            worksheet.Cell(1, 7).Value = "Quantity In";
-//            worksheet.Cell(1, 8).Value = "Quantity Out";
-//            worksheet.Cell(1, 9).Value = "Old Balance";
-//            worksheet.Cell(1, 10).Value = "Available Balance";
-//            worksheet.Cell(1, 11).Value = "Transaction Number";
-//            worksheet.Cell(1, 12).Value = "Order Number";
-//            worksheet.Cell(1, 13).Value = "Size";
-//            worksheet.Cell(1, 14).Value = "Created At";
-
-//            for (int i = 0; i < inventoryDtos.Count; i++)
-//            {
-//                var inventory = inventoryDtos[i];
-//                var row = i + 2;
-
-//                worksheet.Cell(row, 1).Value = inventory.Id.ToString();
-//                worksheet.Cell(row, 2).Value = inventory.Product;
-//                worksheet.Cell(row, 3).Value = inventory.Warehouse;
-//                worksheet.Cell(row, 4).Value = inventory.CurrentLocation;
-//                worksheet.Cell(row, 5).Value = inventory.StockGroup;
-//                worksheet.Cell(row, 6).Value = inventory.ClientCode;
-//                worksheet.Cell(row, 7).Value = inventory.QuantityIn;
-//                worksheet.Cell(row, 8).Value = inventory.QuantityOut;
-//                worksheet.Cell(row, 9).Value = inventory.OldBalance;
-//                worksheet.Cell(row, 10).Value = inventory.NewBalance;
-//                worksheet.Cell(row, 11).Value = inventory.TransactionNumber;
-//                worksheet.Cell(row, 12).Value = inventory.OrderNumber;
-//                worksheet.Cell(row, 13).Value = inventory.Size;
-//                worksheet.Cell(row, 14).Value = inventory.CreatedAt;
-//            }
-
-//            using var stream = new MemoryStream();
-//            workbook.SaveAs(stream);
-//            stream.Seek(0, SeekOrigin.Begin);
-
-//            var contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-
-//            var fileName = $"InventoryExport_{DateTime.Now:yyyyMMdd}.xlsx";
-
-//            return File(stream.ToArray(), contentType, fileName);
-//        }
-
-//        [HttpPost("summary/search", Name = "SearchInventorySummaryAsync")]
-//        public async Task<IActionResult> SearchInventorySummaryAsync([FromBody] InventorySearchDto inventorySearch)
-//        {
-//            var result = await GetUserInformationAsync();
-//            if (!result.Success)
-//            {
-//                return result.ErrorResult!;
-//            }
-
-//            // Base filtered query
-//            var filteredQuery = GetFilteredInventoryQuery(inventorySearch, result.stockGroupIds, result.IsAdminRole);
-              
-//            var latestDatesPerGroup = filteredQuery
-//                .GroupBy(i => new { i.ProductId, i.WarehouseId, i.CurrentLocationId })
-//                .Select(g => new
-//                {
-//                    g.Key.ProductId,
-//                    g.Key.WarehouseId,
-//                    g.Key.CurrentLocationId,
-//                    MaxCreatedAt = g.Max(i => i.CreatedAt)
-//                });
-
-//            var groupedQuery = from item in filteredQuery
-//                                join latest in latestDatesPerGroup
-//                                on new { item.ProductId, item.WarehouseId, item.CurrentLocationId, item.CreatedAt }
-//                                equals new { latest.ProductId, latest.WarehouseId, latest.CurrentLocationId, CreatedAt = latest.MaxCreatedAt }
-//                                select new
-//                                {
-//                                    item.ProductId,
-//                                    item.WarehouseId,
-//                                    item.CurrentLocationId,
-//                                    item.NewBalance,
-//                                    item.CreatedAt,
-//                                    item.ChangedAt
-//                                };
- 
-
-//            var pagedGroupedData = await groupedQuery
-//                .Skip((inventorySearch.Page - 1) * inventorySearch.PageSize)
-//                .Take(inventorySearch.PageSize)
-//                .ToListAsync();
-
-//            // Fetch related data in batch to avoid N+1 query problem
-//            var productIds = pagedGroupedData.Select(p => p.ProductId).Distinct().ToList();
-//            var warehouseIds = pagedGroupedData.Select(p => p.WarehouseId).Distinct().ToList();
-//            var locationIds = pagedGroupedData.Select(p => p.CurrentLocationId).Distinct().ToList();
-
-//            var products = await context.Products.Where(p => productIds.Contains(p.Id)).ToListAsync();
-//            //var warehouses = await context.Warehouses.Where(w => warehouseIds.Contains(w.Id)).ToListAsync();
-//            //var locations = await context.Locations.Where(l => locationIds.Contains(l.Id)).ToListAsync();
-
-//            // Prepare the result DTOs manually
-//            var inventorySummaryDtos = pagedGroupedData.Select(item =>
-//            {
-//                var product = products.FirstOrDefault(p => p.Id == item.ProductId);
-//                var warehouse = warehouses.FirstOrDefault(w => w.Id == item.WarehouseId);
-//                var location = locations.FirstOrDefault(l => l.Id == item.CurrentLocationId);
-
-//                var dto = new InventorySummaryDetailsDto
-//                {
-//                    ProductId = item.ProductId,
-//                    WarehouseId = item.WarehouseId,
-//                    CurrentLocationId = item.CurrentLocationId,
-//                    AvailableQuantity = item.NewBalance,
-//                    CreatedAt = item.CreatedAt,
-//                    ChangedAt = item.ChangedAt,
-//                    ProductName = product != null ? product.Name  : "",
-//                    ProductCode = product != null ? product.ItemCode : "",
-//                    Warehouse = warehouse?.Name ?? "",
-//                    CurrentLocation = location?.Name ?? ""
-//                };
-
-//                if (product != null)
-//                {
-//                    dto.StockGroup = context.CartonSizes?.FirstOrDefault(cs => cs.Id == product.CartonSizeId)?.Name ?? "";
-//                    dto.ClientCode = context.ClientCodes?.FirstOrDefault(cc => cc.Id == product.ClientCodeId)?.Name ?? "";
-//                    dto.Size = context.Sizes?.FirstOrDefault(cc => cc.Id == product.SizeId)?.Name ?? "";
-//                }
-
-//                return dto;
-//            }).ToList();
-
-//            var pagedListDto = new PagedListDto<InventorySummaryDetailsDto>
-//            {
-//                Data = inventorySummaryDtos,
-//                CurrentPage = inventorySearch.Page,
-//                PageSize = inventorySearch.PageSize,
-//            };
-
-//            return Ok(pagedListDto);            
-//        }
-
-//        [HttpPost("summary/count", Name = "CountInventorySummaryAsync")]
-//        public async Task<IActionResult> CountInventorySummaryAsync([FromBody] InventorySearchDto inventorySearch)
-//        {
-//            var result = await GetUserInformationAsync();
-//            if (!result.Success)
-//            {
-//                return result.ErrorResult!;
-//            }
-
-//            var filteredQuery = GetFilteredInventoryQuery(inventorySearch, result.stockGroupIds, result.IsAdminRole);
-            
-//            var latestDatesPerGroup = filteredQuery
-//                .GroupBy(i => new { i.ProductId, i.WarehouseId, i.CurrentLocationId })
-//                .Select(g => new
-//                {
-//                    g.Key.ProductId,
-//                    g.Key.WarehouseId,
-//                    g.Key.CurrentLocationId,
-//                    MaxCreatedAt = g.Max(i => i.CreatedAt)
-//                });
-
-//            var latestInventoryQuery = from item in filteredQuery
-//                join latest in latestDatesPerGroup
-//                    on new { item.ProductId, item.WarehouseId, item.CurrentLocationId, item.CreatedAt }
-//                    equals new { latest.ProductId, latest.WarehouseId, latest.CurrentLocationId, CreatedAt = latest.MaxCreatedAt }
-//                select item;
-
-//            var count = await latestInventoryQuery.CountAsync();
-
-//            return Ok(count);             
-//        }
-
-//        [HttpPost("summary/export", Name = "ExportInventorySummaryAsync")]
-//        public async Task<IActionResult> ExportInventorySummaryAsync([FromBody] InventorySearchDto inventorySearch)
-//        {
-//            var result = await GetUserInformationAsync();
-//            if (!result.Success)
-//            {
-//                return result.ErrorResult!;
-//            }
-
-//            var filteredQuery = GetFilteredInventoryQuery(inventorySearch, result.stockGroupIds, result.IsAdminRole);
-
-//            var latestDatesPerGroup = filteredQuery
-//                .GroupBy(i => new { i.ProductId, i.WarehouseId, i.CurrentLocationId })
-//                .Select(g => new
-//                {
-//                    g.Key.ProductId,
-//                    g.Key.WarehouseId,
-//                    g.Key.CurrentLocationId,
-//                    MaxCreatedAt = g.Max(i => i.CreatedAt)
-//                });
-
-
-//            var groupedQuery = from item in filteredQuery
-//                               join latest in latestDatesPerGroup
-//                               on new { item.ProductId, item.WarehouseId, item.CurrentLocationId, item.CreatedAt }
-//                               equals new { latest.ProductId, latest.WarehouseId, latest.CurrentLocationId, CreatedAt = latest.MaxCreatedAt }
-//                               select new
-//                               {
-//                                   item.ProductId,
-//                                   item.WarehouseId,
-//                                   item.CurrentLocationId,
-//                                   AvailableQuantity = item.NewBalance,
-//                                   item.CreatedAt,
-//                                   item.ChangedAt
-//                               };
-
-
-//            var latestInventoryList = await groupedQuery.ToListAsync();
-
-
-//            var productIds = latestInventoryList.Select(x => x.ProductId).Distinct().ToList();
-//            var warehouseIds = latestInventoryList.Select(x => x.WarehouseId).Distinct().ToList();
-//            var locationIds = latestInventoryList.Select(x => x.CurrentLocationId).Distinct().ToList();
-
-//            var products = await context.Products.Where(p => productIds.Contains(p.Id)).ToListAsync();
-//            var warehouses = await context.Warehouses.Where(w => warehouseIds.Contains(w.Id)).ToListAsync();
-//            var locations = await context.Locations.Where(l => locationIds.Contains(l.Id)).ToListAsync();
-
-//            var inventorySummaryDtos = latestInventoryList.Select(item =>
-//            {
-//                var product = products.FirstOrDefault(p => p.Id == item.ProductId);
-//                var warehouse = warehouses.FirstOrDefault(w => w.Id == item.WarehouseId);
-//                var location = locations.FirstOrDefault(l => l.Id == item.CurrentLocationId);
-
-//                var dto = new InventorySummaryDetailsDto
-//                {
-//                    Id = Guid.NewGuid(),
-//                    ProductId = item.ProductId,
-//                    WarehouseId = item.WarehouseId,
-//                    CurrentLocationId = item.CurrentLocationId,
-//                    AvailableQuantity = item.AvailableQuantity,
-//                    CreatedAt = item.CreatedAt,
-//                    ChangedAt = item.ChangedAt,
-//                    ProductName = product != null ? product.Name : "",
-//                    ProductCode = product != null ? product.ItemCode : "",
-//                    Warehouse = warehouse?.Name ?? "",
-//                    CurrentLocation = location?.Name ?? ""
-//                };
-
-//                if (product != null)
-//                {
-//                    dto.StockGroup = context.CartonSizes?.FirstOrDefault(cs => cs.Id == product.CartonSizeId)?.Name ?? "";
-//                    dto.ClientCode = context.ClientCodes?.FirstOrDefault(cc => cc.Id == product.ClientCodeId)?.Name ?? "";
-//                    dto.Size = context.Sizes?.FirstOrDefault(cc => cc.Id == product.SizeId)?.Name ?? "";
-//                }
-
-//                return dto;
-//            }).ToList();
-
-
-//            using var workbook = new XLWorkbook();
-//            var worksheet = workbook.Worksheets.Add("Inventory Summary");
-
-//            // Add headers
-//            worksheet.Cell(1, 1).Value = "Id";
-//            worksheet.Cell(1, 2).Value = "Product Name";
-//            worksheet.Cell(1, 3).Value = "Product Code";
-//            worksheet.Cell(1, 4).Value = "Warehouse";
-//            worksheet.Cell(1, 5).Value = "Current Location";
-//            worksheet.Cell(1, 6).Value = "Available Quantity";
-//            worksheet.Cell(1, 7).Value = "Stock Group";
-//            worksheet.Cell(1, 8).Value = "Client Code";
-//            worksheet.Cell(1, 9).Value = "Size";
-//            worksheet.Cell(1, 10).Value = "Created At";
-//            for (int i = 0; i < inventorySummaryDtos.Count; i++)
-//            {
-//                var summary = inventorySummaryDtos[i];
-//                var row = i + 2;
-
-//                worksheet.Cell(row, 1).Value = summary.Id.ToString();
-//                worksheet.Cell(row, 2).Value = summary.ProductName;
-//                worksheet.Cell(row, 3).Value = summary.ProductCode;
-//                worksheet.Cell(row, 4).Value = summary.Warehouse;
-//                worksheet.Cell(row, 5).Value = summary.CurrentLocation;
-//                worksheet.Cell(row, 6).Value = summary.AvailableQuantity;
-//                worksheet.Cell(row, 7).Value = summary.StockGroup;
-//                worksheet.Cell(row, 8).Value = summary.ClientCode;
-//                worksheet.Cell(row, 9).Value = summary.Size;
-//                worksheet.Cell(row, 10).Value = summary.CreatedAt;
-//            }
-
-//            using var stream = new MemoryStream();
-//            workbook.SaveAs(stream);
-//            stream.Seek(0, SeekOrigin.Begin);
-
-//            var contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-//            var fileName = $"InventorySummaryExport_{DateTime.Now:yyyyMMdd}.xlsx";
-
-//            return File(stream.ToArray(), contentType, fileName);
-//        }      
-
-//        [HttpPost("summary-product/search", Name = "SearchInventoryByProductSummaryAsync")]
-//        public async Task<IActionResult> SearchInventoryByProductSummaryAsync([FromBody] InventorySearchDto inventorySearch)
-//        {
-//            var result = await GetUserInformationAsync();
-//            if (!result.Success)
-//            {
-//                return result.ErrorResult!;
-//            }
-
-//            // Base filtered query
-//            var filteredQuery = GetFilteredInventoryByProductQuery(inventorySearch, result.stockGroupIds, result.IsAdminRole);
-       
-
-//            var latestDatesPerGroup = filteredQuery
-//                .GroupBy(i => new { i.ProductId, i.WarehouseId })
-//                .Select(g => new
-//                {
-//                    g.Key.ProductId,
-//                    g.Key.WarehouseId, 
-//                    MaxCreatedAt = g.Max(i => i.CreatedAt)
-//                });
-
-//            var groupedQuery = from item in filteredQuery
-//                               join latest in latestDatesPerGroup
-//                               on new { item.ProductId, item.WarehouseId, item.CreatedAt }
-//                               equals new { latest.ProductId, latest.WarehouseId, CreatedAt = latest.MaxCreatedAt }
-//                               select new
-//                               {
-//                                   item.ProductId,
-//                                   item.WarehouseId, 
-//                                   item.OnHandQuantity,
-//                                   item.ReservedQuantity,
-//                                   item.AvailableForPicking,
-//                                   item.CreatedAt,
-//                                   item.ChangedAt
-//                               };
-//            var sortedQuery =
-//                          from grp in groupedQuery
-//                          join prod in context.Products
-//                            on grp.ProductId equals prod.Id
-//                          orderby prod.Name ascending
-//                          select grp;
-
-
-//            var pagedGroupedData = await sortedQuery
-//                .Skip((inventorySearch.Page - 1) * inventorySearch.PageSize)
-//                .Take(inventorySearch.PageSize)
-//                .ToListAsync();
-
-//            // Fetch related data in batch to avoid N+1 query problem
-//            var productIds = pagedGroupedData.Select(p => p.ProductId).Distinct().ToList();
-//            var warehouseIds = pagedGroupedData.Select(p => p.WarehouseId).Distinct().ToList();
-
-//            var products = await context.Products.Where(p => productIds.Contains(p.Id)).ToListAsync();
-//            var warehouses = await context.Warehouses.Where(w => warehouseIds.Contains(w.Id)).ToListAsync();
-
-//            // Prepare the result DTOs manually
-//            var inventorySummaryByProductDtos = pagedGroupedData.Select(item =>
-//            {
-//                var product = products.FirstOrDefault(p => p.Id == item.ProductId);
-//                var warehouse = warehouses.FirstOrDefault(w => w.Id == item.WarehouseId);
-
-//                var dto = new InventorySummaryByProductDetailsDto
-//                {
-//                    ProductId = item.ProductId,
-//                    WarehouseId = item.WarehouseId,
-//                    AvailableQuantity = item.OnHandQuantity,
-//                    ReservedQuantity = item.ReservedQuantity,
-//                    AvailableAfterReserved = item.AvailableForPicking,
-//                    CreatedAt = item.CreatedAt,
-//                    ChangedAt = item.ChangedAt,
-//                    Product = product != null ? $"{product.Name} ({product.ItemCode})" : "",
-//                    Warehouse = warehouse?.Name ?? "", 
-//                };
-
-//                if (product != null)
-//                {
-//                    dto.StockGroup = context.CartonSizes?.FirstOrDefault(cs => cs.Id == product.CartonSizeId)?.Name ?? "";
-//                    dto.ClientCode = context.ClientCodes?.FirstOrDefault(cc => cc.Id == product.ClientCodeId)?.Name ?? "";
-//                    dto.Size = context.Sizes?.FirstOrDefault(cc => cc.Id == product.SizeId)?.Name ?? "";
-//                }
-
-//                return dto;
-//            }).ToList();
-             
-
-//            var pagedListDto = new PagedListDto<InventorySummaryByProductDetailsDto>
-//            {
-//                Data = inventorySummaryByProductDtos,
-//                CurrentPage = inventorySearch.Page,
-//                PageSize = inventorySearch.PageSize,
-//            };
-
-//            return Ok(pagedListDto);
-//        }
-
-//        [HttpPost("summary-product/count", Name = "CountInventoryByProductSummaryAsync")]
-//        public async Task<IActionResult> CountInventoryByProductSummaryAsync([FromBody] InventorySearchDto inventorySearch)
-//        {
-//            var result = await GetUserInformationAsync();
-//            if (!result.Success)
-//            {
-//                return result.ErrorResult!;
-//            }
-
-//            var filteredQuery = GetFilteredInventoryByProductQuery(inventorySearch, result.stockGroupIds, result.IsAdminRole);
-
-//            var latestDatesPerGroup = filteredQuery
-//                .GroupBy(i => new { i.ProductId, i.WarehouseId })
-//                .Select(g => new
-//                {
-//                    g.Key.ProductId,
-//                    g.Key.WarehouseId, 
-//                    MaxCreatedAt = g.Max(i => i.CreatedAt)
-//                });
-
-//            var latestInventoryQuery = from item in filteredQuery
-//                                       join latest in latestDatesPerGroup
-//                                           on new { item.ProductId, item.WarehouseId, item.CreatedAt }
-//                                           equals new { latest.ProductId, latest.WarehouseId, CreatedAt = latest.MaxCreatedAt }
-//                                       select item;
-
-//            var count = await latestInventoryQuery.CountAsync();
-
-//            return Ok(count);
-//        }
-
-//        [HttpPost("summary-product/export", Name = "ExportInventoryByProductSummaryAsync")]
-//        public async Task<IActionResult> ExportInventoryByProductSummaryAsync([FromBody] InventorySearchDto inventorySearch)
-//        {
-//            var result = await GetUserInformationAsync();
-//            if (!result.Success)
-//            {
-//                return result.ErrorResult!;
-//            }
-
-//            var filteredQuery = GetFilteredInventoryByProductQuery(inventorySearch, result.stockGroupIds, result.IsAdminRole);
-
-//            var latestDatesPerGroup = filteredQuery
-//                .GroupBy(i => new { i.ProductId, i.WarehouseId  })
-//                .Select(g => new
-//                {
-//                    g.Key.ProductId,
-//                    g.Key.WarehouseId, 
-//                    MaxCreatedAt = g.Max(i => i.CreatedAt)
-//                });
-
-
-//            var groupedQuery = from item in filteredQuery
-//                               join latest in latestDatesPerGroup
-//                               on new { item.ProductId, item.WarehouseId,  item.CreatedAt }
-//                               equals new { latest.ProductId, latest.WarehouseId,  CreatedAt = latest.MaxCreatedAt }
-//                               select new
-//                               {
-//                                   item.ProductId,
-//                                   item.WarehouseId, 
-//                                   AvailableQuantity = item.OnHandQuantity,
-//                                   item.CreatedAt,
-//                                   item.ChangedAt
-//                               };
-
-
-//            var latestInventoryList = await groupedQuery.ToListAsync();
-
-
-//            var productIds = latestInventoryList.Select(x => x.ProductId).Distinct().ToList();
-//            var warehouseIds = latestInventoryList.Select(x => x.WarehouseId).Distinct().ToList(); 
-
-//            var products = await context.Products.Where(p => productIds.Contains(p.Id)).ToListAsync();
-//            var warehouses = await context.Warehouses.Where(w => warehouseIds.Contains(w.Id)).ToListAsync(); 
-
-//            var inventorySummaryDtos = latestInventoryList.Select(item =>
-//            {
-//                var product = products.FirstOrDefault(p => p.Id == item.ProductId);
-//                var warehouse = warehouses.FirstOrDefault(w => w.Id == item.WarehouseId); 
-
-//                var dto = new InventorySummaryByProductDetailsDto
-//                {
-//                    Id = Guid.NewGuid(),
-//                    ProductId = item.ProductId,
-//                    WarehouseId = item.WarehouseId, 
-//                    AvailableQuantity = item.AvailableQuantity,
-//                    CreatedAt = item.CreatedAt,
-//                    ChangedAt = item.ChangedAt,
-//                    Product = product != null ? $"{product.Name} ({product.ItemCode})" : "",
-//                    Warehouse = warehouse?.Name ?? "", 
-//                };
-
-//                if (product != null)
-//                {
-//                    dto.StockGroup = context.CartonSizes?.FirstOrDefault(cs => cs.Id == product.CartonSizeId)?.Name ?? "";
-//                    dto.ClientCode = context.ClientCodes?.FirstOrDefault(cc => cc.Id == product.ClientCodeId)?.Name ?? "";
-//                    dto.Size = context.Sizes?.FirstOrDefault(cc => cc.Id == product.SizeId)?.Name ?? "";
-//                }
-
-//                return dto;
-//            }).ToList();
-
-
-//            using var workbook = new XLWorkbook();
-//            var worksheet = workbook.Worksheets.Add("Inventory Summary");
-
-//            // Add headers
-//            worksheet.Cell(1, 1).Value = "Id";
-//            worksheet.Cell(1, 2).Value = "Product";
-//            worksheet.Cell(1, 3).Value = "Warehouse"; 
-//            worksheet.Cell(1, 4).Value = "Available Quantity";
-//            worksheet.Cell(1, 5).Value = "Stock Group";
-//            worksheet.Cell(1, 6).Value = "Client Code";
-//            worksheet.Cell(1, 7).Value = "Size";
-//            worksheet.Cell(1, 8).Value = "Created At";
-//            for (int i = 0; i < inventorySummaryDtos.Count; i++)
-//            {
-//                var summary = inventorySummaryDtos[i];
-//                var row = i + 2;
-
-//                worksheet.Cell(row, 1).Value = summary.Id.ToString();
-//                worksheet.Cell(row, 2).Value = summary.Product;
-//                worksheet.Cell(row, 3).Value = summary.Warehouse; 
-//                worksheet.Cell(row, 4).Value = summary.AvailableQuantity;
-//                worksheet.Cell(row, 5).Value = summary.StockGroup;
-//                worksheet.Cell(row, 6).Value = summary.ClientCode;
-//                worksheet.Cell(row, 7).Value = summary.Size;
-//                worksheet.Cell(row, 8).Value = summary.CreatedAt;
-//            }
-
-//            using var stream = new MemoryStream();
-//            workbook.SaveAs(stream);
-//            stream.Seek(0, SeekOrigin.Begin);
-
-//            var contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-//            var fileName = $"InventorySummaryByProductExport_{DateTime.Now:yyyyMMdd}.xlsx";
-
-//            return File(stream.ToArray(), contentType, fileName);
-//        }
-
-//        [HttpGet("{id}")]
-//        public async Task<IActionResult> GetById(Guid id)
-//        {
-//            var product = await service.GetByIdAsync(id);
-//            return Ok(product);
-//        }
-        
-//        private async Task<(bool Success, IActionResult? ErrorResult, string stockGroupIds, bool IsAdminRole)> GetUserInformationAsync()
-//        {
-//            var emailClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
-
-//            if (emailClaim == null || string.IsNullOrEmpty(emailClaim.Value))
-//            {
-//                return (false, BadRequest("User email is missing or invalid."), null, false);
-//            }
-
-//            var email = emailClaim.Value;
-//            var user = await userManager.FindByEmailAsync(email);
-//            if (user == null)
-//            {
-//                return (false, BadRequest("User not found."), null, false);
-//            }
-
-//            bool isAdminRole = false;
-//            var cartonSizeIds = "";
-//            if (user.UserRoleId != null)
-//            {
-//                var userRole = await roleManager.FindByIdAsync(user.UserRoleId.ToString());
-//                if (userRole != null)
-//                {
-//                    // Check if userRole.Name indicates admin role
-//                    isAdminRole = userRole.Name.Equals("admin", StringComparison.OrdinalIgnoreCase);
-//                    cartonSizeIds = userRole.CartonSizeId;
-//                }
-//            }
-
-//            return (true, null, cartonSizeIds, isAdminRole);
-//        }
-
-//        // Helper method to get the filtered inventory query
-//        private IQueryable<Inventory> GetFilteredInventoryQuery(InventorySearchDto inventorySearch,
-//            string stockGroupIds, bool isAdminRole)
-//        {
-//            // 1) Start with everything
-//            var query = context.Inventories.AsQueryable();
-
-//            // 2) Existing stock‐group / carton‐size filter and if not admin role, filter by stock group
-//            if (!isAdminRole && !string.IsNullOrWhiteSpace(stockGroupIds))
-//            {
-//                var allowedCartonSizeIds = stockGroupIds
-//                    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-//                    .Select(id => Guid.TryParse(id, out var g) ? g : Guid.Empty)
-//                    .Where(g => g != Guid.Empty)
-//                    .ToList();
-
-//                if (allowedCartonSizeIds.Count != 0)
-//                {
-//                    query = query
-//                        .Join(context.Products,
-//                            inv => inv.ProductId,
-//                            prod => prod.Id,
-//                            (inv, prod) => new { inv, prod })
-//                        .Where(x => allowedCartonSizeIds.Contains(x.prod.CartonSizeId))
-//                        .Select(x => x.inv);
-//                }
-//            }
-
-//            // 3) Filter by explicit ProductId list
-//            if (inventorySearch.ProductId?.Any() == true)
-//            {
-//                var prodGuids = inventorySearch.ProductId
-//                    .Select(id => Guid.TryParse(id, out var g) ? g : Guid.Empty)
-//                    .Where(g => g != Guid.Empty)
-//                    .ToList();
-
-//                if (prodGuids.Any())
-//                {
-//                    query = query.Where(inv => prodGuids.Contains(inv.ProductId));
-//                }
-//            }
-
-//            // 4) Filter by WarehouseId
-//            if (inventorySearch.WarehouseId?.Any() == true)
-//            {
-//                var whGuids = inventorySearch.WarehouseId
-//                    .Select(id => Guid.TryParse(id, out var g) ? g : Guid.Empty)
-//                    .Where(g => g != Guid.Empty)
-//                    .ToList();
-
-//                if (whGuids.Any())
-//                {
-//                    query = query.Where(inv => whGuids.Contains(inv.WarehouseId));
-//                }
-//            }
-
-//            // 5) Filter by CurrentLocationId
-//            if (inventorySearch.LocationId?.Any() == true)
-//            {
-//                var locGuids = inventorySearch.LocationId
-//                    .Select(id => Guid.TryParse(id, out var g) ? g : Guid.Empty)
-//                    .Where(g => g != Guid.Empty)
-//                    .ToList();
-
-//                if (locGuids.Count != 0)
-//                {
-//                    query = query.Where(inv => locGuids.Contains(inv.CurrentLocationId));
-//                }
-//            }
-
-//            // 6) Filter by ClientCode on the Product
-//            if (inventorySearch.ClientCodeId?.Any() == true)
-//            {
-//                // Parse string codes into enum values
-//                var clientCodeIds = inventorySearch.ClientCodeId
-//                    .Select(id => Guid.TryParse(id, out var g) ? g : Guid.Empty)
-//                    .Where(g => g != Guid.Empty)
-//                    .ToList();
-
-//                if (clientCodeIds.Any())
-//                {
-//                    query = query
-//                        .Join(context.Products,
-//                            inv => inv.ProductId,
-//                            prod => prod.Id,
-//                            (inv, prod) => new { inv, prod })
-//                        .Where(x => clientCodeIds.Contains(x.prod.ClientCodeId))
-//                        .Select(x => x.inv);
-//                }
-//            }
-
-//            return query;
-//        }
-
-//        private IQueryable<WarehouseInventoryBalance> GetFilteredInventoryByProductQuery(InventorySearchDto inventorySearch,
-//           string stockGroupIds, bool isAdminRole)
-//        {
-//            // 1) Start with everything
-//            var query = context.WarehouseInventoryBalances.AsQueryable();
-
-//            // 2) Existing stock‐group / carton‐size filter and if not admin role, filter by stock group
-//            if (!isAdminRole && !string.IsNullOrWhiteSpace(stockGroupIds))
-//            {
-//                var allowedCartonSizeIds = stockGroupIds
-//                    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-//                    .Select(id => Guid.TryParse(id, out var g) ? g : Guid.Empty)
-//                    .Where(g => g != Guid.Empty)
-//                    .ToList();
-
-//                if (allowedCartonSizeIds.Count != 0)
-//                {
-//                    query = query
-//                        .Join(context.Products,
-//                            inv => inv.ProductId,
-//                            prod => prod.Id,
-//                            (inv, prod) => new { inv, prod })
-//                        .Where(x => allowedCartonSizeIds.Contains(x.prod.CartonSizeId))
-//                        .Select(x => x.inv);
-//                }
-//            }
-
-//            // 3) Filter by explicit ProductId list
-//            if (inventorySearch.ProductId?.Any() == true)
-//            {
-//                var prodGuids = inventorySearch.ProductId
-//                    .Select(id => Guid.TryParse(id, out var g) ? g : Guid.Empty)
-//                    .Where(g => g != Guid.Empty)
-//                    .ToList();
-
-//                if (prodGuids.Any())
-//                {
-//                    query = query.Where(inv => prodGuids.Contains(inv.ProductId));
-//                }
-//            }
-
-//            // 4) Filter by WarehouseId
-//            if (inventorySearch.WarehouseId?.Any() == true)
-//            {
-//                var whGuids = inventorySearch.WarehouseId
-//                    .Select(id => Guid.TryParse(id, out var g) ? g : Guid.Empty)
-//                    .Where(g => g != Guid.Empty)
-//                    .ToList();
-
-//                if (whGuids.Any())
-//                {
-//                    query = query.Where(inv => whGuids.Contains(inv.WarehouseId));
-//                }
-//            }
-             
-
-//            // 6) Filter by ClientCode on the Product
-//            if (inventorySearch.ClientCodeId?.Any() == true)
-//            {
-//                // Parse string codes into enum values
-//                var clientCodeIds = inventorySearch.ClientCodeId
-//                    .Select(id => Guid.TryParse(id, out var g) ? g : Guid.Empty)
-//                    .Where(g => g != Guid.Empty)
-//                    .ToList();
-
-//                if (clientCodeIds.Any())
-//                {
-//                    query = query
-//                        .Join(context.Products,
-//                            inv => inv.ProductId,
-//                            prod => prod.Id,
-//                            (inv, prod) => new { inv, prod })
-//                        .Where(x => clientCodeIds.Contains(x.prod.ClientCodeId))
-//                        .Select(x => x.inv);
-//                }
-//            }
-
-//            return query;
-//        }
-//    }
-//}
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Wms.Api.Context;
+using Wms.Api.Dto;
+using Wms.Api.Dto.Inventory;
+using Wms.Api.Dto.PagedList;
+
+namespace Wms.Api.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public class InventoryController(ApplicationDbContext context) : ControllerBase
+    {
+        [HttpPost("audit")]
+        public async Task<IActionResult> GetAuditAsync([FromBody] InventoryAuditSearchDto search)
+        {
+            search ??= new InventoryAuditSearchDto();
+
+            var stockInMovementsQuery =
+                from item in context.StockInItems
+                join stockIn in context.StockIns on item.StockInId equals stockIn.Id
+                join product in context.Products on item.ProductId equals product.ProductId
+                select new
+                {
+                    product.ProductId,
+                    product.ProductCode,
+                    product.Model,
+                    MovementDate = stockIn.DateOfPurchase,
+                    MovementType = "STOCKIN",
+                    ReferenceNumber = stockIn.Number,
+                    QuantityChange = item.ReceiveQuantity,
+                    product.CostPrice,
+                    product.AgentPrice,
+                    product.DealerPrice,
+                    product.RetailPrice
+                };
+
+            var invoiceMovementsQuery =
+                from item in context.InvoiceItems
+                join invoice in context.Invoices on item.InvoiceId equals invoice.Id
+                join product in context.Products on item.ProductId equals product.ProductId into productJoin
+                from product in productJoin.DefaultIfEmpty()
+                where item.ProductId != null
+                select new
+                {
+                    ProductId = item.ProductId!.Value,
+                    ProductCode = item.ProductCode ?? (product != null ? product.ProductCode : string.Empty),
+                    Model = product != null ? product.Model : null,
+                    MovementDate = invoice.DateOfSale,
+                    MovementType = "INVOICE",
+                    ReferenceNumber = invoice.Number,
+                    QuantityChange = -item.Quantity,
+                    CostPrice = product != null ? product.CostPrice : null,
+                    AgentPrice = product != null ? product.AgentPrice : null,
+                    DealerPrice = product != null ? product.DealerPrice : null,
+                    RetailPrice = product != null ? product.RetailPrice : null
+                };
+
+            var combinedQuery = stockInMovementsQuery.Concat(invoiceMovementsQuery);
+
+            if (search.ProductId.HasValue)
+            {
+                combinedQuery = combinedQuery.Where(x => x.ProductId == search.ProductId.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(search.Search))
+            {
+                var term = search.Search.Trim();
+                combinedQuery = combinedQuery.Where(x =>
+                    x.ProductCode.Contains(term) ||
+                    (x.Model != null && x.Model.Contains(term)) ||
+                    x.ReferenceNumber.Contains(term));
+            }
+
+            var materialized = await combinedQuery
+                .OrderBy(x => x.MovementDate)
+                .ThenBy(x => x.ReferenceNumber)
+                .ThenBy(x => x.QuantityChange)
+                .ToListAsync();
+
+            var runningBalances = new Dictionary<Guid, int>();
+            var computed = new List<InventoryAuditDto>(materialized.Count);
+
+            foreach (var entry in materialized)
+            {
+                runningBalances.TryGetValue(entry.ProductId, out var current);
+                current += entry.QuantityChange;
+                runningBalances[entry.ProductId] = current;
+
+                computed.Add(new InventoryAuditDto
+                {
+                    ProductId = entry.ProductId,
+                    ProductCode = entry.ProductCode,
+                    Model = entry.Model,
+                    MovementDate = entry.MovementDate,
+                    MovementType = entry.MovementType,
+                    ReferenceNumber = entry.ReferenceNumber,
+                    QuantityChange = entry.QuantityChange,
+                    BalanceAfter = current,
+                    CostPrice = entry.CostPrice,
+                    AgentPrice = entry.AgentPrice,
+                    DealerPrice = entry.DealerPrice,
+                    RetailPrice = entry.RetailPrice
+                });
+            }
+
+            // Order for display (most recent first) then paginate
+            var orderedForDisplay = computed
+                .OrderByDescending(x => x.MovementDate)
+                .ThenByDescending(x => x.ReferenceNumber)
+                .ToList();
+
+            var skip = (search.Page - 1) * search.PageSize;
+            var dtoItems = orderedForDisplay.Skip(skip).Take(search.PageSize).ToList();
+
+            var paged = new PagedListDto<InventoryAuditDto>
+            {
+                CurrentPage = search.Page,
+                PageSize = search.PageSize,
+                TotalCount = computed.Count,
+                Data = dtoItems
+            };
+
+            return Ok(paged);
+        }
+
+        [HttpPost("summary")]
+        public async Task<IActionResult> GetSummaryAsync([FromBody] InventorySummarySearchDto search)
+        {
+            search ??= new InventorySummarySearchDto();
+
+            var incoming = await context.StockInItems
+                .GroupBy(i => i.ProductId)
+                .Select(g => new { ProductId = g.Key, Quantity = g.Sum(x => x.ReceiveQuantity) })
+                .ToDictionaryAsync(x => x.ProductId, x => x.Quantity);
+
+            var outgoing = await context.InvoiceItems
+                .Where(i => i.ProductId != null)
+                .GroupBy(i => i.ProductId!.Value)
+                .Select(g => new { ProductId = g.Key, Quantity = g.Sum(x => x.Quantity) })
+                .ToDictionaryAsync(x => x.ProductId, x => x.Quantity);
+
+            var productsQuery = context.Products.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search.Search))
+            {
+                var term = search.Search.Trim();
+                productsQuery = productsQuery.Where(p =>
+                    p.ProductCode.Contains(term) ||
+                    (p.Model != null && p.Model.Contains(term)));
+            }
+
+            var totalCount = await productsQuery.CountAsync();
+
+            var products = await productsQuery
+                .OrderBy(p => p.ProductCode)
+                .Skip((search.Page - 1) * search.PageSize)
+                .Take(search.PageSize)
+                .ToListAsync();
+
+            var summaryRows = products.Select(p =>
+            {
+                incoming.TryGetValue(p.ProductId, out var received);
+                outgoing.TryGetValue(p.ProductId, out var sold);
+                var available = received - sold;
+
+                return new InventorySummaryRowDto
+                {
+                    ProductId = p.ProductId,
+                    ProductCode = p.ProductCode,
+                    Model = p.Model,
+                    AvailableQuantity = available,
+                    CostPrice = p.CostPrice,
+                    AgentPrice = p.AgentPrice,
+                    DealerPrice = p.DealerPrice,
+                    RetailPrice = p.RetailPrice
+                };
+            }).ToList();
+
+            var paged = new PagedListDto<InventorySummaryRowDto>
+            {
+                CurrentPage = search.Page,
+                PageSize = search.PageSize,
+                TotalCount = totalCount,
+                Data = summaryRows
+            };
+
+            return Ok(paged);
+        }
+
+        [HttpPut("summary/{productId:guid}/pricing")]
+        public async Task<IActionResult> UpdatePricingAsync(Guid productId, [FromBody] UpdateProductPricingDto pricing)
+        {
+            var product = await context.Products.FirstOrDefaultAsync(p => p.ProductId == productId);
+            if (product == null)
+            {
+                return NotFound();
+            }
+
+            product.CostPrice = pricing.CostPrice ?? product.CostPrice;
+            product.AgentPrice = pricing.AgentPrice ?? product.AgentPrice;
+            product.DealerPrice = pricing.DealerPrice ?? product.DealerPrice;
+            product.RetailPrice = pricing.RetailPrice ?? product.RetailPrice;
+
+            await context.SaveChangesAsync();
+
+            return NoContent();
+        }
+    }
+}

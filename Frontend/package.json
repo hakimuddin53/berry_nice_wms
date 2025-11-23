@@ -105,6 +105,7 @@
     "unitsnet-js": "^3.0.8",
     "util": "0.12.4",
     "uuid": "^9.0.1",
+    "vm-browserify": "^1.1.2",
     "web-vitals": "3.0.1",
     "xlsx": "^0.18.5",
     "yup": "1.2.0"

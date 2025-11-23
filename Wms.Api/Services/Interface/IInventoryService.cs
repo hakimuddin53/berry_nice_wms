@@ -5,8 +5,6 @@ namespace Wms.Api.Services
 {
     public interface IInventoryService
     {
-        Task StockOutAsync(StockOut stockOut);
         Task StockInAsync(StockIn stockIn);
-        Task CancelStockOutAsync(Guid stockOutId);
     }
 }

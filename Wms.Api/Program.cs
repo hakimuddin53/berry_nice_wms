@@ -36,7 +36,6 @@ builder.Services.AddControllers()
 var allowedOrigins = builder.Configuration.GetSection("CorsSettings:AllowedOrigins").Get<string[]>();
 
 builder.Services.AddAutoMapper(typeof(StockInProfile));
-builder.Services.AddAutoMapper(typeof(StockOutProfile));
 builder.Services.AddAutoMapper(typeof(ProductProfile)); 
 builder.Services.AddAutoMapper(typeof(GeneralProfile));
 builder.Services.AddAutoMapper(typeof(InvoiceProfile));
@@ -127,7 +126,7 @@ builder.Services.AddScoped<IInventoryService, InventoryService>();
 builder.Services.AddScoped<IRunningNumberService, RunningNumberService>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped(typeof(IService<>), typeof(Service<>));
-//builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IProductService, ProductService>();
  
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 

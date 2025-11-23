@@ -46,11 +46,6 @@ export const MenuItemTypeEnum = {
   EXTERNAL_LINK: "EXTERNAL_LINK",
 };
 
-export const StockOutStatusEnum = {
-  COMPLETED: "COMPLETED",
-  CANCELLED: "CANCELLED",
-};
-
 /* eslint-disable @typescript-eslint/no-redeclare */
 export type ModuleEnum = typeof ModuleEnum[keyof typeof ModuleEnum];
 export type MonthEnum = typeof MonthEnum[keyof typeof MonthEnum];
@@ -60,6 +55,4 @@ export type UploadActionEnum =
   typeof UploadActionEnum[keyof typeof UploadActionEnum];
 export type ReservationStatusEnum =
   typeof ReservationStatusEnum[keyof typeof ReservationStatusEnum];
-export type StockOutStatusEnum =
-  typeof StockOutStatusEnum[keyof typeof StockOutStatusEnum];
 /* eslint-enable */

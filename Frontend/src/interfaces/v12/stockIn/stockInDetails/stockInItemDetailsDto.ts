@@ -1,9 +1,9 @@
 import { guid } from "types/guid";
-import { StockInItemRemarkDetailsDto } from "./stockInItemRemarkDetailsDto";
 
 export interface StockInItemDetailsDto {
   id: guid;
   stockInId: guid;
+  productId: guid;
   productCode: string;
   categoryId: guid;
   brandId?: guid;
@@ -22,7 +22,9 @@ export interface StockInItemDetailsDto {
   dealerSellingPrice?: number;
   agentSellingPrice?: number;
   cost?: number;
-  stockInItemRemarks?: StockInItemRemarkDetailsDto[];
+  // Aggregated, free-text remark(s)
+  remark?: string;
+  internalRemark?: string;
   receiveQuantity: number;
 
   // Display fields

@@ -5,6 +5,8 @@ namespace Wms.Api.Dto.StockIn.StockInCreateUpdate
 {
     public class StockInItemCreateUpdateDto
     {
+        public Guid? ProductId { get; set; }
+
         [Required]
         [MaxLength(64)]
         public string ProductCode { get; set; } = default!;
@@ -36,7 +38,9 @@ namespace Wms.Api.Dto.StockIn.StockInCreateUpdate
         public decimal? AgentSellingPrice { get; set; }
         public decimal? Cost { get; set; }
 
-        public ICollection<StockInItemRemarkCreateUpdateDto>? StockInItemRemarks { get; set; }
+        // Free-text, comma-delimited chips input
+        public string? Remark { get; set; }
+        public string? InternalRemark { get; set; }
         public int ReceiveQuantity { get; set; }
     }
 }

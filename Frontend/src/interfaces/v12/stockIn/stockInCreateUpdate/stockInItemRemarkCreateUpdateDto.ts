@@ -3,5 +3,6 @@ import { guid } from "types/guid";
 export interface StockInItemRemarkCreateUpdateDto {
   id?: guid;
   stockInItemId?: guid;
-  remark: string;
+  productRemarkId?: guid;
+  remark?: string;
 }

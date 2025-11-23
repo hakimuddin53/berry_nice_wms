@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Wms.Api.Entities;
 using Wms.Api.Services;
@@ -59,9 +59,7 @@ namespace Wms.Api.Context
         public DbSet<Product> Products { get; set; }
         public DbSet<StockIn> StockIns { get; set; }
         public DbSet<StockInItem> StockInItems { get; set; }
-        public DbSet<StockInItemRemark> StockInItemRemarks { get; set; }
-        public DbSet<StockOut> StockOuts { get; set; }
-        public DbSet<StockOutItem> StockOutItems { get; set; }
+    // Removed: StockInItemRemarks (replaced with single Remark field on StockInItem)
         public DbSet<Inventory> Inventories { get; set; }
         public DbSet<RunningNumber> RunningNumbers { get; set; } 
         public DbSet<Lookup> Lookups { get; set; }
@@ -70,6 +68,7 @@ namespace Wms.Api.Context
         public DbSet<Expense> Expenses { get; set; }
         public DbSet<Invoice> Invoices { get; set; }
         public DbSet<InvoiceItem> InvoiceItems { get; set; }
+    // Removed: ProductRemarks (replaced with single Remark field on Product)
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -118,11 +117,13 @@ namespace Wms.Api.Context
                 .HasForeignKey(p => p.ScreenSizeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<StockInItemRemark>()
-                .HasOne(r => r.StockInItem)
-                .WithMany(i => i.StockInItemRemarks)
-                .HasForeignKey(r => r.StockInItemId)
-                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<StockInItem>()
+                .HasOne(i => i.Product)
+                .WithMany()
+                .HasForeignKey(i => i.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Remarks are now simple string fields; related tables removed.
 
             modelBuilder.Entity<InvoiceItem>()
                 .HasOne(ii => ii.Invoice)

@@ -25,7 +25,7 @@ export const useStockInTable = () => {
         label: t("number"),
         render: (row) => (
           <EasyCopy clipboard={row.number}>
-            <Link component={NavLink} to={`/stockin/${row.id}`}>
+            <Link component={NavLink} to={`/stock-in/${row.id}`}>
               {row.number || "N/A"}
             </Link>
           </EasyCopy>
