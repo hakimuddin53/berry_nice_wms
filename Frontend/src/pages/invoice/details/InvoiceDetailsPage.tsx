@@ -108,7 +108,6 @@ const InvoiceDetailsPage = () => {
             <TableHead>
               <TableRow>
                 <TableCell>{t("product-code")}</TableCell>
-                <TableCell>{t("description")}</TableCell>
                 <TableCell>{t("primary-serial-number")}</TableCell>
                 <TableCell>{t("manufacture-serial-number")}</TableCell>
                 <TableCell>{t("imei")}</TableCell>
@@ -121,7 +120,6 @@ const InvoiceDetailsPage = () => {
               {invoice.invoiceItems.map((item) => (
                 <TableRow key={item.id as unknown as string}>
                   <TableCell>{item.productCode || "-"}</TableCell>
-                  <TableCell>{item.description || "-"}</TableCell>
                   <TableCell>{item.primarySerialNumber || "-"}</TableCell>
                   <TableCell>{item.manufactureSerialNumber || "-"}</TableCell>
                   <TableCell>{item.imei || "-"}</TableCell>

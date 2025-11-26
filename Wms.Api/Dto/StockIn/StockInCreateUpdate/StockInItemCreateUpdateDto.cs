@@ -7,9 +7,8 @@ namespace Wms.Api.Dto.StockIn.StockInCreateUpdate
     {
         public Guid? ProductId { get; set; }
 
-        [Required]
         [MaxLength(64)]
-        public string ProductCode { get; set; } = default!;
+        public string? ProductCode { get; set; }
 
         [Required]
         public Guid CategoryId { get; set; }

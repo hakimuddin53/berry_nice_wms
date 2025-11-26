@@ -23,7 +23,8 @@ namespace Wms.Api.Controllers
         IService<Invoice> invoiceService,
         IMapper mapper,
         ApplicationDbContext context,
-        IRunningNumberService runningNumberService)
+        IRunningNumberService runningNumberService,
+        IInventoryService inventoryService)
         : ControllerBase
     {
         [HttpPost("search")]
@@ -126,6 +127,9 @@ namespace Wms.Api.Controllers
 
             await invoiceService.AddAsync(invoice);
             await UpdateProductPricingFromInvoiceAsync(invoice.InvoiceItems);
+
+            // NEW: Update inventory for the invoice
+            await inventoryService.StockOutAsync(invoice);
 
             var dto = mapper.Map<InvoiceDetailsDto>(invoice);
             return CreatedAtAction(nameof(GetByIdAsync), new { id = invoice.Id }, dto);

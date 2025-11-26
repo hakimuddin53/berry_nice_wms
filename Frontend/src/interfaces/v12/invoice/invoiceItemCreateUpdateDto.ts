@@ -4,7 +4,6 @@ export interface InvoiceItemCreateUpdateDto {
   id?: guid;
   productId?: guid | null;
   productCode?: string | null;
-  description?: string | null;
   primarySerialNumber?: string | null;
   manufactureSerialNumber?: string | null;
   imei?: string | null;

@@ -10,7 +10,7 @@ export interface YupStockInCreateEdit {
 }
 
 export interface YupStockInItemCreateEdit {
-  productCode: string;
+  productCode?: string;
   categoryId: guid;
   brandId?: guid;
   model?: string;
@@ -45,7 +45,6 @@ export const stockInCreateEditSchema = yup.object().shape({
     .array()
     .of(
       yup.object().shape({
-        productCode: yup.string().required(),
         categoryId: yup.string().required(),
         brandId: yup.string().nullable(),
         model: yup.string().nullable(),

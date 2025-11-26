@@ -5,7 +5,6 @@ export interface InvoiceItemDetailsDto {
   invoiceId: guid;
   productId?: guid | null;
   productCode?: string | null;
-  description?: string | null;
   primarySerialNumber?: string | null;
   manufactureSerialNumber?: string | null;
   imei?: string | null;

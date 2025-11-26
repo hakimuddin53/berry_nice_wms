@@ -24,11 +24,6 @@ export const useInvoiceItemTable = () => {
         render: (row) => row.productCode || "-",
       },
       {
-        id: "description",
-        label: t("description"),
-        render: (row) => row.description || "-",
-      },
-      {
         id: "primarySerialNumber",
         label: t("primary-serial-number"),
         render: (row) => row.primarySerialNumber || "-",

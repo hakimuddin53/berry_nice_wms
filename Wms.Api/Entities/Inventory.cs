@@ -18,18 +18,17 @@ namespace Wms.Api.Entities
         [Required]
         public Guid WarehouseId { get; set; }
 
-        public Guid CurrentLocationId { get; set; }
-
         public string? Remark { get; set; }
 
-    [Required]
-    public Guid StockInId { get; set; }
+        [Required]
+        public Guid StockInId { get; set; }
 
-    [Required]
-    public Guid StockTransferId { get; set; }
+        [Required]
+        public Guid StockTransferId { get; set; }
 
-    [Required]
-    public Guid StockAdjustmentId { get; set; }
+        public Guid? StockAdjustmentId { get; set; } // Made nullable
+
+        public Guid? InvoiceId { get; set; } // New field for invoice reference
 
         [Required]
         public int QuantityIn { get; set; } // Quantity added in the transaction
@@ -43,7 +42,7 @@ namespace Wms.Api.Entities
         [Required]
         public int NewBalance { get; set; } // Balance after the transaction
 
-        [Required]                           // 
+        [Required]                           
         [Column(TypeName = "decimal(18,4)")]
         public decimal UnitPrice { get; set; } = 0m;
     }

@@ -260,7 +260,8 @@ namespace Wms.Api.Controllers
                 {
                     if (string.IsNullOrWhiteSpace(normalizedCode))
                     {
-                        throw new InvalidOperationException("Each stock-in item must include a product code when product ID is not specified.");
+                        normalizedCode = await runningNumberService.GenerateRunningNumberAsync(OperationTypeEnum.PRODUCT);
+                        dtoItem.ProductCode = normalizedCode;
                     }
 
                     var newProductId = dtoItem.ProductId.HasValue && dtoItem.ProductId.Value != Guid.Empty
@@ -297,12 +298,6 @@ namespace Wms.Api.Controllers
                 }
                 else
                 {
-                    if (!string.IsNullOrWhiteSpace(normalizedCode))
-                    {
-                        product.ProductCode = normalizedCode;
-                        productsByCode[normalizedCode] = product;
-                    }
-
                     product.CategoryId = dtoItem.CategoryId;
                     product.BrandId = dtoItem.BrandId;
                     product.Model = dtoItem.Model;

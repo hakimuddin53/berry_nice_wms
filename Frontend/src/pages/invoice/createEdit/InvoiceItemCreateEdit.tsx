@@ -36,12 +36,8 @@ const InvoiceItemCreateEdit = (props: {
       }
       try {
         const results =
-          (await productService.getSelectOptions(
-            input,
-            page + 1,
-            pageSize,
-            ids
-          )) ?? [];
+          (await productService.getSelectOptions(input, page, pageSize, ids)) ??
+          [];
         return results.map((p: any) => ({
           label: p.label ?? p.productCode ?? "",
           value: p.value ?? p.id ?? p.productId ?? p.productCode,
@@ -100,38 +96,38 @@ const InvoiceItemCreateEdit = (props: {
                   asyncFunc={productAsync}
                   suggestionsIfEmpty
                   onSelectionChange={(option: any) => {
+                    const data = option?.data ?? {};
                     formik.setFieldValue(
                       fieldName("productCode"),
-                      option?.data?.productCode ?? option?.label ?? ""
+                      data.productCode ?? option?.label ?? ""
                     );
                     formik.setFieldValue(
                       fieldName("productId"),
                       option?.value ?? undefined
                     );
                     formik.setFieldValue(
-                      fieldName("description"),
-                      option?.data?.productName ??
-                        option?.data?.description ??
-                        option?.label ??
-                        item.description ??
-                        ""
-                    );
-                    formik.setFieldValue(
                       fieldName("primarySerialNumber"),
-                      option?.data?.primarySerialNumber ??
-                        item.primarySerialNumber ??
-                        ""
+                      data.primarySerialNumber ?? item.primarySerialNumber ?? ""
                     );
                     formik.setFieldValue(
                       fieldName("manufactureSerialNumber"),
-                      option?.data?.manufactureSerialNumber ??
+                      data.manufactureSerialNumber ??
                         item.manufactureSerialNumber ??
                         ""
                     );
-                    formik.setFieldValue(
-                      fieldName("unitOfMeasure"),
-                      option?.data?.unitOfMeasure ?? item.unitOfMeasure ?? ""
-                    );
+                    if (
+                      data.retailPrice !== undefined &&
+                      data.retailPrice !== null
+                    ) {
+                      formik.setFieldValue(
+                        fieldName("unitPrice"),
+                        data.retailPrice
+                      );
+                      formik.setFieldValue(
+                        fieldName("totalPrice"),
+                        (data.retailPrice ?? 0) * (item.quantity ?? 0)
+                      );
+                    }
                   }}
                   onBlur={() =>
                     formik.setFieldTouched(fieldName("productCode"))
@@ -145,31 +141,6 @@ const InvoiceItemCreateEdit = (props: {
                       touched={fieldTouched("productCode")}
                       error={fieldError("productCode")}
                       translatedFieldName={t("product-code")}
-                    />
-                  }
-                />
-              ),
-            },
-            {
-              label: t("description"),
-              value: (
-                <TextField
-                  fullWidth
-                  size="small"
-                  id={fieldName("description")}
-                  name={fieldName("description")}
-                  value={item.description ?? ""}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={
-                    fieldTouched("description") &&
-                    Boolean(fieldError("description"))
-                  }
-                  helperText={
-                    <FormikErrorMessage
-                      touched={fieldTouched("description")}
-                      error={fieldError("description")}
-                      translatedFieldName={t("description")}
                     />
                   }
                 />

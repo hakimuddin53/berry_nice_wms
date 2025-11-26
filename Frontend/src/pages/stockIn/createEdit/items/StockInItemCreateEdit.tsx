@@ -164,31 +164,6 @@ const StockInItemCreateEdit = (props: {
               hideDevider={true}
               data={[
                 {
-                  label: t("product-code"),
-                  value: (
-                    <TextField
-                      fullWidth
-                      id={fieldName("productCode")}
-                      name={fieldName("productCode")}
-                      size="small"
-                      value={item.productCode}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      error={
-                        fieldTouched("productCode") &&
-                        Boolean(fieldError("productCode"))
-                      }
-                      helperText={
-                        <FormikErrorMessage
-                          touched={fieldTouched("productCode")}
-                          error={fieldError("productCode")}
-                          translatedFieldName={t("product-code")}
-                        />
-                      }
-                    />
-                  ),
-                },
-                {
                   label: t("model"),
                   value: (
                     <TextField

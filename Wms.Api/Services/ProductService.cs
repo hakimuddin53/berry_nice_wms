@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Linq.Expressions;
 using AutoMapper;
 using LinqKit;
 using Microsoft.AspNetCore.Http;
@@ -36,10 +37,30 @@ namespace Wms.Api.Services
 
         public async Task<PagedListDto<SelectOptionV12Dto>> GetSelectOptionsAsync(GlobalSelectFilterV12Dto selectFilterV12Dto)
         {
-            var predicate = BuildProductFilter(selectFilterV12Dto.SearchString, selectFilterV12Dto.Ids);
+            var query = QueryWithLookups();
 
-            var paginatedResult = await QueryWithLookups()
-                .Where(predicate)
+            // Filter by IDs if provided
+            if (selectFilterV12Dto.Ids != null && selectFilterV12Dto.Ids.Any())
+            {
+                var productIds = selectFilterV12Dto.Ids
+                    .Where(id => Guid.TryParse(id, out _))
+                    .Select(id => Guid.Parse(id))
+                    .ToList();
+
+                if (productIds.Any())
+                {
+                    query = query.Where(p => productIds.Contains(p.ProductId));
+                }
+            }
+
+            // Filter by ProductCode if search string provided
+            if (!string.IsNullOrWhiteSpace(selectFilterV12Dto.SearchString))
+            {
+                var searchLower = selectFilterV12Dto.SearchString.Trim().ToLower();
+                query = query.Where(p => p.ProductCode != null && p.ProductCode.ToLower().Contains(searchLower));
+            }
+
+            var paginatedResult = await query
                 .OrderBy(p => p.ProductCode)
                 .Skip((selectFilterV12Dto.Page - 1) * selectFilterV12Dto.PageSize)
                 .Take(selectFilterV12Dto.PageSize)
@@ -51,10 +72,15 @@ namespace Wms.Api.Services
 
         public async Task<PagedListDto<ProductDetailsDto>> SearchProductsAsync(ProductSearchDto productSearchDto)
         {
-            var predicate = BuildProductFilter(productSearchDto.search);
+            var query = QueryWithLookups();
 
-            var products = await QueryWithLookups()
-                .Where(predicate)
+            if (!string.IsNullOrWhiteSpace(productSearchDto.search))
+            {
+                var searchLower = productSearchDto.search.Trim().ToLower();
+                query = query.Where(p => p.ProductCode != null && p.ProductCode.ToLower().Contains(searchLower));
+            }
+
+            var products = await query
                 .OrderBy(p => p.ProductCode)
                 .Skip((productSearchDto.Page - 1) * productSearchDto.PageSize)
                 .Take(productSearchDto.PageSize)
@@ -66,8 +92,15 @@ namespace Wms.Api.Services
 
         public async Task<int> CountProductsAsync(ProductSearchDto productSearchDto)
         {
-            var predicate = BuildProductFilter(productSearchDto.search);
-            return await QueryWithLookups().Where(predicate).CountAsync();
+            var query = QueryWithLookups();
+
+            if (!string.IsNullOrWhiteSpace(productSearchDto.search))
+            {
+                var searchLower = productSearchDto.search.Trim().ToLower();
+                query = query.Where(p => p.ProductCode != null && p.ProductCode.ToLower().Contains(searchLower));
+            }
+
+            return await query.CountAsync();
         }
 
         public async Task<ProductDetailsDto?> GetProductByIdAsync(Guid id)
@@ -139,36 +172,6 @@ namespace Wms.Api.Services
                 .Include(p => p.ScreenSize);
 
             return asNoTracking ? query.AsNoTracking() : query;
-        }
-
-        private static ExpressionStarter<Product> BuildProductFilter(string? searchTerm, string[]? ids = null)
-        {
-            var predicate = PredicateBuilder.New<Product>(true);
-
-            if (ids != null && ids.Length > 0)
-            {
-                var productIds = ids
-                    .Select(id => Guid.TryParse(id, out var parsedId) ? parsedId : Guid.Empty)
-                    .Where(id => id != Guid.Empty)
-                    .ToArray();
-
-                if (productIds.Length > 0)
-                {
-                    predicate = predicate.And(product => productIds.Contains(product.ProductId));
-                }
-            }
-
-            if (!string.IsNullOrWhiteSpace(searchTerm))
-            {
-                var search = searchTerm.Trim();
-                predicate = predicate.And(product =>
-                    product.ProductCode.Contains(search) ||
-                    (product.Model != null && product.Model.Contains(search)) ||
-                    (product.PrimarySerialNumber != null && product.PrimarySerialNumber.Contains(search)) ||
-                    (product.ManufactureSerialNumber != null && product.ManufactureSerialNumber.Contains(search)));
-            }
-
-            return predicate;
-        }
+        }         
     }
 }

@@ -10,18 +10,15 @@ namespace Wms.Api.Services
         public async Task<string> GenerateRunningNumberAsync(OperationTypeEnum operationType)
         {
             var now = DateTime.UtcNow;
-            var isProductOperation = operationType == OperationTypeEnum.PRODUCT;
 
-            string datePart = isProductOperation
-                ? now.ToString("yyMM")
-                : now.ToString("yyyyMMdd");
+            var datePart = now.ToString("yyyyMMdd");
 
             string operationPrefix = operationType switch
             {
                 OperationTypeEnum.STOCKIN => "SI",
                 OperationTypeEnum.STOCKRESERVATION => "SR",
                 OperationTypeEnum.STOCKTRANSFER => "ST",
-                OperationTypeEnum.PRODUCT => string.Empty,
+                OperationTypeEnum.PRODUCT => "P",
                 OperationTypeEnum.STOCKADJUSTMENT => "SA",
                 OperationTypeEnum.INVOICE => "INV",
                 _ => throw new ArgumentOutOfRangeException(nameof(operationType), "Invalid operation type")
@@ -57,9 +54,7 @@ namespace Wms.Api.Services
                 await transaction.CommitAsync();
 
                 // Return the formatted running number
-                return isProductOperation
-                    ? $"{datePart}{runningNumber.CurrentSequence:D4}"
-                    : $"{operationPrefix}{datePart}{runningNumber.CurrentSequence:D4}";
+                return $"{operationPrefix}{datePart}{runningNumber.CurrentSequence:D4}";
             }
             catch
             {

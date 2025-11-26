@@ -66,6 +66,9 @@ const buildStockInPayload = (values: YupStockInCreateEdit) => {
     delete sanitized.key;
     delete sanitized.locationName;
     delete sanitized.productName;
+    if (!sanitized.productCode) {
+      delete sanitized.productCode;
+    }
 
     return sanitized;
   });

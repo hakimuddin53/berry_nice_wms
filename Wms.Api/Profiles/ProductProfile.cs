@@ -30,7 +30,22 @@ public class ProductProfile : Profile
 
         CreateMap<Product, SelectOptionV12Dto>()
             .ForMember(x => x.Value, option => option.MapFrom(y => y.ProductId))
-            .ForMember(x => x.Label, option => option.MapFrom(y => $"{y.ProductCode}"));
+            .ForMember(x => x.Label, option => option.MapFrom(y => $"{y.ProductCode}"))
+            .ForMember(
+                x => x.Data,
+                option => option.MapFrom(y => new
+                {
+                    y.ProductId,
+                    y.ProductCode,
+                    y.Model,
+                    y.PrimarySerialNumber,
+                    y.ManufactureSerialNumber,
+                    y.RetailPrice,
+                    y.DealerPrice,
+                    y.AgentPrice,
+                    y.CostPrice
+                })
+            );
 
     }
 }
