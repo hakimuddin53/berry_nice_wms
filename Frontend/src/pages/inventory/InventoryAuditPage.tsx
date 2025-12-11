@@ -1,7 +1,7 @@
 import { Box, Button, TextField } from "@mui/material";
-import Page from "components/platbricks/shared/Page";
-import { DataTable } from "components/platbricks/shared";
+import { BadgeText, DataTable } from "components/platbricks/shared";
 import { DataTableHeaderCell } from "components/platbricks/shared/dataTable/DataTable";
+import Page from "components/platbricks/shared/Page";
 import UserDateTime from "components/platbricks/shared/UserDateTime";
 import { useDatatableControls } from "hooks/useDatatableControls";
 import { InventoryAuditDto } from "interfaces/v12/inventory/inventoryAuditDto";
@@ -21,49 +21,35 @@ const InventoryAuditPage = () => {
       { id: "productCode", label: t("product-code") },
       { id: "model", label: t("model"), render: (row) => row.model ?? "-" },
       {
+        id: "warehouseLabel",
+        label: t("warehouse"),
+        render: (row) => row.warehouseLabel || "-",
+      },
+      {
         id: "movementDate",
         label: t("date"),
         render: (row) => <UserDateTime date={row.movementDate} />,
       },
-      { id: "movementType", label: t("movement-type") },
-      { id: "referenceNumber", label: t("reference-number") },
       {
-        id: "quantityChange",
-        label: t("quantity"),
-        render: (row) =>
-          row.quantityChange > 0
-            ? `+${row.quantityChange}`
-            : row.quantityChange.toString(),
+        id: "movementType",
+        label: t("movement-type"),
+        render: (row) => (
+          <BadgeText
+            color={row.quantityIn >= row.quantityOut ? "success" : "error"}
+          >
+            {row.movementType}
+          </BadgeText>
+        ),
       },
       {
-        id: "balanceAfter",
-        label: t("balance"),
-        render: (row) => row.balanceAfter.toString(),
+        id: "referenceNumber",
+        label: t("reference-number"),
+        render: (row) => row.referenceNumber || "-",
       },
-      {
-        id: "costPrice",
-        label: t("cost"),
-        render: (row) =>
-          row.costPrice != null ? row.costPrice.toString() : "-",
-      },
-      {
-        id: "agentPrice",
-        label: t("agent"),
-        render: (row) =>
-          row.agentPrice != null ? row.agentPrice.toString() : "-",
-      },
-      {
-        id: "dealerPrice",
-        label: t("dealer"),
-        render: (row) =>
-          row.dealerPrice != null ? row.dealerPrice.toString() : "-",
-      },
-      {
-        id: "retailPrice",
-        label: t("retail"),
-        render: (row) =>
-          row.retailPrice != null ? row.retailPrice.toString() : "-",
-      },
+      { id: "quantityIn", label: t("quantity-in"), align: "right" },
+      { id: "quantityOut", label: t("quantity-out"), align: "right" },
+      { id: "oldBalance", label: t("old-balance"), align: "right" },
+      { id: "newBalance", label: t("new-balance"), align: "right" },
     ],
     [t]
   );

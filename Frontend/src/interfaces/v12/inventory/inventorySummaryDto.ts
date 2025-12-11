@@ -5,7 +5,6 @@ export interface InventorySummaryRowDto {
   productCode: string;
   model?: string | null;
   availableQuantity: number;
-  costPrice?: number | null;
   agentPrice?: number | null;
   dealerPrice?: number | null;
   retailPrice?: number | null;

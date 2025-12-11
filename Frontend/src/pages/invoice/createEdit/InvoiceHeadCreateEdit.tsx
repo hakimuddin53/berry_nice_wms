@@ -156,6 +156,35 @@ const InvoiceHeadCreateEdit = (props: {
           ),
         },
         {
+          label: t("warehouse"),
+          required: isRequiredField(
+            invoiceCreateEditSchema,
+            "warehouseId",
+            formik.values
+          ),
+          value: (
+            <LookupAutocomplete
+              groupKey={LookupGroupKey.Warehouse}
+              name="warehouseId"
+              value={formik.values.warehouseId ?? ""}
+              onChange={(newValue) =>
+                formik.setFieldValue("warehouseId", newValue || "")
+              }
+              onBlur={() => formik.setFieldTouched("warehouseId")}
+              error={
+                formik.touched.warehouseId && Boolean(formik.errors.warehouseId)
+              }
+              helperText={
+                <FormikErrorMessage
+                  touched={formik.touched.warehouseId}
+                  error={formik.errors.warehouseId}
+                  translatedFieldName={t("warehouse")}
+                />
+              }
+            />
+          ),
+        },
+        {
           label: t("sales-person"),
           required: isRequiredField(
             invoiceCreateEditSchema,
@@ -183,20 +212,6 @@ const InvoiceHeadCreateEdit = (props: {
                   translatedFieldName={t("sales-person")}
                 />
               }
-            />
-          ),
-        },
-        {
-          label: t("e-order-number"),
-          value: (
-            <TextField
-              fullWidth
-              size="small"
-              id="eOrderNumber"
-              name="eOrderNumber"
-              value={formik.values.eOrderNumber ?? ""}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
             />
           ),
         },

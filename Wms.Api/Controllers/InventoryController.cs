@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -6,6 +6,7 @@ using Wms.Api.Context;
 using Wms.Api.Dto;
 using Wms.Api.Dto.Inventory;
 using Wms.Api.Dto.PagedList;
+using Wms.Api.Model;
 
 namespace Wms.Api.Controllers
 {
@@ -19,108 +20,82 @@ namespace Wms.Api.Controllers
         {
             search ??= new InventoryAuditSearchDto();
 
-            var stockInMovementsQuery =
-                from item in context.StockInItems
-                join stockIn in context.StockIns on item.StockInId equals stockIn.Id
-                join product in context.Products on item.ProductId equals product.ProductId
-                select new
-                {
-                    product.ProductId,
-                    product.ProductCode,
-                    product.Model,
-                    MovementDate = stockIn.DateOfPurchase,
-                    MovementType = "STOCKIN",
-                    ReferenceNumber = stockIn.Number,
-                    QuantityChange = item.ReceiveQuantity,
-                    product.CostPrice,
-                    product.AgentPrice,
-                    product.DealerPrice,
-                    product.RetailPrice
-                };
-
-            var invoiceMovementsQuery =
-                from item in context.InvoiceItems
-                join invoice in context.Invoices on item.InvoiceId equals invoice.Id
-                join product in context.Products on item.ProductId equals product.ProductId into productJoin
+            var inventoryQuery =
+                from inv in context.Inventories
+                join product in context.Products on inv.ProductId equals product.ProductId into productJoin
                 from product in productJoin.DefaultIfEmpty()
-                where item.ProductId != null
+                join sr in context.StockRecieves on inv.StockRecieveId equals sr.Id into srJoin
+                from sr in srJoin.DefaultIfEmpty()
+                join invc in context.Invoices on inv.InvoiceId equals invc.Id into invoiceJoin
+                from invc in invoiceJoin.DefaultIfEmpty()
+                join warehouse in context.Lookups on inv.WarehouseId equals warehouse.Id into warehouseJoin
+                from warehouse in warehouseJoin.DefaultIfEmpty()
                 select new
                 {
-                    ProductId = item.ProductId!.Value,
-                    ProductCode = item.ProductCode ?? (product != null ? product.ProductCode : string.Empty),
-                    Model = product != null ? product.Model : null,
-                    MovementDate = invoice.DateOfSale,
-                    MovementType = "INVOICE",
-                    ReferenceNumber = invoice.Number,
-                    QuantityChange = -item.Quantity,
-                    CostPrice = product != null ? product.CostPrice : null,
-                    AgentPrice = product != null ? product.AgentPrice : null,
-                    DealerPrice = product != null ? product.DealerPrice : null,
-                    RetailPrice = product != null ? product.RetailPrice : null
+                    inv,
+                    product,
+                    StockRecieveNumber = sr != null ? sr.Number : string.Empty,
+                    InvoiceNumber = invc != null ? invc.Number : string.Empty,
+                    MovementDate = inv.CreatedAt,
+                    WarehouseLabel = warehouse != null ? warehouse.Label : string.Empty
                 };
-
-            var combinedQuery = stockInMovementsQuery.Concat(invoiceMovementsQuery);
 
             if (search.ProductId.HasValue)
             {
-                combinedQuery = combinedQuery.Where(x => x.ProductId == search.ProductId.Value);
+                inventoryQuery = inventoryQuery.Where(x => x.inv.ProductId == search.ProductId.Value);
             }
 
             if (!string.IsNullOrWhiteSpace(search.Search))
             {
                 var term = search.Search.Trim();
-                combinedQuery = combinedQuery.Where(x =>
-                    x.ProductCode.Contains(term) ||
-                    (x.Model != null && x.Model.Contains(term)) ||
-                    x.ReferenceNumber.Contains(term));
+                inventoryQuery = inventoryQuery.Where(x =>
+                    (x.product != null && x.product.ProductCode.Contains(term)) ||
+                    (!string.IsNullOrEmpty(x.StockRecieveNumber) && x.StockRecieveNumber.Contains(term)) ||
+                    (!string.IsNullOrEmpty(x.InvoiceNumber) && x.InvoiceNumber.Contains(term)) ||
+                    (x.product != null && x.product.Model != null && x.product.Model.Contains(term)));
             }
 
-            var materialized = await combinedQuery
-                .OrderBy(x => x.MovementDate)
-                .ThenBy(x => x.ReferenceNumber)
-                .ThenBy(x => x.QuantityChange)
+            var totalCount = await inventoryQuery.CountAsync();
+
+            var pagedItems = await inventoryQuery
+                .OrderByDescending(x => x.MovementDate)
+                .ThenByDescending(x => x.inv.Id)
+                .Skip((search.Page - 1) * search.PageSize)
+                .Take(search.PageSize)
                 .ToListAsync();
 
-            var runningBalances = new Dictionary<Guid, int>();
-            var computed = new List<InventoryAuditDto>(materialized.Count);
-
-            foreach (var entry in materialized)
+            var dtoItems = pagedItems.Select(x =>
             {
-                runningBalances.TryGetValue(entry.ProductId, out var current);
-                current += entry.QuantityChange;
-                runningBalances[entry.ProductId] = current;
+                var movementType = Enum.GetName(typeof(TransactionTypeEnum), x.inv.TransactionType) ?? x.inv.TransactionType.ToString();
+                var referenceNumber = !string.IsNullOrEmpty(x.StockRecieveNumber)
+                    ? x.StockRecieveNumber
+                    : !string.IsNullOrEmpty(x.InvoiceNumber)
+                        ? x.InvoiceNumber
+                        : (x.inv.StockTransferId != Guid.Empty ? x.inv.StockTransferId.ToString() : string.Empty);
 
-                computed.Add(new InventoryAuditDto
+                return new InventoryAuditDto
                 {
-                    ProductId = entry.ProductId,
-                    ProductCode = entry.ProductCode,
-                    Model = entry.Model,
-                    MovementDate = entry.MovementDate,
-                    MovementType = entry.MovementType,
-                    ReferenceNumber = entry.ReferenceNumber,
-                    QuantityChange = entry.QuantityChange,
-                    BalanceAfter = current,
-                    CostPrice = entry.CostPrice,
-                    AgentPrice = entry.AgentPrice,
-                    DealerPrice = entry.DealerPrice,
-                    RetailPrice = entry.RetailPrice
-                });
-            }
-
-            // Order for display (most recent first) then paginate
-            var orderedForDisplay = computed
-                .OrderByDescending(x => x.MovementDate)
-                .ThenByDescending(x => x.ReferenceNumber)
-                .ToList();
-
-            var skip = (search.Page - 1) * search.PageSize;
-            var dtoItems = orderedForDisplay.Skip(skip).Take(search.PageSize).ToList();
+                    ProductId = x.inv.ProductId,
+                    ProductCode = x.product?.ProductCode ?? string.Empty,
+                    Model = x.product?.Model,
+                    WarehouseId = x.inv.WarehouseId,
+                    WarehouseLabel = x.WarehouseLabel,
+                    MovementDate = x.MovementDate,
+                    MovementType = movementType,
+                    ReferenceNumber = referenceNumber,
+                    QuantityIn = x.inv.QuantityIn,
+                    QuantityOut = x.inv.QuantityOut,
+                    OldBalance = x.inv.OldBalance,
+                    NewBalance = x.inv.NewBalance,
+                    CostPrice = x.product?.CostPrice
+                };
+            }).ToList();
 
             var paged = new PagedListDto<InventoryAuditDto>
             {
                 CurrentPage = search.Page,
                 PageSize = search.PageSize,
-                TotalCount = computed.Count,
+                TotalCount = totalCount,
                 Data = dtoItems
             };
 
@@ -132,7 +107,7 @@ namespace Wms.Api.Controllers
         {
             search ??= new InventorySummarySearchDto();
 
-            var incoming = await context.StockInItems
+            var incoming = await context.StockRecieveItems
                 .GroupBy(i => i.ProductId)
                 .Select(g => new { ProductId = g.Key, Quantity = g.Sum(x => x.ReceiveQuantity) })
                 .ToDictionaryAsync(x => x.ProductId, x => x.Quantity);
@@ -211,3 +186,4 @@ namespace Wms.Api.Controllers
         }
     }
 }
+

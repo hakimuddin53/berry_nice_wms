@@ -1,4 +1,4 @@
-// All pages that rely on 3rd party components (other than Material-UI) are
+﻿// All pages that rely on 3rd party components (other than Material-UI) are
 // loaded asynchronously, to keep the initial JS bundle to a minimum size
 
 // Layouts
@@ -40,9 +40,9 @@ import InvoiceListPage from "pages/invoice/index/InvoiceListPage";
 import LookupCreateEditPage from "pages/lookup/createEdit/LookupCreateEditPage";
 import LookupDetailsPage from "pages/lookup/details/LookupDetailsPage";
 import LookupListPage from "pages/lookup/index/LookupListPage";
-import StockInCreateEditPage from "pages/stockIn/createEdit/StockInCreateEditPage";
-import StockInDetailsPage from "pages/stockIn/details/StockInDetailsPage";
-import StockInListPage from "pages/stockIn/index/StockInListPage";
+import StockRecieveCreateEditPage from "pages/stockReceive/createEdit/StockRecieveCreateEditPage";
+import StockRecieveDetailsPage from "pages/stockReceive/details/StockRecieveDetailsPage";
+import StockRecieveListPage from "pages/stockReceive/index/StockRecieveListPage";
 import SupplierCreateEditPage from "pages/supplier/createEdit/SupplierCreateEditPage";
 import SupplierDetailsPage from "pages/supplier/details/SupplierDetailsPage";
 import SupplierListPage from "pages/supplier/index/SupplierListPage";
@@ -152,37 +152,37 @@ const routes = [
         ],
       },
       {
-        path: "stock-in",
+        path: "stock-receive",
         children: [
           {
             index: true,
             element: (
-              <ModuleGuard requiredModule={ModuleEnum.STOCKIN}>
-                <StockInListPage />
+              <ModuleGuard requiredModule={ModuleEnum.STOCKRECEIVE}>
+                <StockRecieveListPage />
               </ModuleGuard>
             ),
           },
           {
             path: "new",
             element: (
-              <ModuleGuard requiredModule={ModuleEnum.STOCKIN}>
-                <StockInCreateEditPage />
+              <ModuleGuard requiredModule={ModuleEnum.STOCKRECEIVE}>
+                <StockRecieveCreateEditPage />
               </ModuleGuard>
             ),
           },
           {
             path: ":id",
             element: (
-              <ModuleGuard requiredModule={ModuleEnum.STOCKIN}>
-                <StockInDetailsPage />
+              <ModuleGuard requiredModule={ModuleEnum.STOCKRECEIVE}>
+                <StockRecieveDetailsPage />
               </ModuleGuard>
             ),
           },
           {
             path: ":id/edit",
             element: (
-              <ModuleGuard requiredModule={ModuleEnum.STOCKIN}>
-                <StockInCreateEditPage />
+              <ModuleGuard requiredModule={ModuleEnum.STOCKRECEIVE}>
+                <StockRecieveCreateEditPage />
               </ModuleGuard>
             ),
           },

@@ -1,4 +1,4 @@
-{
+﻿{
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit",
     "source.organizeImports": "explicit",
@@ -19,14 +19,15 @@
   "i18n-ally.sortLocale": "en",
   "i18n-ally.sourceLanguage": "en-US",
   "i18n-ally.extract.ignored": [
-    "StockInListPage-Inbound Deliveries",
+    "StockRecieveListPage-Inbound Deliveries",
     "Delete",
     "Edit",
     "Add"
   ],
   "i18n-ally.extract.ignoredByFiles": {
-    "src\\pages\\stockIn\\index\\StockInListPage.tsx": [
-      "StockInListPage-Inbound Deliveries"
+    "src\\pages\\StockRecieve\\index\\StockRecieveListPage.tsx": [
+      "StockRecieveListPage-Inbound Deliveries"
     ]
   }
 }
+

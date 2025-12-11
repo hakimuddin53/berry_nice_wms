@@ -359,10 +359,7 @@ namespace Wms.Api.Migrations
                     b.Property<string>("Remark")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("StockAdjustmentId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("StockInId")
+                    b.Property<Guid>("StockRecieveId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("StockTransferId")
@@ -678,7 +675,7 @@ namespace Wms.Api.Migrations
                     b.ToTable("RunningNumbers");
                 });
 
-            modelBuilder.Entity("Wms.Api.Entities.StockIn", b =>
+            modelBuilder.Entity("Wms.Api.Entities.StockRecieve", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -720,10 +717,10 @@ namespace Wms.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("StockIns");
+                    b.ToTable("StockRecieves");
                 });
 
-            modelBuilder.Entity("Wms.Api.Entities.StockInItem", b =>
+            modelBuilder.Entity("Wms.Api.Entities.StockRecieveItem", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -756,16 +753,16 @@ namespace Wms.Api.Migrations
                     b.Property<string>("Remark")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("StockInId")
+                    b.Property<Guid>("StockRecieveId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ProductId");
 
-                    b.HasIndex("StockInId");
+                    b.HasIndex("StockRecieveId");
 
-                    b.ToTable("StockInItems");
+                    b.ToTable("StockRecieveItems");
                 });
 
             modelBuilder.Entity("Wms.Api.Entities.Supplier", b =>
@@ -938,7 +935,7 @@ namespace Wms.Api.Migrations
                     b.Navigation("Storage");
                 });
 
-            modelBuilder.Entity("Wms.Api.Entities.StockInItem", b =>
+            modelBuilder.Entity("Wms.Api.Entities.StockRecieveItem", b =>
                 {
                     b.HasOne("Wms.Api.Entities.Product", "Product")
                         .WithMany()
@@ -946,15 +943,15 @@ namespace Wms.Api.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Wms.Api.Entities.StockIn", "StockIn")
-                        .WithMany("StockInItems")
-                        .HasForeignKey("StockInId")
+                    b.HasOne("Wms.Api.Entities.StockRecieve", "StockRecieve")
+                        .WithMany("StockRecieveItems")
+                        .HasForeignKey("StockRecieveId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Product");
 
-                    b.Navigation("StockIn");
+                    b.Navigation("StockRecieve");
                 });
 
             modelBuilder.Entity("Wms.Api.Entities.Invoice", b =>
@@ -962,9 +959,9 @@ namespace Wms.Api.Migrations
                     b.Navigation("InvoiceItems");
                 });
 
-            modelBuilder.Entity("Wms.Api.Entities.StockIn", b =>
+            modelBuilder.Entity("Wms.Api.Entities.StockRecieve", b =>
                 {
-                    b.Navigation("StockInItems");
+                    b.Navigation("StockRecieveItems");
                 });
 #pragma warning restore 612, 618
         }

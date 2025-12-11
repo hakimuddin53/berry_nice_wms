@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Wms.Api.Entities;
 using Wms.Api.Services;
@@ -57,9 +57,9 @@ namespace Wms.Api.Context
         }
 
         public DbSet<Product> Products { get; set; }
-        public DbSet<StockIn> StockIns { get; set; }
-        public DbSet<StockInItem> StockInItems { get; set; }
-    // Removed: StockInItemRemarks (replaced with single Remark field on StockInItem)
+        public DbSet<StockRecieve> StockRecieves { get; set; }
+        public DbSet<StockRecieveItem> StockRecieveItems { get; set; }
+    // Removed: StockRecieveItemRemarks (replaced with single Remark field on StockRecieveItem)
         public DbSet<Inventory> Inventories { get; set; }
         public DbSet<RunningNumber> RunningNumbers { get; set; } 
         public DbSet<Lookup> Lookups { get; set; }
@@ -117,7 +117,7 @@ namespace Wms.Api.Context
                 .HasForeignKey(p => p.ScreenSizeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<StockInItem>()
+            modelBuilder.Entity<StockRecieveItem>()
                 .HasOne(i => i.Product)
                 .WithMany()
                 .HasForeignKey(i => i.ProductId)
@@ -133,3 +133,4 @@ namespace Wms.Api.Context
         }
     }
 }
+

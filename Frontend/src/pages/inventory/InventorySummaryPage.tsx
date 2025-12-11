@@ -1,7 +1,7 @@
 import { Box, Button, TextField } from "@mui/material";
-import Page from "components/platbricks/shared/Page";
 import { DataTable } from "components/platbricks/shared";
 import { DataTableHeaderCell } from "components/platbricks/shared/dataTable/DataTable";
+import Page from "components/platbricks/shared/Page";
 import { useDatatableControls } from "hooks/useDatatableControls";
 import {
   InventorySummaryRowDto,
@@ -73,12 +73,6 @@ const InventorySummaryPage = () => {
       { id: "productCode", label: t("product-code") },
       { id: "model", label: t("model"), render: (row) => row.model ?? "-" },
       { id: "availableQuantity", label: t("available-quantity") },
-      {
-        id: "costPrice",
-        label: t("cost"),
-        render: (row) =>
-          priceInput(row.productId as string, "costPrice", row.costPrice),
-      },
       {
         id: "agentPrice",
         label: t("agent"),

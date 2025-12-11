@@ -26,6 +26,9 @@ namespace Wms.Api.Dto.Invoice.InvoiceCreateUpdate
         [MaxLength(128)]
         public string? PaymentReference { get; set; }
 
+        [Required]
+        public Guid WarehouseId { get; set; }
+
         [MaxLength(512)]
         public string? Remark { get; set; }
 

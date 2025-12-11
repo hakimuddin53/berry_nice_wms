@@ -3,6 +3,7 @@ import { useCreatedChangeDate } from "hooks/useCreatedChangeDate";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { YupInvoiceItemCreateEdit } from "../createEdit/yup/invoiceCreateEditSchema";
+import { formatWarrantyExpiry, warrantyLabelFromMonths } from "utils/warranty";
 
 const hidden = true;
 
@@ -24,14 +25,9 @@ export const useInvoiceItemTable = () => {
         render: (row) => row.productCode || "-",
       },
       {
-        id: "primarySerialNumber",
-        label: t("primary-serial-number"),
-        render: (row) => row.primarySerialNumber || "-",
-      },
-      {
-        id: "manufactureSerialNumber",
-        label: t("manufacture-serial-number"),
-        render: (row) => row.manufactureSerialNumber || "-",
+        id: "imei",
+        label: t("imei", { defaultValue: "IMEI/Serial Number" }),
+        render: (row) => row.imei || "-",
       },
       {
         id: "quantity",
@@ -45,10 +41,17 @@ export const useInvoiceItemTable = () => {
           row.unitPrice !== undefined ? row.unitPrice.toString() : "-",
       },
       {
-        id: "totalPrice",
-        label: t("total-price"),
-        render: (row) =>
-          row.totalPrice !== undefined ? row.totalPrice.toString() : "-",
+        id: "warrantyDurationMonths",
+        label: t("warranty-duration-months"),
+        render: (row) => warrantyLabelFromMonths(row.warrantyDurationMonths),
+      },
+      {
+        id: "warrantyExpiryDate",
+        label:
+          t("warranty", { defaultValue: "Warranty" }) +
+          " " +
+          t("expired", { defaultValue: "Expired" }),
+        render: (row) => formatWarrantyExpiry(row.warrantyExpiryDate) || "-",
       },
     ],
     [t]

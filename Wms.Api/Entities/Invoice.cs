@@ -39,7 +39,7 @@ namespace Wms.Api.Entities
         [System.ComponentModel.DataAnnotations.Schema.Column(TypeName = "decimal(18,4)")]
         public decimal GrandTotal { get; set; }
 
-        public Guid? WarehouseId { get; set; } // New field to match inventory warehouse
+        public Guid? WarehouseId { get; set; } // Warehouse for inventory movements
 
         public ICollection<InvoiceItem>? InvoiceItems { get; set; }
     }

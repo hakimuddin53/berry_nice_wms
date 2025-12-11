@@ -21,12 +21,10 @@ namespace Wms.Api.Entities
         public string? Remark { get; set; }
 
         [Required]
-        public Guid StockInId { get; set; }
+        public Guid StockRecieveId { get; set; }
 
         [Required]
         public Guid StockTransferId { get; set; }
-
-        public Guid? StockAdjustmentId { get; set; } // Made nullable
 
         public Guid? InvoiceId { get; set; } // New field for invoice reference
 
@@ -47,3 +45,4 @@ namespace Wms.Api.Entities
         public decimal UnitPrice { get; set; } = 0m;
     }
 }
+

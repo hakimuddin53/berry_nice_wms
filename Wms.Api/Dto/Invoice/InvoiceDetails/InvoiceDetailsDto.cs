@@ -19,6 +19,8 @@ namespace Wms.Api.Dto.Invoice.InvoiceDetails
         public string? PaymentReference { get; set; }
         public string? Remark { get; set; }
         public decimal GrandTotal { get; set; }
+        public Guid WarehouseId { get; set; }
+        public string WarehouseLabel { get; set; } = string.Empty;
 
         public ICollection<InvoiceItemDetailsDto> InvoiceItems { get; set; } = new List<InvoiceItemDetailsDto>();
     }

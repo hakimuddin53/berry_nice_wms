@@ -1,4 +1,4 @@
-import styled from "@emotion/styled";
+﻿import styled from "@emotion/styled";
 import React, { useState } from "react";
 import { Outlet } from "react-router-dom";
 
@@ -296,7 +296,7 @@ const lookupChildren: SidebarItemsType[] = [
   },
 ];
 
-// 2) Add a parent “Lookups” item that uses those as children
+// 2) Add a parent â€œLookupsâ€ item that uses those as children
 const lookupsParent: SidebarItemsType = {
   id: 199,
   href: "#", // important: parent should not navigate
@@ -371,13 +371,13 @@ export const dashboardItems: SidebarItemsType[] = [
   },
   {
     id: 8,
-    href: "/stock-in",
+    href: "/stock-receive",
     itemType: "link",
     title: "Stock Recieve",
     icon: <ArrowRight size={20} />,
     type: "single",
     children: [],
-    requiredModule: ModuleEnum.STOCKIN, // <--- Link to STOCKIN module
+    requiredModule: ModuleEnum.STOCKRECEIVE, // <--- Link to StockRecieve module
   },
   {
     id: 9,

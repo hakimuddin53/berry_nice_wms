@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using Wms.Api.Dto;
 using Wms.Api.Dto.Lookup;
-using Wms.Api.Dto.StockIn.StockInCreateUpdate;
+using Wms.Api.Dto.StockRecieve.StockRecieveCreateUpdate;
 using Wms.Api.Entities;
 
 namespace Wms.Api.Profiles;

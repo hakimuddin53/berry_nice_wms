@@ -18,10 +18,12 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { useInvoiceService } from "services/InvoiceService";
 import { useNotificationService } from "services/NotificationService";
+import { EMPTY_GUID, guid } from "types/guid";
 import {
   formikObjectHasHeadTouchedErrors,
   formikObjectHasTouchedErrors,
 } from "utils/formikHelpers";
+import { calculateWarrantyExpiryDate } from "utils/warranty";
 import { useInvoiceItemTable } from "../datatables/useInvoiceItemTable";
 import InvoiceHeadCreateEdit from "./InvoiceHeadCreateEdit";
 import InvoiceItemCreateEdit from "./InvoiceItemCreateEdit";
@@ -35,14 +37,12 @@ const createEmptyItem = (): YupInvoiceItemCreateEdit => ({
   id: undefined,
   productId: undefined,
   productCode: "",
-  primarySerialNumber: "",
-  manufactureSerialNumber: "",
-  warrantyDurationMonths: 0,
-  unitOfMeasure: "",
+  imei: "",
+  warrantyDurationMonths: undefined,
   quantity: 1,
   unitPrice: 0,
   totalPrice: 0,
-  status: "",
+  warrantyExpiryDate: null,
 });
 
 const formatDateInput = (value?: string) =>
@@ -53,7 +53,7 @@ const mapDetailsToForm = (details: any): YupInvoiceCreateEdit => ({
   customerName: details.customerName ?? "",
   dateOfSale: formatDateInput(details.dateOfSale),
   salesPersonId: details.salesPersonId ?? "",
-  eOrderNumber: details.eOrderNumber ?? "",
+  warehouseId: details.warehouseId ?? "",
   salesTypeId: details.salesTypeId ?? undefined,
   paymentTypeId: details.paymentTypeId ?? undefined,
   paymentReference: details.paymentReference ?? "",
@@ -62,15 +62,14 @@ const mapDetailsToForm = (details: any): YupInvoiceCreateEdit => ({
     id: item.id,
     productId: item.productId ?? undefined,
     productCode: item.productCode ?? "",
-    primarySerialNumber: item.primarySerialNumber ?? "",
-    manufactureSerialNumber: item.manufactureSerialNumber ?? "",
     imei: item.imei ?? "",
-    warrantyDurationMonths: item.warrantyDurationMonths ?? 0,
-    unitOfMeasure: item.unitOfMeasure ?? "",
+    warrantyDurationMonths: item.warrantyDurationMonths ?? undefined,
     quantity: item.quantity ?? 1,
     unitPrice: item.unitPrice ?? 0,
     totalPrice: item.totalPrice ?? 0,
-    status: item.status ?? "",
+    warrantyExpiryDate:
+      item.warrantyExpiryDate ??
+      calculateWarrantyExpiryDate(details.dateOfSale, item.warrantyDurationMonths),
   })),
 });
 
@@ -87,7 +86,7 @@ const InvoiceCreateEditPage = () => {
     customerName: "",
     dateOfSale: formatDateInput(),
     salesPersonId: "",
-    eOrderNumber: "",
+    warehouseId: EMPTY_GUID as guid,
     salesTypeId: undefined,
     paymentTypeId: undefined,
     paymentReference: "",
@@ -95,6 +94,8 @@ const InvoiceCreateEditPage = () => {
     invoiceItems: [],
   });
   const [pageBlocker, setPageBlocker] = useState(false);
+  const [allowNavigationAfterSave, setAllowNavigationAfterSave] =
+    useState(false);
   const [pageReady, setPageReady] = useState<boolean>(() => !id);
 
   const [invoiceItemTable] = useInvoiceItemTable();
@@ -119,7 +120,10 @@ const InvoiceCreateEditPage = () => {
         notificationService.handleApiErrorMessage(err.data, "common");
         navigate("/invoice");
       })
-      .finally(() => setPageReady(true));
+      .finally(() => {
+        setAllowNavigationAfterSave(false);
+        setPageReady(true);
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
@@ -134,7 +138,7 @@ const InvoiceCreateEditPage = () => {
         customerName: values.customerName || undefined,
         dateOfSale: values.dateOfSale,
         salesPersonId: values.salesPersonId,
-        eOrderNumber: values.eOrderNumber || undefined,
+        warehouseId: values.warehouseId,
         salesTypeId: values.salesTypeId || undefined,
         paymentTypeId: values.paymentTypeId || undefined,
         paymentReference: values.paymentReference || undefined,
@@ -143,21 +147,20 @@ const InvoiceCreateEditPage = () => {
           id: item.id,
           productId: item.productId || undefined,
           productCode: item.productCode || undefined,
-          primarySerialNumber: item.primarySerialNumber || undefined,
-          manufactureSerialNumber: item.manufactureSerialNumber || undefined,
           imei: item.imei || undefined,
           warrantyDurationMonths: item.warrantyDurationMonths || 0,
-          unitOfMeasure: item.unitOfMeasure || undefined,
           quantity: item.quantity,
           unitPrice: item.unitPrice,
           totalPrice: item.totalPrice ?? item.unitPrice * item.quantity,
-          status: item.status || undefined,
+          warrantyExpiryDate: item.warrantyExpiryDate || undefined,
         })),
       };
 
       try {
         if (id) {
           await invoiceService.updateInvoice(id, payload);
+          helpers.resetForm({ values });
+          setAllowNavigationAfterSave(true);
           notificationService.handleApiSuccessMessage(
             "invoice",
             "updated",
@@ -166,6 +169,8 @@ const InvoiceCreateEditPage = () => {
           navigate(`/invoice/${id}`);
         } else {
           const created = await invoiceService.createInvoice(payload);
+          helpers.resetForm({ values });
+          setAllowNavigationAfterSave(true);
           notificationService.handleApiSuccessMessage(
             "invoice",
             "created",
@@ -197,6 +202,30 @@ const InvoiceCreateEditPage = () => {
   }, [
     formik.values.invoiceItems
       .map((item) => `${item.unitPrice}-${item.quantity}`)
+      .join("|"),
+  ]);
+
+  useEffect(() => {
+    const saleDate = formik.values.dateOfSale;
+    formik.values.invoiceItems.forEach((item, index) => {
+      const expiry = calculateWarrantyExpiryDate(
+        saleDate,
+        item.warrantyDurationMonths
+      );
+      const current = item.warrantyExpiryDate ?? null;
+      if ((expiry || null) !== (current || null)) {
+        formik.setFieldValue(
+          `invoiceItems[${index}].warrantyExpiryDate`,
+          expiry,
+          false
+        );
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    formik.values.dateOfSale,
+    formik.values.invoiceItems
+      .map((item) => `${item.warrantyDurationMonths ?? ""}`)
       .join("|"),
   ]);
 
@@ -261,7 +290,6 @@ const InvoiceCreateEditPage = () => {
     setAllFieldsTouched();
     setTab(val);
   };
-
   const selectedInvoiceItem = invoiceItemsTableProps.selections[0];
 
   return (
@@ -280,7 +308,14 @@ const InvoiceCreateEditPage = () => {
       ]}
       hasSingleActionButton
     >
-      <NavBlocker when={formik.dirty}></NavBlocker>
+      <NavBlocker
+        when={
+          !allowNavigationAfterSave &&
+          !formik.isSubmitting &&
+          !pageBlocker &&
+          formik.dirty
+        }
+      ></NavBlocker>
       <FormikProvider value={formik}>
         <PbCard px={2} pt={2}>
           <PbTabs

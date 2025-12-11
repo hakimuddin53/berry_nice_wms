@@ -1,4 +1,4 @@
-import { TextField } from "@mui/material";
+import { MenuItem, TextField } from "@mui/material";
 import { DataList, PageSection, PbCard } from "components/platbricks/shared";
 import FormikErrorMessage from "components/platbricks/shared/ErrorMessage";
 import SelectAsync2 from "components/platbricks/shared/SelectAsync2";
@@ -7,6 +7,11 @@ import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useProductService } from "services/ProductService";
 import { isRequiredField } from "utils/formikHelpers";
+import {
+  calculateWarrantyExpiryDate,
+  formatWarrantyExpiry,
+  WARRANTY_OPTIONS,
+} from "utils/warranty";
 import {
   invoiceCreateEditSchema,
   YupInvoiceCreateEdit,
@@ -75,6 +80,26 @@ const InvoiceItemCreateEdit = (props: {
     return errors[field] as string | FormikErrors<any> | undefined;
   };
 
+  const warrantyExpiryText = formatWarrantyExpiry(item.warrantyExpiryDate);
+
+  const handleWarrantyChange = (value: number | "") => {
+    if (value === "") {
+      formik.setFieldValue(fieldName("warrantyDurationMonths"), undefined);
+      formik.setFieldValue(fieldName("warrantyExpiryDate"), null, false);
+      formik.setFieldTouched(fieldName("warrantyDurationMonths"), true, false);
+      return;
+    }
+
+    const numericValue = Number(value);
+    formik.setFieldValue(fieldName("warrantyDurationMonths"), numericValue);
+    formik.setFieldValue(
+      fieldName("warrantyExpiryDate"),
+      calculateWarrantyExpiryDate(formik.values.dateOfSale, numericValue),
+      false
+    );
+    formik.setFieldTouched(fieldName("warrantyDurationMonths"), true, false);
+  };
+
   return (
     <PageSection title={t("invoice-items")}>
       <PbCard px={2} pt={2}>
@@ -94,32 +119,26 @@ const InvoiceItemCreateEdit = (props: {
                   placeholder={t("product-code")}
                   ids={productIds}
                   asyncFunc={productAsync}
-                  suggestionsIfEmpty
-                  onSelectionChange={(option: any) => {
-                    const data = option?.data ?? {};
-                    formik.setFieldValue(
-                      fieldName("productCode"),
+                suggestionsIfEmpty
+                onSelectionChange={(option: any) => {
+                  const data = option?.data ?? {};
+                  formik.setFieldValue(
+                    fieldName("productCode"),
                       data.productCode ?? option?.label ?? ""
                     );
+                  formik.setFieldValue(
+                    fieldName("productId"),
+                    option?.value ?? undefined
+                  );
+                  formik.setFieldValue(
+                    fieldName("imei"),
+                    data.imei ?? item.imei ?? ""
+                  );
+                  if (
+                    data.retailPrice !== undefined &&
+                    data.retailPrice !== null
+                  ) {
                     formik.setFieldValue(
-                      fieldName("productId"),
-                      option?.value ?? undefined
-                    );
-                    formik.setFieldValue(
-                      fieldName("primarySerialNumber"),
-                      data.primarySerialNumber ?? item.primarySerialNumber ?? ""
-                    );
-                    formik.setFieldValue(
-                      fieldName("manufactureSerialNumber"),
-                      data.manufactureSerialNumber ??
-                        item.manufactureSerialNumber ??
-                        ""
-                    );
-                    if (
-                      data.retailPrice !== undefined &&
-                      data.retailPrice !== null
-                    ) {
-                      formik.setFieldValue(
                         fieldName("unitPrice"),
                         data.retailPrice
                       );
@@ -147,91 +166,31 @@ const InvoiceItemCreateEdit = (props: {
               ),
             },
             {
-              label: t("primary-serial-number"),
+              label: t("imei", { defaultValue: "IMEI/Serial Number" }),
+              required: isRequiredField(
+                invoiceCreateEditSchema,
+                "invoiceItems[0].imei",
+                formik.values
+              ),
               value: (
                 <TextField
                   fullWidth
                   size="small"
-                  id={fieldName("primarySerialNumber")}
-                  name={fieldName("primarySerialNumber")}
-                  value={item.primarySerialNumber ?? ""}
+                  id={fieldName("imei")}
+                  name={fieldName("imei")}
+                  value={item.imei ?? ""}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  error={
-                    fieldTouched("primarySerialNumber") &&
-                    Boolean(fieldError("primarySerialNumber"))
-                  }
+                  error={fieldTouched("imei") && Boolean(fieldError("imei"))}
                   helperText={
                     <FormikErrorMessage
-                      touched={fieldTouched("primarySerialNumber")}
-                      error={fieldError("primarySerialNumber")}
-                      translatedFieldName={t("primary-serial-number")}
+                      touched={fieldTouched("imei")}
+                      error={fieldError("imei")}
+                      translatedFieldName={t("imei", {
+                        defaultValue: "IMEI/Serial Number",
+                      })}
                     />
                   }
-                />
-              ),
-            },
-            {
-              label: t("manufacture-serial-number"),
-              value: (
-                <TextField
-                  fullWidth
-                  size="small"
-                  id={fieldName("manufactureSerialNumber")}
-                  name={fieldName("manufactureSerialNumber")}
-                  value={item.manufactureSerialNumber ?? ""}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={
-                    fieldTouched("manufactureSerialNumber") &&
-                    Boolean(fieldError("manufactureSerialNumber"))
-                  }
-                  helperText={
-                    <FormikErrorMessage
-                      touched={fieldTouched("manufactureSerialNumber")}
-                      error={fieldError("manufactureSerialNumber")}
-                      translatedFieldName={t("manufacture-serial-number")}
-                    />
-                  }
-                />
-              ),
-            },
-            {
-              label: t("uom"),
-              value: (
-                <TextField
-                  fullWidth
-                  size="small"
-                  id={fieldName("unitOfMeasure")}
-                  name={fieldName("unitOfMeasure")}
-                  value={item.unitOfMeasure ?? ""}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={
-                    fieldTouched("unitOfMeasure") &&
-                    Boolean(fieldError("unitOfMeasure"))
-                  }
-                  helperText={
-                    <FormikErrorMessage
-                      touched={fieldTouched("unitOfMeasure")}
-                      error={fieldError("unitOfMeasure")}
-                      translatedFieldName={t("uom")}
-                    />
-                  }
-                />
-              ),
-            },
-            {
-              label: t("status"),
-              value: (
-                <TextField
-                  fullWidth
-                  size="small"
-                  id={fieldName("status")}
-                  name={fieldName("status")}
-                  value={item.status ?? ""}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
                 />
               ),
             },
@@ -297,31 +256,65 @@ const InvoiceItemCreateEdit = (props: {
               ),
             },
             {
-              label: t("total-price"),
-              value: (
-                <TextField
-                  fullWidth
-                  size="small"
-                  type="number"
-                  id={fieldName("totalPrice")}
-                  name={fieldName("totalPrice")}
-                  value={item.totalPrice ?? 0}
-                  InputProps={{ readOnly: true }}
-                />
-              ),
-            },
-            {
               label: t("warranty-duration-months"),
               value: (
                 <TextField
                   fullWidth
                   size="small"
-                  type="number"
+                  select
                   id={fieldName("warrantyDurationMonths")}
                   name={fieldName("warrantyDurationMonths")}
-                  value={item.warrantyDurationMonths ?? 0}
-                  onChange={formik.handleChange}
+                  value={item.warrantyDurationMonths ?? ""}
+                  onChange={(e) =>
+                    handleWarrantyChange(
+                      e.target.value === "" ? "" : Number(e.target.value)
+                    )
+                  }
                   onBlur={formik.handleBlur}
+                  error={
+                    fieldTouched("warrantyDurationMonths") &&
+                    Boolean(fieldError("warrantyDurationMonths"))
+                  }
+                  helperText={
+                    <FormikErrorMessage
+                      touched={fieldTouched("warrantyDurationMonths")}
+                      error={fieldError("warrantyDurationMonths")}
+                      translatedFieldName={t("warranty-duration-months")}
+                    />
+                  }
+                >
+                  <MenuItem value="">
+                    {t("select", { defaultValue: "Select" })}{" "}
+                    {t("warranty", { defaultValue: "Warranty" })}
+                  </MenuItem>
+                  {WARRANTY_OPTIONS.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              ),
+            },
+            {
+              label:
+                t("warranty", { defaultValue: "Warranty" }) +
+                " " +
+                t("expired", { defaultValue: "Expired" }),
+              value: (
+                <TextField
+                  fullWidth
+                  size="small"
+                  value={warrantyExpiryText || ""}
+                  InputProps={{ readOnly: true }}
+                  helperText={
+                    warrantyExpiryText
+                      ? t("calculated-from-date", {
+                          defaultValue: "Calculated from invoice date",
+                        })
+                      : t("select-warranty-to-calc", {
+                          defaultValue: "Select warranty to calculate expiry",
+                        })
+                  }
                 />
               ),
             },

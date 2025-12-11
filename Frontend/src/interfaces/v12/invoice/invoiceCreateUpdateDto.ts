@@ -6,7 +6,7 @@ export interface InvoiceCreateUpdateDto {
   customerName?: string | null;
   dateOfSale: string;
   salesPersonId: string;
-  eOrderNumber?: string | null;
+  warehouseId: guid;
   salesTypeId?: guid | null;
   paymentTypeId?: guid | null;
   paymentReference?: string | null;

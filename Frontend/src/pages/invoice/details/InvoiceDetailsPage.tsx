@@ -20,6 +20,11 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { useInvoiceService } from "services/InvoiceService";
+import {
+  calculateWarrantyExpiryDate,
+  formatWarrantyExpiry,
+  warrantyLabelFromMonths,
+} from "utils/warranty";
 
 const InvoiceDetailsPage = () => {
   const { t } = useTranslation();
@@ -71,6 +76,9 @@ const InvoiceDetailsPage = () => {
                 <KeyValuePair label={t("sales-person")}>
                   {invoice.salesPersonName || invoice.salesPersonId}
                 </KeyValuePair>
+                <KeyValuePair label={t("warehouse")}>
+                  {invoice.warehouseLabel || "-"}
+                </KeyValuePair>
                 <KeyValuePair label={t("sales-type")}>
                   {invoice.salesTypeName || "-"}
                 </KeyValuePair>
@@ -83,9 +91,6 @@ const InvoiceDetailsPage = () => {
                 </KeyValuePair>
                 <KeyValuePair label={t("payment-reference")}>
                   {invoice.paymentReference || "-"}
-                </KeyValuePair>
-                <KeyValuePair label={t("e-order-number")}>
-                  {invoice.eOrderNumber || "-"}
                 </KeyValuePair>
                 <KeyValuePair label={t("remark")}>
                   {invoice.remark || "-"}
@@ -105,36 +110,52 @@ const InvoiceDetailsPage = () => {
             {t("invoice-items")}
           </Typography>
           <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>{t("product-code")}</TableCell>
-                <TableCell>{t("primary-serial-number")}</TableCell>
-                <TableCell>{t("manufacture-serial-number")}</TableCell>
-                <TableCell>{t("imei")}</TableCell>
-                <TableCell align="right">{t("quantity")}</TableCell>
-                <TableCell align="right">{t("unit-price-sold")}</TableCell>
-                <TableCell align="right">{t("total-price")}</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {invoice.invoiceItems.map((item) => (
+          <TableHead>
+            <TableRow>
+              <TableCell>{t("product-code")}</TableCell>
+              <TableCell>
+                {t("imei", { defaultValue: "IMEI/Serial Number" })}
+              </TableCell>
+              <TableCell align="right">{t("quantity")}</TableCell>
+              <TableCell align="right">{t("unit-price-sold")}</TableCell>
+              <TableCell align="right">
+                {t("warranty-duration-months")}
+              </TableCell>
+              <TableCell align="right">
+                {t("warranty", { defaultValue: "Warranty" }) +
+                  " " +
+                  t("expired", { defaultValue: "Expired" })}
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {invoice.invoiceItems.map((item) => {
+              const expiryIso =
+                item.warrantyExpiryDate ??
+                calculateWarrantyExpiryDate(
+                  invoice.dateOfSale,
+                  item.warrantyDurationMonths
+                );
+              return (
                 <TableRow key={item.id as unknown as string}>
                   <TableCell>{item.productCode || "-"}</TableCell>
-                  <TableCell>{item.primarySerialNumber || "-"}</TableCell>
-                  <TableCell>{item.manufactureSerialNumber || "-"}</TableCell>
                   <TableCell>{item.imei || "-"}</TableCell>
                   <TableCell align="right">{item.quantity}</TableCell>
                   <TableCell align="right">
                     {item.unitPrice.toFixed(2)}
                   </TableCell>
                   <TableCell align="right">
-                    {item.totalPrice.toFixed(2)}
+                    {warrantyLabelFromMonths(item.warrantyDurationMonths)}
+                  </TableCell>
+                  <TableCell align="right">
+                    {formatWarrantyExpiry(expiryIso) || "-"}
                   </TableCell>
                 </TableRow>
-              ))}
+              );
+            })}
               {invoice.invoiceItems.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={8}>
+                  <TableCell colSpan={6}>
                     <Typography variant="body2" color="text.secondary">
                       {t("no-items-added")}
                     </Typography>

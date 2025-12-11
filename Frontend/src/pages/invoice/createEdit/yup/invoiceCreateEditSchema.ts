@@ -1,19 +1,16 @@
-import * as yup from "yup";
 import { guid } from "types/guid";
+import * as yup from "yup";
 
 export interface YupInvoiceItemCreateEdit {
   id?: guid;
   productId?: guid | null;
   productCode?: string | null;
-  primarySerialNumber?: string | null;
-  manufactureSerialNumber?: string | null;
   imei?: string | null;
   warrantyDurationMonths?: number;
-  unitOfMeasure?: string | null;
   quantity: number;
   unitPrice: number;
   totalPrice?: number;
-  status?: string | null;
+  warrantyExpiryDate?: string | null;
 }
 
 export interface YupInvoiceCreateEdit {
@@ -21,7 +18,7 @@ export interface YupInvoiceCreateEdit {
   customerName?: string | null;
   dateOfSale: string;
   salesPersonId: string;
-  eOrderNumber?: string | null;
+  warehouseId: guid;
   salesTypeId?: guid | null;
   paymentTypeId?: guid | null;
   paymentReference?: string | null;
@@ -33,15 +30,12 @@ const invoiceItemSchema = yup.object().shape({
   id: yup.string().nullable(),
   productId: yup.string().nullable(),
   productCode: yup.string().nullable(),
-  primarySerialNumber: yup.string().nullable(),
-  manufactureSerialNumber: yup.string().nullable(),
-  imei: yup.string().nullable(),
-  warrantyDurationMonths: yup.number().min(0).nullable(),
-  unitOfMeasure: yup.string().nullable(),
+  imei: yup.string().required(),
+  warrantyDurationMonths: yup.number().min(0).nullable().required(),
   quantity: yup.number().min(1).required(),
   unitPrice: yup.number().min(0).required(),
   totalPrice: yup.number().min(0).nullable(),
-  status: yup.string().nullable(),
+  warrantyExpiryDate: yup.string().nullable(),
 });
 
 export const invoiceCreateEditSchema = yup.object().shape({
@@ -49,7 +43,7 @@ export const invoiceCreateEditSchema = yup.object().shape({
   customerName: yup.string().nullable(),
   dateOfSale: yup.string().required(),
   salesPersonId: yup.string().required(),
-  eOrderNumber: yup.string().nullable(),
+  warehouseId: yup.string().required(),
   salesTypeId: yup.string().nullable(),
   paymentTypeId: yup.string().nullable(),
   paymentReference: yup.string().nullable(),

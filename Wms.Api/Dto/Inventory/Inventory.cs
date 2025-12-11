@@ -11,8 +11,8 @@ namespace Wms.Api.Dto.Inventory
         public Guid CurrentLocationId { get; set; } 
         public TransactionTypeEnum TransactionType { get; set; }
         
-        public Guid StockInId { get; set; }
-        public Guid StockOutId { get; set; }
+        public Guid StockRecieveId { get; set; }
+        public Guid InvoiceId { get; set; }
         public Guid StockTransferId { get; set; }
         public Guid StockAdjustmentId { get; set; }
         
@@ -78,3 +78,4 @@ namespace Wms.Api.Dto.Inventory
 
     }
 }
+

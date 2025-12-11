@@ -1,5 +1,7 @@
-using AutoMapper;
+﻿using AutoMapper;
+using System;
 using System.Linq;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -49,6 +51,7 @@ namespace Wms.Api.Controllers
             var items = ordered.Skip(skip).Take(searchDto.PageSize).ToList();
             var pagedList = new PagedList<Invoice>(items, searchDto.Page, searchDto.PageSize);
             var dto = mapper.Map<PagedListDto<InvoiceDetailsDto>>(pagedList);
+            await AssignWarehouseLabelsAsync(dto.Data);
 
             return Ok(dto);
         }
@@ -70,7 +73,7 @@ namespace Wms.Api.Controllers
             return Ok(query.Count());
         }
 
-        [HttpGet("{id:guid}")]
+        [HttpGet("{id:guid}", Name = "GetInvoiceByIdAsync")]
         public async Task<IActionResult> GetByIdAsync(Guid id)
         {
             var invoice = await context.Invoices
@@ -106,6 +109,14 @@ namespace Wms.Api.Controllers
                     .FirstOrDefaultAsync();
             }
 
+            var warehouseId = invoice.WarehouseId ?? Guid.Empty;
+            dto.WarehouseLabel = warehouseId == Guid.Empty
+                ? string.Empty
+                : await context.Lookups
+                    .Where(l => l.Id == warehouseId)
+                    .Select(l => l.Label)
+                    .FirstOrDefaultAsync() ?? string.Empty;
+
             return Ok(dto);
         }
 
@@ -115,6 +126,11 @@ namespace Wms.Api.Controllers
             if (!ModelState.IsValid)
             {
                 return ValidationProblem(ModelState);
+            }
+
+            if (createDto.WarehouseId == Guid.Empty)
+            {
+                return BadRequest(new { message = "Warehouse is required." });
             }
 
             var invoiceNumber = await runningNumberService.GenerateRunningNumberAsync(OperationTypeEnum.INVOICE);
@@ -128,11 +144,18 @@ namespace Wms.Api.Controllers
             await invoiceService.AddAsync(invoice);
             await UpdateProductPricingFromInvoiceAsync(invoice.InvoiceItems);
 
-            // NEW: Update inventory for the invoice
-            await inventoryService.StockOutAsync(invoice);
+            try
+            {
+                await inventoryService.InvoiceAsync(invoice);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
 
             var dto = mapper.Map<InvoiceDetailsDto>(invoice);
-            return CreatedAtAction(nameof(GetByIdAsync), new { id = invoice.Id }, dto);
+            await AssignWarehouseLabelsAsync(new[] { dto });
+            return CreatedAtRoute("GetInvoiceByIdAsync", new { id = invoice.Id }, dto);
         }
 
         [HttpPut("{id:guid}")]
@@ -141,6 +164,11 @@ namespace Wms.Api.Controllers
             if (!ModelState.IsValid)
             {
                 return ValidationProblem(ModelState);
+            }
+
+            if (updateDto.WarehouseId == Guid.Empty)
+            {
+                return BadRequest(new { message = "Warehouse is required." });
             }
 
             var invoice = await context.Invoices
@@ -156,6 +184,7 @@ namespace Wms.Api.Controllers
             invoice.CustomerName = updateDto.CustomerName;
             invoice.DateOfSale = updateDto.DateOfSale;
             invoice.SalesPersonId = updateDto.SalesPersonId;
+            invoice.WarehouseId = updateDto.WarehouseId;
             invoice.EOrderNumber = updateDto.EOrderNumber;
             invoice.SalesTypeId = updateDto.SalesTypeId;
             invoice.PaymentTypeId = updateDto.PaymentTypeId;
@@ -277,5 +306,39 @@ namespace Wms.Api.Controllers
 
             invoice.GrandTotal = invoice.InvoiceItems.Sum(i => i.TotalPrice);
         }
+
+        private async Task AssignWarehouseLabelsAsync(IEnumerable<InvoiceDetailsDto> invoices)
+        {
+            if (invoices == null)
+            {
+                return;
+            }
+
+            var list = invoices.Where(i => i != null).ToList();
+            if (list.Count == 0)
+            {
+                return;
+            }
+
+            var warehouseIds = list
+                .Select(i => i.WarehouseId)
+                .Where(id => id != Guid.Empty)
+                .Distinct()
+                .ToList();
+
+            var lookupLabels = warehouseIds.Count == 0
+                ? new Dictionary<Guid, string>()
+                : await context.Lookups
+                    .Where(l => warehouseIds.Contains(l.Id))
+                    .ToDictionaryAsync(l => l.Id, l => l.Label);
+
+            foreach (var dto in list)
+            {
+                dto.WarehouseLabel = lookupLabels.TryGetValue(dto.WarehouseId, out var label)
+                    ? label
+                    : string.Empty;
+            }
+        }
     }
 }
+

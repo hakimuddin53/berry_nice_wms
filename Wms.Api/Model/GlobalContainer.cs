@@ -2,26 +2,23 @@
 {     
     public enum OperationTypeEnum
     {
-        STOCKIN = 0, 
-        STOCKRESERVATION = 2, 
-        STOCKTRANSFER = 3, 
-        PRODUCT = 4,
-        STOCKADJUSTMENT = 5, 
-        INVOICE = 6
+        STOCKRECEIVE = 0, 
+        STOCKTRANSFER = 1, 
+        PRODUCT = 2, 
+        INVOICE = 3
     }
 
     public enum TransactionTypeEnum
     {
-        STOCKIN = 0,
+        STOCKRECEIVE = 0,
         STOCKTRANSFERIN = 2,
         STOCKTRANSFEROUT = 3,
-        STOCKADJUSTMENT = 4,
-        BULKUPLOAD = 5
+        INVOICE = 4
     }
 
     public enum ModuleEnum
     {
-        STOCKIN = 0,
+        STOCKRECEIVE = 0,
         STOCKTRANSFER = 2,
         STOCKRESERVATION = 3,
         CATEGORY = 4,
@@ -76,3 +73,4 @@
         Warehouse = 17,
     }
 } 
+

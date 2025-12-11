@@ -9,7 +9,6 @@ export interface InvoiceDetailsDto {
   dateOfSale: string;
   salesPersonId: string;
   salesPersonName?: string | null;
-  eOrderNumber?: string | null;
   salesTypeId?: guid | null;
   salesTypeName?: string | null;
   paymentTypeId?: guid | null;
@@ -17,5 +16,7 @@ export interface InvoiceDetailsDto {
   paymentReference?: string | null;
   remark?: string | null;
   grandTotal: number;
+  warehouseId: guid;
+  warehouseLabel?: string | null;
   invoiceItems: InvoiceItemDetailsDto[];
 }

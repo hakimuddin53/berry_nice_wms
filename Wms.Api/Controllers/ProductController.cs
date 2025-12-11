@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -22,16 +22,16 @@ namespace Wms.Api.Controllers
         }
 
         [HttpPost("search", Name = "SearchProductsAsync")]
-        public async Task<IActionResult> SearchProductsAsync([FromBody] ProductSearchDto stockInSearch)
+        public async Task<IActionResult> SearchProductsAsync([FromBody] ProductSearchDto StockRecieveSearch)
         {
-            var products = await productService.SearchProductsAsync(stockInSearch);
+            var products = await productService.SearchProductsAsync(StockRecieveSearch);
             return Ok(products);
         }
 
         [HttpPost("count", Name = "CountProductsAsync")]
-        public async Task<IActionResult> CountProductsAsync([FromBody] ProductSearchDto stockInSearch)
+        public async Task<IActionResult> CountProductsAsync([FromBody] ProductSearchDto StockRecieveSearch)
         {
-            var count = await productService.CountProductsAsync(stockInSearch);
+            var count = await productService.CountProductsAsync(StockRecieveSearch);
             return Ok(count);
         }
 
@@ -85,3 +85,4 @@ namespace Wms.Api.Controllers
         }
     }
 }
+

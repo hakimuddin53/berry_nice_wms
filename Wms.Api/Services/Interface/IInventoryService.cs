@@ -5,7 +5,9 @@ namespace Wms.Api.Services
 {
     public interface IInventoryService
     {
-        Task StockInAsync(StockIn stockIn);
-        Task StockOutAsync(Invoice invoice);
+        Task StockRecieveAsync(StockRecieve StockRecieve);
+        Task InvoiceAsync(Invoice invoice);
+        Task StockTransferAsync(StockTransferRequest request);
     }
 }
+

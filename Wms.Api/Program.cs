@@ -1,6 +1,4 @@
-using Hangfire;
-using Hangfire.SqlServer;
-using Leitstand.Mapping.Profiles.v12_0;
+﻿using Leitstand.Mapping.Profiles.v12_0;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -35,7 +33,7 @@ builder.Services.AddControllers()
 // Retrieve CORS origins from configuration
 var allowedOrigins = builder.Configuration.GetSection("CorsSettings:AllowedOrigins").Get<string[]>();
 
-builder.Services.AddAutoMapper(typeof(StockInProfile));
+builder.Services.AddAutoMapper(typeof(StockRecieveProfile));
 builder.Services.AddAutoMapper(typeof(ProductProfile)); 
 builder.Services.AddAutoMapper(typeof(GeneralProfile));
 builder.Services.AddAutoMapper(typeof(InvoiceProfile));
@@ -157,19 +155,6 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.User.RequireUniqueEmail = true;
 });
 
-builder.Services.AddHangfire(cfg => cfg
-    .UseSimpleAssemblyNameTypeSerializer()
-    .UseRecommendedSerializerSettings()
-    .UseSqlServerStorage(defaultConn, new SqlServerStorageOptions
-    {
-        PrepareSchemaIfNecessary = true,    // auto?create tables if missing
-        SchemaName = "hangfire"            // remove or change if you want dbo
-    })
-);
-
-// 3) Start the background server
-builder.Services.AddHangfireServer();
-
 
 var app = builder.Build();
 
@@ -195,10 +180,6 @@ using (var scope = app.Services.CreateScope())
 }
 
 
-// optional Hangfire dashboard
-app.UseHangfireDashboard("/hangfire");
-
-
 app.UseCors("AllowReactApp"); // Apply the CORS policy
 app.UseSwagger();
 app.UseSwaggerUI();
@@ -207,3 +188,4 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.Run();
+

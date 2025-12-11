@@ -15,11 +15,9 @@ namespace Wms.Api.Services
 
             string operationPrefix = operationType switch
             {
-                OperationTypeEnum.STOCKIN => "SI",
-                OperationTypeEnum.STOCKRESERVATION => "SR",
+                OperationTypeEnum.STOCKRECEIVE => "SR", 
                 OperationTypeEnum.STOCKTRANSFER => "ST",
-                OperationTypeEnum.PRODUCT => "P",
-                OperationTypeEnum.STOCKADJUSTMENT => "SA",
+                OperationTypeEnum.PRODUCT => "P", 
                 OperationTypeEnum.INVOICE => "INV",
                 _ => throw new ArgumentOutOfRangeException(nameof(operationType), "Invalid operation type")
             };
@@ -64,3 +62,4 @@ namespace Wms.Api.Services
         }
     }
 }
+

@@ -4,15 +4,15 @@ export interface InventoryAuditDto {
   productId: guid;
   productCode: string;
   model?: string | null;
+  warehouseId: guid;
+  warehouseLabel?: string | null;
   movementDate: string;
   movementType: string;
   referenceNumber: string;
-  quantityChange: number;
-  balanceAfter: number;
-  costPrice?: number | null;
-  agentPrice?: number | null;
-  dealerPrice?: number | null;
-  retailPrice?: number | null;
+  quantityIn: number;
+  quantityOut: number;
+  oldBalance: number;
+  newBalance: number;
 }
 
 export interface InventoryAuditSearchDto {
