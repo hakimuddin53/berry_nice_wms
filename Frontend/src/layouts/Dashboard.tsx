@@ -294,6 +294,16 @@ const lookupChildren: SidebarItemsType[] = [
     children: [],
     requiredModule: ModuleEnum.LOOKUP,
   },
+  {
+    id: 217,
+    href: "/lookups/Grade",
+    itemType: "link",
+    title: "Grade",
+    icon: <Ruler size={20} />,
+    type: "single",
+    children: [],
+    requiredModule: ModuleEnum.LOOKUP,
+  },
 ];
 
 // 2) Add a parent â€œLookupsâ€ item that uses those as children
@@ -402,7 +412,7 @@ export const dashboardItems: SidebarItemsType[] = [
         id: 1102,
         href: "/inventory/audit",
         itemType: "link",
-        title: "Audit Trail",
+        title: "Inventory Balance",
         icon: <RotateCcw size={18} />,
         type: "single",
         children: [],

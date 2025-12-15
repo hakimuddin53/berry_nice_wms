@@ -13,6 +13,7 @@ export interface StockRecieveItemDetailsDto {
   ramId?: guid;
   processorId?: guid;
   screenSizeId?: guid;
+  grade: string;
   locationId: guid;
   imeiSerialNumber?: string;
   region?: string;
@@ -29,4 +30,3 @@ export interface StockRecieveItemDetailsDto {
   // Display fields
   productName?: string;
 }
-

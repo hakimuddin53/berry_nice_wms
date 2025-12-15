@@ -186,39 +186,39 @@ const StockRecieveItemCreateEdit = (props: {
                       }
                     />
                   ),
-        },
-        {
-          label: t("imei", { defaultValue: "IMEI/Serial Number" }),
-          required: isRequiredField(
-            StockRecieveCreateEditSchema,
-            "StockRecieveItems[0].imeiSerialNumber",
-            formik.values
-          ),
-          value: (
-            <TextField
-              fullWidth
-              id={fieldName("imeiSerialNumber")}
-              name={fieldName("imeiSerialNumber")}
-              size="small"
-              value={item.imeiSerialNumber}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              error={
-                fieldTouched("imeiSerialNumber") &&
-                Boolean(fieldError("imeiSerialNumber"))
-              }
-              helperText={
-                <FormikErrorMessage
-                  touched={fieldTouched("imeiSerialNumber")}
-                  error={fieldError("imeiSerialNumber")}
-                  translatedFieldName={t("imei", {
-                    defaultValue: "IMEI/Serial Number",
-                  })}
-                />
-              }
-            />
-          ),
-        },
+                },
+                {
+                  label: t("imei", { defaultValue: "IMEI/Serial Number" }),
+                  required: isRequiredField(
+                    StockRecieveCreateEditSchema,
+                    "StockRecieveItems[0].imeiSerialNumber",
+                    formik.values
+                  ),
+                  value: (
+                    <TextField
+                      fullWidth
+                      id={fieldName("imeiSerialNumber")}
+                      name={fieldName("imeiSerialNumber")}
+                      size="small"
+                      value={item.imeiSerialNumber}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      error={
+                        fieldTouched("imeiSerialNumber") &&
+                        Boolean(fieldError("imeiSerialNumber"))
+                      }
+                      helperText={
+                        <FormikErrorMessage
+                          touched={fieldTouched("imeiSerialNumber")}
+                          error={fieldError("imeiSerialNumber")}
+                          translatedFieldName={t("imei", {
+                            defaultValue: "IMEI/Serial Number",
+                          })}
+                        />
+                      }
+                    />
+                  ),
+                },
                 {
                   label: t("category"),
                   required: isRequiredField(
@@ -502,19 +502,19 @@ const StockRecieveItemCreateEdit = (props: {
                       }
                     />
                   ),
-        },
-        {
-          label: t("new-or-used"),
-          required: isRequiredField(
-            StockRecieveCreateEditSchema,
-            "StockRecieveItems[0].newOrUsed",
-            formik.values
-          ),
-          value: (
-            <LookupAutocomplete
-              groupKey={LookupGroupKey.NewOrUsed}
-              name={fieldName("newOrUsed")}
-              value={item.newOrUsed ?? ""}
+                },
+                {
+                  label: t("new-or-used"),
+                  required: isRequiredField(
+                    StockRecieveCreateEditSchema,
+                    "StockRecieveItems[0].newOrUsed",
+                    formik.values
+                  ),
+                  value: (
+                    <LookupAutocomplete
+                      groupKey={LookupGroupKey.NewOrUsed}
+                      name={fieldName("newOrUsed")}
+                      value={item.newOrUsed ?? ""}
                       onChange={(_, option) =>
                         formik.setFieldValue(
                           fieldName("newOrUsed"),
@@ -533,31 +533,31 @@ const StockRecieveItemCreateEdit = (props: {
                           touched={fieldTouched("newOrUsed")}
                           error={fieldError("newOrUsed")}
                           translatedFieldName={t("new-or-used")}
-                />
-              }
+                        />
+                      }
+                    />
+                  ),
+                },
+              ]}
             />
-          ),
-        },
-      ]}
-    />
-  </Box>
-</PbTabPanel>
+          </Box>
+        </PbTabPanel>
 
         <PbTabPanel value={activeTab} index={1}>
           <Box mt={6}>
             <DataList
               hideDevider={true}
-      data={[
-        {
-          label: t("cost"),
-          required: isRequiredField(
-            StockRecieveCreateEditSchema,
-            "StockRecieveItems[0].cost",
-            formik.values
-          ),
-          value: (
-            <TextField
-              fullWidth
+              data={[
+                {
+                  label: t("cost"),
+                  required: isRequiredField(
+                    StockRecieveCreateEditSchema,
+                    "StockRecieveItems[0].cost",
+                    formik.values
+                  ),
+                  value: (
+                    <TextField
+                      fullWidth
                       id={fieldName("cost")}
                       name={fieldName("cost")}
                       size="small"
@@ -663,70 +663,123 @@ const StockRecieveItemCreateEdit = (props: {
 
         <PbTabPanel value={activeTab} index={2}>
           <Box mt={6}>
-            <FormControl fullWidth error={remarkHasError}>
-              <InputLabel id={`${fieldName("remark")}-label`}>
-                {t("remark")}
-              </InputLabel>
-              <Select
-                labelId={`${fieldName("remark")}-label`}
-                id={fieldName("remark")}
-                multiple
-                value={selectedRemarks}
-                onChange={handleRemarkSelectionChange}
-                onBlur={handleRemarkBlur}
-                input={<OutlinedInput label={t("remark")} />}
-                renderValue={(selected) => (
-                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                    {(selected as string[]).map((value) => (
-                      <Chip
-                        key={value}
-                        label={value}
-                        size="small"
-                        onMouseDown={(event) => event.stopPropagation()}
-                        onDelete={() => handleRemarkChipDelete(value)}
-                      />
-                    ))}
-                  </Box>
-                )}
-              >
-                {remarkOptions.map((option) => (
-                  <MenuItem key={option} value={option}>
-                    <Checkbox checked={selectedRemarks.indexOf(option) > -1} />
-                    {option}
-                  </MenuItem>
-                ))}
-              </Select>
-              <FormHelperText>
-                <FormikErrorMessage
-                  touched={fieldTouched("remark")}
-                  error={fieldError("remark")}
-                  translatedFieldName={t("remark")}
-                />
-              </FormHelperText>
-            </FormControl>
-            <TextField
-              sx={{ mt: 3 }}
-              fullWidth
-              multiline
-              minRows={3}
-              id={fieldName("internalRemark")}
-              name={fieldName("internalRemark")}
-              label={t("internal-remark")}
-              placeholder={t("enter-internal-remark")}
-              value={item.internalRemark ?? ""}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              error={
-                fieldTouched("internalRemark") &&
-                Boolean(fieldError("internalRemark"))
-              }
-              helperText={
-                <FormikErrorMessage
-                  touched={fieldTouched("internalRemark")}
-                  error={fieldError("internalRemark")}
-                  translatedFieldName={t("internal-remark")}
-                />
-              }
+            <DataList
+              hideDevider={true}
+              data={[
+                {
+                  label: t("grade"),
+                  required: isRequiredField(
+                    StockRecieveCreateEditSchema,
+                    "StockRecieveItems[0].grade",
+                    formik.values
+                  ),
+                  value: (
+                    <LookupAutocomplete
+                      groupKey={LookupGroupKey.Grade}
+                      name={fieldName("grade")}
+                      value={item.grade ?? ""}
+                      onChange={(newValue) =>
+                        formik.setFieldValue(fieldName("grade"), newValue || "")
+                      }
+                      onBlur={() =>
+                        formik.setFieldTouched(fieldName("grade"), true, false)
+                      }
+                      error={
+                        fieldTouched("grade") && Boolean(fieldError("grade"))
+                      }
+                      helperText={
+                        <FormikErrorMessage
+                          touched={fieldTouched("grade")}
+                          error={fieldError("grade")}
+                          translatedFieldName={t("grade")}
+                        />
+                      }
+                    />
+                  ),
+                },
+                {
+                  label: t("remark"),
+                  value: (
+                    <FormControl
+                      fullWidth
+                      error={remarkHasError}
+                      size="small"
+                      sx={{ mt: 1 }}
+                    >
+                      <InputLabel id={`${fieldName("remark")}-label`}>
+                        {t("remark")}
+                      </InputLabel>
+                      <Select
+                        labelId={`${fieldName("remark")}-label`}
+                        id={fieldName("remark")}
+                        multiple
+                        value={selectedRemarks}
+                        onChange={handleRemarkSelectionChange}
+                        onBlur={handleRemarkBlur}
+                        input={<OutlinedInput label={t("remark")} />}
+                        renderValue={(selected) => (
+                          <Box
+                            sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}
+                          >
+                            {(selected as string[]).map((value) => (
+                              <Chip
+                                key={value}
+                                label={value}
+                                size="small"
+                                onMouseDown={(event) => event.stopPropagation()}
+                                onDelete={() => handleRemarkChipDelete(value)}
+                              />
+                            ))}
+                          </Box>
+                        )}
+                      >
+                        {remarkOptions.map((option) => (
+                          <MenuItem key={option} value={option}>
+                            <Checkbox
+                              checked={selectedRemarks.indexOf(option) > -1}
+                            />
+                            {option}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                      <FormHelperText>
+                        <FormikErrorMessage
+                          touched={fieldTouched("remark")}
+                          error={fieldError("remark")}
+                          translatedFieldName={t("remark")}
+                        />
+                      </FormHelperText>
+                    </FormControl>
+                  ),
+                },
+                {
+                  label: t("internal-remark"),
+                  value: (
+                    <TextField
+                      fullWidth
+                      multiline
+                      minRows={3}
+                      id={fieldName("internalRemark")}
+                      name={fieldName("internalRemark")}
+                      placeholder={t("enter-internal-remark")}
+                      value={item.internalRemark ?? ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      error={
+                        fieldTouched("internalRemark") &&
+                        Boolean(fieldError("internalRemark"))
+                      }
+                      helperText={
+                        <FormikErrorMessage
+                          touched={fieldTouched("internalRemark")}
+                          error={fieldError("internalRemark")}
+                          translatedFieldName={t("internal-remark")}
+                        />
+                      }
+                    />
+                  ),
+                },
+              ]}
             />
           </Box>
         </PbTabPanel>

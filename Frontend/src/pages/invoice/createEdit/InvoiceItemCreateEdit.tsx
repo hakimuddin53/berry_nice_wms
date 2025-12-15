@@ -82,6 +82,76 @@ const InvoiceItemCreateEdit = (props: {
 
   const warrantyExpiryText = formatWarrantyExpiry(item.warrantyExpiryDate);
 
+  const resetProductDerivedValues = () => {
+    formik.setFieldValue(fieldName("productCode"), "");
+    formik.setFieldValue(fieldName("productId"), undefined);
+    formik.setFieldValue(fieldName("imei"), "");
+    formik.setFieldValue(fieldName("locationId"), undefined);
+    formik.setFieldValue(fieldName("locationName"), "");
+    formik.setFieldValue(fieldName("brand"), "");
+    formik.setFieldValue(fieldName("model"), "");
+    formik.setFieldValue(fieldName("unitPrice"), 0);
+    formik.setFieldValue(fieldName("totalPrice"), 0);
+    formik.setFieldValue(fieldName("quantity"), 1);
+  };
+
+  const populateFromProduct = (option: any) => {
+    const data = option?.data ?? {};
+    formik.setFieldValue(
+      fieldName("productCode"),
+      data.productCode ?? option?.label ?? ""
+    );
+    formik.setFieldValue(fieldName("productId"), option?.value ?? undefined);
+
+    const imeiValue =
+      data.imei ?? data.imeiSerialNumber ?? data.serialNumber ?? "";
+    formik.setFieldValue(fieldName("imei"), imeiValue);
+
+    const locationId =
+      data.locationId ??
+      data.currentLocationId ??
+      data.location?.id ??
+      data.location;
+    const locationNameRaw =
+      data.locationName ??
+      data.currentLocation ??
+      data.locationLabel ??
+      data.location;
+    const normalizedLocationId =
+      typeof locationId === "string" ? locationId : undefined;
+    const normalizedLocationName =
+      typeof locationNameRaw === "string" || typeof locationNameRaw === "number"
+        ? String(locationNameRaw)
+        : "";
+    formik.setFieldValue(fieldName("locationId"), normalizedLocationId);
+    formik.setFieldValue(fieldName("locationName"), normalizedLocationName);
+
+    const brand =
+      data.brand ?? data.brandName ?? data.brandLabel ?? data.brandId ?? "";
+    const model =
+      data.model ??
+      data.productName ??
+      data.modelName ??
+      data.productModel ??
+      "";
+    formik.setFieldValue(fieldName("brand"), brand ?? "");
+    formik.setFieldValue(fieldName("model"), model ?? "");
+
+    const unitPriceRaw =
+      data.retailPrice ?? data.unitPrice ?? data.price ?? item.unitPrice ?? 0;
+    const unitPrice =
+      unitPriceRaw === "" || unitPriceRaw === null || unitPriceRaw === undefined
+        ? 0
+        : Number(unitPriceRaw);
+    const quantity = 1;
+    formik.setFieldValue(fieldName("unitPrice"), unitPrice ?? 0);
+    formik.setFieldValue(fieldName("quantity"), quantity);
+    formik.setFieldValue(
+      fieldName("totalPrice"),
+      Number(unitPrice ?? 0) * quantity
+    );
+  };
+
   const handleWarrantyChange = (value: number | "") => {
     if (value === "") {
       formik.setFieldValue(fieldName("warrantyDurationMonths"), undefined);
@@ -119,34 +189,13 @@ const InvoiceItemCreateEdit = (props: {
                   placeholder={t("product-code")}
                   ids={productIds}
                   asyncFunc={productAsync}
-                suggestionsIfEmpty
-                onSelectionChange={(option: any) => {
-                  const data = option?.data ?? {};
-                  formik.setFieldValue(
-                    fieldName("productCode"),
-                      data.productCode ?? option?.label ?? ""
-                    );
-                  formik.setFieldValue(
-                    fieldName("productId"),
-                    option?.value ?? undefined
-                  );
-                  formik.setFieldValue(
-                    fieldName("imei"),
-                    data.imei ?? item.imei ?? ""
-                  );
-                  if (
-                    data.retailPrice !== undefined &&
-                    data.retailPrice !== null
-                  ) {
-                    formik.setFieldValue(
-                        fieldName("unitPrice"),
-                        data.retailPrice
-                      );
-                      formik.setFieldValue(
-                        fieldName("totalPrice"),
-                        (data.retailPrice ?? 0) * (item.quantity ?? 0)
-                      );
+                  suggestionsIfEmpty
+                  onSelectionChange={(option: any) => {
+                    if (!option) {
+                      resetProductDerivedValues();
+                      return;
                     }
+                    populateFromProduct(option);
                   }}
                   onBlur={() =>
                     formik.setFieldTouched(fieldName("productCode"))
@@ -179,8 +228,8 @@ const InvoiceItemCreateEdit = (props: {
                   id={fieldName("imei")}
                   name={fieldName("imei")}
                   value={item.imei ?? ""}
-                  onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
+                  InputProps={{ readOnly: true }}
                   error={fieldTouched("imei") && Boolean(fieldError("imei"))}
                   helperText={
                     <FormikErrorMessage
@@ -195,30 +244,58 @@ const InvoiceItemCreateEdit = (props: {
               ),
             },
             {
-              label: t("quantity"),
+              label: t("brand"),
+              value: (
+                <TextField
+                  fullWidth
+                  size="small"
+                  id={fieldName("brand")}
+                  name={fieldName("brand")}
+                  value={item.brand ?? ""}
+                  InputProps={{ readOnly: true }}
+                  onBlur={formik.handleBlur}
+                />
+              ),
+            },
+            {
+              label: t("model"),
+              value: (
+                <TextField
+                  fullWidth
+                  size="small"
+                  id={fieldName("model")}
+                  name={fieldName("model")}
+                  value={item.model ?? ""}
+                  InputProps={{ readOnly: true }}
+                  onBlur={formik.handleBlur}
+                />
+              ),
+            },
+            {
+              label: t("location"),
               required: isRequiredField(
                 invoiceCreateEditSchema,
-                "invoiceItems[0].quantity",
+                "invoiceItems[0].locationId",
                 formik.values
               ),
               value: (
                 <TextField
                   fullWidth
                   size="small"
-                  type="number"
-                  id={fieldName("quantity")}
-                  name={fieldName("quantity")}
-                  value={item.quantity}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
+                  id={fieldName("locationId")}
+                  name={fieldName("locationId")}
+                  value={item.locationName ?? ""}
+                  onBlur={() => formik.setFieldTouched(fieldName("locationId"))}
+                  InputProps={{ readOnly: true }}
                   error={
-                    fieldTouched("quantity") && Boolean(fieldError("quantity"))
+                    fieldTouched("locationId") &&
+                    Boolean(fieldError("locationId"))
                   }
                   helperText={
                     <FormikErrorMessage
-                      touched={fieldTouched("quantity")}
-                      error={fieldError("quantity")}
-                      translatedFieldName={t("quantity")}
+                      touched={fieldTouched("locationId")}
+                      error={fieldError("locationId")}
+                      translatedFieldName={t("location")}
                     />
                   }
                 />
@@ -239,7 +316,7 @@ const InvoiceItemCreateEdit = (props: {
                   id={fieldName("unitPrice")}
                   name={fieldName("unitPrice")}
                   value={item.unitPrice}
-                  onChange={formik.handleChange}
+                  InputProps={{ readOnly: true }}
                   onBlur={formik.handleBlur}
                   error={
                     fieldTouched("unitPrice") &&

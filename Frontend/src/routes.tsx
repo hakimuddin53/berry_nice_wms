@@ -26,7 +26,7 @@ import CartonSizeListPage from "pages/cartonSize/index/CartonSizeListPage";
 
 import DashboardPage from "pages/dashboard/DashboardPage";
 
-import InventoryAuditPage from "pages/inventory/InventoryAuditPage";
+import InventoryBalancePage from "pages/inventory/InventoryAuditPage";
 import InventorySummaryPage from "pages/inventory/InventorySummaryPage";
 
 import CustomerCreateEditPage from "pages/customer/createEdit/CustomerCreateEditPage";
@@ -232,7 +232,7 @@ const routes = [
             index: true,
             element: (
               <ModuleGuard requiredModule={ModuleEnum.INVENTORY}>
-                <InventoryAuditPage />
+                <InventoryBalancePage />
               </ModuleGuard>
             ),
           },
@@ -240,7 +240,7 @@ const routes = [
             path: "audit",
             element: (
               <ModuleGuard requiredModule={ModuleEnum.INVENTORY}>
-                <InventoryAuditPage />
+                <InventoryBalancePage />
               </ModuleGuard>
             ),
           },

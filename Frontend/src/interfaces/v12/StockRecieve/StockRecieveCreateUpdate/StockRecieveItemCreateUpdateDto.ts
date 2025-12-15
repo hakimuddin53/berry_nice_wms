@@ -11,6 +11,7 @@ export interface StockRecieveItemCreateUpdateDto {
   ramId?: guid;
   processorId?: guid;
   screenSizeId?: guid;
+  grade: string;
   locationId: guid;
   imeiSerialNumber?: string;
   region?: string;
@@ -24,4 +25,3 @@ export interface StockRecieveItemCreateUpdateDto {
   internalRemark?: string;
   receiveQuantity: number;
 }
-

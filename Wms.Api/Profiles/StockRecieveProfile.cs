@@ -25,6 +25,7 @@ public class StockRecieveProfile : Profile
             .ForMember(dest => dest.RamId, opt => opt.MapFrom(src => src.Product != null ? src.Product.RamId : null))
             .ForMember(dest => dest.ProcessorId, opt => opt.MapFrom(src => src.Product != null ? src.Product.ProcessorId : null))
             .ForMember(dest => dest.ScreenSizeId, opt => opt.MapFrom(src => src.Product != null ? src.Product.ScreenSizeId : null))
+            .ForMember(dest => dest.LocationId, opt => opt.MapFrom(src => src.Product != null ? src.Product.LocationId : Guid.Empty))
             .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product != null ? src.Product.Model : null))
             .ForMember(dest => dest.PrimarySerialNumber, opt => opt.MapFrom(src => src.Product != null ? src.Product.PrimarySerialNumber : null))
             .ForMember(dest => dest.ManufactureSerialNumber, opt => opt.MapFrom(src => src.Product != null ? src.Product.ManufactureSerialNumber : null))
@@ -34,8 +35,8 @@ public class StockRecieveProfile : Profile
             .ForMember(dest => dest.DealerSellingPrice, opt => opt.MapFrom(src => src.Product != null ? src.Product.DealerPrice : null))
             .ForMember(dest => dest.AgentSellingPrice, opt => opt.MapFrom(src => src.Product != null ? src.Product.AgentPrice : null))
             .ForMember(dest => dest.Cost, opt => opt.MapFrom(src => src.Product != null ? src.Product.CostPrice : null))
-            .ForMember(dest => dest.Remark, opt => opt.MapFrom(src => src.Remark))
-            .ForMember(dest => dest.InternalRemark, opt => opt.MapFrom(src => src.InternalRemark));
+            .ForMember(dest => dest.Remark, opt => opt.MapFrom(src => src.Product != null ? src.Product.Remark : null))
+            .ForMember(dest => dest.InternalRemark, opt => opt.MapFrom(src => src.Product != null ? src.Product.InternalRemark : null));
         #endregion
 
         #region CreateUpdateV12Dto
@@ -44,12 +45,9 @@ public class StockRecieveProfile : Profile
 
         CreateMap<StockRecieveItemCreateUpdateDto, StockRecieveItem>()
             .ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.ProductId ?? Guid.Empty))
-            .ForMember(dest => dest.Remark, opt => opt.MapFrom(src => src.Remark))
-            .ForMember(dest => dest.InternalRemark, opt => opt.MapFrom(src => src.InternalRemark))
             .ForMember(dest => dest.Product, opt => opt.Ignore());
 
         #endregion
 
     }
 }
-

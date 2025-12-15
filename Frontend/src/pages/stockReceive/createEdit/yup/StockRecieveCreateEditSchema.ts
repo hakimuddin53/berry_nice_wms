@@ -19,6 +19,7 @@ export interface YupStockRecieveItemCreateEdit {
   ramId?: guid;
   processorId?: guid;
   screenSizeId?: guid;
+  grade: string;
   locationId: guid;
   locationName?: string;
   imeiSerialNumber?: string;
@@ -51,6 +52,7 @@ export const StockRecieveCreateEditSchema = yup.object().shape({
         ramId: yup.string().nullable(),
         processorId: yup.string().nullable(),
         screenSizeId: yup.string().nullable(),
+        grade: yup.string().required(),
         locationId: yup
           .string()
           .test(

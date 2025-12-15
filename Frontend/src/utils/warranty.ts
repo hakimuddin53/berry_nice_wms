@@ -2,7 +2,11 @@ export const calculateWarrantyExpiryDate = (
   dateOfSale: string,
   durationInMonths?: number
 ): string | null => {
-  if (!dateOfSale || durationInMonths === undefined || durationInMonths === null)
+  if (
+    !dateOfSale ||
+    durationInMonths === undefined ||
+    durationInMonths === null
+  )
     return null;
 
   const base = new Date(dateOfSale);

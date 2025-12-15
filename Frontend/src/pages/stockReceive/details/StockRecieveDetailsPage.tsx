@@ -52,6 +52,11 @@ function StockRecieveDetailsPage() {
         render: (item) => item.model || "-",
       },
       {
+        id: "grade",
+        label: t("grade"),
+        render: (item) => item.grade || "-",
+      },
+      {
         id: "imeiSerialNumber",
         label: t("imei", { defaultValue: "IMEI/Serial Number" }),
         render: (item) => item.imeiSerialNumber || "-",

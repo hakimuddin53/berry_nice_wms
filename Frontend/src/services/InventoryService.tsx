@@ -8,6 +8,7 @@ import {
   InventorySummarySearchDto,
 } from "interfaces/v12/inventory/inventorySummaryDto";
 import { UpdateProductPricingDto } from "interfaces/v12/inventory/updateProductPricingDto";
+import { UpdateInventoryBalanceDto } from "interfaces/v12/inventory/updateInventoryBalanceDto";
 import React from "react";
 import axios from "../utils/axios";
 
@@ -24,6 +25,10 @@ interface IInventoryService {
     productId: string,
     dto: UpdateProductPricingDto
   ) => Promise<void>;
+  updateBalance: (
+    productId: string,
+    dto: UpdateInventoryBalanceDto
+  ) => Promise<void>;
 }
 
 const InventoryServiceContext = createContext({} as IInventoryService);
@@ -39,6 +44,10 @@ export type InventoryServiceProviderProps = {
   updatePricing?: (
     productId: string,
     dto: UpdateProductPricingDto
+  ) => Promise<void>;
+  updateBalance?: (
+    productId: string,
+    dto: UpdateInventoryBalanceDto
   ) => Promise<void>;
 };
 
@@ -59,10 +68,17 @@ export const InventoryServiceProvider: React.FC<
       .then(() => undefined);
   };
 
+  const updateBalance = (productId: string, dto: UpdateInventoryBalanceDto) => {
+    return axios
+      .put(`/inventory/balance/${productId}`, dto)
+      .then(() => undefined);
+  };
+
   const value: IInventoryService = {
     searchAudit: props.searchAudit || searchAudit,
     searchSummary: props.searchSummary || searchSummary,
     updatePricing: props.updatePricing || updatePricing,
+    updateBalance: props.updateBalance || updateBalance,
   };
 
   return (

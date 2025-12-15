@@ -24,6 +24,24 @@ interface LookupOption {
   value: string;
 }
 
+const GRADE_FALLBACK_OPTIONS: LookupOption[] = [
+  "AA",
+  "AB",
+  "AC",
+  "AD",
+  "AE",
+  "AG",
+].map((value) => ({ label: value, value }));
+
+const dedupeOptions = (options: LookupOption[]) => {
+  const seen = new Set<string>();
+  return options.filter((option) => {
+    if (seen.has(option.value)) return false;
+    seen.add(option.value);
+    return true;
+  });
+};
+
 const PAGE_SIZE = 50;
 
 const LookupAutocomplete: React.FC<LookupAutocompleteProps> = ({
@@ -72,8 +90,12 @@ const LookupAutocomplete: React.FC<LookupAutocompleteProps> = ({
           }
           page += 1;
         }
+        const optionsWithFallback =
+          groupKey === LookupGroupKey.Grade
+            ? dedupeOptions([...nextOptions, ...GRADE_FALLBACK_OPTIONS])
+            : nextOptions;
         if (isActive) {
-          setOptions(nextOptions);
+          setOptions(optionsWithFallback);
         }
       } catch (err) {
         if (process.env.NODE_ENV !== "production") {
@@ -84,7 +106,9 @@ const LookupAutocomplete: React.FC<LookupAutocompleteProps> = ({
           );
         }
         if (isActive) {
-          setOptions([]);
+          setOptions(
+            groupKey === LookupGroupKey.Grade ? [...GRADE_FALLBACK_OPTIONS] : []
+          );
         }
       } finally {
         if (isActive) {

@@ -4,8 +4,7 @@ export interface InvoiceItemDetailsDto {
   id: guid;
   invoiceId: guid;
   productId?: guid | null;
-  productCode?: string | null;
-  imei?: string | null;
+  locationId?: guid | null;
   warrantyDurationMonths: number;
   quantity: number;
   unitPrice: number;

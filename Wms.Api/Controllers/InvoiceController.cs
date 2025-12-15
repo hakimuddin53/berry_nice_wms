@@ -201,17 +201,11 @@ namespace Wms.Api.Controllers
                 Id = Guid.NewGuid(),
                 InvoiceId = invoice.Id,
                 ProductId = itemDto.ProductId,
-                ProductCode = itemDto.ProductCode,
-                Description = itemDto.Description,
-                PrimarySerialNumber = itemDto.PrimarySerialNumber,
-                ManufactureSerialNumber = itemDto.ManufactureSerialNumber,
-                Imei = itemDto.Imei,
                 WarrantyDurationMonths = itemDto.WarrantyDurationMonths,
-                UnitOfMeasure = itemDto.UnitOfMeasure,
+                WarrantyExpiryDate = CalculateWarrantyExpiryDate(invoice.DateOfSale, itemDto.WarrantyDurationMonths),
                 Quantity = itemDto.Quantity,
                 UnitPrice = itemDto.UnitPrice,
                 TotalPrice = itemDto.TotalPrice > 0 ? itemDto.TotalPrice : itemDto.UnitPrice * itemDto.Quantity,
-                Status = itemDto.Status
             }).ToList();
 
             invoice.InvoiceItems = newItems;
@@ -290,7 +284,7 @@ namespace Wms.Api.Controllers
         {
             if (invoice.InvoiceItems == null)
             {
-                invoice.InvoiceItems = new List<InvoiceItem>();
+            invoice.InvoiceItems = new List<InvoiceItem>();
             }
 
             foreach (var item in invoice.InvoiceItems)
@@ -302,6 +296,7 @@ namespace Wms.Api.Controllers
 
                 item.InvoiceId = invoice.Id;
                 item.TotalPrice = item.TotalPrice > 0 ? item.TotalPrice : item.UnitPrice * item.Quantity;
+                item.WarrantyExpiryDate ??= CalculateWarrantyExpiryDate(invoice.DateOfSale, item.WarrantyDurationMonths);
             }
 
             invoice.GrandTotal = invoice.InvoiceItems.Sum(i => i.TotalPrice);
@@ -339,6 +334,23 @@ namespace Wms.Api.Controllers
                     : string.Empty;
             }
         }
+
+        private static DateTime? CalculateWarrantyExpiryDate(DateTime dateOfSale, int warrantyDurationMonths)
+        {
+            if (warrantyDurationMonths <= 0)
+            {
+                return null;
+            }
+
+            try
+            {
+                return dateOfSale.AddMonths(warrantyDurationMonths);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                // Fallback to null if date overflows
+                return null;
+            }
+        }
     }
 }
-

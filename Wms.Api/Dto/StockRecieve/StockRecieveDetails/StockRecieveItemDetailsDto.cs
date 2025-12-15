@@ -16,6 +16,7 @@ namespace Wms.Api.Dto.StockRecieve.StockRecieveDetails
         public Guid? RamId { get; set; }
         public Guid? ProcessorId { get; set; }
         public Guid? ScreenSizeId { get; set; }
+        // Stored on Product
         public Guid LocationId { get; set; }
         public string? PrimarySerialNumber { get; set; }
         public string? ManufactureSerialNumber { get; set; }
@@ -25,13 +26,12 @@ namespace Wms.Api.Dto.StockRecieve.StockRecieveDetails
         public decimal? DealerSellingPrice { get; set; }
         public decimal? AgentSellingPrice { get; set; }
         public decimal? Cost { get; set; }
-    public int ReceiveQuantity { get; set; }
+        public int ReceiveQuantity { get; set; }
 
-    // Aggregated, free-text remark(s)
-    public string? Remark { get; set; }
-    public string? InternalRemark { get; set; }
+        // Aggregated, free-text remark(s) stored on Product
+        public string? Remark { get; set; }
+        public string? InternalRemark { get; set; }
 
         public string? ProductName { get; set; }
     }
 }
-

@@ -1,5 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Wms.Api.Entities;
 using Wms.Api.Services;
 
@@ -13,13 +16,31 @@ namespace Wms.Api.Context
         public override int SaveChanges()
         {
             UpdateAuditEntities();
-            return base.SaveChanges();
+            var productAudits = CaptureProductAuditEntries();
+            var result = base.SaveChanges();
+
+            if (productAudits.Count > 0)
+            {
+                ProductAuditLogs.AddRange(productAudits);
+                base.SaveChanges();
+            }
+
+            return result;
         }
 
-        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             UpdateAuditEntities();
-            return base.SaveChangesAsync(cancellationToken);
+            var productAudits = CaptureProductAuditEntries();
+            var result = await base.SaveChangesAsync(cancellationToken);
+
+            if (productAudits.Count > 0)
+            {
+                ProductAuditLogs.AddRange(productAudits);
+                await base.SaveChangesAsync(cancellationToken);
+            }
+
+            return result;
         }
 
         private void UpdateAuditEntities()
@@ -59,7 +80,7 @@ namespace Wms.Api.Context
         public DbSet<Product> Products { get; set; }
         public DbSet<StockRecieve> StockRecieves { get; set; }
         public DbSet<StockRecieveItem> StockRecieveItems { get; set; }
-    // Removed: StockRecieveItemRemarks (replaced with single Remark field on StockRecieveItem)
+    // Removed: StockRecieveItemRemarks (remarks now stored directly on Product)
         public DbSet<Inventory> Inventories { get; set; }
         public DbSet<RunningNumber> RunningNumbers { get; set; } 
         public DbSet<Lookup> Lookups { get; set; }
@@ -68,6 +89,7 @@ namespace Wms.Api.Context
         public DbSet<Expense> Expenses { get; set; }
         public DbSet<Invoice> Invoices { get; set; }
         public DbSet<InvoiceItem> InvoiceItems { get; set; }
+        public DbSet<ProductAuditLog> ProductAuditLogs { get; set; }
     // Removed: ProductRemarks (replaced with single Remark field on Product)
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -131,6 +153,62 @@ namespace Wms.Api.Context
                 .HasForeignKey(ii => ii.InvoiceId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
+
+        private List<ProductAuditLog> CaptureProductAuditEntries()
+        {
+            ChangeTracker.DetectChanges();
+
+            var fieldsToTrack = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                nameof(Product.Remark),
+                nameof(Product.InternalRemark),
+                nameof(Product.AgentPrice),
+                nameof(Product.DealerPrice),
+                nameof(Product.RetailPrice),
+                nameof(Product.LocationId),
+                nameof(Product.CostPrice)
+            };
+
+            var currentUser = "System";
+            try
+            {
+                currentUser = currentUserService.UserId();
+            }
+            catch (Exception)
+            {
+                // If the user is not authenticated, keep fallback "System".
+            }
+
+            var audits = new List<ProductAuditLog>();
+
+            foreach (var entry in ChangeTracker.Entries<Product>())
+            {
+                if (entry.State != EntityState.Modified)
+                {
+                    continue;
+                }
+
+                foreach (var prop in entry.Properties)
+                {
+                    if (!fieldsToTrack.Contains(prop.Metadata.Name) || !prop.IsModified)
+                    {
+                        continue;
+                    }
+
+                    audits.Add(new ProductAuditLog
+                    {
+                        Id = Guid.NewGuid(),
+                        ProductId = entry.Entity.ProductId,
+                        PropertyName = prop.Metadata.Name,
+                        OldValue = prop.OriginalValue?.ToString(),
+                        NewValue = prop.CurrentValue?.ToString(),
+                        ChangedBy = currentUser,
+                        ChangedAt = DateTime.UtcNow
+                    });
+                }
+            }
+
+            return audits;
+        }
     }
 }
-

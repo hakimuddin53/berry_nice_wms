@@ -13,6 +13,7 @@ export enum LookupGroupKey {
   ExpenseCategory = "ExpenseCategory",
   UserRole = "UserRole",
   ScreenSize = "ScreenSize",
+  Grade = "Grade",
   Color = "Color",
   Storage = "Storage",
   Ram = "Ram",

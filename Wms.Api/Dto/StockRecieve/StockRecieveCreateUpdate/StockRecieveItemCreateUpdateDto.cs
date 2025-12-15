@@ -27,6 +27,7 @@ namespace Wms.Api.Dto.StockRecieve.StockRecieveCreateUpdate
 
         public Guid? ScreenSizeId { get; set; }
 
+        // Stored on Product (per item input)
         public Guid LocationId { get; set; }
         public string? PrimarySerialNumber { get; set; }
         public string? ManufactureSerialNumber { get; set; }
@@ -37,10 +38,10 @@ namespace Wms.Api.Dto.StockRecieve.StockRecieveCreateUpdate
         public decimal? AgentSellingPrice { get; set; }
         public decimal? Cost { get; set; }
 
-        // Free-text, comma-delimited chips input
+        // Free-text, comma-delimited chips input (stored on Product)
         public string? Remark { get; set; }
+        // Additional internal note (stored on Product)
         public string? InternalRemark { get; set; }
         public int ReceiveQuantity { get; set; }
     }
 }
-

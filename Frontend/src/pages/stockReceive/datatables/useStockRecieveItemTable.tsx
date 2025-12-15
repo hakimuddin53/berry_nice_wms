@@ -29,6 +29,11 @@ export const useStockRecieveItemTable = () => {
         render: (row) => row.model || "-",
       },
       {
+        id: "grade",
+        label: t("grade"),
+        render: (row) => row.grade || "-",
+      },
+      {
         id: "imeiSerialNumber",
         label: t("imei", { defaultValue: "IMEI/Serial Number" }),
         render: (row) => row.imeiSerialNumber || "-",

@@ -3,8 +3,7 @@ import { guid } from "types/guid";
 export interface InvoiceItemCreateUpdateDto {
   id?: guid;
   productId?: guid | null;
-  productCode?: string | null;
-  imei?: string | null;
+  locationId?: guid | null;
   warrantyDurationMonths?: number;
   quantity: number;
   unitPrice: number;

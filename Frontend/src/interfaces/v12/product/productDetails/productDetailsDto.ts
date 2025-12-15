@@ -25,4 +25,13 @@ export interface ProductDetailsDto {
 
   lowQty: number;
   createdDate: string;
+
+  // Pricing and notes
+  remark?: string | null;
+  internalRemark?: string | null;
+  agentPrice?: number | null;
+  dealerPrice?: number | null;
+  retailPrice?: number | null;
+  costPrice?: number | null;
+  locationId?: guid | null;
 }

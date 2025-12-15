@@ -247,7 +247,7 @@ namespace Wms.Api.Controllers
                 .Where(p => !string.IsNullOrWhiteSpace(p.ProductCode))
                 .ToDictionary(p => p.ProductCode!, p => p, StringComparer.OrdinalIgnoreCase);
 
-            // Remarks are simple strings now; no per-product remark catalog needed.
+            // Remarks captured on stock receive item are persisted on the Product.
 
             for (int index = 0; index < entityItems.Count; index++)
             {
@@ -307,6 +307,7 @@ namespace Wms.Api.Controllers
                         RamId = dtoItem.RamId,
                         ProcessorId = dtoItem.ProcessorId,
                         ScreenSizeId = dtoItem.ScreenSizeId,
+                        LocationId = dtoItem.LocationId,
                         RetailPrice = dtoItem.RetailSellingPrice,
                         DealerPrice = dtoItem.DealerSellingPrice,
                         AgentPrice = dtoItem.AgentSellingPrice,
@@ -315,7 +316,9 @@ namespace Wms.Api.Controllers
                         ManufactureSerialNumber = string.IsNullOrWhiteSpace(dtoItem.ManufactureSerialNumber) ? null : dtoItem.ManufactureSerialNumber.Trim(),
                         Region = string.IsNullOrWhiteSpace(dtoItem.Region) ? null : dtoItem.Region.Trim(),
                         NewOrUsed = string.IsNullOrWhiteSpace(dtoItem.NewOrUsed) ? null : dtoItem.NewOrUsed.Trim(),
-                        CreatedDate = DateTime.UtcNow
+                        CreatedDate = DateTime.UtcNow,
+                        Remark = string.IsNullOrWhiteSpace(dtoItem.Remark) ? null : dtoItem.Remark.Trim(),
+                        InternalRemark = string.IsNullOrWhiteSpace(dtoItem.InternalRemark) ? null : dtoItem.InternalRemark.Trim()
                     };
 
                     await context.Products.AddAsync(product);
@@ -333,6 +336,10 @@ namespace Wms.Api.Controllers
                     product.RamId = dtoItem.RamId;
                     product.ProcessorId = dtoItem.ProcessorId;
                     product.ScreenSizeId = dtoItem.ScreenSizeId;
+                    if (dtoItem.LocationId != Guid.Empty)
+                    {
+                        product.LocationId = dtoItem.LocationId;
+                    }
                     product.RetailPrice = dtoItem.RetailSellingPrice ?? product.RetailPrice;
                     product.DealerPrice = dtoItem.DealerSellingPrice ?? product.DealerPrice;
                     product.AgentPrice = dtoItem.AgentSellingPrice ?? product.AgentPrice;
@@ -358,16 +365,21 @@ namespace Wms.Api.Controllers
                         product.NewOrUsed = dtoItem.NewOrUsed.Trim();
                     }
 
-                    // no per-product remarks
+                    if (!string.IsNullOrWhiteSpace(dtoItem.Remark))
+                    {
+                        product.Remark = dtoItem.Remark.Trim();
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(dtoItem.InternalRemark))
+                    {
+                        product.InternalRemark = dtoItem.InternalRemark.Trim();
+                    }
                 }
 
                 entityItem.ProductId = product.ProductId;
                 entityItem.Product = product;
-                // Assign free-text remark from DTO to entity
-                entityItem.Remark = dtoItem.Remark?.Trim();
             }
         }
 
     }
 }
-

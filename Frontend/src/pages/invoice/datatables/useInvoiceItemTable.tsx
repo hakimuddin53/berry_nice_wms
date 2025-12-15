@@ -30,9 +30,9 @@ export const useInvoiceItemTable = () => {
         render: (row) => row.imei || "-",
       },
       {
-        id: "quantity",
-        label: t("quantity"),
-        render: (row) => row.quantity?.toString() ?? "-",
+        id: "locationName",
+        label: t("location"),
+        render: (row) => row.locationName || row.locationId || "-",
       },
       {
         id: "unitPrice",

@@ -22,6 +22,7 @@ namespace Wms.Api.Entities
         public Guid? RamId { get; set; }
         public Guid? ProcessorId { get; set; }
         public Guid? ScreenSizeId { get; set; }
+        public Guid LocationId { get; set; }
 
         public int LowQty { get; set; } = 0;
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
@@ -57,5 +58,8 @@ namespace Wms.Api.Entities
 
         // Free-text, comma-delimited remark(s) for product
         public string? Remark { get; set; }
+
+        // Additional internal note stored verbatim
+        public string? InternalRemark { get; set; }
     }
 }

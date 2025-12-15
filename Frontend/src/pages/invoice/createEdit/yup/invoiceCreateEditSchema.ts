@@ -5,6 +5,10 @@ export interface YupInvoiceItemCreateEdit {
   id?: guid;
   productId?: guid | null;
   productCode?: string | null;
+  locationId?: guid | null;
+  locationName?: string | null;
+  brand?: string | null;
+  model?: string | null;
   imei?: string | null;
   warrantyDurationMonths?: number;
   quantity: number;
@@ -30,6 +34,10 @@ const invoiceItemSchema = yup.object().shape({
   id: yup.string().nullable(),
   productId: yup.string().nullable(),
   productCode: yup.string().nullable(),
+  locationId: yup.string().nullable().required(),
+  locationName: yup.string().nullable(),
+  brand: yup.string().nullable(),
+  model: yup.string().nullable(),
   imei: yup.string().required(),
   warrantyDurationMonths: yup.number().min(0).nullable().required(),
   quantity: yup.number().min(1).required(),

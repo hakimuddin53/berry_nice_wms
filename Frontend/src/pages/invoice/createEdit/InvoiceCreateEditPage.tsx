@@ -37,6 +37,10 @@ const createEmptyItem = (): YupInvoiceItemCreateEdit => ({
   id: undefined,
   productId: undefined,
   productCode: "",
+  locationId: undefined,
+  locationName: "",
+  brand: "",
+  model: "",
   imei: "",
   warrantyDurationMonths: undefined,
   quantity: 1,
@@ -62,6 +66,10 @@ const mapDetailsToForm = (details: any): YupInvoiceCreateEdit => ({
     id: item.id,
     productId: item.productId ?? undefined,
     productCode: item.productCode ?? "",
+    locationId: item.locationId ?? undefined,
+    locationName: item.locationName ?? item.location ?? "",
+    brand: item.brand ?? "",
+    model: item.model ?? "",
     imei: item.imei ?? "",
     warrantyDurationMonths: item.warrantyDurationMonths ?? undefined,
     quantity: item.quantity ?? 1,
@@ -69,7 +77,10 @@ const mapDetailsToForm = (details: any): YupInvoiceCreateEdit => ({
     totalPrice: item.totalPrice ?? 0,
     warrantyExpiryDate:
       item.warrantyExpiryDate ??
-      calculateWarrantyExpiryDate(details.dateOfSale, item.warrantyDurationMonths),
+      calculateWarrantyExpiryDate(
+        details.dateOfSale,
+        item.warrantyDurationMonths
+      ),
   })),
 });
 
@@ -146,8 +157,7 @@ const InvoiceCreateEditPage = () => {
         invoiceItems: values.invoiceItems.map((item) => ({
           id: item.id,
           productId: item.productId || undefined,
-          productCode: item.productCode || undefined,
-          imei: item.imei || undefined,
+          locationId: item.locationId || undefined,
           warrantyDurationMonths: item.warrantyDurationMonths || 0,
           quantity: item.quantity,
           unitPrice: item.unitPrice,

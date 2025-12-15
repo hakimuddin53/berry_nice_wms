@@ -110,49 +110,45 @@ const InvoiceDetailsPage = () => {
             {t("invoice-items")}
           </Typography>
           <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>{t("product-code")}</TableCell>
-              <TableCell>
-                {t("imei", { defaultValue: "IMEI/Serial Number" })}
-              </TableCell>
-              <TableCell align="right">{t("quantity")}</TableCell>
-              <TableCell align="right">{t("unit-price-sold")}</TableCell>
-              <TableCell align="right">
-                {t("warranty-duration-months")}
-              </TableCell>
-              <TableCell align="right">
-                {t("warranty", { defaultValue: "Warranty" }) +
-                  " " +
-                  t("expired", { defaultValue: "Expired" })}
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {invoice.invoiceItems.map((item) => {
-              const expiryIso =
-                item.warrantyExpiryDate ??
-                calculateWarrantyExpiryDate(
-                  invoice.dateOfSale,
-                  item.warrantyDurationMonths
+            <TableHead>
+              <TableRow>
+                <TableCell>{t("product")}</TableCell>
+                <TableCell>{t("location")}</TableCell>
+                <TableCell align="right">{t("unit-price-sold")}</TableCell>
+                <TableCell align="right">
+                  {t("warranty-duration-months")}
+                </TableCell>
+                <TableCell align="right">
+                  {t("warranty", { defaultValue: "Warranty" }) +
+                    " " +
+                    t("expired", { defaultValue: "Expired" })}
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {invoice.invoiceItems.map((item) => {
+                const expiryIso =
+                  item.warrantyExpiryDate ??
+                  calculateWarrantyExpiryDate(
+                    invoice.dateOfSale,
+                    item.warrantyDurationMonths
+                  );
+                return (
+                  <TableRow key={item.id as unknown as string}>
+                    <TableCell>{item.productId || "-"}</TableCell>
+                    <TableCell>{item.locationId || "-"}</TableCell>
+                    <TableCell align="right">
+                      {item.unitPrice.toFixed(2)}
+                    </TableCell>
+                    <TableCell align="right">
+                      {warrantyLabelFromMonths(item.warrantyDurationMonths)}
+                    </TableCell>
+                    <TableCell align="right">
+                      {formatWarrantyExpiry(expiryIso) || "-"}
+                    </TableCell>
+                  </TableRow>
                 );
-              return (
-                <TableRow key={item.id as unknown as string}>
-                  <TableCell>{item.productCode || "-"}</TableCell>
-                  <TableCell>{item.imei || "-"}</TableCell>
-                  <TableCell align="right">{item.quantity}</TableCell>
-                  <TableCell align="right">
-                    {item.unitPrice.toFixed(2)}
-                  </TableCell>
-                  <TableCell align="right">
-                    {warrantyLabelFromMonths(item.warrantyDurationMonths)}
-                  </TableCell>
-                  <TableCell align="right">
-                    {formatWarrantyExpiry(expiryIso) || "-"}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+              })}
               {invoice.invoiceItems.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={6}>

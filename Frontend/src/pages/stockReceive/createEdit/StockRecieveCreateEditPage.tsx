@@ -41,6 +41,7 @@ const createDefaultItem = (): YupStockRecieveItemCreateEdit => ({
   ramId: undefined,
   processorId: undefined,
   screenSizeId: undefined,
+  grade: "",
   locationId: EMPTY_GUID as guid,
   locationName: "",
   imeiSerialNumber: "",
@@ -187,6 +188,7 @@ const StockRecieveCreateEditPage: React.FC = () => {
       return {
         ...rest,
         key: index,
+        grade: rest.grade ?? "",
         locationName: rest.locationName ?? "",
         productName: rest.productName ?? "",
         imeiSerialNumber: rest.imeiSerialNumber ?? "",

@@ -69,7 +69,7 @@ export const LookupServiceProvider: React.FC<{
       search,
       activeOnly,
       page: page + 1, // server is 1-based
-      pageSize, // ✅ PageSize
+      pageSize, // バ. PageSize
     };
     return axios
       .post(`/lookup/search`, body)
@@ -88,7 +88,7 @@ export const LookupServiceProvider: React.FC<{
       search,
       activeOnly,
       page,
-      pageSize, // ✅ PageSize
+      pageSize, // バ. PageSize
     };
     return axios.post(`/lookup/count`, body).then((r) => r.data as number);
   };
@@ -109,17 +109,47 @@ export const LookupServiceProvider: React.FC<{
     resultSize,
     ids
   ) => {
+    const fallbackGradeOptions: SelectAsyncOption[] = [
+      "AA",
+      "AB",
+      "AC",
+      "AD",
+      "AE",
+      "AG",
+    ].map((value) => ({ label: value, value }));
+
+    const dedupeOptions = (options: SelectAsyncOption[]) => {
+      const seen = new Set<string>();
+      return options.filter((option) => {
+        if (seen.has(option.value)) return false;
+        seen.add(option.value);
+        return true;
+      });
+    };
+
     return axios
       .get(`/lookup/select-options/${groupKey}`, {
         params: {
           searchString: label,
-          page: resultPage, // ✅ page
-          pageSize: resultSize, // ✅ pageSize
+          page: resultPage, // バ. page
+          pageSize: resultSize, // バ. pageSize
           ids: ids ?? [],
         },
       })
       .then((r) => r.data.data as { value: string; label: string }[])
-      .then((rows) => rows.map((x) => ({ value: x.value, label: x.label })));
+      .then((rows) => rows.map((x) => ({ value: x.value, label: x.label })))
+      .then((options) => {
+        if (groupKey === LookupGroupKey.Grade) {
+          return dedupeOptions([...(options ?? []), ...fallbackGradeOptions]);
+        }
+        return options;
+      })
+      .catch((err) => {
+        if (groupKey === LookupGroupKey.Grade) {
+          return fallbackGradeOptions;
+        }
+        throw err;
+      });
   };
 
   const getGroups: ILookupService["getGroups"] = async () =>
