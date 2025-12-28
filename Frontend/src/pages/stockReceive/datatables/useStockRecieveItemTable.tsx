@@ -19,24 +19,19 @@ export const useStockRecieveItemTable = () => {
         hidden,
       },
       {
-        id: "product",
-        label: t("product"),
-        render: (row) => row.model || row.productCode || "-",
-      },
-      {
         id: "model",
         label: t("model"),
         render: (row) => row.model || "-",
       },
       {
-        id: "grade",
+        id: "gradeId",
         label: t("grade"),
-        render: (row) => row.grade || "-",
+        render: (row) => row.gradeName || row.gradeId || "-",
       },
       {
-        id: "imeiSerialNumber",
+        id: "serialNumber",
         label: t("imei", { defaultValue: "IMEI/Serial Number" }),
-        render: (row) => row.imeiSerialNumber || "-",
+        render: (row) => row.serialNumber || "-",
       },
       {
         id: "locationId",
@@ -63,12 +58,6 @@ export const useStockRecieveItemTable = () => {
           row.dealerSellingPrice !== undefined
             ? row.dealerSellingPrice.toString()
             : "-",
-      },
-      {
-        id: "receiveQuantity",
-        label: t("quantity"),
-        render: (row) =>
-          row.receiveQuantity ? row.receiveQuantity.toString() : "-",
       },
     ],
     [t]

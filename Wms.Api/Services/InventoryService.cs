@@ -11,13 +11,16 @@ namespace Wms.Api.Services
 	public class InventoryService : IInventoryService
 	{
 		private readonly ApplicationDbContext _context;
+		private readonly IRunningNumberService _runningNumberService;
+		private static readonly HashSet<string> ServiceProductCodes = new(StringComparer.OrdinalIgnoreCase) { "POSTAGE", "LALAMOVE", "ACCESSORY" };
 
-		public InventoryService(ApplicationDbContext context)
+		public InventoryService(ApplicationDbContext context, IRunningNumberService runningNumberService)
 		{
 			_context = context;
+			_runningNumberService = runningNumberService;
 		}
 
-		public async Task StockTransferAsync(StockTransferRequest request)
+		public async Task<List<StockTransfer>> StockTransferAsync(StockTransferRequest request)
 		{
 			ArgumentNullException.ThrowIfNull(request);
 			if (request.FromWarehouseId == Guid.Empty || request.ToWarehouseId == Guid.Empty)
@@ -39,21 +42,11 @@ namespace Wms.Api.Services
 
 			try
 			{
-				var stockTransferId = Guid.NewGuid();
+				var transferNumber = string.IsNullOrWhiteSpace(request.Number)
+					? await _runningNumberService.GenerateRunningNumberAsync(OperationTypeEnum.STOCKTRANSFER)
+					: request.Number!;
+
 				var balanceCache = new Dictionary<(Guid ProductId, Guid WarehouseId), int>();
-
-				var productIds = request.Items
-					.Where(i => i.ProductId != Guid.Empty)
-					.Select(i => i.ProductId)
-					.Distinct()
-					.ToList();
-
-				var productCostMap = productIds.Count == 0
-					? new Dictionary<Guid, decimal?>()
-					: await _context.Products
-						.Where(p => productIds.Contains(p.ProductId))
-						.Select(p => new { p.ProductId, p.CostPrice })
-						.ToDictionaryAsync(p => p.ProductId, p => p.CostPrice);
 
 				var groupedItems = request.Items
 					.Where(i => i.ProductId != Guid.Empty && i.Quantity > 0)
@@ -61,6 +54,7 @@ namespace Wms.Api.Services
 					.ToList();
 
 				var inventoryRecords = new List<Inventory>();
+				var stockTransfers = new List<StockTransfer>();
 
 				foreach (var group in groupedItems)
 				{
@@ -75,10 +69,24 @@ namespace Wms.Api.Services
 						fromOldBalance = await GetCurrentBalanceAsync(productId, request.FromWarehouseId);
 					}
 
+					if (totalQuantity > fromOldBalance)
+					{
+						throw new InvalidOperationException($"Insufficient quantity for product {productId} in warehouse {request.FromWarehouseId}. Available: {fromOldBalance}, requested: {totalQuantity}.");
+					}
+
 					var fromNewBalance = checked(fromOldBalance - totalQuantity);
 					balanceCache[fromKey] = fromNewBalance;
 
-					var unitCost = productCostMap.TryGetValue(productId, out var cost) ? cost ?? 0 : 0;
+					var stockTransferId = Guid.NewGuid();
+					stockTransfers.Add(new StockTransfer
+					{
+						Id = stockTransferId,
+						Number = transferNumber,
+						ProductId = productId,
+						QuantityTransferred = totalQuantity,
+						FromWarehouseId = request.FromWarehouseId,
+						ToWarehouseId = request.ToWarehouseId
+					});
 
 					inventoryRecords.Add(new Inventory
 					{
@@ -93,8 +101,7 @@ namespace Wms.Api.Services
 						QuantityOut = totalQuantity,
 						OldBalance = fromOldBalance,
 						NewBalance = fromNewBalance,
-						UnitPrice = unitCost,
-						Remark = group.FirstOrDefault()?.Remark ?? "Stock Transfer Out"
+						Remark = group.FirstOrDefault()?.Remark ?? $"Stock Transfer Out - {transferNumber}"
 					});
 
 					if (!balanceCache.TryGetValue(toKey, out var toOldBalance))
@@ -118,14 +125,15 @@ namespace Wms.Api.Services
 						QuantityOut = 0,
 						OldBalance = toOldBalance,
 						NewBalance = toNewBalance,
-						UnitPrice = unitCost,
-						Remark = group.FirstOrDefault()?.Remark ?? "Stock Transfer In"
+						Remark = group.FirstOrDefault()?.Remark ?? $"Stock Transfer In - {transferNumber}"
 					});
 				}
 
+				_context.StockTransfers.AddRange(stockTransfers);
 				_context.Inventories.AddRange(inventoryRecords);
 				await _context.SaveChangesAsync();
 				await transaction.CommitAsync();
+				return stockTransfers;
 			}
 			catch
 			{
@@ -155,13 +163,6 @@ namespace Wms.Api.Services
 					.Where(id => id != Guid.Empty)
 					.Distinct()
 					.ToList();
-
-				var productCostMap = productIds.Count == 0
-					? new Dictionary<Guid, decimal?>()
-					: await _context.Products
-						.Where(p => productIds.Contains(p.ProductId))
-						.Select(p => new { p.ProductId, p.CostPrice })
-						.ToDictionaryAsync(p => p.ProductId, p => p.CostPrice);
 
 				var warehouseId = StockRecieve.WarehouseId;
 
@@ -201,7 +202,6 @@ namespace Wms.Api.Services
 						QuantityOut = 0,
 						OldBalance = oldBalance,
 						NewBalance = newBalance,
-						UnitPrice = productCostMap.TryGetValue(productId, out var unitCost) ? unitCost ?? 0 : 0,
 						Remark = "Stock Receive Transaction"
 					};
 
@@ -255,12 +255,7 @@ namespace Wms.Api.Services
 					.Distinct()
 					.ToList();
 
-				var productCostMap = productIds.Count == 0
-					? new Dictionary<Guid, decimal?>()
-					: await _context.Products
-						.Where(p => productIds.Contains(p.ProductId))
-						.Select(p => new { p.ProductId, p.CostPrice })
-						.ToDictionaryAsync(p => p.ProductId, p => p.CostPrice);
+				var serviceProductIds = await GetServiceProductIdsAsync(productIds);
 
 				var productGroups = invoice.InvoiceItems
 					.Where(i => i.ProductId.HasValue && i.ProductId.Value != Guid.Empty)
@@ -273,6 +268,12 @@ namespace Wms.Api.Services
 				{
 					var productId = productGroup.Key;
 					var totalQuantity = productGroup.Sum(i => i.Quantity);
+
+					if (serviceProductIds.Contains(productId))
+					{
+                        // service item will not affect inventory balance                         
+						continue;
+					}
 
 					if (totalQuantity <= 0)
 					{
@@ -307,7 +308,6 @@ namespace Wms.Api.Services
 						QuantityOut = totalQuantity,
 						OldBalance = oldBalance,
 						NewBalance = newBalance,
-						UnitPrice = productCostMap.TryGetValue(productId, out var unitCost) ? unitCost ?? 0 : 0,
 						Remark = $"Invoice: {invoice.Number}"
 					};
 
@@ -335,6 +335,91 @@ namespace Wms.Api.Services
 
 			throw new InvalidOperationException("Warehouse is required for invoice inventory processing.");
 		}
+
+		private async Task<HashSet<Guid>> GetServiceProductIdsAsync(IEnumerable<Guid> productIds)
+		{
+			var ids = productIds?.Distinct().ToList() ?? new List<Guid>();
+			if (ids.Count == 0)
+			{
+				return new HashSet<Guid>();
+			}
+
+			var serviceCategoryId = await _context.Lookups
+				.Where(l => l.GroupKey == LookupGroupKey.ProductCategory && l.Code == "SERVICE")
+				.Select(l => l.Id)
+				.FirstOrDefaultAsync();
+
+			var products = await _context.Products
+				.Where(p => ids.Contains(p.ProductId))
+				.Select(p => new { p.ProductId, p.CategoryId, p.ProductCode })
+				.ToListAsync();
+
+			return products
+				.Where(p =>
+					(serviceCategoryId != Guid.Empty && p.CategoryId == serviceCategoryId) ||
+					(!string.IsNullOrWhiteSpace(p.ProductCode) && ServiceProductCodes.Contains(p.ProductCode)))
+				.Select(p => p.ProductId)
+				.ToHashSet();
+		}
+
+		public async Task<StockTake> StockTakeAsync(StockTakeRequest request)
+		{
+			ArgumentNullException.ThrowIfNull(request);
+			if (request.WarehouseId == Guid.Empty)
+			{
+				throw new ArgumentException("Warehouse is required for stock take.");
+			}
+
+			if (request.Items == null || request.Items.Count == 0)
+			{
+				throw new ArgumentException("At least one stock take item is required.");
+			}
+
+			await using var transaction = await _context.Database.BeginTransactionAsync();
+
+			try
+			{
+				var stockTake = new StockTake
+				{
+					Id = Guid.NewGuid(),
+					Number = await _runningNumberService.GenerateRunningNumberAsync(OperationTypeEnum.STOCKTAKE),
+					WarehouseId = request.WarehouseId,
+					TakenAt = DateTime.UtcNow,
+					Remark = request.Remark
+				};
+
+				var itemEntities = new List<StockTakeItem>();
+
+				foreach (var item in request.Items.Where(i => i.ProductId != Guid.Empty))
+				{
+					var systemQty = await GetCurrentBalanceAsync(item.ProductId, request.WarehouseId);
+					var diff = item.CountedQuantity - systemQty;
+
+					itemEntities.Add(new StockTakeItem
+					{
+						Id = Guid.NewGuid(),
+						StockTakeId = stockTake.Id,
+						ProductId = item.ProductId,
+						CountedQuantity = item.CountedQuantity,
+						SystemQuantity = systemQty,
+						DifferenceQuantity = diff,
+						Remark = item.Remark
+					});
+				}
+
+				stockTake.Items = itemEntities;
+
+				_context.StockTakes.Add(stockTake);
+
+				await _context.SaveChangesAsync();
+				await transaction.CommitAsync();
+				return stockTake;
+			}
+			catch
+			{
+				await transaction.RollbackAsync();
+				throw;
+			}
+		}
 	}
 }
-

@@ -1,8 +1,8 @@
 import { Autocomplete, CircularProgress, TextField } from "@mui/material";
+import { useLookupSelectOptionsFetcher } from "hooks/queries/useLookupQueries";
 import { LookupGroupKey } from "interfaces/v12/lookup/lookup";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { useLookupService } from "services/LookupService";
 
 interface LookupAutocompleteProps {
   groupKey: LookupGroupKey;
@@ -23,15 +23,6 @@ interface LookupOption {
   label: string;
   value: string;
 }
-
-const GRADE_FALLBACK_OPTIONS: LookupOption[] = [
-  "AA",
-  "AB",
-  "AC",
-  "AD",
-  "AE",
-  "AG",
-].map((value) => ({ label: value, value }));
 
 const dedupeOptions = (options: LookupOption[]) => {
   const seen = new Set<string>();
@@ -59,7 +50,7 @@ const LookupAutocomplete: React.FC<LookupAutocompleteProps> = ({
   onChange,
 }) => {
   const { t } = useTranslation();
-  const lookupService = useLookupService();
+  const fetchLookupOptions = useLookupSelectOptionsFetcher();
 
   const [options, setOptions] = React.useState<LookupOption[]>([]);
   const [loading, setLoading] = React.useState(false);
@@ -75,12 +66,7 @@ const LookupAutocomplete: React.FC<LookupAutocompleteProps> = ({
       try {
         while (true) {
           const chunk =
-            (await lookupService.getSelectOptions(
-              groupKey,
-              "",
-              page,
-              PAGE_SIZE
-            )) ?? [];
+            (await fetchLookupOptions(groupKey, "", page, PAGE_SIZE)) ?? [];
           if (chunk.length === 0) {
             break;
           }
@@ -90,12 +76,9 @@ const LookupAutocomplete: React.FC<LookupAutocompleteProps> = ({
           }
           page += 1;
         }
-        const optionsWithFallback =
-          groupKey === LookupGroupKey.Grade
-            ? dedupeOptions([...nextOptions, ...GRADE_FALLBACK_OPTIONS])
-            : nextOptions;
+        const dedupedOptions = dedupeOptions(nextOptions);
         if (isActive) {
-          setOptions(optionsWithFallback);
+          setOptions(dedupedOptions);
         }
       } catch (err) {
         if (process.env.NODE_ENV !== "production") {
@@ -106,9 +89,7 @@ const LookupAutocomplete: React.FC<LookupAutocompleteProps> = ({
           );
         }
         if (isActive) {
-          setOptions(
-            groupKey === LookupGroupKey.Grade ? [...GRADE_FALLBACK_OPTIONS] : []
-          );
+          setOptions([]);
         }
       } finally {
         if (isActive) {
@@ -122,7 +103,7 @@ const LookupAutocomplete: React.FC<LookupAutocompleteProps> = ({
     return () => {
       isActive = false;
     };
-  }, [groupKey]);
+  }, [fetchLookupOptions, groupKey]);
   /* eslint-enable react-hooks/exhaustive-deps */
 
   const selectedOption = React.useMemo(() => {

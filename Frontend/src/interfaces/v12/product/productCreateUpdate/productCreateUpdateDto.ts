@@ -12,6 +12,7 @@ export interface ProductCreateUpdateDto {
   ramId?: guid;
   processorId?: guid;
   screenSizeId?: guid;
+  gradeId?: guid;
 
   lowQty: number;
 }

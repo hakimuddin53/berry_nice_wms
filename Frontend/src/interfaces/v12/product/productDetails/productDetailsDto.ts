@@ -12,6 +12,7 @@ export interface ProductDetailsDto {
   ramId?: guid;
   processorId?: guid;
   screenSizeId?: guid;
+  gradeId?: guid;
 
   // Display names from lookups
   category: string;
@@ -22,6 +23,7 @@ export interface ProductDetailsDto {
   ram?: string;
   processor?: string;
   screenSize?: string;
+  gradeName?: string;
 
   lowQty: number;
   createdDate: string;

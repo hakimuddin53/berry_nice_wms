@@ -19,7 +19,8 @@ public class ProductProfile : Profile
             .ForMember(dest => dest.Storage, opt => opt.MapFrom(src => src.Storage != null ? src.Storage.Label : null))
             .ForMember(dest => dest.Ram, opt => opt.MapFrom(src => src.Ram != null ? src.Ram.Label : null))
             .ForMember(dest => dest.Processor, opt => opt.MapFrom(src => src.Processor != null ? src.Processor.Label : null))
-            .ForMember(dest => dest.ScreenSize, opt => opt.MapFrom(src => src.ScreenSize != null ? src.ScreenSize.Label : null));
+            .ForMember(dest => dest.ScreenSize, opt => opt.MapFrom(src => src.ScreenSize != null ? src.ScreenSize.Label : null))
+            .ForMember(dest => dest.GradeName, opt => opt.MapFrom(src => src.Grade != null ? src.Grade.Label : null));
 
         #endregion
 
@@ -38,8 +39,7 @@ public class ProductProfile : Profile
                     y.ProductId,
                     y.ProductCode,
                     y.Model,
-                    y.PrimarySerialNumber,
-                    y.ManufactureSerialNumber,
+                    y.SerialNumber, 
                     y.RetailPrice,
                     y.DealerPrice,
                     y.AgentPrice,

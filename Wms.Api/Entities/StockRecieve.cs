@@ -17,9 +17,6 @@ namespace Wms.Api.Entities
         public required string Purchaser { get; set; }
 
         [Required]
-        public string Location { get; set; } = string.Empty;
-
-        [Required]
         public DateTime DateOfPurchase { get; set; }
 
         [Required]
@@ -28,4 +25,3 @@ namespace Wms.Api.Entities
         public ICollection<StockRecieveItem>? StockRecieveItems { get; set; }
     }
 }
-

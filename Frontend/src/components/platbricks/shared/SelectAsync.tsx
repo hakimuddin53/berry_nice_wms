@@ -35,6 +35,8 @@ interface SelectAsyncProps extends InputProps {
   multiple?: boolean;
   getOptionDisabled?: (option: SelectAsyncOption) => boolean;
   disableClearable?: boolean;
+  error?: boolean;
+  helperText?: React.ReactNode;
 }
 
 const SelectAsync = (props: SelectAsyncProps) => {
@@ -142,6 +144,7 @@ const SelectAsync = (props: SelectAsyncProps) => {
           </React.Fragment>
         ),
       }}
+      helperText={props.helperText}
     />
   );
 

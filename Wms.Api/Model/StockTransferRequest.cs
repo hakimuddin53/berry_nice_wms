@@ -4,6 +4,8 @@ namespace Wms.Api.Model
 {
     public sealed class StockTransferRequest
     {
+        public string? Number { get; set; }
+
         [Required]
         public Guid FromWarehouseId { get; set; }
 

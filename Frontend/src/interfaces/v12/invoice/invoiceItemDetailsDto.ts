@@ -10,4 +10,12 @@ export interface InvoiceItemDetailsDto {
   unitPrice: number;
   totalPrice: number;
   warrantyExpiryDate?: string | null;
+
+  // Display helpers returned by API
+  productCode?: string | null;
+  productName?: string | null;
+  brand?: string | null;
+  model?: string | null;
+  locationName?: string | null;
+  locationLabel?: string | null;
 }

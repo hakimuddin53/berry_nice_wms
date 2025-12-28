@@ -191,26 +191,26 @@ const StockRecieveItemCreateEdit = (props: {
                   label: t("imei", { defaultValue: "IMEI/Serial Number" }),
                   required: isRequiredField(
                     StockRecieveCreateEditSchema,
-                    "StockRecieveItems[0].imeiSerialNumber",
+                    "StockRecieveItems[0].serialNumber",
                     formik.values
                   ),
                   value: (
                     <TextField
                       fullWidth
-                      id={fieldName("imeiSerialNumber")}
-                      name={fieldName("imeiSerialNumber")}
+                      id={fieldName("serialNumber")}
+                      name={fieldName("serialNumber")}
                       size="small"
-                      value={item.imeiSerialNumber}
+                      value={item.serialNumber}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
                       error={
-                        fieldTouched("imeiSerialNumber") &&
-                        Boolean(fieldError("imeiSerialNumber"))
+                        fieldTouched("serialNumber") &&
+                        Boolean(fieldError("serialNumber"))
                       }
                       helperText={
                         <FormikErrorMessage
-                          touched={fieldTouched("imeiSerialNumber")}
-                          error={fieldError("imeiSerialNumber")}
+                          touched={fieldTouched("serialNumber")}
+                          error={fieldError("serialNumber")}
                           translatedFieldName={t("imei", {
                             defaultValue: "IMEI/Serial Number",
                           })}
@@ -481,22 +481,29 @@ const StockRecieveItemCreateEdit = (props: {
                   value: (
                     <LookupAutocomplete
                       groupKey={LookupGroupKey.Region}
-                      name={fieldName("region")}
-                      value={item.region ?? ""}
-                      onChange={(_, option) =>
+                      name={fieldName("regionId")}
+                      value={item.regionId ?? ""}
+                      onChange={(newValue, option) => {
                         formik.setFieldValue(
-                          fieldName("region"),
+                          fieldName("regionId"),
+                          newValue || ""
+                        );
+                        formik.setFieldValue(
+                          fieldName("regionName"),
                           option?.label ?? ""
-                        )
+                        );
+                      }}
+                      onBlur={() =>
+                        formik.setFieldTouched(fieldName("regionId"))
                       }
-                      onBlur={() => formik.setFieldTouched(fieldName("region"))}
                       error={
-                        fieldTouched("region") && Boolean(fieldError("region"))
+                        fieldTouched("regionId") &&
+                        Boolean(fieldError("regionId"))
                       }
                       helperText={
                         <FormikErrorMessage
-                          touched={fieldTouched("region")}
-                          error={fieldError("region")}
+                          touched={fieldTouched("regionId")}
+                          error={fieldError("regionId")}
                           translatedFieldName={t("region")}
                         />
                       }
@@ -507,31 +514,35 @@ const StockRecieveItemCreateEdit = (props: {
                   label: t("new-or-used"),
                   required: isRequiredField(
                     StockRecieveCreateEditSchema,
-                    "StockRecieveItems[0].newOrUsed",
+                    "StockRecieveItems[0].newOrUsedId",
                     formik.values
                   ),
                   value: (
                     <LookupAutocomplete
                       groupKey={LookupGroupKey.NewOrUsed}
-                      name={fieldName("newOrUsed")}
-                      value={item.newOrUsed ?? ""}
-                      onChange={(_, option) =>
+                      name={fieldName("newOrUsedId")}
+                      value={item.newOrUsedId ?? ""}
+                      onChange={(newValue, option) => {
                         formik.setFieldValue(
-                          fieldName("newOrUsed"),
+                          fieldName("newOrUsedId"),
+                          newValue || ""
+                        );
+                        formik.setFieldValue(
+                          fieldName("newOrUsedName"),
                           option?.label ?? ""
-                        )
-                      }
+                        );
+                      }}
                       onBlur={() =>
-                        formik.setFieldTouched(fieldName("newOrUsed"))
+                        formik.setFieldTouched(fieldName("newOrUsedId"))
                       }
                       error={
-                        fieldTouched("newOrUsed") &&
-                        Boolean(fieldError("newOrUsed"))
+                        fieldTouched("newOrUsedId") &&
+                        Boolean(fieldError("newOrUsedId"))
                       }
                       helperText={
                         <FormikErrorMessage
-                          touched={fieldTouched("newOrUsed")}
-                          error={fieldError("newOrUsed")}
+                          touched={fieldTouched("newOrUsedId")}
+                          error={fieldError("newOrUsedId")}
                           translatedFieldName={t("new-or-used")}
                         />
                       }
@@ -670,27 +681,39 @@ const StockRecieveItemCreateEdit = (props: {
                   label: t("grade"),
                   required: isRequiredField(
                     StockRecieveCreateEditSchema,
-                    "StockRecieveItems[0].grade",
+                    "StockRecieveItems[0].gradeId",
                     formik.values
                   ),
                   value: (
                     <LookupAutocomplete
                       groupKey={LookupGroupKey.Grade}
-                      name={fieldName("grade")}
-                      value={item.grade ?? ""}
-                      onChange={(newValue) =>
-                        formik.setFieldValue(fieldName("grade"), newValue || "")
-                      }
+                      name={fieldName("gradeId")}
+                      value={item.gradeId ?? ""}
+                      onChange={(newValue, option) => {
+                        formik.setFieldValue(
+                          fieldName("gradeId"),
+                          newValue || ""
+                        );
+                        formik.setFieldValue(
+                          fieldName("gradeName"),
+                          option?.label ?? ""
+                        );
+                      }}
                       onBlur={() =>
-                        formik.setFieldTouched(fieldName("grade"), true, false)
+                        formik.setFieldTouched(
+                          fieldName("gradeId"),
+                          true,
+                          false
+                        )
                       }
                       error={
-                        fieldTouched("grade") && Boolean(fieldError("grade"))
+                        fieldTouched("gradeId") &&
+                        Boolean(fieldError("gradeId"))
                       }
                       helperText={
                         <FormikErrorMessage
-                          touched={fieldTouched("grade")}
-                          error={fieldError("grade")}
+                          touched={fieldTouched("gradeId")}
+                          error={fieldError("gradeId")}
                           translatedFieldName={t("grade")}
                         />
                       }

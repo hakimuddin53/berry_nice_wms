@@ -39,7 +39,7 @@ const invoiceItemSchema = yup.object().shape({
   brand: yup.string().nullable(),
   model: yup.string().nullable(),
   imei: yup.string().required(),
-  warrantyDurationMonths: yup.number().min(0).nullable().required(),
+  warrantyDurationMonths: yup.number().min(0).nullable().notRequired(),
   quantity: yup.number().min(1).required(),
   unitPrice: yup.number().min(0).required(),
   totalPrice: yup.number().min(0).nullable(),

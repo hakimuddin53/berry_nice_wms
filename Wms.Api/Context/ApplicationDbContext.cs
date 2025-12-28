@@ -90,6 +90,9 @@ namespace Wms.Api.Context
         public DbSet<Invoice> Invoices { get; set; }
         public DbSet<InvoiceItem> InvoiceItems { get; set; }
         public DbSet<ProductAuditLog> ProductAuditLogs { get; set; }
+        public DbSet<StockTransfer> StockTransfers { get; set; }
+        public DbSet<StockTake> StockTakes { get; set; }
+        public DbSet<StockTakeItem> StockTakeItems { get; set; }
     // Removed: ProductRemarks (replaced with single Remark field on Product)
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -139,6 +142,12 @@ namespace Wms.Api.Context
                 .HasForeignKey(p => p.ScreenSizeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<Product>()
+                .HasOne(p => p.Grade)
+                .WithMany()
+                .HasForeignKey(p => p.GradeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<StockRecieveItem>()
                 .HasOne(i => i.Product)
                 .WithMany()
@@ -152,6 +161,24 @@ namespace Wms.Api.Context
                 .WithMany(i => i.InvoiceItems)
                 .HasForeignKey(ii => ii.InvoiceId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<StockTransfer>()
+                .HasOne(st => st.Product)
+                .WithMany()
+                .HasForeignKey(st => st.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<StockTakeItem>()
+                .HasOne(sti => sti.StockTake)
+                .WithMany(st => st.Items)
+                .HasForeignKey(sti => sti.StockTakeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<StockTakeItem>()
+                .HasOne(sti => sti.Product)
+                .WithMany()
+                .HasForeignKey(sti => sti.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
 
         private List<ProductAuditLog> CaptureProductAuditEntries()
@@ -166,6 +193,7 @@ namespace Wms.Api.Context
                 nameof(Product.DealerPrice),
                 nameof(Product.RetailPrice),
                 nameof(Product.LocationId),
+                nameof(Product.GradeId),
                 nameof(Product.CostPrice)
             };
 

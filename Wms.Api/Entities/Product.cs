@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -12,8 +10,7 @@ namespace Wms.Api.Entities
 
         [Required]
         public string ProductCode { get; set; } = default!;
-
-        // Foreign keys to Lookup table
+         
         public Guid CategoryId { get; set; }
         public Guid? BrandId { get; set; }
         public string? Model { get; set; }
@@ -22,10 +19,11 @@ namespace Wms.Api.Entities
         public Guid? RamId { get; set; }
         public Guid? ProcessorId { get; set; }
         public Guid? ScreenSizeId { get; set; }
+        public Guid? GradeId { get; set; }
         public Guid LocationId { get; set; }
-
-        public int LowQty { get; set; } = 0;
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+        public Guid? RegionId { get; set; }
+        public Guid? NewOrUsedId { get; set; }
 
         [Column(TypeName = "decimal(18,4)")]
         public decimal? RetailPrice { get; set; }
@@ -39,13 +37,7 @@ namespace Wms.Api.Entities
         [Column(TypeName = "decimal(18,4)")]
         public decimal? CostPrice { get; set; }
 
-        public string? PrimarySerialNumber { get; set; }
-
-        public string? ManufactureSerialNumber { get; set; }
-
-        public string? Region { get; set; }
-
-        public string? NewOrUsed { get; set; }
+        public string? SerialNumber { get; set; }         
 
         // Navigation properties
         public virtual Lookup Category { get; set; } = default!;
@@ -55,11 +47,10 @@ namespace Wms.Api.Entities
         public virtual Lookup? Ram { get; set; }
         public virtual Lookup? Processor { get; set; }
         public virtual Lookup? ScreenSize { get; set; }
-
-        // Free-text, comma-delimited remark(s) for product
-        public string? Remark { get; set; }
-
-        // Additional internal note stored verbatim
+        public virtual Lookup? Grade { get; set; }
+        public virtual Lookup? Region { get; set; }
+        public virtual Lookup? NewOrUsed { get; set; }
+        public string? Remark { get; set; }         
         public string? InternalRemark { get; set; }
     }
 }

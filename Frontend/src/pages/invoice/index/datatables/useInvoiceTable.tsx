@@ -1,11 +1,11 @@
 import { Link } from "@mui/material";
+import EasyCopy from "components/platbricks/shared/EasyCopy";
+import { DataTableHeaderCell } from "components/platbricks/shared/dataTable/DataTable";
 import { useCreatedChangeDate } from "hooks/useCreatedChangeDate";
 import { InvoiceDetailsDto } from "interfaces/v12/invoice/invoiceDetailsDto";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { NavLink } from "react-router-dom";
-import EasyCopy from "components/platbricks/shared/EasyCopy";
-import { DataTableHeaderCell } from "components/platbricks/shared/dataTable/DataTable";
 
 const hidden = true;
 
@@ -32,6 +32,7 @@ export const useInvoiceTable = () => {
       {
         id: "customerName",
         label: t("customer"),
+        render: (row) => row.customerName || (row as any).customerId || "-",
       },
       {
         id: "dateOfSale",

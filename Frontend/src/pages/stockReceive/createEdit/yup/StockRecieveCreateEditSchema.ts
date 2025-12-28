@@ -19,12 +19,15 @@ export interface YupStockRecieveItemCreateEdit {
   ramId?: guid;
   processorId?: guid;
   screenSizeId?: guid;
-  grade: string;
+  gradeId: guid;
+  gradeName?: string;
   locationId: guid;
   locationName?: string;
-  imeiSerialNumber?: string;
-  region?: string;
-  newOrUsed?: string;
+  serialNumber?: string;
+  regionId?: guid;
+  regionName?: string;
+  newOrUsedId?: guid;
+  newOrUsedName?: string;
   retailSellingPrice?: number;
   dealerSellingPrice?: number;
   agentSellingPrice?: number;
@@ -34,6 +37,9 @@ export interface YupStockRecieveItemCreateEdit {
   receiveQuantity: number;
   productName?: string;
 }
+
+const GUID_REGEX =
+  /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 
 export const StockRecieveCreateEditSchema = yup.object().shape({
   sellerInfo: yup.string().required(),
@@ -52,7 +58,14 @@ export const StockRecieveCreateEditSchema = yup.object().shape({
         ramId: yup.string().nullable(),
         processorId: yup.string().nullable(),
         screenSizeId: yup.string().nullable(),
-        grade: yup.string().required(),
+        gradeId: yup
+          .string()
+          .test(
+            "valid-grade-id",
+            "required",
+            (value) => !!value && value !== EMPTY_GUID && GUID_REGEX.test(value)
+          )
+          .required(),
         locationId: yup
           .string()
           .test(
@@ -61,9 +74,27 @@ export const StockRecieveCreateEditSchema = yup.object().shape({
             (value) => !!value && value !== EMPTY_GUID
           )
           .required(),
-        imeiSerialNumber: yup.string().required(),
-        region: yup.string().nullable(),
-        newOrUsed: yup.string().required(),
+        serialNumber: yup.string().required(),
+        regionId: yup
+          .string()
+          .nullable()
+          .test(
+            "valid-region-id",
+            "invalid",
+            (value) =>
+              value === null ||
+              value === undefined ||
+              value === "" ||
+              GUID_REGEX.test(value)
+          ),
+        newOrUsedId: yup
+          .string()
+          .test(
+            "not-empty-guid",
+            "required",
+            (value) => !!value && GUID_REGEX.test(value)
+          )
+          .required(),
         remark: yup.string().nullable(),
         internalRemark: yup.string().nullable(),
         cost: yup.number().min(0).required(),

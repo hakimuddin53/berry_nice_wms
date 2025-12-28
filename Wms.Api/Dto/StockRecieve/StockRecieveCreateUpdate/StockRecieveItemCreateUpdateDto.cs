@@ -27,12 +27,15 @@ namespace Wms.Api.Dto.StockRecieve.StockRecieveCreateUpdate
 
         public Guid? ScreenSizeId { get; set; }
 
+        public Guid? GradeId { get; set; }
+
         // Stored on Product (per item input)
         public Guid LocationId { get; set; }
-        public string? PrimarySerialNumber { get; set; }
-        public string? ManufactureSerialNumber { get; set; }
-        public string? Region { get; set; }
-        public string? NewOrUsed { get; set; }
+        public string? SerialNumber { get; set; }
+        public Guid? RegionId { get; set; }
+
+        [Required]
+        public Guid? NewOrUsedId { get; set; }
         public decimal? RetailSellingPrice { get; set; }
         public decimal? DealerSellingPrice { get; set; }
         public decimal? AgentSellingPrice { get; set; }

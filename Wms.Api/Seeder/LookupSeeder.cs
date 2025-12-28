@@ -97,6 +97,17 @@ namespace Wms.Api.Data.Seeding
             list.Add(L(LookupGroupKey.NewOrUsed, "NEW", "NEW", 1));
             list.Add(L(LookupGroupKey.NewOrUsed, "USED", "USED", 2));
 
+            // --- Grade
+            list.AddRange(new[]
+            {
+                L(LookupGroupKey.Grade, "AA", "AA", 1),
+                L(LookupGroupKey.Grade, "AB", "AB", 2),
+                L(LookupGroupKey.Grade, "AC", "AC", 3),
+                L(LookupGroupKey.Grade, "AD", "AD", 4),
+                L(LookupGroupKey.Grade, "AE", "AE", 5),
+                L(LookupGroupKey.Grade, "AG", "AG", 6),
+            });
+
             // --- Inventory Status
             list.AddRange(new[]
             {

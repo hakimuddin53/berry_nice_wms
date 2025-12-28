@@ -7,7 +7,7 @@ namespace Wms.Api.Services
     {
         Task StockRecieveAsync(StockRecieve StockRecieve);
         Task InvoiceAsync(Invoice invoice);
-        Task StockTransferAsync(StockTransferRequest request);
+        Task<List<StockTransfer>> StockTransferAsync(StockTransferRequest request);
+        Task<StockTake> StockTakeAsync(StockTakeRequest request);
     }
 }
-

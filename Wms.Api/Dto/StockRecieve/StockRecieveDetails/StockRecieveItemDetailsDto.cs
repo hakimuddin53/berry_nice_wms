@@ -16,12 +16,15 @@ namespace Wms.Api.Dto.StockRecieve.StockRecieveDetails
         public Guid? RamId { get; set; }
         public Guid? ProcessorId { get; set; }
         public Guid? ScreenSizeId { get; set; }
+        public Guid? GradeId { get; set; }
+        public string? GradeName { get; set; }
         // Stored on Product
         public Guid LocationId { get; set; }
-        public string? PrimarySerialNumber { get; set; }
-        public string? ManufactureSerialNumber { get; set; }
-        public string? Region { get; set; }
-        public string? NewOrUsed { get; set; }
+        public string? SerialNumber { get; set; } 
+        public Guid? RegionId { get; set; }
+        public string? RegionName { get; set; }
+        public Guid? NewOrUsedId { get; set; }
+        public string? NewOrUsedName { get; set; }
         public decimal? RetailSellingPrice { get; set; }
         public decimal? DealerSellingPrice { get; set; }
         public decimal? AgentSellingPrice { get; set; }

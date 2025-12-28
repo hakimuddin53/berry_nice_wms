@@ -26,8 +26,8 @@ import CartonSizeListPage from "pages/cartonSize/index/CartonSizeListPage";
 
 import DashboardPage from "pages/dashboard/DashboardPage";
 
-import InventoryBalancePage from "pages/inventory/InventoryAuditPage";
-import InventorySummaryPage from "pages/inventory/InventorySummaryPage";
+import InventoryPage from "pages/inventory/InventoryPage";
+import InvoicedProductsReportPage from "pages/inventory/InvoicedProductsReportPage";
 
 import CustomerCreateEditPage from "pages/customer/createEdit/CustomerCreateEditPage";
 import CustomerDetailsPage from "pages/customer/details/CustomerDetailsPage";
@@ -54,6 +54,10 @@ import UserRoleDetailsPage from "pages/userRoles/details/UserRoleDetailsPage";
 import UserRoleListPage from "pages/userRoles/index/UserRoleListPage";
 
 import ExpenseListPage from "pages/expense/index/ExpenseListPage";
+import StockTakeCreatePage from "pages/stockTake/createEdit/StockTakeCreatePage";
+import StockTakeListPage from "pages/stockTake/index/StockTakeListPage";
+import StockTransferCreatePage from "pages/stockTransfer/createEdit/StockTransferCreatePage";
+import StockTransferListPage from "pages/stockTransfer/index/StockTransferListPage";
 import { Navigate } from "react-router-dom";
 
 // --- Routes Definition ---
@@ -189,6 +193,48 @@ const routes = [
         ],
       },
       {
+        path: "stock-transfer",
+        children: [
+          {
+            index: true,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.STOCKTRANSFER}>
+                <StockTransferListPage />
+              </ModuleGuard>
+            ),
+          },
+          {
+            path: "new",
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.STOCKTRANSFER}>
+                <StockTransferCreatePage />
+              </ModuleGuard>
+            ),
+          },
+        ],
+      },
+      {
+        path: "stock-take",
+        children: [
+          {
+            index: true,
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.STOCKTAKE}>
+                <StockTakeListPage />
+              </ModuleGuard>
+            ),
+          },
+          {
+            path: "new",
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.STOCKTAKE}>
+                <StockTakeCreatePage />
+              </ModuleGuard>
+            ),
+          },
+        ],
+      },
+      {
         path: "invoice",
         children: [
           {
@@ -232,7 +278,7 @@ const routes = [
             index: true,
             element: (
               <ModuleGuard requiredModule={ModuleEnum.INVENTORY}>
-                <InventoryBalancePage />
+                <InventoryPage />
               </ModuleGuard>
             ),
           },
@@ -240,7 +286,7 @@ const routes = [
             path: "audit",
             element: (
               <ModuleGuard requiredModule={ModuleEnum.INVENTORY}>
-                <InventoryBalancePage />
+                <InventoryPage />
               </ModuleGuard>
             ),
           },
@@ -248,7 +294,7 @@ const routes = [
             path: "summary",
             element: (
               <ModuleGuard requiredModule={ModuleEnum.INVENTORY}>
-                <InventorySummaryPage />
+                <InvoicedProductsReportPage />
               </ModuleGuard>
             ),
           },

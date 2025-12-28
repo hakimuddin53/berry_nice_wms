@@ -72,6 +72,11 @@ namespace Wms.Api.Controllers
             StockRecieve.StockRecieveItems = await context.StockRecieveItems
                 .Where(x => x.StockRecieveId == StockRecieve.Id)
                 .Include(x => x.Product)
+                    .ThenInclude(p => p.Grade)
+                .Include(x => x.Product)
+                    .ThenInclude(p => p.Region)
+                .Include(x => x.Product)
+                    .ThenInclude(p => p.NewOrUsed)
                 .ToListAsync();
 
             var StockRecieveDtos = autoMapperService.Map<StockRecieveDetailsDto>(StockRecieve);
@@ -88,7 +93,6 @@ namespace Wms.Api.Controllers
             var StockRecieveDtos = autoMapperService.Map<StockRecieve>(StockRecieveCreateUpdateDto);
             StockRecieveDtos.Id = Guid.NewGuid();
             StockRecieveDtos.Number = StockRecieveNumber;
-            StockRecieveDtos.Location = string.Empty;
 
             NormalizeStockRecieveItems(StockRecieveDtos);
 
@@ -116,7 +120,6 @@ namespace Wms.Api.Controllers
                 return NotFound();
 
             autoMapperService.Map(StockRecieveCreateUpdate, StockRecieve);
-            StockRecieve.Location = string.Empty;
 
             NormalizeStockRecieveItems(StockRecieve);
 
@@ -307,15 +310,15 @@ namespace Wms.Api.Controllers
                         RamId = dtoItem.RamId,
                         ProcessorId = dtoItem.ProcessorId,
                         ScreenSizeId = dtoItem.ScreenSizeId,
+                        GradeId = dtoItem.GradeId,
                         LocationId = dtoItem.LocationId,
                         RetailPrice = dtoItem.RetailSellingPrice,
                         DealerPrice = dtoItem.DealerSellingPrice,
                         AgentPrice = dtoItem.AgentSellingPrice,
                         CostPrice = dtoItem.Cost,
-                        PrimarySerialNumber = string.IsNullOrWhiteSpace(dtoItem.PrimarySerialNumber) ? null : dtoItem.PrimarySerialNumber.Trim(),
-                        ManufactureSerialNumber = string.IsNullOrWhiteSpace(dtoItem.ManufactureSerialNumber) ? null : dtoItem.ManufactureSerialNumber.Trim(),
-                        Region = string.IsNullOrWhiteSpace(dtoItem.Region) ? null : dtoItem.Region.Trim(),
-                        NewOrUsed = string.IsNullOrWhiteSpace(dtoItem.NewOrUsed) ? null : dtoItem.NewOrUsed.Trim(),
+                        SerialNumber = string.IsNullOrWhiteSpace(dtoItem.SerialNumber) ? null : dtoItem.SerialNumber.Trim(),                        
+                        RegionId = dtoItem.RegionId.HasValue && dtoItem.RegionId.Value != Guid.Empty ? dtoItem.RegionId : null,
+                        NewOrUsedId = dtoItem.NewOrUsedId.HasValue && dtoItem.NewOrUsedId.Value != Guid.Empty ? dtoItem.NewOrUsedId : null,
                         CreatedDate = DateTime.UtcNow,
                         Remark = string.IsNullOrWhiteSpace(dtoItem.Remark) ? null : dtoItem.Remark.Trim(),
                         InternalRemark = string.IsNullOrWhiteSpace(dtoItem.InternalRemark) ? null : dtoItem.InternalRemark.Trim()
@@ -336,6 +339,7 @@ namespace Wms.Api.Controllers
                     product.RamId = dtoItem.RamId;
                     product.ProcessorId = dtoItem.ProcessorId;
                     product.ScreenSizeId = dtoItem.ScreenSizeId;
+                    product.GradeId = dtoItem.GradeId ?? product.GradeId;
                     if (dtoItem.LocationId != Guid.Empty)
                     {
                         product.LocationId = dtoItem.LocationId;
@@ -345,25 +349,18 @@ namespace Wms.Api.Controllers
                     product.AgentPrice = dtoItem.AgentSellingPrice ?? product.AgentPrice;
                     product.CostPrice = dtoItem.Cost ?? product.CostPrice;
 
-                    if (!string.IsNullOrWhiteSpace(dtoItem.PrimarySerialNumber))
+                    if (!string.IsNullOrWhiteSpace(dtoItem.SerialNumber))
                     {
-                        product.PrimarySerialNumber = dtoItem.PrimarySerialNumber.Trim();
-                    }
+                        product.SerialNumber = dtoItem.SerialNumber.Trim();
+                    }                     
 
-                    if (!string.IsNullOrWhiteSpace(dtoItem.ManufactureSerialNumber))
-                    {
-                        product.ManufactureSerialNumber = dtoItem.ManufactureSerialNumber.Trim();
-                    }
+                    product.RegionId = dtoItem.RegionId.HasValue && dtoItem.RegionId.Value != Guid.Empty
+                        ? dtoItem.RegionId
+                        : null;
 
-                    if (!string.IsNullOrWhiteSpace(dtoItem.Region))
-                    {
-                        product.Region = dtoItem.Region.Trim();
-                    }
-
-                    if (!string.IsNullOrWhiteSpace(dtoItem.NewOrUsed))
-                    {
-                        product.NewOrUsed = dtoItem.NewOrUsed.Trim();
-                    }
+                    product.NewOrUsedId = dtoItem.NewOrUsedId.HasValue && dtoItem.NewOrUsedId.Value != Guid.Empty
+                        ? dtoItem.NewOrUsedId
+                        : null;
 
                     if (!string.IsNullOrWhiteSpace(dtoItem.Remark))
                     {

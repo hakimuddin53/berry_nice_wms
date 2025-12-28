@@ -18,6 +18,7 @@ namespace Wms.Api.Dto.Product.ProductCreateUpdate
         public Guid? RamId { get; set; }
         public Guid? ProcessorId { get; set; }
         public Guid? ScreenSizeId { get; set; }
+        public Guid? GradeId { get; set; }
 
         public int LowQty { get; set; } = 0;
     }

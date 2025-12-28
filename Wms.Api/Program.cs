@@ -37,6 +37,8 @@ builder.Services.AddAutoMapper(typeof(StockRecieveProfile));
 builder.Services.AddAutoMapper(typeof(ProductProfile)); 
 builder.Services.AddAutoMapper(typeof(GeneralProfile));
 builder.Services.AddAutoMapper(typeof(InvoiceProfile));
+builder.Services.AddAutoMapper(typeof(StockTransferProfile));
+builder.Services.AddAutoMapper(typeof(StockTakeProfile));
 
 
 builder.Services.AddAuthentication(options =>
@@ -164,17 +166,20 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var db = services.GetRequiredService<ApplicationDbContext>();
-        var logger = services.GetRequiredService<ILoggerFactory>().CreateLogger("LookupSeeder");
+        var loggerFactory = services.GetRequiredService<ILoggerFactory>();
+        var lookupLogger = loggerFactory.CreateLogger("LookupSeeder");
+        var productLogger = loggerFactory.CreateLogger("ProductSeeder");
 
         // Will run migrations (your seeder calls MigrateAsync) and insert only when missing
-        await LookupSeeder.SeedAsync(db, logger, app.Lifetime.ApplicationStopping);
+        await LookupSeeder.SeedAsync(db, lookupLogger, app.Lifetime.ApplicationStopping);
+        await ProductSeeder.SeedAsync(db, productLogger, app.Lifetime.ApplicationStopping);
     }
     catch (Exception ex)
     {
         var bootstrapLogger = services
             .GetRequiredService<ILoggerFactory>()
             .CreateLogger("Startup");
-        bootstrapLogger.LogError(ex, "An error occurred while seeding lookups.");
+        bootstrapLogger.LogError(ex, "An error occurred while seeding initial data.");
         throw; // optional: rethrow to fail fast
     }
 }
@@ -188,4 +193,3 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.Run();
-

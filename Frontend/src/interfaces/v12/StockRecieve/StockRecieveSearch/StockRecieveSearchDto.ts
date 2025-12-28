@@ -3,4 +3,3 @@
 export interface StockRecieveSearchDto extends PagedRequestAbstractDto {
   search: string;
 }
-

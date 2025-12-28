@@ -2,6 +2,7 @@ import "react-app-polyfill/stable";
 import { SnackbarUtilsConfigurator } from "./utils/SnackBarUtils";
 import "./wdyr";
 
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 
@@ -20,21 +21,30 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 
 const container = document.getElementById("root");
 const root = createRoot(container!);
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 root.render(
   <BrowserRouter>
-    <SnackbarProvider
-      maxSnack={3}
-      anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
-      autoHideDuration={5000}
-    >
-      <>
-        <SnackbarUtilsConfigurator />
-        <ThemeProvider>
-          <App />
-        </ThemeProvider>
-      </>
-    </SnackbarProvider>
+    <QueryClientProvider client={queryClient}>
+      <SnackbarProvider
+        maxSnack={3}
+        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+        autoHideDuration={5000}
+      >
+        <>
+          <SnackbarUtilsConfigurator />
+          <ThemeProvider>
+            <App />
+          </ThemeProvider>
+        </>
+      </SnackbarProvider>
+    </QueryClientProvider>
   </BrowserRouter>
 );
 

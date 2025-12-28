@@ -6,4 +6,3 @@ export interface StockRecieveItemRemarkCreateUpdateDto {
   productRemarkId?: guid;
   remark?: string;
 }
-

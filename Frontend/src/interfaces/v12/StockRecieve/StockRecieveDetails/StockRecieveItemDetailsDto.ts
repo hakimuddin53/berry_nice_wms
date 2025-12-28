@@ -13,11 +13,17 @@ export interface StockRecieveItemDetailsDto {
   ramId?: guid;
   processorId?: guid;
   screenSizeId?: guid;
-  grade: string;
+  gradeId?: guid;
+  // Display-friendly grade label from lookup
+  gradeName?: string;
   locationId: guid;
-  imeiSerialNumber?: string;
-  region?: string;
-  newOrUsed?: string;
+  locationName?: string;
+  locationLabel?: string;
+  serialNumber?: string;
+  regionId?: guid;
+  regionName?: string;
+  newOrUsedId?: guid;
+  newOrUsedName?: string;
   retailSellingPrice?: number;
   dealerSellingPrice?: number;
   agentSellingPrice?: number;

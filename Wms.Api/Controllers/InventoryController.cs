@@ -6,6 +6,7 @@ using Wms.Api.Context;
 using Wms.Api.Dto;
 using Wms.Api.Dto.Inventory;
 using Wms.Api.Dto.PagedList;
+using Wms.Api.Dto.Product;
 using Wms.Api.Model;
 
 namespace Wms.Api.Controllers
@@ -45,6 +46,75 @@ namespace Wms.Api.Controllers
                 inventoryQuery = inventoryQuery.Where(x => x.inv.ProductId == search.ProductId.Value);
             }
 
+            if (!string.IsNullOrWhiteSpace(search.Model))
+            {
+                var modelTerm = search.Model.Trim();
+                inventoryQuery = inventoryQuery.Where(x =>
+                    x.product != null &&
+                    x.product.Model != null &&
+                    x.product.Model.Contains(modelTerm));
+            }
+
+            if (search.WarehouseId.HasValue)
+            {
+                inventoryQuery = inventoryQuery.Where(x => x.inv.WarehouseId == search.WarehouseId.Value);
+            }
+
+            if (search.LocationId.HasValue)
+            {
+                inventoryQuery = inventoryQuery.Where(x => x.product != null && x.product.LocationId == search.LocationId.Value);
+            }
+
+            if (search.CategoryId.HasValue)
+            {
+                inventoryQuery = inventoryQuery.Where(x => x.product != null && x.product.CategoryId == search.CategoryId.Value);
+            }
+
+            if (search.BrandId.HasValue)
+            {
+                inventoryQuery = inventoryQuery.Where(x => x.product != null && x.product.BrandId == search.BrandId.Value);
+            }
+
+            if (search.ColorId.HasValue)
+            {
+                inventoryQuery = inventoryQuery.Where(x => x.product != null && x.product.ColorId == search.ColorId.Value);
+            }
+
+            if (search.StorageId.HasValue)
+            {
+                inventoryQuery = inventoryQuery.Where(x => x.product != null && x.product.StorageId == search.StorageId.Value);
+            }
+
+            if (search.RamId.HasValue)
+            {
+                inventoryQuery = inventoryQuery.Where(x => x.product != null && x.product.RamId == search.RamId.Value);
+            }
+
+            if (search.ProcessorId.HasValue)
+            {
+                inventoryQuery = inventoryQuery.Where(x => x.product != null && x.product.ProcessorId == search.ProcessorId.Value);
+            }
+
+            if (search.ScreenSizeId.HasValue)
+            {
+                inventoryQuery = inventoryQuery.Where(x => x.product != null && x.product.ScreenSizeId == search.ScreenSizeId.Value);
+            }
+
+            if (search.GradeId.HasValue)
+            {
+                inventoryQuery = inventoryQuery.Where(x => x.product != null && x.product.GradeId == search.GradeId.Value);
+            }
+
+            if (search.RegionId.HasValue)
+            {
+                inventoryQuery = inventoryQuery.Where(x => x.product != null && x.product.RegionId == search.RegionId.Value);
+            }
+
+            if (search.NewOrUsedId.HasValue)
+            {
+                inventoryQuery = inventoryQuery.Where(x => x.product != null && x.product.NewOrUsedId == search.NewOrUsedId.Value);
+            }
+
             if (!string.IsNullOrWhiteSpace(search.Search))
             {
                 var term = search.Search.Trim();
@@ -55,9 +125,21 @@ namespace Wms.Api.Controllers
                     (x.product != null && x.product.Model != null && x.product.Model.Contains(term)));
             }
 
-            var totalCount = await inventoryQuery.CountAsync();
+            var latestIdsQuery = inventoryQuery
+                .GroupBy(x => x.inv.ProductId)
+                .Select(g => g
+                    .OrderByDescending(x => x.MovementDate)
+                    .ThenByDescending(x => x.inv.Id)
+                    .Select(x => x.inv.Id)
+                    .First());
 
-            var pagedItems = await inventoryQuery
+            var latestQuery = inventoryQuery
+                .Join(latestIdsQuery, row => row.inv.Id, id => id, (row, _) => row)
+                .Where(row => row.inv.NewBalance > 0);
+
+            var totalCount = await latestQuery.CountAsync();
+
+            var pagedItems = await latestQuery
                 .OrderByDescending(x => x.MovementDate)
                 .ThenByDescending(x => x.inv.Id)
                 .Skip((search.Page - 1) * search.PageSize)
@@ -92,6 +174,160 @@ namespace Wms.Api.Controllers
             }).ToList();
 
             var paged = new PagedListDto<InventoryAuditDto>
+            {
+                CurrentPage = search.Page,
+                PageSize = search.PageSize,
+                TotalCount = totalCount,
+                Data = dtoItems
+            };
+
+            return Ok(paged);
+        }
+
+        [HttpPost("invoiced-report")]
+        public async Task<IActionResult> GetInvoicedReportAsync([FromBody] InvoicedProductReportSearchDto search)
+        {
+            search ??= new InvoicedProductReportSearchDto();
+
+            var reportQuery =
+                from item in context.InvoiceItems
+                join invoice in context.Invoices on item.InvoiceId equals invoice.Id
+                join product in context.Products on item.ProductId equals product.ProductId into productJoin
+                from product in productJoin.DefaultIfEmpty()
+                join warehouse in context.Lookups on invoice.WarehouseId equals warehouse.Id into warehouseJoin
+                from warehouse in warehouseJoin.DefaultIfEmpty()
+                join location in context.Lookups on product.LocationId equals location.Id into locationJoin
+                from location in locationJoin.DefaultIfEmpty()
+                select new
+                {
+                    item,
+                    invoice,
+                    product,
+                    WarehouseLabel = warehouse != null ? warehouse.Label : string.Empty,
+                    LocationLabel = location != null ? location.Label : string.Empty
+                };
+
+            if (search.FromDate.HasValue)
+            {
+                reportQuery = reportQuery.Where(x => x.invoice.DateOfSale >= search.FromDate.Value.Date);
+            }
+
+            if (search.ToDate.HasValue)
+            {
+                var endDate = search.ToDate.Value.Date.AddDays(1).AddTicks(-1);
+                reportQuery = reportQuery.Where(x => x.invoice.DateOfSale <= endDate);
+            }
+
+            if (search.ProductId.HasValue)
+            {
+                reportQuery = reportQuery.Where(x => x.item.ProductId == search.ProductId.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(search.Model))
+            {
+                var modelTerm = search.Model.Trim();
+                reportQuery = reportQuery.Where(x =>
+                    x.product != null &&
+                    x.product.Model != null &&
+                    x.product.Model.Contains(modelTerm));
+            }
+
+            if (search.WarehouseId.HasValue)
+            {
+                reportQuery = reportQuery.Where(x => x.invoice.WarehouseId == search.WarehouseId.Value);
+            }
+
+            if (search.LocationId.HasValue)
+            {
+                reportQuery = reportQuery.Where(x => x.product != null && x.product.LocationId == search.LocationId.Value);
+            }
+
+            if (search.CategoryId.HasValue)
+            {
+                reportQuery = reportQuery.Where(x => x.product != null && x.product.CategoryId == search.CategoryId.Value);
+            }
+
+            if (search.BrandId.HasValue)
+            {
+                reportQuery = reportQuery.Where(x => x.product != null && x.product.BrandId == search.BrandId.Value);
+            }
+
+            if (search.ColorId.HasValue)
+            {
+                reportQuery = reportQuery.Where(x => x.product != null && x.product.ColorId == search.ColorId.Value);
+            }
+
+            if (search.StorageId.HasValue)
+            {
+                reportQuery = reportQuery.Where(x => x.product != null && x.product.StorageId == search.StorageId.Value);
+            }
+
+            if (search.RamId.HasValue)
+            {
+                reportQuery = reportQuery.Where(x => x.product != null && x.product.RamId == search.RamId.Value);
+            }
+
+            if (search.ProcessorId.HasValue)
+            {
+                reportQuery = reportQuery.Where(x => x.product != null && x.product.ProcessorId == search.ProcessorId.Value);
+            }
+
+            if (search.ScreenSizeId.HasValue)
+            {
+                reportQuery = reportQuery.Where(x => x.product != null && x.product.ScreenSizeId == search.ScreenSizeId.Value);
+            }
+
+            if (search.GradeId.HasValue)
+            {
+                reportQuery = reportQuery.Where(x => x.product != null && x.product.GradeId == search.GradeId.Value);
+            }
+
+            if (search.RegionId.HasValue)
+            {
+                reportQuery = reportQuery.Where(x => x.product != null && x.product.RegionId == search.RegionId.Value);
+            }
+
+            if (search.NewOrUsedId.HasValue)
+            {
+                reportQuery = reportQuery.Where(x => x.product != null && x.product.NewOrUsedId == search.NewOrUsedId.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(search.Search))
+            {
+                var term = search.Search.Trim();
+                reportQuery = reportQuery.Where(x =>
+                    (x.product != null && x.product.ProductCode.Contains(term)) ||
+                    (x.product != null && x.product.Model != null && x.product.Model.Contains(term)) ||
+                    x.invoice.Number.Contains(term));
+            }
+
+            var totalCount = await reportQuery.CountAsync();
+
+            var pagedItems = await reportQuery
+                .OrderByDescending(x => x.invoice.DateOfSale)
+                .ThenByDescending(x => x.invoice.Number)
+                .Skip((search.Page - 1) * search.PageSize)
+                .Take(search.PageSize)
+                .ToListAsync();
+
+            var dtoItems = pagedItems.Select(x => new InvoicedProductReportRowDto
+            {
+                InvoiceId = x.invoice.Id,
+                InvoiceNumber = x.invoice.Number,
+                DateOfSale = x.invoice.DateOfSale,
+                ProductId = x.item.ProductId,
+                ProductCode = x.product?.ProductCode ?? string.Empty,
+                Model = x.product?.Model,
+                WarehouseId = x.invoice.WarehouseId,
+                WarehouseLabel = x.WarehouseLabel,
+                LocationId = x.product?.LocationId,
+                LocationLabel = x.LocationLabel,
+                Quantity = x.item.Quantity,
+                UnitPrice = x.item.UnitPrice,
+                TotalPrice = x.item.TotalPrice > 0 ? x.item.TotalPrice : x.item.UnitPrice * x.item.Quantity
+            }).ToList();
+
+            var paged = new PagedListDto<InvoicedProductReportRowDto>
             {
                 CurrentPage = search.Page,
                 PageSize = search.PageSize,
@@ -184,6 +420,52 @@ namespace Wms.Api.Controllers
 
             return NoContent();
         }
+
+        [HttpPut("balance/{productId:guid}")]
+        public async Task<IActionResult> UpdateBalanceAsync(Guid productId, [FromBody] UpdateInventoryBalanceDto balance)
+        {
+            var product = await context.Products.FirstOrDefaultAsync(p => p.ProductId == productId);
+            if (product == null)
+            {
+                return NotFound();
+            }
+
+            product.Remark = balance.Remark;
+            product.InternalRemark = balance.InternalRemark;
+            product.AgentPrice = balance.AgentPrice;
+            product.DealerPrice = balance.DealerPrice;
+            product.RetailPrice = balance.RetailPrice;
+            product.CostPrice = balance.CostPrice;
+            if (balance.LocationId.HasValue)
+            {
+                product.LocationId = balance.LocationId.Value;
+            }
+
+            await context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        [HttpGet("product/{productId:guid}/audit-log")]
+        public async Task<IActionResult> GetProductAuditAsync(Guid productId)
+        {
+            var items = await context.ProductAuditLogs
+                .Where(p => p.ProductId == productId)
+                .OrderByDescending(p => p.ChangedAt)
+                .ThenByDescending(p => p.Id)
+                .Select(p => new ProductAuditLogDto
+                {
+                    Id = p.Id,
+                    ProductId = p.ProductId,
+                    PropertyName = p.PropertyName,
+                    OldValue = p.OldValue,
+                    NewValue = p.NewValue,
+                    ChangedBy = p.ChangedBy,
+                    ChangedAt = p.ChangedAt
+                })
+                .ToListAsync();
+
+            return Ok(items);
+        }
     }
 }
-

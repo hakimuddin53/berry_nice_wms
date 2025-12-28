@@ -39,10 +39,5 @@ namespace Wms.Api.Entities
 
         [Required]
         public int NewBalance { get; set; } // Balance after the transaction
-
-        [Required]                           
-        [Column(TypeName = "decimal(18,4)")]
-        public decimal UnitPrice { get; set; } = 0m;
     }
 }
-

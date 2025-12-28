@@ -31,6 +31,12 @@ import {
   YupStockRecieveItemCreateEdit,
 } from "./yup/StockRecieveCreateEditSchema";
 
+const GUID_REGEX =
+  /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+
+const isGuidString = (value?: any) =>
+  typeof value === "string" && GUID_REGEX.test(value);
+
 const createDefaultItem = (): YupStockRecieveItemCreateEdit => ({
   productCode: "",
   categoryId: EMPTY_GUID as guid,
@@ -41,12 +47,15 @@ const createDefaultItem = (): YupStockRecieveItemCreateEdit => ({
   ramId: undefined,
   processorId: undefined,
   screenSizeId: undefined,
-  grade: "",
+  gradeId: EMPTY_GUID as guid,
+  gradeName: "",
   locationId: EMPTY_GUID as guid,
   locationName: "",
-  imeiSerialNumber: "",
-  region: "",
-  newOrUsed: "",
+  serialNumber: "",
+  regionId: EMPTY_GUID as guid,
+  regionName: "",
+  newOrUsedId: EMPTY_GUID as guid,
+  newOrUsedName: "",
   retailSellingPrice: undefined,
   dealerSellingPrice: undefined,
   agentSellingPrice: undefined,
@@ -67,7 +76,26 @@ const buildStockRecievePayload = (values: YupStockRecieveCreateEdit) => {
     delete sanitized.key;
     delete sanitized.locationName;
     delete sanitized.productName;
-    delete sanitized.imeiSerialNumber;
+    delete sanitized.gradeName;
+    delete sanitized.regionName;
+    delete sanitized.newOrUsedName;
+
+    sanitized.gradeId = isGuidString(sanitized.gradeId)
+      ? sanitized.gradeId
+      : null;
+
+    sanitized.regionId = isGuidString(sanitized.regionId)
+      ? sanitized.regionId
+      : null;
+
+    sanitized.newOrUsedId = isGuidString(sanitized.newOrUsedId)
+      ? sanitized.newOrUsedId
+      : null;
+
+    if (!sanitized.productId) {
+      delete sanitized.productId;
+    }
+
     if (!sanitized.productCode) {
       delete sanitized.productCode;
     }
@@ -75,9 +103,11 @@ const buildStockRecievePayload = (values: YupStockRecieveCreateEdit) => {
     return sanitized;
   });
 
+  const { stockRecieveItems: _ignored, ...rest } = values;
+
   return {
-    ...values,
-    stockRecieveItems,
+    ...rest,
+    StockRecieveItems: stockRecieveItems,
   };
 };
 
@@ -126,6 +156,7 @@ const StockRecieveCreateEditPage: React.FC = () => {
     onSubmit: (values, { resetForm }) => {
       setPageBlocker(true);
       const payload = buildStockRecievePayload(values);
+      console.log(payload);
 
       if (!id) {
         StockRecieveService.createStockRecieve(payload)
@@ -172,7 +203,20 @@ const StockRecieveCreateEditPage: React.FC = () => {
   /* eslint-disable react-hooks/exhaustive-deps */
   const normalizeStockRecieveItems = (items: any[] = []) =>
     items.map((item: any, index: number) => {
-      const { remarks: legacyRemark, StockRecieveItemRemarks, ...rest } = item;
+      const {
+        remarks: legacyRemark,
+        StockRecieveItemRemarks,
+        grade,
+        gradeId,
+        gradeName,
+        regionId,
+        regionName,
+        region,
+        newOrUsedId,
+        newOrUsedName,
+        newOrUsed,
+        ...rest
+      } = item;
 
       // Prefer the new single remark; else fallback to joining any legacy list/fields
       const remarkText =
@@ -185,13 +229,37 @@ const StockRecieveCreateEditPage: React.FC = () => {
           ? legacyRemark
           : "");
 
+      const resolvedGradeId =
+        (isGuidString(gradeId) && gradeId) ||
+        (isGuidString(grade) && (grade as string)) ||
+        "";
+      const resolvedGradeName =
+        gradeName ?? (typeof grade === "string" ? grade : "");
+      const resolvedRegionId =
+        (isGuidString(regionId) && regionId) ||
+        (isGuidString(region) && (region as string)) ||
+        "";
+      const resolvedRegionName =
+        regionName ?? (typeof region === "string" ? region : "");
+      const resolvedNewOrUsedId =
+        (isGuidString(newOrUsedId) && newOrUsedId) ||
+        (isGuidString(newOrUsed) && (newOrUsed as string)) ||
+        "";
+      const resolvedNewOrUsedName =
+        newOrUsedName ?? (typeof newOrUsed === "string" ? newOrUsed : "");
+
       return {
         ...rest,
         key: index,
-        grade: rest.grade ?? "",
+        gradeId: resolvedGradeId ?? "",
+        gradeName: resolvedGradeName ?? "",
+        regionId: resolvedRegionId ?? "",
+        regionName: resolvedRegionName ?? "",
+        newOrUsedId: resolvedNewOrUsedId ?? "",
+        newOrUsedName: resolvedNewOrUsedName ?? "",
         locationName: rest.locationName ?? "",
         productName: rest.productName ?? "",
-        imeiSerialNumber: rest.imeiSerialNumber ?? "",
+        serialNumber: rest.serialNumber ?? "",
         remark: remarkText,
         internalRemark: rest.internalRemark ?? "",
         receiveQuantity: rest.receiveQuantity ?? 1,

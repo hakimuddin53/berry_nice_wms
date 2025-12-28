@@ -10,4 +10,3 @@ export interface StockRecieveItemRemarkDetailsDto {
   changedAt?: string;
   changedById?: guid;
 }
-

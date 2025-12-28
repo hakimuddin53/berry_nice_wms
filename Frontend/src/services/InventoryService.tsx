@@ -7,8 +7,13 @@ import {
   InventorySummaryRowDto,
   InventorySummarySearchDto,
 } from "interfaces/v12/inventory/inventorySummaryDto";
-import { UpdateProductPricingDto } from "interfaces/v12/inventory/updateProductPricingDto";
+import {
+  InvoicedProductReportRowDto,
+  InvoicedProductReportSearchDto,
+} from "interfaces/v12/inventory/invoicedProductReportDto";
 import { UpdateInventoryBalanceDto } from "interfaces/v12/inventory/updateInventoryBalanceDto";
+import { UpdateProductPricingDto } from "interfaces/v12/inventory/updateProductPricingDto";
+import { ProductAuditLogDto } from "interfaces/v12/product/productAuditLogDto";
 import React from "react";
 import axios from "../utils/axios";
 
@@ -18,9 +23,13 @@ interface IInventoryService {
   searchAudit: (
     dto: InventoryAuditSearchDto
   ) => Promise<PagedListDto<InventoryAuditDto>>;
+  searchInvoicedReport: (
+    dto: InvoicedProductReportSearchDto
+  ) => Promise<PagedListDto<InvoicedProductReportRowDto>>;
   searchSummary: (
     dto: InventorySummarySearchDto
   ) => Promise<PagedListDto<InventorySummaryRowDto>>;
+  getProductAuditLog: (productId: string) => Promise<ProductAuditLogDto[]>;
   updatePricing: (
     productId: string,
     dto: UpdateProductPricingDto
@@ -38,9 +47,13 @@ export type InventoryServiceProviderProps = {
   searchAudit?: (
     dto: InventoryAuditSearchDto
   ) => Promise<PagedListDto<InventoryAuditDto>>;
+  searchInvoicedReport?: (
+    dto: InvoicedProductReportSearchDto
+  ) => Promise<PagedListDto<InvoicedProductReportRowDto>>;
   searchSummary?: (
     dto: InventorySummarySearchDto
   ) => Promise<PagedListDto<InventorySummaryRowDto>>;
+  getProductAuditLog?: (productId: string) => Promise<ProductAuditLogDto[]>;
   updatePricing?: (
     productId: string,
     dto: UpdateProductPricingDto
@@ -58,8 +71,20 @@ export const InventoryServiceProvider: React.FC<
     return axios.post("/inventory/audit", dto).then((res) => res.data);
   };
 
+  const searchInvoicedReport = (dto: InvoicedProductReportSearchDto) => {
+    return axios
+      .post("/inventory/invoiced-report", dto)
+      .then((res) => res.data);
+  };
+
   const searchSummary = (dto: InventorySummarySearchDto) => {
     return axios.post("/inventory/summary", dto).then((res) => res.data);
+  };
+
+  const getProductAuditLog = (productId: string) => {
+    return axios
+      .get<ProductAuditLogDto[]>(`/inventory/product/${productId}/audit-log`)
+      .then((res) => res.data);
   };
 
   const updatePricing = (productId: string, dto: UpdateProductPricingDto) => {
@@ -76,7 +101,9 @@ export const InventoryServiceProvider: React.FC<
 
   const value: IInventoryService = {
     searchAudit: props.searchAudit || searchAudit,
+    searchInvoicedReport: props.searchInvoicedReport || searchInvoicedReport,
     searchSummary: props.searchSummary || searchSummary,
+    getProductAuditLog: props.getProductAuditLog || getProductAuditLog,
     updatePricing: props.updatePricing || updatePricing,
     updateBalance: props.updateBalance || updateBalance,
   };

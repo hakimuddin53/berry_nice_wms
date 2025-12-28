@@ -14,6 +14,8 @@ interface ModuleGuardProps {
 // For routes that require specific module permissions for authenticated users
 function ModuleGuard({ children, requiredModule }: ModuleGuardProps) {
   const { isAuthenticated, isInitialized } = useAuth();
+  const normalizeModule = (module: string) =>
+    module.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
 
   if (!isInitialized) {
     return <React.Fragment />;
@@ -33,13 +35,13 @@ function ModuleGuard({ children, requiredModule }: ModuleGuardProps) {
 
   const allowedModules = userModulesString
     .split(",")
-    .map((module: string) => module.trim().toUpperCase())
+    .map((module: string) => normalizeModule(module.trim()))
     .filter((module: any) => module); // Remove empty strings if any
 
   const isAdmin = userEmail.toLowerCase() === "admin@mhglobal.com";
 
   const hasPermission =
-    isAdmin || allowedModules.includes(requiredModule.toUpperCase());
+    isAdmin || allowedModules.includes(normalizeModule(requiredModule));
 
   if (!hasPermission) {
     console.warn(

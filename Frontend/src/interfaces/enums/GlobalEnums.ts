@@ -1,5 +1,7 @@
-﻿export const ModuleEnum = {
+export const ModuleEnum = {
   STOCKRECEIVE: "STOCKRECEIVE",
+  STOCKTRANSFER: "STOCKTRANSFER",
+  STOCKTAKE: "STOCKTAKE",
   INVENTORY: "INVENTORY",
   STOCKGROUP: "STOCKGROUP",
   USER: "USER",

@@ -17,6 +17,7 @@ namespace Wms.Api.Dto.Product.ProductDetails
         public Guid? RamId { get; set; }
         public Guid? ProcessorId { get; set; }
         public Guid? ScreenSizeId { get; set; }
+        public Guid? GradeId { get; set; }
         
         // Display names from lookups
         public string Category { get; set; } = default!;
@@ -27,6 +28,16 @@ namespace Wms.Api.Dto.Product.ProductDetails
         public string? Ram { get; set; }
         public string? Processor { get; set; }
         public string? ScreenSize { get; set; }
+        public string? GradeName { get; set; }
+
+        // Pricing and notes
+        public string? Remark { get; set; }
+        public string? InternalRemark { get; set; }
+        public decimal? AgentPrice { get; set; }
+        public decimal? DealerPrice { get; set; }
+        public decimal? RetailPrice { get; set; }
+        public decimal? CostPrice { get; set; }
+        public Guid? LocationId { get; set; }
 
         public int LowQty { get; set; } = 0;
         public DateTime CreatedDate { get; set; }

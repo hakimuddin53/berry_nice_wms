@@ -7,6 +7,19 @@ public class InventoryAuditSearchDto : PagedRequestAbstractDto
 {
     public string? Search { get; set; }
     public Guid? ProductId { get; set; }
+    public string? Model { get; set; }
+    public Guid? WarehouseId { get; set; }
+    public Guid? LocationId { get; set; }
+    public Guid? CategoryId { get; set; }
+    public Guid? BrandId { get; set; }
+    public Guid? ColorId { get; set; }
+    public Guid? StorageId { get; set; }
+    public Guid? RamId { get; set; }
+    public Guid? ProcessorId { get; set; }
+    public Guid? ScreenSizeId { get; set; }
+    public Guid? GradeId { get; set; }
+    public Guid? RegionId { get; set; }
+    public Guid? NewOrUsedId { get; set; }
 }
 
 public class InventoryAuditDto

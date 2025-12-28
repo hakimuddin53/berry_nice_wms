@@ -5,6 +5,8 @@ import SelectAsync2 from "components/platbricks/shared/SelectAsync2";
 import { FormikErrors, FormikProps } from "formik";
 import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { LookupGroupKey } from "interfaces/v12/lookup/lookup";
+import { useLookupService } from "services/LookupService";
 import { useProductService } from "services/ProductService";
 import { isRequiredField } from "utils/formikHelpers";
 import {
@@ -27,10 +29,16 @@ const InvoiceItemCreateEdit = (props: {
   const { formik, itemIndex } = props;
   const item = formik.values.invoiceItems[itemIndex];
   const productService = useProductService();
+  const lookupService = useLookupService();
 
   const productIds = useMemo(
     () => (item.productId ? [item.productId as unknown as string] : []),
     [item.productId]
+  );
+
+  const locationIds = useMemo(
+    () => (item.locationId ? [item.locationId as unknown as string] : []),
+    [item.locationId]
   );
 
   const productAsync = useCallback(
@@ -53,6 +61,27 @@ const InvoiceItemCreateEdit = (props: {
       }
     },
     [productService]
+  );
+
+  const locationAsync = useCallback(
+    async (input: string, page: number, pageSize: number, ids?: string[]) => {
+      try {
+        const options = await lookupService.getSelectOptions(
+          LookupGroupKey.Location,
+          input,
+          page,
+          pageSize,
+          ids
+        );
+        return (options ?? []).map((option) => ({
+          label: option.label ?? "",
+          value: option.value ?? option.label ?? "",
+        }));
+      } catch (err) {
+        return [];
+      }
+    },
+    [lookupService]
   );
 
   const fieldName = (field: ItemField) => `invoiceItems[${itemIndex}].${field}`;
@@ -95,62 +124,109 @@ const InvoiceItemCreateEdit = (props: {
     formik.setFieldValue(fieldName("quantity"), 1);
   };
 
-  const populateFromProduct = (option: any) => {
-    const data = option?.data ?? {};
-    formik.setFieldValue(
-      fieldName("productCode"),
-      data.productCode ?? option?.label ?? ""
-    );
-    formik.setFieldValue(fieldName("productId"), option?.value ?? undefined);
+  const fetchProductDetailsIfMissing = useCallback(
+    async (data: any, productId?: string) => {
+      if (!productId) {
+        return data ?? {};
+      }
 
-    const imeiValue =
-      data.imei ?? data.imeiSerialNumber ?? data.serialNumber ?? "";
-    formik.setFieldValue(fieldName("imei"), imeiValue);
+      const hasBrand =
+        data?.brand ?? data?.brandName ?? data?.brandLabel ?? data?.brandId;
+      const hasModel =
+        data?.model ??
+        data?.productName ??
+        data?.modelName ??
+        data?.productModel;
+      const hasLocation = data?.locationId ?? data?.currentLocationId;
 
-    const locationId =
-      data.locationId ??
-      data.currentLocationId ??
-      data.location?.id ??
-      data.location;
-    const locationNameRaw =
-      data.locationName ??
-      data.currentLocation ??
-      data.locationLabel ??
-      data.location;
-    const normalizedLocationId =
-      typeof locationId === "string" ? locationId : undefined;
-    const normalizedLocationName =
-      typeof locationNameRaw === "string" || typeof locationNameRaw === "number"
-        ? String(locationNameRaw)
-        : "";
-    formik.setFieldValue(fieldName("locationId"), normalizedLocationId);
-    formik.setFieldValue(fieldName("locationName"), normalizedLocationName);
+      if (hasBrand && hasModel && hasLocation) {
+        return data ?? {};
+      }
 
-    const brand =
-      data.brand ?? data.brandName ?? data.brandLabel ?? data.brandId ?? "";
-    const model =
-      data.model ??
-      data.productName ??
-      data.modelName ??
-      data.productModel ??
-      "";
-    formik.setFieldValue(fieldName("brand"), brand ?? "");
-    formik.setFieldValue(fieldName("model"), model ?? "");
+      try {
+        const details = await productService.getProductById(productId);
+        return {
+          ...data,
+          ...details,
+          productId: details.productId ?? productId,
+          productCode: details.productCode ?? data?.productCode,
+          locationId: details.locationId ?? data?.locationId,
+        };
+      } catch {
+        return data ?? {};
+      }
+    },
+    [productService]
+  );
 
-    const unitPriceRaw =
-      data.retailPrice ?? data.unitPrice ?? data.price ?? item.unitPrice ?? 0;
-    const unitPrice =
-      unitPriceRaw === "" || unitPriceRaw === null || unitPriceRaw === undefined
-        ? 0
-        : Number(unitPriceRaw);
-    const quantity = 1;
-    formik.setFieldValue(fieldName("unitPrice"), unitPrice ?? 0);
-    formik.setFieldValue(fieldName("quantity"), quantity);
-    formik.setFieldValue(
-      fieldName("totalPrice"),
-      Number(unitPrice ?? 0) * quantity
-    );
-  };
+  const populateFromProduct = useCallback(
+    async (option: any) => {
+      const baseData = option?.data ?? {};
+      const productId =
+        (option?.value as string | undefined) ??
+        (baseData?.productId as string | undefined) ??
+        (baseData?.id as string | undefined);
+      const data = await fetchProductDetailsIfMissing(baseData, productId);
+
+      formik.setFieldValue(
+        fieldName("productCode"),
+        data.productCode ?? option?.label ?? ""
+      );
+      formik.setFieldValue(fieldName("productId"), option?.value ?? undefined);
+
+      const imeiValue =
+        data.imei ?? data.serialNumber ?? data.serialNumber ?? "";
+      formik.setFieldValue(fieldName("imei"), imeiValue);
+
+      const locationId =
+        data.locationId ??
+        data.currentLocationId ??
+        data.location?.id ??
+        data.location;
+      const locationNameRaw =
+        data.locationName ??
+        data.currentLocation ??
+        data.locationLabel ??
+        data.location;
+      const normalizedLocationId =
+        typeof locationId === "string" ? locationId : undefined;
+      const normalizedLocationName =
+        typeof locationNameRaw === "string" ||
+        typeof locationNameRaw === "number"
+          ? String(locationNameRaw)
+          : "";
+      formik.setFieldValue(fieldName("locationId"), normalizedLocationId);
+      formik.setFieldValue(fieldName("locationName"), normalizedLocationName);
+
+      const brand =
+        data.brand ?? data.brandName ?? data.brandLabel ?? data.brandId ?? "";
+      const model =
+        data.model ??
+        data.productName ??
+        data.modelName ??
+        data.productModel ??
+        "";
+      formik.setFieldValue(fieldName("brand"), brand ?? "");
+      formik.setFieldValue(fieldName("model"), model ?? "");
+
+      const unitPriceRaw =
+        data.retailPrice ?? data.unitPrice ?? data.price ?? item.unitPrice ?? 0;
+      const unitPrice =
+        unitPriceRaw === "" ||
+        unitPriceRaw === null ||
+        unitPriceRaw === undefined
+          ? 0
+          : Number(unitPriceRaw);
+      const quantity = 1;
+      formik.setFieldValue(fieldName("unitPrice"), unitPrice ?? 0);
+      formik.setFieldValue(fieldName("quantity"), quantity);
+      formik.setFieldValue(
+        fieldName("totalPrice"),
+        Number(unitPrice ?? 0) * quantity
+      );
+    },
+    [fetchProductDetailsIfMissing, fieldName, formik, item.unitPrice]
+  );
 
   const handleWarrantyChange = (value: number | "") => {
     if (value === "") {
@@ -190,12 +266,12 @@ const InvoiceItemCreateEdit = (props: {
                   ids={productIds}
                   asyncFunc={productAsync}
                   suggestionsIfEmpty
-                  onSelectionChange={(option: any) => {
+                  onSelectionChange={async (option: any) => {
                     if (!option) {
                       resetProductDerivedValues();
                       return;
                     }
-                    populateFromProduct(option);
+                    await populateFromProduct(option);
                   }}
                   onBlur={() =>
                     formik.setFieldTouched(fieldName("productCode"))
@@ -243,20 +319,7 @@ const InvoiceItemCreateEdit = (props: {
                 />
               ),
             },
-            {
-              label: t("brand"),
-              value: (
-                <TextField
-                  fullWidth
-                  size="small"
-                  id={fieldName("brand")}
-                  name={fieldName("brand")}
-                  value={item.brand ?? ""}
-                  InputProps={{ readOnly: true }}
-                  onBlur={formik.handleBlur}
-                />
-              ),
-            },
+
             {
               label: t("model"),
               value: (
@@ -272,6 +335,20 @@ const InvoiceItemCreateEdit = (props: {
               ),
             },
             {
+              label: t("brand"),
+              value: (
+                <TextField
+                  fullWidth
+                  size="small"
+                  id={fieldName("brand")}
+                  name={fieldName("brand")}
+                  value={item.brand ?? ""}
+                  InputProps={{ readOnly: true }}
+                  onBlur={formik.handleBlur}
+                />
+              ),
+            },
+            {
               label: t("location"),
               required: isRequiredField(
                 invoiceCreateEditSchema,
@@ -279,14 +356,23 @@ const InvoiceItemCreateEdit = (props: {
                 formik.values
               ),
               value: (
-                <TextField
-                  fullWidth
-                  size="small"
-                  id={fieldName("locationId")}
+                <SelectAsync2
                   name={fieldName("locationId")}
-                  value={item.locationName ?? ""}
+                  placeholder={t("location")}
+                  ids={locationIds}
+                  suggestionsIfEmpty
+                  asyncFunc={locationAsync}
+                  onSelectionChange={(option: any) => {
+                    formik.setFieldValue(
+                      fieldName("locationId"),
+                      option?.value ?? undefined
+                    );
+                    formik.setFieldValue(
+                      fieldName("locationName"),
+                      option?.label ?? ""
+                    );
+                  }}
                   onBlur={() => formik.setFieldTouched(fieldName("locationId"))}
-                  InputProps={{ readOnly: true }}
                   error={
                     fieldTouched("locationId") &&
                     Boolean(fieldError("locationId"))
@@ -316,7 +402,12 @@ const InvoiceItemCreateEdit = (props: {
                   id={fieldName("unitPrice")}
                   name={fieldName("unitPrice")}
                   value={item.unitPrice}
-                  InputProps={{ readOnly: true }}
+                  onChange={(e) =>
+                    formik.setFieldValue(
+                      fieldName("unitPrice"),
+                      e.target.value === "" ? "" : Number(e.target.value)
+                    )
+                  }
                   onBlur={formik.handleBlur}
                   error={
                     fieldTouched("unitPrice") &&

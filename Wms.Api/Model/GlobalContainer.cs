@@ -5,7 +5,8 @@
         STOCKRECEIVE = 0, 
         STOCKTRANSFER = 1, 
         PRODUCT = 2, 
-        INVOICE = 3
+        INVOICE = 3,
+        STOCKTAKE = 4
     }
 
     public enum TransactionTypeEnum
@@ -13,7 +14,8 @@
         STOCKRECEIVE = 0,
         STOCKTRANSFERIN = 2,
         STOCKTRANSFEROUT = 3,
-        INVOICE = 4
+        INVOICE = 4,
+        STOCKTAKE = 5
     }
 
     public enum ModuleEnum
@@ -34,7 +36,8 @@
         USERROLE = 14, 
         CLIENTCODE = 15,
         STOCKADJUSTMENT = 16,
-        INVOICE = 17
+        INVOICE = 17,
+        STOCKTAKE = 18
     }
 
     public enum ReservationStatusEnum
@@ -71,6 +74,6 @@
         Brand = 15,
         Model = 16,
         Warehouse = 17,
+        Grade = 18,
     }
 } 
-

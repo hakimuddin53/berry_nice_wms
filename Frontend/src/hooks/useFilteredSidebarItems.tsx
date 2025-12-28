@@ -4,6 +4,9 @@ import jwtDecode from "jwt-decode"; // Import jwtDecode
 import { SidebarItemsType } from "types/sidebar";
 import useAuth from "./useAuth";
 
+const normalizeModule = (module: string) =>
+  module.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+
 export const useFilteredSidebarItems = (
   allMenuItems: SidebarItemsType[]
 ): SidebarItemsType[] => {
@@ -27,7 +30,7 @@ export const useFilteredSidebarItems = (
   const userModulesString = decoded?.Modules ?? "";
   const allowedModules = userModulesString
     .split(",")
-    .map((module: string) => module.trim().toUpperCase())
+    .map((module: string) => normalizeModule(module.trim()))
     .filter((module: any) => module); // Filter out empty strings
 
   const isAdmin = userEmail.toLowerCase() === "admin@mhglobal.com";
@@ -40,7 +43,7 @@ export const useFilteredSidebarItems = (
     }
     return (
       !item.requiredModule ||
-      allowedModules.includes(item.requiredModule.toUpperCase())
+      allowedModules.includes(normalizeModule(item.requiredModule))
     );
   });
 

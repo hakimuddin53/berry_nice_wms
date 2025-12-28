@@ -11,11 +11,11 @@ export interface StockRecieveItemCreateUpdateDto {
   ramId?: guid;
   processorId?: guid;
   screenSizeId?: guid;
-  grade: string;
+  gradeId: guid;
   locationId: guid;
-  imeiSerialNumber?: string;
-  region?: string;
-  newOrUsed?: string;
+  serialNumber?: string;
+  regionId?: guid;
+  newOrUsedId?: guid;
   retailSellingPrice?: number;
   dealerSellingPrice?: number;
   agentSellingPrice?: number;

@@ -158,7 +158,7 @@ const InvoiceCreateEditPage = () => {
           id: item.id,
           productId: item.productId || undefined,
           locationId: item.locationId || undefined,
-          warrantyDurationMonths: item.warrantyDurationMonths || 0,
+          warrantyDurationMonths: item.warrantyDurationMonths ?? undefined,
           quantity: item.quantity,
           unitPrice: item.unitPrice,
           totalPrice: item.totalPrice ?? item.unitPrice * item.quantity,

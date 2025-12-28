@@ -148,6 +148,7 @@ namespace Wms.Api.Repositories
                 .Include(p => p.Ram)
                 .Include(p => p.Processor)
                 .Include(p => p.ScreenSize)
+                .Include(p => p.Grade)
                 .FirstOrDefaultAsync(p => p.ProductId == productId);
         }
 
