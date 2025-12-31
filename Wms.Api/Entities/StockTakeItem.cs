@@ -10,17 +10,15 @@ namespace Wms.Api.Entities
         [Required]
         public Guid StockTakeId { get; set; }
 
-        [Required]
-        public Guid ProductId { get; set; }
+        public Guid? ProductId { get; set; }
 
-        [Required]
         public int CountedQuantity { get; set; }
 
-        [Required]
         public int SystemQuantity { get; set; }
 
-        [Required]
         public int DifferenceQuantity { get; set; }
+
+        public string? ScannedBarcode { get; set; }
 
         public string? Remark { get; set; }
 

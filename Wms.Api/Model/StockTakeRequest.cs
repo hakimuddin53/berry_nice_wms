@@ -15,10 +15,11 @@ namespace Wms.Api.Model
 
     public class StockTakeItemRequest
     {
-        [Required]
-        public Guid ProductId { get; set; }
+        public Guid? ProductId { get; set; }
 
-        [Range(0, int.MaxValue)]
+        public string? ScannedBarcode { get; set; }
+
+        [Range(1, int.MaxValue)]
         public int CountedQuantity { get; set; }
 
         public string? Remark { get; set; }

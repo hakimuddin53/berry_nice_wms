@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Wms.Api.Context;
 using Wms.Api.Entities;
 using Wms.Api.Model;
@@ -375,6 +372,17 @@ namespace Wms.Api.Services
 				throw new ArgumentException("At least one stock take item is required.");
 			}
 
+			var validItems = request.Items
+				.Where(i =>
+					(i.ProductId.HasValue && i.ProductId.Value != Guid.Empty) ||
+					!string.IsNullOrWhiteSpace(i.ScannedBarcode))
+				.ToList();
+
+			if (validItems.Count == 0)
+			{
+				throw new ArgumentException("Each item must have a product or scanned barcode.");
+			}
+
 			await using var transaction = await _context.Database.BeginTransactionAsync();
 
 			try
@@ -390,19 +398,30 @@ namespace Wms.Api.Services
 
 				var itemEntities = new List<StockTakeItem>();
 
-				foreach (var item in request.Items.Where(i => i.ProductId != Guid.Empty))
+				foreach (var item in validItems)
 				{
-					var systemQty = await GetCurrentBalanceAsync(item.ProductId, request.WarehouseId);
+					var productId = item.ProductId.HasValue && item.ProductId.Value != Guid.Empty
+						? item.ProductId
+						: null;
+
+					var systemQty = 0;
+
+					if (productId.HasValue)
+					{
+						systemQty = await GetCurrentBalanceAsync(productId.Value, request.WarehouseId);
+					}
+
 					var diff = item.CountedQuantity - systemQty;
 
 					itemEntities.Add(new StockTakeItem
 					{
 						Id = Guid.NewGuid(),
 						StockTakeId = stockTake.Id,
-						ProductId = item.ProductId,
+						ProductId = productId,
 						CountedQuantity = item.CountedQuantity,
 						SystemQuantity = systemQty,
 						DifferenceQuantity = diff,
+						ScannedBarcode = productId.HasValue ? null : item.ScannedBarcode,
 						Remark = item.Remark
 					});
 				}

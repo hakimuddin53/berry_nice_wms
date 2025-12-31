@@ -14,11 +14,12 @@ namespace Wms.Api.Dto.StockTake
     public class StockTakeItemDetailsDto
     {
         public Guid Id { get; set; }
-        public Guid ProductId { get; set; }
+        public Guid? ProductId { get; set; }
         public string? ProductCode { get; set; }
         public int CountedQuantity { get; set; }
         public int SystemQuantity { get; set; }
         public int DifferenceQuantity { get; set; }
+        public string? ScannedBarcode { get; set; }
         public string? Remark { get; set; }
     }
 }

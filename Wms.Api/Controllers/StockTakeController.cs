@@ -37,6 +37,7 @@ namespace Wms.Api.Controllers
                 Items = dto.Items.Select(i => new StockTakeItemRequest
                 {
                     ProductId = i.ProductId,
+                    ScannedBarcode = string.IsNullOrWhiteSpace(i.ScannedBarcode) ? null : i.ScannedBarcode,
                     CountedQuantity = i.CountedQuantity,
                     Remark = i.Remark
                 }).ToList()
@@ -69,7 +70,8 @@ namespace Wms.Api.Controllers
                 var term = searchDto.Search.Trim();
                 query = query.Where(st =>
                     st.Number.Contains(term) ||
-                    st.Items.Any(i => i.Product != null && i.Product.ProductCode.Contains(term)));
+                    st.Items.Any(i => (i.Product != null && i.Product.ProductCode.Contains(term)) ||
+                                      (!string.IsNullOrWhiteSpace(i.ScannedBarcode) && i.ScannedBarcode.Contains(term))));
             }
 
             var ordered = query.OrderByDescending(st => st.TakenAt);
@@ -142,7 +144,7 @@ namespace Wms.Api.Controllers
                     .ToDictionaryAsync(l => l.Id, l => l.Label);
 
             var productIds = list
-                .SelectMany(d => d.Items.Select(i => i.ProductId))
+                .SelectMany(d => d.Items.Where(i => i.ProductId.HasValue).Select(i => i.ProductId!.Value))
                 .Distinct()
                 .ToList();
 
@@ -160,7 +162,9 @@ namespace Wms.Api.Controllers
 
                 foreach (var item in dto.Items)
                 {
-                    if (string.IsNullOrWhiteSpace(item.ProductCode) && productCodes.TryGetValue(item.ProductId, out var code))
+                    if (item.ProductId.HasValue &&
+                        string.IsNullOrWhiteSpace(item.ProductCode) &&
+                        productCodes.TryGetValue(item.ProductId.Value, out var code))
                     {
                         item.ProductCode = code;
                     }

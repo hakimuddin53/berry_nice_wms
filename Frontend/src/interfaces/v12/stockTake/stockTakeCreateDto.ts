@@ -5,7 +5,8 @@ export interface StockTakeCreateDto {
 }
 
 export interface StockTakeCreateItemDto {
-  productId: string;
+  productId?: string | null;
+  scannedBarcode?: string | null;
   countedQuantity: number;
   remark?: string;
 }

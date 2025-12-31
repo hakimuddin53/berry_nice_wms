@@ -23,7 +23,10 @@ namespace Wms.Api.Services
                 _ => throw new ArgumentOutOfRangeException(nameof(operationType), "Invalid operation type")
             };
 
-            using var transaction = await context.Database.BeginTransactionAsync();
+            var hasAmbientTransaction = context.Database.CurrentTransaction != null;
+            using var transaction = hasAmbientTransaction
+                ? null
+                : await context.Database.BeginTransactionAsync();
 
             try
             {
@@ -50,14 +53,20 @@ namespace Wms.Api.Services
 
                 // Save changes and commit the transaction
                 await context.SaveChangesAsync();
-                await transaction.CommitAsync();
+                if (transaction != null)
+                {
+                    await transaction.CommitAsync();
+                }
 
                 // Return the formatted running number
                 return $"{operationPrefix}{datePart}{runningNumber.CurrentSequence:D4}";
             }
             catch
             {
-                await transaction.RollbackAsync();
+                if (transaction != null)
+                {
+                    await transaction.RollbackAsync();
+                }
                 throw;
             }
         }

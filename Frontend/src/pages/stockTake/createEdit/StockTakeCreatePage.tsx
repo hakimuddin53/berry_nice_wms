@@ -1,42 +1,57 @@
 import {
   Box,
   Button,
+  Card,
+  CardContent,
+  CardHeader,
+  Chip,
+  Divider,
   Grid,
   IconButton,
   Paper,
+  List,
+  ListItem,
+  ListItemText,
   Stack,
   TextField,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
+import QrCodeScannerIcon from "@mui/icons-material/QrCodeScanner";
 import LookupAutocomplete from "components/platbricks/shared/LookupAutocomplete";
 import Page from "components/platbricks/shared/Page";
-import SelectAsync, {
-  SelectAsyncOption,
-} from "components/platbricks/shared/SelectAsync";
 import { useFormik } from "formik";
 import { LookupGroupKey } from "interfaces/v12/lookup/lookup";
 import {
   StockTakeCreateDto,
   StockTakeCreateItemDto,
 } from "interfaces/v12/stockTake/stockTakeCreateDto";
+import { InventorySummaryRowDto } from "interfaces/v12/inventory/inventorySummaryDto";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { useProductService } from "services/ProductService";
+import { useInventoryService } from "services/InventoryService";
 import { useStockTakeService } from "services/StockTakeService";
 import * as Yup from "yup";
-import { Add, Delete } from "@mui/icons-material";
-import { useCallback } from "react";
+import { Delete } from "@mui/icons-material";
+import { useCallback, useMemo, useState } from "react";
 
 const validationSchema = Yup.object({
   warehouseId: Yup.string().required("Warehouse is required"),
   items: Yup.array()
     .of(
       Yup.object({
-        productId: Yup.string().required("Product is required"),
+        productId: Yup.string().nullable(),
+        scannedBarcode: Yup.string().nullable(),
         countedQuantity: Yup.number()
-          .min(0, "Quantity cannot be negative")
+          .min(1, "Quantity must be at least 1")
           .required("Quantity is required"),
-      })
+        remark: Yup.string().nullable(),
+      }).test(
+        "product-or-barcode",
+        "Product or scanned barcode is required",
+        (value) => !!(value?.productId || value?.scannedBarcode)
+      )
     )
     .min(1, "At least one item is required"),
 });
@@ -45,14 +60,26 @@ const StockTakeCreatePage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const stockTakeService = useStockTakeService();
-  const productService = useProductService();
+  const inventoryService = useInventoryService();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const [scanValue, setScanValue] = useState("");
+  const [checkingInventory, setCheckingInventory] = useState(false);
+  const [scanError, setScanError] = useState<string | null>(null);
+  const [scannedProducts, setScannedProducts] = useState<
+    Record<
+      string,
+      InventorySummaryRowDto & { count: number; lastScanned: number }
+    >
+  >({});
+  const [missingBarcodes, setMissingBarcodes] = useState<
+    Record<string, { code: string; count: number; lastScanned: number }>
+  >({});
 
   const formik = useFormik<StockTakeCreateDto>({
     initialValues: {
       warehouseId: "",
-      items: [
-        { productId: "", countedQuantity: 0 },
-      ] as StockTakeCreateItemDto[],
+      items: [] as StockTakeCreateItemDto[],
       remark: "",
     },
     validationSchema,
@@ -71,27 +98,118 @@ const StockTakeCreatePage = () => {
     },
   });
 
-  const updateItem = useCallback(
-    (index: number, item: Partial<StockTakeCreateItemDto>) => {
-      const nextItems = [...formik.values.items];
-      nextItems[index] = { ...nextItems[index], ...item };
-      formik.setFieldValue("items", nextItems);
+  const unwrapInventoryResults = (result: any): InventorySummaryRowDto[] => {
+    if (!result) return [];
+    if (Array.isArray(result)) return result;
+    if (Array.isArray(result.data)) return result.data;
+    if (Array.isArray(result.data?.data)) return result.data.data;
+    return [];
+  };
+
+  const syncFormikItems = useCallback(
+    (
+      items: Record<string, InventorySummaryRowDto & { count: number }>,
+      missing: Record<string, { code: string; count: number }>
+    ) => {
+      const formItems: StockTakeCreateItemDto[] = [
+        ...Object.values(items).map((item) => ({
+          productId: item.productId,
+          scannedBarcode: null,
+          countedQuantity: item.count,
+        })),
+        ...Object.values(missing).map((item) => ({
+          productId: null,
+          scannedBarcode: item.code,
+          countedQuantity: item.count,
+        })),
+      ];
+      formik.setFieldValue("items", formItems);
     },
     [formik]
   );
 
-  const addItem = () => {
-    formik.setFieldValue("items", [
-      ...formik.values.items,
-      { productId: "", countedQuantity: 0 },
-    ]);
+  const handleScanSubmit = useCallback(async () => {
+    const value = scanValue.trim();
+    if (!value) return;
+
+    setCheckingInventory(true);
+    setScanError(null);
+    try {
+      const response = await inventoryService.searchSummary({
+        search: value,
+        page: 1,
+        pageSize: 1,
+      });
+      const rows = unwrapInventoryResults(response);
+      if (rows.length > 0) {
+        const hit = rows[0];
+        setScannedProducts((prev) => {
+          const next = {
+            ...prev,
+            [hit.productId]: {
+              ...hit,
+              count: (prev[hit.productId]?.count ?? 0) + 1,
+              lastScanned: Date.now(),
+            },
+          };
+          syncFormikItems(next, missingBarcodes);
+          return next;
+        });
+      } else {
+        setMissingBarcodes((prev) => {
+          const next = {
+            ...prev,
+            [value]: {
+              code: value,
+              count: (prev[value]?.count ?? 0) + 1,
+              lastScanned: Date.now(),
+            },
+          };
+          syncFormikItems(scannedProducts, next);
+          return next;
+        });
+      }
+    } catch (e) {
+      setScanError(
+        t("common:request-failed", { defaultValue: "Request failed" })
+      );
+    } finally {
+      setCheckingInventory(false);
+      setScanValue("");
+    }
+  }, [
+    inventoryService,
+    scanValue,
+    syncFormikItems,
+    missingBarcodes,
+    scannedProducts,
+    t,
+  ]);
+
+  const removeScannedProduct = (productId: string) => {
+    setScannedProducts((prev) => {
+      const next = { ...prev };
+      delete next[productId];
+      syncFormikItems(next, missingBarcodes);
+      return next;
+    });
   };
 
-  const removeItem = (index: number) => {
-    const nextItems = [...formik.values.items];
-    nextItems.splice(index, 1);
-    formik.setFieldValue("items", nextItems);
-  };
+  const inventoryList = useMemo(
+    () =>
+      Object.values(scannedProducts).sort(
+        (a, b) => b.lastScanned - a.lastScanned
+      ),
+    [scannedProducts]
+  );
+
+  const missingList = useMemo(
+    () =>
+      Object.values(missingBarcodes).sort(
+        (a, b) => b.lastScanned - a.lastScanned
+      ),
+    [missingBarcodes]
+  );
 
   return (
     <Page
@@ -144,109 +262,145 @@ const StockTakeCreatePage = () => {
             </Grid>
           </Paper>
 
-          <Paper sx={{ p: 3 }}>
-            <Stack
-              direction="row"
-              alignItems="center"
-              justifyContent="space-between"
-              mb={2}
-            >
-              <Typography variant="h6">
-                {t("items", { defaultValue: "Items" })}
-              </Typography>
-              <Button startIcon={<Add />} onClick={addItem}>
-                {t("add-item", { defaultValue: "Add Item" })}
-              </Button>
-            </Stack>
-
-            <Stack spacing={2}>
-              {formik.values.items.map((item, index) => (
-                <Paper
-                  key={index}
-                  variant="outlined"
-                  sx={{ p: 2, backgroundColor: "background.default" }}
+          <Card>
+            <CardHeader
+              title={t("scan-items", { defaultValue: "Scan items" })}
+              subheader={t("scan-items-to-verify-inventory", {
+                defaultValue:
+                  "Scan barcodes; each scan adds 1 to the counted quantity.",
+              })}
+            />
+            <CardContent>
+              <Stack spacing={2}>
+                <Stack
+                  direction={isMobile ? "column" : "row"}
+                  spacing={2}
+                  alignItems={isMobile ? "stretch" : "center"}
                 >
-                  <Grid container spacing={2} alignItems="center">
-                    <Grid item xs={12} md={5}>
-                      <SelectAsync
-                        name={`items[${index}].productId`}
-                        label={t("product")}
-                        asyncFunc={(value, page, pageSize) =>
-                          productService.getSelectOptions(value, page, pageSize)
-                        }
-                        onSelectionChange={(
-                          selection: SelectAsyncOption | null
-                        ) =>
-                          updateItem(index, {
-                            productId: selection?.value ?? "",
-                          })
-                        }
-                        initValue={
-                          item.productId
-                            ? {
-                                value: item.productId,
-                                label: item.productId,
-                              }
-                            : undefined
-                        }
-                        error={
-                          Boolean(
-                            (formik.errors.items as any)?.[index]?.productId
-                          ) && Boolean(formik.touched.items)
-                        }
-                        helperText={
-                          (formik.errors.items as any)?.[index]?.productId
-                        }
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={3}>
-                      <TextField
-                        fullWidth
-                        type="number"
-                        name={`items[${index}].countedQuantity`}
-                        label={t("counted-quantity", {
-                          defaultValue: "Counted Qty",
+                  <TextField
+                    fullWidth
+                    label={t("scan-barcode", { defaultValue: "Scan barcode" })}
+                    placeholder={t("scan-or-type-barcode", {
+                      defaultValue: "Scan or type a barcode",
+                    })}
+                    value={scanValue}
+                    autoFocus={!isMobile}
+                    onChange={(event) => setScanValue(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        handleScanSubmit();
+                      }
+                    }}
+                    helperText={t("hit-enter-to-add", {
+                      defaultValue: "Press Enter after each scan.",
+                    })}
+                  />
+                  <Button
+                    variant="contained"
+                    startIcon={<QrCodeScannerIcon />}
+                    onClick={handleScanSubmit}
+                    disabled={checkingInventory || !scanValue.trim()}
+                    sx={{ minWidth: isMobile ? "100%" : 180 }}
+                  >
+                    {checkingInventory
+                      ? t("common:loading", { defaultValue: "Loading" })
+                      : t("add-scan", { defaultValue: "Add Scan" })}
+                  </Button>
+                </Stack>
+                {scanError && (
+                  <Typography color="error" variant="body2">
+                    {scanError}
+                  </Typography>
+                )}
+                <Divider />
+                <Stack
+                  direction={isMobile ? "column" : "row"}
+                  spacing={3}
+                  alignItems="stretch"
+                >
+                  <Box flex={1}>
+                    <Typography variant="subtitle1" gutterBottom>
+                      {t("items", { defaultValue: "Items" })}
+                    </Typography>
+                    {inventoryList.length === 0 ? (
+                      <Typography variant="body2" color="text.secondary">
+                        {t("start-scanning-to-see-inventory", {
+                          defaultValue: "Start scanning to add items.",
                         })}
-                        size="small"
-                        inputProps={{ min: 0 }}
-                        value={item.countedQuantity}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={
-                          Boolean(
-                            (formik.errors.items as any)?.[index]
-                              ?.countedQuantity
-                          ) && Boolean(formik.touched.items)
-                        }
-                        helperText={
-                          (formik.errors.items as any)?.[index]?.countedQuantity
-                        }
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={3}>
-                      <TextField
-                        fullWidth
-                        name={`items[${index}].remark`}
-                        label={t("remark")}
-                        size="small"
-                        value={item.remark ?? ""}
-                        onChange={formik.handleChange}
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={1} textAlign="right">
-                      <IconButton
-                        aria-label={t("remove")}
-                        onClick={() => removeItem(index)}
-                        disabled={formik.values.items.length === 1}
-                      >
-                        <Delete />
-                      </IconButton>
-                    </Grid>
-                  </Grid>
-                </Paper>
-              ))}
-            </Stack>
-          </Paper>
+                      </Typography>
+                    ) : (
+                      <List dense>
+                        {inventoryList.map((item) => (
+                          <ListItem
+                            key={item.productId}
+                            divider
+                            secondaryAction={
+                              <IconButton
+                                edge="end"
+                                aria-label={t("remove")}
+                                onClick={() =>
+                                  removeScannedProduct(item.productId)
+                                }
+                              >
+                                <Delete />
+                              </IconButton>
+                            }
+                          >
+                            <ListItemText
+                              primary={item.productCode || item.productId}
+                              secondary={item.model}
+                            />
+                            <Chip
+                              label={`${t("counted-quantity", {
+                                defaultValue: "Counted Qty",
+                              })}: ${item.count}`}
+                              color="primary"
+                              size="small"
+                            />
+                          </ListItem>
+                        ))}
+                      </List>
+                    )}
+                  </Box>
+                  <Box flex={1}>
+                    <Typography variant="subtitle1" gutterBottom>
+                      {t("not-in-inventory", {
+                        defaultValue: "Not in inventory",
+                      })}
+                    </Typography>
+                    {missingList.length === 0 ? (
+                      <Typography variant="body2" color="text.secondary">
+                        {t("no-missing-scans", {
+                          defaultValue: "No missing barcodes yet.",
+                        })}
+                      </Typography>
+                    ) : (
+                      <List dense>
+                        {missingList.map((item) => (
+                          <ListItem key={item.code} divider>
+                            <ListItemText
+                              primary={item.code}
+                              secondary={t("flagged-not-in-inventory", {
+                                defaultValue: "Flagged as not in inventory",
+                              })}
+                            />
+                            <Chip
+                              label={`${t("scanned", {
+                                defaultValue: "Scanned",
+                              })}: ${item.count}`}
+                              color="warning"
+                              size="small"
+                            />
+                          </ListItem>
+                        ))}
+                      </List>
+                    )}
+                  </Box>
+                </Stack>
+              </Stack>
+            </CardContent>
+          </Card>
 
           <Box display="flex" justifyContent="flex-end" gap={2}>
             <Button variant="outlined" onClick={() => navigate("/stock-take")}>

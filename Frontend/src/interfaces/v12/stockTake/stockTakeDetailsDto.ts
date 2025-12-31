@@ -10,10 +10,11 @@ export interface StockTakeDetailsDto {
 
 export interface StockTakeItemDetailsDto {
   id: string;
-  productId: string;
+  productId?: string | null;
   productCode?: string;
   countedQuantity: number;
   systemQuantity: number;
   differenceQuantity: number;
+  scannedBarcode?: string | null;
   remark?: string;
 }
