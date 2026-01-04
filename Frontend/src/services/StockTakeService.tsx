@@ -13,6 +13,7 @@ interface IStockTakeService {
   ) => Promise<PagedListDto<StockTakeDetailsDto>>;
   count: (dto: StockTakeSearchDto) => Promise<number>;
   create: (dto: StockTakeCreateDto) => Promise<StockTakeDetailsDto>;
+  getById: (id: string) => Promise<StockTakeDetailsDto>;
 }
 
 const StockTakeServiceContext = createContext({} as IStockTakeService);
@@ -29,7 +30,10 @@ export const StockTakeServiceProvider: React.FC<{
   const create = (dto: StockTakeCreateDto) =>
     axios.post("/stock-take", dto).then((res) => res.data);
 
-  const value: IStockTakeService = { search, count, create };
+  const getById = (id: string) =>
+    axios.get(`/stock-take/${id}`).then((res) => res.data);
+
+  const value: IStockTakeService = { search, count, create, getById };
 
   return (
     <StockTakeServiceContext.Provider value={value}>

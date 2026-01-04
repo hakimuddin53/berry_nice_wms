@@ -47,7 +47,7 @@ const createDefaultItem = (): YupStockRecieveItemCreateEdit => ({
   ramId: undefined,
   processorId: undefined,
   screenSizeId: undefined,
-  gradeId: EMPTY_GUID as guid,
+  gradeId: undefined,
   gradeName: "",
   locationId: EMPTY_GUID as guid,
   locationName: "",

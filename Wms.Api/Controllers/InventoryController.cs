@@ -160,6 +160,9 @@ namespace Wms.Api.Controllers
                     ProductId = x.inv.ProductId,
                     ProductCode = x.product?.ProductCode ?? string.Empty,
                     Model = x.product?.Model,
+                    AgeDays = x.product == null
+                        ? 0
+                        : Math.Max(0, (int)Math.Floor((DateTime.UtcNow - x.product.CreatedDate).TotalDays)),
                     WarehouseId = x.inv.WarehouseId,
                     WarehouseLabel = x.WarehouseLabel,
                     MovementDate = x.MovementDate,
@@ -338,57 +341,208 @@ namespace Wms.Api.Controllers
             return Ok(paged);
         }
 
+        [HttpPost("invoiced-report-total")]
+        public async Task<IActionResult> GetInvoicedReportTotalAsync([FromBody] InvoicedProductReportSearchDto search)
+        {
+            search ??= new InvoicedProductReportSearchDto();
+
+            var reportQuery =
+                from item in context.InvoiceItems
+                join invoice in context.Invoices on item.InvoiceId equals invoice.Id
+                join product in context.Products on item.ProductId equals product.ProductId into productJoin
+                from product in productJoin.DefaultIfEmpty()
+                join warehouse in context.Lookups on invoice.WarehouseId equals warehouse.Id into warehouseJoin
+                from warehouse in warehouseJoin.DefaultIfEmpty()
+                join location in context.Lookups on product.LocationId equals location.Id into locationJoin
+                from location in locationJoin.DefaultIfEmpty()
+                select new
+                {
+                    item,
+                    invoice,
+                    product,
+                    WarehouseLabel = warehouse != null ? warehouse.Label : string.Empty,
+                    LocationLabel = location != null ? location.Label : string.Empty
+                };
+
+            if (search.FromDate.HasValue)
+            {
+                reportQuery = reportQuery.Where(x => x.invoice.DateOfSale >= search.FromDate.Value.Date);
+            }
+
+            if (search.ToDate.HasValue)
+            {
+                var endDate = search.ToDate.Value.Date.AddDays(1).AddTicks(-1);
+                reportQuery = reportQuery.Where(x => x.invoice.DateOfSale <= endDate);
+            }
+
+            if (search.ProductId.HasValue)
+            {
+                reportQuery = reportQuery.Where(x => x.item.ProductId == search.ProductId.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(search.Model))
+            {
+                var modelTerm = search.Model.Trim();
+                reportQuery = reportQuery.Where(x =>
+                    x.product != null &&
+                    x.product.Model != null &&
+                    x.product.Model.Contains(modelTerm));
+            }
+
+            if (search.WarehouseId.HasValue)
+            {
+                reportQuery = reportQuery.Where(x => x.invoice.WarehouseId == search.WarehouseId.Value);
+            }
+
+            if (search.LocationId.HasValue)
+            {
+                reportQuery = reportQuery.Where(x => x.product != null && x.product.LocationId == search.LocationId.Value);
+            }
+
+            if (search.CategoryId.HasValue)
+            {
+                reportQuery = reportQuery.Where(x => x.product != null && x.product.CategoryId == search.CategoryId.Value);
+            }
+
+            if (search.BrandId.HasValue)
+            {
+                reportQuery = reportQuery.Where(x => x.product != null && x.product.BrandId == search.BrandId.Value);
+            }
+
+            if (search.ColorId.HasValue)
+            {
+                reportQuery = reportQuery.Where(x => x.product != null && x.product.ColorId == search.ColorId.Value);
+            }
+
+            if (search.StorageId.HasValue)
+            {
+                reportQuery = reportQuery.Where(x => x.product != null && x.product.StorageId == search.StorageId.Value);
+            }
+
+            if (search.RamId.HasValue)
+            {
+                reportQuery = reportQuery.Where(x => x.product != null && x.product.RamId == search.RamId.Value);
+            }
+
+            if (search.ProcessorId.HasValue)
+            {
+                reportQuery = reportQuery.Where(x => x.product != null && x.product.ProcessorId == search.ProcessorId.Value);
+            }
+
+            if (search.ScreenSizeId.HasValue)
+            {
+                reportQuery = reportQuery.Where(x => x.product != null && x.product.ScreenSizeId == search.ScreenSizeId.Value);
+            }
+
+            if (search.GradeId.HasValue)
+            {
+                reportQuery = reportQuery.Where(x => x.product != null && x.product.GradeId == search.GradeId.Value);
+            }
+
+            if (search.RegionId.HasValue)
+            {
+                reportQuery = reportQuery.Where(x => x.product != null && x.product.RegionId == search.RegionId.Value);
+            }
+
+            if (search.NewOrUsedId.HasValue)
+            {
+                reportQuery = reportQuery.Where(x => x.product != null && x.product.NewOrUsedId == search.NewOrUsedId.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(search.Search))
+            {
+                var term = search.Search.Trim();
+                reportQuery = reportQuery.Where(x =>
+                    (x.product != null && x.product.ProductCode.Contains(term)) ||
+                    (x.product != null && x.product.Model != null && x.product.Model.Contains(term)) ||
+                    x.invoice.Number.Contains(term));
+            }
+
+            var total = await reportQuery
+                .Select(x => x.item.TotalPrice > 0 ? x.item.TotalPrice : x.item.UnitPrice * x.item.Quantity)
+                .DefaultIfEmpty(0m)
+                .SumAsync();
+
+            return Ok(total);
+        }
+
         [HttpPost("summary")]
         public async Task<IActionResult> GetSummaryAsync([FromBody] InventorySummarySearchDto search)
         {
             search ??= new InventorySummarySearchDto();
 
-            var incoming = await context.StockRecieveItems
+            // Latest inventory record per product (captures current warehouse and balance)
+            var latestDatesQuery = context.Inventories
                 .GroupBy(i => i.ProductId)
-                .Select(g => new { ProductId = g.Key, Quantity = g.Sum(x => x.ReceiveQuantity) })
-                .ToDictionaryAsync(x => x.ProductId, x => x.Quantity);
+                .Select(g => new
+                {
+                    ProductId = g.Key,
+                    CreatedAt = g.Max(x => x.CreatedAt)
+                });
 
-            var outgoing = await context.InvoiceItems
-                .Where(i => i.ProductId != null)
-                .GroupBy(i => i.ProductId!.Value)
-                .Select(g => new { ProductId = g.Key, Quantity = g.Sum(x => x.Quantity) })
-                .ToDictionaryAsync(x => x.ProductId, x => x.Quantity);
+            var latestIdsQuery =
+                from inv in context.Inventories
+                join latestDate in latestDatesQuery
+                    on new { inv.ProductId, inv.CreatedAt } equals new { latestDate.ProductId, latestDate.CreatedAt }
+                group inv by inv.ProductId into g
+                select new
+                {
+                    ProductId = g.Key,
+                    Id = g.Max(x => x.Id)
+                };
 
-            var productsQuery = context.Products.AsQueryable();
+            var baseQuery =
+                from inv in context.Inventories
+                join latest in latestIdsQuery
+                    on new { inv.ProductId, inv.Id } equals new { latest.ProductId, latest.Id }
+                join product in context.Products on inv.ProductId equals product.ProductId
+                join warehouse in context.Lookups on inv.WarehouseId equals warehouse.Id into warehouseJoin
+                from warehouse in warehouseJoin.DefaultIfEmpty()
+                select new
+                {
+                    inv,
+                    product,
+                    WarehouseLabel = warehouse != null ? warehouse.Label : string.Empty
+                };
 
             if (!string.IsNullOrWhiteSpace(search.Search))
             {
                 var term = search.Search.Trim();
-                productsQuery = productsQuery.Where(p =>
-                    p.ProductCode.Contains(term) ||
-                    (p.Model != null && p.Model.Contains(term)));
+                baseQuery = baseQuery.Where(x =>
+                    x.product.ProductCode.Contains(term) ||
+                    (x.product.Model != null && x.product.Model.Contains(term)));
             }
 
-            var totalCount = await productsQuery.CountAsync();
+            if (search.WarehouseId.HasValue)
+            {
+                baseQuery = baseQuery.Where(x => x.inv.WarehouseId == search.WarehouseId.Value);
+            }
 
-            var products = await productsQuery
-                .OrderBy(p => p.ProductCode)
+            if (search.MinQuantity.HasValue)
+            {
+                baseQuery = baseQuery.Where(x => x.inv.NewBalance >= search.MinQuantity.Value);
+            }
+
+            var totalCount = await baseQuery.CountAsync();
+
+            var pagedRows = await baseQuery
+                .OrderBy(x => x.product.ProductCode)
                 .Skip((search.Page - 1) * search.PageSize)
                 .Take(search.PageSize)
                 .ToListAsync();
 
-            var summaryRows = products.Select(p =>
+            var summaryRows = pagedRows.Select(x => new InventorySummaryRowDto
             {
-                incoming.TryGetValue(p.ProductId, out var received);
-                outgoing.TryGetValue(p.ProductId, out var sold);
-                var available = received - sold;
-
-                return new InventorySummaryRowDto
-                {
-                    ProductId = p.ProductId,
-                    ProductCode = p.ProductCode,
-                    Model = p.Model,
-                    AvailableQuantity = available,
-                    CostPrice = p.CostPrice,
-                    AgentPrice = p.AgentPrice,
-                    DealerPrice = p.DealerPrice,
-                    RetailPrice = p.RetailPrice
-                };
+                ProductId = x.inv.ProductId,
+                ProductCode = x.product.ProductCode,
+                Model = x.product.Model,
+                AvailableQuantity = x.inv.NewBalance,
+                WarehouseId = x.inv.WarehouseId,
+                WarehouseLabel = x.WarehouseLabel,
+                CostPrice = x.product.CostPrice,
+                AgentPrice = x.product.AgentPrice,
+                DealerPrice = x.product.DealerPrice,
+                RetailPrice = x.product.RetailPrice
             }).ToList();
 
             var paged = new PagedListDto<InventorySummaryRowDto>

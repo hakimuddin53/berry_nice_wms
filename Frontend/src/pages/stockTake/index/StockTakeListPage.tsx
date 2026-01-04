@@ -1,3 +1,4 @@
+import { Button } from "@mui/material";
 import { DataTable } from "components/platbricks/shared";
 import Page from "components/platbricks/shared/Page";
 import { useDatatableControls } from "hooks/useDatatableControls";
@@ -8,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useStockTakeService } from "services/StockTakeService";
 import { useStockTakeTable } from "./datatables/useStockTakeTable";
+import { flattenStockTake } from "./__mockDataAdapter";
 
 const StockTakeListPage = () => {
   const { t } = useTranslation();
@@ -31,12 +33,21 @@ const StockTakeListPage = () => {
     searchValue: string,
     orderBy: string,
     order: "asc" | "desc"
-  ) => {
+  ): Promise<StockTakeDetailsDto[]> => {
     const searchOptions = getSearchOptions(page, pageSize, searchValue);
     return stockTakeService
       .search(searchOptions)
-      .then((res) => res.data)
-      .catch(() => []);
+      .then(
+        (res) =>
+          res.data.map(flattenStockTake).map((item) => ({
+            // ensure items is an array to match StockTakeDetailsDto
+            ...item,
+            items: Array.isArray((item as any).items)
+              ? (item as any).items
+              : [],
+          })) as StockTakeDetailsDto[]
+      )
+      .catch(() => [] as StockTakeDetailsDto[]);
   };
 
   const loadDataCount = (
@@ -60,6 +71,23 @@ const StockTakeListPage = () => {
     reloadData();
   }, [reloadData]);
 
+  const headerCellsWithLinks = headerCells.map((cell) =>
+    cell.id === "number"
+      ? {
+          ...cell,
+          render: (row: any) => (
+            <Button
+              variant="text"
+              size="small"
+              onClick={() => navigate(`/stock-take/${row.id}`)}
+            >
+              {row.number}
+            </Button>
+          ),
+        }
+      : cell
+  );
+
   return (
     <Page
       title={t("stock-take", { defaultValue: "Stock Take" })}
@@ -79,7 +107,7 @@ const StockTakeListPage = () => {
       <DataTable
         title={t("stock-take", { defaultValue: "Stock Take" })}
         tableKey="StockTakeListPage"
-        headerCells={headerCells}
+        headerCells={headerCellsWithLinks}
         data={tableProps}
         dataKey="id"
         showSearch

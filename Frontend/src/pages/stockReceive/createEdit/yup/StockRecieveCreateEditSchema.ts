@@ -19,7 +19,7 @@ export interface YupStockRecieveItemCreateEdit {
   ramId?: guid;
   processorId?: guid;
   screenSizeId?: guid;
-  gradeId: guid;
+  gradeId?: guid;
   gradeName?: string;
   locationId: guid;
   locationName?: string;
@@ -58,14 +58,7 @@ export const StockRecieveCreateEditSchema = yup.object().shape({
         ramId: yup.string().nullable(),
         processorId: yup.string().nullable(),
         screenSizeId: yup.string().nullable(),
-        gradeId: yup
-          .string()
-          .test(
-            "valid-grade-id",
-            "required",
-            (value) => !!value && value !== EMPTY_GUID && GUID_REGEX.test(value)
-          )
-          .required(),
+        gradeId: yup.string().nullable(),
         locationId: yup
           .string()
           .test(

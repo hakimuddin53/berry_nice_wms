@@ -24,6 +24,7 @@ export interface ProductDetailsDto {
   processor?: string;
   screenSize?: string;
   gradeName?: string;
+  serialNumber?: string | null;
 
   lowQty: number;
   createdDate: string;

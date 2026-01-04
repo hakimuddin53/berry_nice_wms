@@ -419,6 +419,16 @@ export const dashboardItems: SidebarItemsType[] = [
     children: [],
     requiredModule: ModuleEnum.INVOICE,
   },
+  {
+    id: 12,
+    href: "/logbook",
+    itemType: "link",
+    title: "Logbook",
+    icon: <BookOpenText size={20} />,
+    type: "single",
+    children: [],
+    requiredModule: ModuleEnum.INVENTORY,
+  },
 
   {
     id: 11,

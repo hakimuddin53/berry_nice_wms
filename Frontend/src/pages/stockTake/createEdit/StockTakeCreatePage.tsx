@@ -1,3 +1,4 @@
+import { Delete } from "@mui/icons-material";
 import {
   Box,
   Button,
@@ -8,33 +9,33 @@ import {
   Divider,
   Grid,
   IconButton,
-  Paper,
   List,
   ListItem,
   ListItemText,
+  Paper,
   Stack,
   TextField,
   Typography,
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import QrCodeScannerIcon from "@mui/icons-material/QrCodeScanner";
 import LookupAutocomplete from "components/platbricks/shared/LookupAutocomplete";
 import Page from "components/platbricks/shared/Page";
+import ProductCodeScanStockTake from "components/platbricks/shared/ProductCodeScanStockTake";
 import { useFormik } from "formik";
+import { InventorySummaryRowDto } from "interfaces/v12/inventory/inventorySummaryDto";
 import { LookupGroupKey } from "interfaces/v12/lookup/lookup";
 import {
   StockTakeCreateDto,
   StockTakeCreateItemDto,
 } from "interfaces/v12/stockTake/stockTakeCreateDto";
-import { InventorySummaryRowDto } from "interfaces/v12/inventory/inventorySummaryDto";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useInventoryService } from "services/InventoryService";
+import { useProductService } from "services/ProductService";
 import { useStockTakeService } from "services/StockTakeService";
 import * as Yup from "yup";
-import { Delete } from "@mui/icons-material";
-import { useCallback, useMemo, useState } from "react";
 
 const validationSchema = Yup.object({
   warehouseId: Yup.string().required("Warehouse is required"),
@@ -61,19 +62,25 @@ const StockTakeCreatePage = () => {
   const navigate = useNavigate();
   const stockTakeService = useStockTakeService();
   const inventoryService = useInventoryService();
+  const productService = useProductService();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  const [scanValue, setScanValue] = useState("");
-  const [checkingInventory, setCheckingInventory] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
   const [scannedProducts, setScannedProducts] = useState<
     Record<
       string,
-      InventorySummaryRowDto & { count: number; lastScanned: number }
+      InventorySummaryRowDto & {
+        count: number;
+        lastScanned: number;
+        systemQty?: number;
+      }
     >
   >({});
   const [missingBarcodes, setMissingBarcodes] = useState<
-    Record<string, { code: string; count: number; lastScanned: number }>
+    Record<
+      string,
+      { code: string; count: number; lastScanned: number; reason?: string }
+    >
   >({});
 
   const formik = useFormik<StockTakeCreateDto>({
@@ -108,14 +115,20 @@ const StockTakeCreatePage = () => {
 
   const syncFormikItems = useCallback(
     (
-      items: Record<string, InventorySummaryRowDto & { count: number }>,
-      missing: Record<string, { code: string; count: number }>
+      items: Record<
+        string,
+        InventorySummaryRowDto & { count: number; systemQty?: number }
+      >,
+      missing: Record<string, { code: string; count: number; reason?: string }>
     ) => {
       const formItems: StockTakeCreateItemDto[] = [
         ...Object.values(items).map((item) => ({
           productId: item.productId,
           scannedBarcode: null,
           countedQuantity: item.count,
+          systemQuantity: item.systemQty ?? item.availableQuantity ?? 0,
+          differenceQuantity:
+            item.count - (item.systemQty ?? item.availableQuantity ?? 0),
         })),
         ...Object.values(missing).map((item) => ({
           productId: null,
@@ -128,63 +141,72 @@ const StockTakeCreatePage = () => {
     [formik]
   );
 
-  const handleScanSubmit = useCallback(async () => {
-    const value = scanValue.trim();
-    if (!value) return;
-
-    setCheckingInventory(true);
-    setScanError(null);
-    try {
-      const response = await inventoryService.searchSummary({
-        search: value,
-        page: 1,
-        pageSize: 1,
-      });
-      const rows = unwrapInventoryResults(response);
-      if (rows.length > 0) {
-        const hit = rows[0];
-        setScannedProducts((prev) => {
-          const next = {
-            ...prev,
-            [hit.productId]: {
-              ...hit,
-              count: (prev[hit.productId]?.count ?? 0) + 1,
-              lastScanned: Date.now(),
-            },
-          };
-          syncFormikItems(next, missingBarcodes);
-          return next;
+  const handleProductResolved = useCallback(
+    async (code: string) => {
+      setScanError(null);
+      try {
+        const response = await inventoryService.searchSummary({
+          search: code,
+          page: 1,
+          pageSize: 1,
+          warehouseId: (formik.values.warehouseId as any) || null,
         });
-      } else {
-        setMissingBarcodes((prev) => {
-          const next = {
-            ...prev,
-            [value]: {
-              code: value,
-              count: (prev[value]?.count ?? 0) + 1,
-              lastScanned: Date.now(),
-            },
-          };
-          syncFormikItems(scannedProducts, next);
-          return next;
-        });
+        const rows = unwrapInventoryResults(response);
+        if (rows.length > 0) {
+          const hit = rows[0];
+          const systemQty = hit.availableQuantity ?? 0;
+          setScannedProducts((prev) => {
+            const next = {
+              ...prev,
+              [hit.productId]: {
+                ...hit,
+                count: (prev[hit.productId]?.count ?? 0) + 1,
+                systemQty,
+                lastScanned: Date.now(),
+              },
+            };
+            syncFormikItems(next, missingBarcodes);
+            return next;
+          });
+        } else {
+          // Check if product exists in another warehouse
+          const productOptions = await productService.getSelectOptions(
+            code,
+            1,
+            1
+          );
+          const existsElsewhere =
+            Array.isArray(productOptions) && productOptions.length > 0;
+          setMissingBarcodes((prev) => {
+            const next = {
+              ...prev,
+              [code]: {
+                code,
+                count: (prev[code]?.count ?? 0) + 1,
+                lastScanned: Date.now(),
+                reason: existsElsewhere ? "other-warehouse" : "not-found",
+              },
+            };
+            syncFormikItems(scannedProducts, next);
+            return next;
+          });
+        }
+      } catch (e) {
+        setScanError(
+          t("common:request-failed", { defaultValue: "Request failed" })
+        );
       }
-    } catch (e) {
-      setScanError(
-        t("common:request-failed", { defaultValue: "Request failed" })
-      );
-    } finally {
-      setCheckingInventory(false);
-      setScanValue("");
-    }
-  }, [
-    inventoryService,
-    scanValue,
-    syncFormikItems,
-    missingBarcodes,
-    scannedProducts,
-    t,
-  ]);
+    },
+    [
+      inventoryService,
+      missingBarcodes,
+      scannedProducts,
+      syncFormikItems,
+      productService,
+      t,
+      formik.values.warehouseId,
+    ]
+  );
 
   const removeScannedProduct = (productId: string) => {
     setScannedProducts((prev) => {
@@ -272,42 +294,31 @@ const StockTakeCreatePage = () => {
             />
             <CardContent>
               <Stack spacing={2}>
-                <Stack
-                  direction={isMobile ? "column" : "row"}
-                  spacing={2}
-                  alignItems={isMobile ? "stretch" : "center"}
-                >
-                  <TextField
-                    fullWidth
-                    label={t("scan-barcode", { defaultValue: "Scan barcode" })}
-                    placeholder={t("scan-or-type-barcode", {
-                      defaultValue: "Scan or type a barcode",
-                    })}
-                    value={scanValue}
-                    autoFocus={!isMobile}
-                    onChange={(event) => setScanValue(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") {
-                        event.preventDefault();
-                        handleScanSubmit();
-                      }
-                    }}
-                    helperText={t("hit-enter-to-add", {
-                      defaultValue: "Press Enter after each scan.",
-                    })}
-                  />
-                  <Button
-                    variant="contained"
-                    startIcon={<QrCodeScannerIcon />}
-                    onClick={handleScanSubmit}
-                    disabled={checkingInventory || !scanValue.trim()}
-                    sx={{ minWidth: isMobile ? "100%" : 180 }}
-                  >
-                    {checkingInventory
-                      ? t("common:loading", { defaultValue: "Loading" })
-                      : t("add-scan", { defaultValue: "Add Scan" })}
-                  </Button>
-                </Stack>
+                <ProductCodeScanStockTake
+                  label={t("scan-barcode", { defaultValue: "Scan barcode" })}
+                  warehouseId={formik.values.warehouseId}
+                  onResolved={handleProductResolved}
+                  onMissing={(code, existsElsewhere) => {
+                    setMissingBarcodes((prev) => {
+                      const next = {
+                        ...prev,
+                        [code]: {
+                          code,
+                          count: (prev[code]?.count ?? 0) + 1,
+                          lastScanned: Date.now(),
+                          reason: existsElsewhere
+                            ? "other-warehouse"
+                            : "not-found",
+                        },
+                      };
+                      syncFormikItems(scannedProducts, next);
+                      return next;
+                    });
+                  }}
+                  helperText={t("hit-enter-to-add", {
+                    defaultValue: "Press Enter after each scan.",
+                  })}
+                />
                 {scanError && (
                   <Typography color="error" variant="body2">
                     {scanError}
@@ -351,13 +362,36 @@ const StockTakeCreatePage = () => {
                               primary={item.productCode || item.productId}
                               secondary={item.model}
                             />
-                            <Chip
-                              label={`${t("counted-quantity", {
-                                defaultValue: "Counted Qty",
-                              })}: ${item.count}`}
-                              color="primary"
-                              size="small"
-                            />
+                            <Stack direction="row" spacing={1}>
+                              <Chip
+                                label={`${t("counted-quantity", {
+                                  defaultValue: "Counted Qty",
+                                })}: ${item.count}`}
+                                color="primary"
+                                size="small"
+                              />
+                              <Chip
+                                label={`${t("system-quantity", {
+                                  defaultValue: "System",
+                                })}: ${
+                                  item.systemQty ?? item.availableQuantity ?? 0
+                                }`}
+                                variant="outlined"
+                                size="small"
+                              />
+                              <Chip
+                                label={`${t("difference", {
+                                  defaultValue: "Diff",
+                                })}: ${
+                                  item.count -
+                                  (item.systemQty ??
+                                    item.availableQuantity ??
+                                    0)
+                                }`}
+                                variant="outlined"
+                                size="small"
+                              />
+                            </Stack>
                           </ListItem>
                         ))}
                       </List>
@@ -381,9 +415,17 @@ const StockTakeCreatePage = () => {
                           <ListItem key={item.code} divider>
                             <ListItemText
                               primary={item.code}
-                              secondary={t("flagged-not-in-inventory", {
-                                defaultValue: "Flagged as not in inventory",
-                              })}
+                              secondary={
+                                item.reason === "other-warehouse"
+                                  ? t("not-in-selected-warehouse", {
+                                      defaultValue:
+                                        "Not in selected warehouse inventory",
+                                    })
+                                  : t("flagged-not-in-inventory", {
+                                      defaultValue:
+                                        "Flagged as not in inventory",
+                                    })
+                              }
                             />
                             <Chip
                               label={`${t("scanned", {

@@ -64,6 +64,8 @@ const InvoicedProductsReportPage = () => {
     fromDate: "",
     toDate: "",
   });
+  const [reportTotal, setReportTotal] = useState<number | null>(null);
+  const [reportTotalLoading, setReportTotalLoading] = useState(false);
 
   const updateFilter = useCallback(
     <K extends keyof ReportFilters>(key: K, value: ReportFilters[K]) => {
@@ -206,7 +208,19 @@ const InvoicedProductsReportPage = () => {
   const onSearch = () => {
     updateDatatableControls({ searchValue: filters.search, page: 0 });
     reloadData(true);
+    setReportTotal(null);
+    setReportTotalLoading(true);
+    inventoryService
+      .getInvoicedReportTotal(buildPayload(0, 1, filters.search))
+      .then((total) => setReportTotal(total))
+      .catch(() => setReportTotal(null))
+      .finally(() => setReportTotalLoading(false));
   };
+
+  const totalCount = tableProps.totalCount ?? 0;
+  const isLastPage =
+    totalCount > 0 && (tableProps.page + 1) * tableProps.pageSize >= totalCount;
+  const showTotal = isLastPage && (reportTotalLoading || reportTotal !== null);
 
   return (
     <Page
@@ -544,6 +558,20 @@ const InvoicedProductsReportPage = () => {
         data={tableProps}
         dataKey="rowId"
       />
+      {showTotal && (
+        <Box sx={{ mt: 2, display: "flex", justifyContent: "flex-end" }}>
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Typography variant="subtitle2">
+              {t("total-price", { defaultValue: "Total Price" })}
+            </Typography>
+            <Typography variant="h6">
+              {reportTotalLoading
+                ? t("common:loading", { defaultValue: "Loading" })
+                : formatMoney(reportTotal)}
+            </Typography>
+          </Stack>
+        </Box>
+      )}
     </Page>
   );
 };

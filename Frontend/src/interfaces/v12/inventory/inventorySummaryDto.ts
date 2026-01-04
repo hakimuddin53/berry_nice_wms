@@ -5,6 +5,8 @@ export interface InventorySummaryRowDto {
   productCode: string;
   model?: string | null;
   availableQuantity: number;
+  warehouseId?: guid;
+  warehouseLabel?: string;
   agentPrice?: number | null;
   dealerPrice?: number | null;
   retailPrice?: number | null;
@@ -14,4 +16,6 @@ export interface InventorySummarySearchDto {
   search?: string | null;
   page: number;
   pageSize: number;
+  warehouseId?: guid | null;
+  minQuantity?: number | null;
 }

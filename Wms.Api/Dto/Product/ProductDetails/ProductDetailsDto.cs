@@ -18,6 +18,7 @@ namespace Wms.Api.Dto.Product.ProductDetails
         public Guid? ProcessorId { get; set; }
         public Guid? ScreenSizeId { get; set; }
         public Guid? GradeId { get; set; }
+        public string? SerialNumber { get; set; }
         
         // Display names from lookups
         public string Category { get; set; } = default!;

@@ -10,9 +10,9 @@ import {
 } from "@mui/material";
 import LookupAutocomplete from "components/platbricks/shared/LookupAutocomplete";
 import Page from "components/platbricks/shared/Page";
-import SelectAsync, {
-  SelectAsyncOption,
-} from "components/platbricks/shared/SelectAsync";
+import ProductCodeScan, {
+  ProductCodeOption,
+} from "components/platbricks/shared/ProductCodeScan";
 import { LookupGroupKey } from "interfaces/v12/lookup/lookup";
 import {
   StockTransferCreateDto,
@@ -21,7 +21,6 @@ import {
 import { useFormik } from "formik";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { useProductService } from "services/ProductService";
 import { useStockTransferService } from "services/StockTransferService";
 import * as Yup from "yup";
 import { useCallback } from "react";
@@ -46,7 +45,6 @@ const StockTransferCreatePage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const stockTransferService = useStockTransferService();
-  const productService = useProductService();
 
   const formik = useFormik<StockTransferCreateDto>({
     initialValues: {
@@ -178,27 +176,21 @@ const StockTransferCreatePage = () => {
                   sx={{ p: 2, backgroundColor: "background.default" }}
                 >
                   <Grid container spacing={2} alignItems="center">
-                    <Grid item xs={12} md={5}>
-                      <SelectAsync
-                        name={`items[${index}].productId`}
-                        label={t("product")}
-                        asyncFunc={(value, page, pageSize) =>
-                          productService.getSelectOptions(value, page, pageSize)
-                        }
-                        onSelectionChange={(
-                          selection: SelectAsyncOption | null
-                        ) =>
+                    <Grid item xs={12} md={6}>
+                      <ProductCodeScan
+                        label={t("product", { defaultValue: "Product" })}
+                        value={item.productId}
+                        allowOnlyAvailable
+                        warehouseId={formik.values.fromWarehouseId}
+                        requireWarehouse
+                        warehousePromptText={t("warehouse-required", {
+                          defaultValue: "Select a warehouse before scanning.",
+                        })}
+                        onResolved={(opt: ProductCodeOption) =>
                           updateItem(index, {
-                            productId: selection?.value ?? "",
+                            productId: opt.value,
+                            quantity: 1,
                           })
-                        }
-                        initValue={
-                          item.productId
-                            ? {
-                                value: item.productId,
-                                label: item.productId,
-                              }
-                            : undefined
                         }
                         error={
                           Boolean(
@@ -210,28 +202,7 @@ const StockTransferCreatePage = () => {
                         }
                       />
                     </Grid>
-                    <Grid item xs={12} md={3}>
-                      <TextField
-                        fullWidth
-                        type="number"
-                        name={`items[${index}].quantity`}
-                        label={t("quantity")}
-                        size="small"
-                        inputProps={{ min: 1 }}
-                        value={item.quantity}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={
-                          Boolean(
-                            (formik.errors.items as any)?.[index]?.quantity
-                          ) && Boolean(formik.touched.items)
-                        }
-                        helperText={
-                          (formik.errors.items as any)?.[index]?.quantity
-                        }
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={3}>
+                    <Grid item xs={12} md={4}>
                       <TextField
                         fullWidth
                         name={`items[${index}].remark`}

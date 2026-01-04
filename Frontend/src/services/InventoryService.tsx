@@ -26,6 +26,9 @@ interface IInventoryService {
   searchInvoicedReport: (
     dto: InvoicedProductReportSearchDto
   ) => Promise<PagedListDto<InvoicedProductReportRowDto>>;
+  getInvoicedReportTotal: (
+    dto: InvoicedProductReportSearchDto
+  ) => Promise<number>;
   searchSummary: (
     dto: InventorySummarySearchDto
   ) => Promise<PagedListDto<InventorySummaryRowDto>>;
@@ -50,6 +53,9 @@ export type InventoryServiceProviderProps = {
   searchInvoicedReport?: (
     dto: InvoicedProductReportSearchDto
   ) => Promise<PagedListDto<InvoicedProductReportRowDto>>;
+  getInvoicedReportTotal?: (
+    dto: InvoicedProductReportSearchDto
+  ) => Promise<number>;
   searchSummary?: (
     dto: InventorySummarySearchDto
   ) => Promise<PagedListDto<InventorySummaryRowDto>>;
@@ -74,6 +80,12 @@ export const InventoryServiceProvider: React.FC<
   const searchInvoicedReport = (dto: InvoicedProductReportSearchDto) => {
     return axios
       .post("/inventory/invoiced-report", dto)
+      .then((res) => res.data);
+  };
+
+  const getInvoicedReportTotal = (dto: InvoicedProductReportSearchDto) => {
+    return axios
+      .post<number>("/inventory/invoiced-report-total", dto)
       .then((res) => res.data);
   };
 
@@ -102,6 +114,8 @@ export const InventoryServiceProvider: React.FC<
   const value: IInventoryService = {
     searchAudit: props.searchAudit || searchAudit,
     searchInvoicedReport: props.searchInvoicedReport || searchInvoicedReport,
+    getInvoicedReportTotal:
+      props.getInvoicedReportTotal || getInvoicedReportTotal,
     searchSummary: props.searchSummary || searchSummary,
     getProductAuditLog: props.getProductAuditLog || getProductAuditLog,
     updatePricing: props.updatePricing || updatePricing,

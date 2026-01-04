@@ -1,3 +1,5 @@
+import HistoryIcon from "@mui/icons-material/History";
+import PrintIcon from "@mui/icons-material/Print";
 import {
   Box,
   Button,
@@ -13,14 +15,17 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { DataTable, PbCard } from "components/platbricks/shared";
+import BarcodeLabel, {
+  BarcodeLabelData,
+} from "components/platbricks/shared/BarcodeLabel";
+import { DataTableHeaderCell } from "components/platbricks/shared/dataTable/DataTable";
+import LookupAutocomplete from "components/platbricks/shared/LookupAutocomplete";
+import Page from "components/platbricks/shared/Page";
 import SelectAsync, {
   type SelectAsyncOption,
 } from "components/platbricks/shared/SelectAsync";
 import SelectAsync2 from "components/platbricks/shared/SelectAsync2";
-import { DataTable, PbCard } from "components/platbricks/shared";
-import LookupAutocomplete from "components/platbricks/shared/LookupAutocomplete";
-import { DataTableHeaderCell } from "components/platbricks/shared/dataTable/DataTable";
-import Page from "components/platbricks/shared/Page";
 import { useInventoryAuditLogQuery } from "hooks/queries/useInventoryQueries";
 import {
   useLookupByIdFetcher,
@@ -35,11 +40,10 @@ import { InventoryAuditDto } from "interfaces/v12/inventory/inventoryAuditDto";
 import { UpdateInventoryBalanceDto } from "interfaces/v12/inventory/updateInventoryBalanceDto";
 import { LookupGroupKey } from "interfaces/v12/lookup/lookup";
 import { ProductDetailsDto } from "interfaces/v12/product/productDetails/productDetailsDto";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useReactToPrint } from "react-to-print";
 import { useInventoryService } from "services/InventoryService";
-import HistoryIcon from "@mui/icons-material/History";
-import PrintIcon from "@mui/icons-material/Print";
 import { guid } from "types/guid";
 
 type BalanceRow = InventoryAuditDto & { rowId: number };
@@ -60,6 +64,9 @@ type ProductExtras = {
   screenSize?: string | null;
   gradeName?: string | null;
   productCode?: string;
+  brand?: string | null;
+  category?: string | null;
+  serialNumber?: string | null;
 };
 
 type InventorySearchFilters = {
@@ -139,6 +146,9 @@ const InventoryPage = () => {
   const [formValues, setFormValues] = useState<ProductExtras>({});
   const [saving, setSaving] = useState(false);
   const [historyProductId, setHistoryProductId] = useState<string | null>(null);
+  const [labelData, setLabelData] = useState<BarcodeLabelData | null>(null);
+  const [printRequested, setPrintRequested] = useState(false);
+  const labelRef = useRef<HTMLDivElement | null>(null);
   const { data: historyLogs = [], isLoading: historyLoading } =
     useInventoryAuditLogQuery(historyProductId);
 
@@ -269,6 +279,12 @@ const InventoryPage = () => {
         render: (row) => formatText(row.model),
       },
       {
+        id: "ageDays",
+        label: t("stock-age-days", { defaultValue: "Age (days)" }),
+        align: "right",
+        render: (row) => formatNumber(row.ageDays),
+      },
+      {
         id: "warehouseLabel",
         label: t("warehouse"),
         render: (row) => formatText(row.warehouseLabel),
@@ -392,6 +408,9 @@ const InventoryPage = () => {
     screenSize: product.screenSize ?? null,
     gradeName: product.gradeName ?? null,
     productCode: product.productCode,
+    brand: product.brand ?? null,
+    category: product.category ?? null,
+    serialNumber: product.serialNumber ?? null,
   });
 
   const hydrateLocationLabels = useCallback(
@@ -574,71 +593,38 @@ const InventoryPage = () => {
     setHistoryProductId(productId);
   };
 
+  const handlePrint = useReactToPrint({
+    content: () => labelRef.current,
+    documentTitle: labelData?.code ?? "label",
+    pageStyle: "@page { size: 60mm 33mm; margin: 0; } body { margin: 0; }",
+    onAfterPrint: () => setLabelData(null),
+  });
+
+  useEffect(() => {
+    if (printRequested && labelData && handlePrint) {
+      handlePrint();
+      setPrintRequested(false);
+    }
+  }, [printRequested, labelData, handlePrint]);
+
   const printLabel = (row: BalanceRow) => {
     const extras = productExtras[row.productId] || {};
     const code = extras.productCode ?? row.productCode ?? row.productId ?? "";
-    const model = extras.model ?? row.model ?? "-";
-    const ram = extras.ram ?? "-";
-    const storage = extras.storage ?? "-";
-    const processor = extras.processor ?? "-";
-    const screenSize = extras.screenSize ?? "-";
-    const remark = extras.remark ?? "";
-    const warehouse = row.warehouseLabel ?? "-";
 
-    const labelHtml = `
-      <!doctype html>
-      <html>
-      <head>
-        <meta charset="utf-8" />
-        <style>
-          @page { size: 60mm 33mm; margin: 0; }
-          body { margin: 0; padding: 0; font-family: Arial, sans-serif; width: 60mm; height: 33mm; }
-          .label { box-sizing: border-box; width: 60mm; height: 33mm; padding: 3mm; display: flex; }
-          .left { width: 18mm; text-align: center; }
-          .right { flex: 1; padding-left: 2mm; box-sizing: border-box; }
-          .title { font-size: 10pt; font-weight: bold; line-height: 1.1; }
-          .spec { font-size: 8pt; line-height: 1.1; }
-          .remark { font-size: 7pt; margin-top: 1mm; }
-          #barcode { width: 30mm; height: 10mm; }
-        </style>
-      </head>
-      <body>
-        <div class="label">
-          <div class="left">
-            <div id="qrcode"></div>
-            <div style="font-size:7pt; margin-top:2px;">${warehouse}</div>
-          </div>
-          <div class="right">
-            <div class="title">${model}</div>
-            <div class="spec">RAM: ${ram}  |  Storage: ${storage}</div>
-            <div class="spec">CPU: ${processor}  |  Screen: ${screenSize}</div>
-            <div id="barcode"></div>
-            <div style="font-size:8pt; text-align:center; margin-top:2px;">${code}</div>
-            <div class="remark">${remark || "-"}</div>
-          </div>
-        </div>
-        <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-        <script>
-          window.onload = function() {
-            JsBarcode("#barcode", "${code}", { format: "CODE128", height: 40, displayValue: false, margin: 0 });
-            new QRCode(document.getElementById("qrcode"), {
-              text: "${code}",
-              width: 18 * 3.78,
-              height: 18 * 3.78,
-            });
-            window.print();
-            window.close();
-          };
-        </script>
-      </body>
-      </html>
-    `;
-    const printWindow = window.open("", "_blank", "width=700,height=450");
-    if (printWindow) {
-      printWindow.document.write(labelHtml);
-      printWindow.document.close();
-    }
+    setLabelData({
+      code,
+      model: extras.model ?? row.model ?? null,
+      ram: extras.ram ?? null,
+      storage: extras.storage ?? null,
+      processor: extras.processor ?? null,
+      screenSize: extras.screenSize ?? null,
+      remark: extras.remark ?? null,
+      warehouse: row.warehouseLabel ?? null,
+      serialNumber: extras.serialNumber ?? null,
+      brand: extras.brand ?? null,
+      category: extras.category ?? null,
+    });
+    setPrintRequested(true);
   };
 
   const onSave = async () => {
@@ -1289,6 +1275,21 @@ const InventoryPage = () => {
           <Button onClick={closeHistory}>{t("close")}</Button>
         </DialogActions>
       </Dialog>
+
+      {labelData && (
+        <Box
+          sx={{
+            position: "fixed",
+            left: -10000,
+            top: 0,
+            width: 0,
+            height: 0,
+            overflow: "hidden",
+          }}
+        >
+          <BarcodeLabel ref={labelRef} data={labelData} />
+        </Box>
+      )}
     </>
   );
 };

@@ -93,6 +93,8 @@ namespace Wms.Api.Context
         public DbSet<StockTransfer> StockTransfers { get; set; }
         public DbSet<StockTake> StockTakes { get; set; }
         public DbSet<StockTakeItem> StockTakeItems { get; set; }
+        public DbSet<LogbookEntry> LogbookEntries { get; set; }
+        public DbSet<LogbookStatusHistory> LogbookStatusHistories { get; set; }
     // Removed: ProductRemarks (replaced with single Remark field on Product)
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -179,6 +181,18 @@ namespace Wms.Api.Context
                 .WithMany()
                 .HasForeignKey(sti => sti.ProductId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<LogbookEntry>()
+                .HasOne(le => le.Product)
+                .WithMany()
+                .HasForeignKey(le => le.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<LogbookStatusHistory>()
+                .HasOne(h => h.LogbookEntry)
+                .WithMany(e => e.StatusHistory)
+                .HasForeignKey(h => h.LogbookEntryId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
 
         private List<ProductAuditLog> CaptureProductAuditEntries()

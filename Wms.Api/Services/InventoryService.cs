@@ -44,6 +44,8 @@ namespace Wms.Api.Services
 					: request.Number!;
 
 				var balanceCache = new Dictionary<(Guid ProductId, Guid WarehouseId), int>();
+				var baseNow = DateTime.UtcNow;
+				var sequence = 0;
 
 				var groupedItems = request.Items
 					.Where(i => i.ProductId != Guid.Empty && i.Quantity > 0)
@@ -98,7 +100,9 @@ namespace Wms.Api.Services
 						QuantityOut = totalQuantity,
 						OldBalance = fromOldBalance,
 						NewBalance = fromNewBalance,
-						Remark = group.FirstOrDefault()?.Remark ?? $"Stock Transfer Out - {transferNumber}"
+						Remark = group.FirstOrDefault()?.Remark ?? $"Stock Transfer Out - {transferNumber}",
+						CreatedAt = baseNow.AddMilliseconds(sequence++),
+						CreatedById = Guid.Empty
 					});
 
 					if (!balanceCache.TryGetValue(toKey, out var toOldBalance))
@@ -122,7 +126,9 @@ namespace Wms.Api.Services
 						QuantityOut = 0,
 						OldBalance = toOldBalance,
 						NewBalance = toNewBalance,
-						Remark = group.FirstOrDefault()?.Remark ?? $"Stock Transfer In - {transferNumber}"
+						Remark = group.FirstOrDefault()?.Remark ?? $"Stock Transfer In - {transferNumber}",
+						CreatedAt = baseNow.AddMilliseconds(sequence++),
+						CreatedById = Guid.Empty
 					});
 				}
 

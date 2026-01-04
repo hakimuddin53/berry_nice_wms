@@ -54,7 +54,9 @@ import UserRoleDetailsPage from "pages/userRoles/details/UserRoleDetailsPage";
 import UserRoleListPage from "pages/userRoles/index/UserRoleListPage";
 
 import ExpenseListPage from "pages/expense/index/ExpenseListPage";
+import LogbookPage from "pages/logbook/LogbookPage";
 import StockTakeCreatePage from "pages/stockTake/createEdit/StockTakeCreatePage";
+import StockTakeDetailsPage from "pages/stockTake/details/StockTakeDetailsPage";
 import StockTakeListPage from "pages/stockTake/index/StockTakeListPage";
 import StockTransferCreatePage from "pages/stockTransfer/createEdit/StockTransferCreatePage";
 import StockTransferListPage from "pages/stockTransfer/index/StockTransferListPage";
@@ -232,6 +234,14 @@ const routes = [
               </ModuleGuard>
             ),
           },
+          {
+            path: ":id",
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.STOCKTAKE}>
+                <StockTakeDetailsPage />
+              </ModuleGuard>
+            ),
+          },
         ],
       },
       {
@@ -299,6 +309,14 @@ const routes = [
             ),
           },
         ],
+      },
+      {
+        path: "logbook",
+        element: (
+          <ModuleGuard requiredModule={ModuleEnum.INVENTORY}>
+            <LogbookPage />
+          </ModuleGuard>
+        ),
       },
       {
         path: "customer",

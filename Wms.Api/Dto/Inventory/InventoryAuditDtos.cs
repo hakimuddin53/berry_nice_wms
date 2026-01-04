@@ -27,6 +27,7 @@ public class InventoryAuditDto
     public Guid ProductId { get; set; }
     public string ProductCode { get; set; } = string.Empty;
     public string? Model { get; set; }
+    public int AgeDays { get; set; }
     public Guid WarehouseId { get; set; }
     public string WarehouseLabel { get; set; } = string.Empty;
     public DateTime MovementDate { get; set; }
@@ -42,6 +43,8 @@ public class InventoryAuditDto
 public class InventorySummarySearchDto : PagedRequestAbstractDto
 {
     public string? Search { get; set; }
+    public Guid? WarehouseId { get; set; }
+    public int? MinQuantity { get; set; }
 }
 
 public class InventorySummaryRowDto
@@ -50,6 +53,8 @@ public class InventorySummaryRowDto
     public string ProductCode { get; set; } = string.Empty;
     public string? Model { get; set; }
     public int AvailableQuantity { get; set; }
+    public Guid? WarehouseId { get; set; }
+    public string? WarehouseLabel { get; set; }
     public decimal? CostPrice { get; set; }
     public decimal? AgentPrice { get; set; }
     public decimal? DealerPrice { get; set; }

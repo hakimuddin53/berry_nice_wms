@@ -1,7 +1,7 @@
 import { MenuItem, TextField } from "@mui/material";
 import { DataList, PageSection, PbCard } from "components/platbricks/shared";
 import FormikErrorMessage from "components/platbricks/shared/ErrorMessage";
-import SelectAsync2 from "components/platbricks/shared/SelectAsync2";
+import ProductCodeScanInvoice from "components/platbricks/shared/ProductCodeScanInvoice";
 import { FormikErrors, FormikProps } from "formik";
 import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -18,6 +18,7 @@ import {
   invoiceCreateEditSchema,
   YupInvoiceCreateEdit,
 } from "./yup/invoiceCreateEditSchema";
+import SelectAsync2 from "components/platbricks/shared/SelectAsync2";
 
 type ItemField = keyof YupInvoiceCreateEdit["invoiceItems"][number];
 
@@ -30,6 +31,7 @@ const InvoiceItemCreateEdit = (props: {
   const item = formik.values.invoiceItems[itemIndex];
   const productService = useProductService();
   const lookupService = useLookupService();
+  const serviceProductCodes = ["POSTAGE", "LALAMOVE", "ACCESSORY"];
 
   const productIds = useMemo(
     () => (item.productId ? [item.productId as unknown as string] : []),
@@ -260,22 +262,20 @@ const InvoiceItemCreateEdit = (props: {
                 formik.values
               ),
               value: (
-                <SelectAsync2
-                  name={fieldName("productCode")}
-                  placeholder={t("product-code")}
-                  ids={productIds}
-                  asyncFunc={productAsync}
-                  suggestionsIfEmpty
-                  onSelectionChange={async (option: any) => {
-                    if (!option) {
-                      resetProductDerivedValues();
-                      return;
-                    }
-                    await populateFromProduct(option);
+                <ProductCodeScanInvoice
+                  label={t("product-code")}
+                  warehouseId={formik.values.warehouseId as string}
+                  serviceCodes={serviceProductCodes}
+                  onResolved={async (option) => {
+                    await populateFromProduct({
+                      value: option.productId,
+                      label: option.productCode,
+                      data: {
+                        productId: option.productId,
+                        productCode: option.productCode,
+                      },
+                    });
                   }}
-                  onBlur={() =>
-                    formik.setFieldTouched(fieldName("productCode"))
-                  }
                   error={
                     fieldTouched("productCode") &&
                     Boolean(fieldError("productCode"))

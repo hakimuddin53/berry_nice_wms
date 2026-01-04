@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Wms.Api.Context;
 
@@ -11,9 +12,11 @@ using Wms.Api.Context;
 namespace Wms.Api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260103023855_Logbook")]
+    partial class Logbook
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -525,9 +528,6 @@ namespace Wms.Api.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("StatusChangedAt")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("UserName")
                         .IsRequired()
                         .HasMaxLength(128)
@@ -538,37 +538,6 @@ namespace Wms.Api.Migrations
                     b.HasIndex("ProductId");
 
                     b.ToTable("LogbookEntries");
-                });
-
-            modelBuilder.Entity("Wms.Api.Entities.LogbookStatusHistory", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("ChangedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("LogbookEntryId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Remark")
-                        .HasMaxLength(512)
-                        .HasColumnType("nvarchar(512)");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UserName")
-                        .IsRequired()
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("LogbookEntryId");
-
-                    b.ToTable("LogbookStatusHistories");
                 });
 
             modelBuilder.Entity("Wms.Api.Entities.Lookup", b =>
@@ -1100,17 +1069,6 @@ namespace Wms.Api.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("Wms.Api.Entities.LogbookStatusHistory", b =>
-                {
-                    b.HasOne("Wms.Api.Entities.LogbookEntry", "LogbookEntry")
-                        .WithMany("StatusHistory")
-                        .HasForeignKey("LogbookEntryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("LogbookEntry");
-                });
-
             modelBuilder.Entity("Wms.Api.Entities.Product", b =>
                 {
                     b.HasOne("Wms.Api.Entities.Lookup", "Brand")
@@ -1234,11 +1192,6 @@ namespace Wms.Api.Migrations
             modelBuilder.Entity("Wms.Api.Entities.Invoice", b =>
                 {
                     b.Navigation("InvoiceItems");
-                });
-
-            modelBuilder.Entity("Wms.Api.Entities.LogbookEntry", b =>
-                {
-                    b.Navigation("StatusHistory");
                 });
 
             modelBuilder.Entity("Wms.Api.Entities.StockRecieve", b =>

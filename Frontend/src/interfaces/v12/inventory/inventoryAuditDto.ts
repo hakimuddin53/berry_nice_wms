@@ -4,6 +4,7 @@ export interface InventoryAuditDto {
   productId: guid;
   productCode: string;
   model?: string | null;
+  ageDays: number;
   warehouseId: guid;
   warehouseLabel?: string | null;
   movementDate: string;

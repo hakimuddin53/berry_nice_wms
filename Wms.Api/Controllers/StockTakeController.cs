@@ -52,7 +52,7 @@ namespace Wms.Api.Controllers
             var outDto = mapper.Map<StockTakeDetailsDto>(details);
             await PopulateStockTakeDetailsAsync(new[] { outDto });
 
-            return CreatedAtAction(nameof(GetByIdAsync), new { id = outDto.Id }, outDto);
+            return Ok(outDto);
         }
 
         [HttpPost("search")]
