@@ -131,4 +131,5 @@ public class InventoryServiceTests
 public class FakeCurrentUserService : ICurrentUserService
 {
     public string UserId() => Guid.Empty.ToString();
+    public string UserEmailOrId() => "system@test.local";
 }

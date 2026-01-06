@@ -30,5 +30,23 @@ namespace Wms.Api.Services
             }
 
         } 
+
+        public string UserEmailOrId()
+        {
+            var user = _httpContextAccessor.HttpContext?.User;
+
+            if (user == null || !user.Identity!.IsAuthenticated)
+            {
+                throw new UnauthorizedAccessException("User is not authenticated.");
+            }
+
+            var email = user.FindFirstValue(ClaimTypes.Email);
+            if (!string.IsNullOrWhiteSpace(email))
+            {
+                return email;
+            }
+
+            return UserId();
+        }
     } 
 }

@@ -98,13 +98,6 @@ function UserRoleDetailsPage() {
                   ))}
                 </>
               </KeyValuePair>
-              <KeyValuePair label={t("carton-size")}>
-                <>
-                  {userRole.cartonSizeName.map((size) => (
-                    <Chip key={size} label={size} sx={{ margin: "4px" }} />
-                  ))}
-                </>
-              </KeyValuePair>
             </KeyValueList>
           </PbTabPanel>
         </CardContent>

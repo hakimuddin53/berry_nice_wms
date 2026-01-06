@@ -29,7 +29,6 @@ const UserRoleCreateEditPage: React.FC = () => {
   const [UserRole, setUserRole] = useState<YupUserRoleCreateEdit>({
     name: "",
     module: [],
-    cartonSizeId: [],
   });
 
   const notificationService = useNotificationService();
@@ -73,10 +72,6 @@ const UserRoleCreateEditPage: React.FC = () => {
         module: Array.isArray(values.module)
           ? values.module.join(",")
           : values.module,
-        // Assuming CartonSizeId might also be a multi-select, handle it similarly
-        cartonSizeId: Array.isArray(values.cartonSizeId)
-          ? values.cartonSizeId.join(",")
-          : values.cartonSizeId,
       };
 
       if (!id) {

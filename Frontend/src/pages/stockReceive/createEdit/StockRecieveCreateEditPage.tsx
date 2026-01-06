@@ -12,7 +12,8 @@ import {
 import { FormikProvider, setNestedObjectValues, useFormik } from "formik";
 import { useDatatableControls } from "hooks/useDatatableControls";
 import { useFormikDatatable } from "hooks/useFormikDatatable";
-import { useEffect, useState } from "react";
+import jwtDecode from "jwt-decode";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { useNotificationService } from "services/NotificationService";
@@ -66,51 +67,6 @@ const createDefaultItem = (): YupStockRecieveItemCreateEdit => ({
   productName: "",
 });
 
-const buildStockRecievePayload = (values: YupStockRecieveCreateEdit) => {
-  const stockRecieveItems = values.stockRecieveItems.map((item) => {
-    const sanitized: any = {
-      ...item,
-      receiveQuantity: item.receiveQuantity ?? 1,
-    };
-
-    delete sanitized.key;
-    delete sanitized.locationName;
-    delete sanitized.productName;
-    delete sanitized.gradeName;
-    delete sanitized.regionName;
-    delete sanitized.newOrUsedName;
-
-    sanitized.gradeId = isGuidString(sanitized.gradeId)
-      ? sanitized.gradeId
-      : null;
-
-    sanitized.regionId = isGuidString(sanitized.regionId)
-      ? sanitized.regionId
-      : null;
-
-    sanitized.newOrUsedId = isGuidString(sanitized.newOrUsedId)
-      ? sanitized.newOrUsedId
-      : null;
-
-    if (!sanitized.productId) {
-      delete sanitized.productId;
-    }
-
-    if (!sanitized.productCode) {
-      delete sanitized.productCode;
-    }
-
-    return sanitized;
-  });
-
-  const { stockRecieveItems: _ignored, ...rest } = values;
-
-  return {
-    ...rest,
-    StockRecieveItems: stockRecieveItems,
-  };
-};
-
 const StockRecieveCreateEditPage: React.FC = () => {
   const { t } = useTranslation("common");
   const { id } = useParams();
@@ -121,9 +77,26 @@ const StockRecieveCreateEditPage: React.FC = () => {
   const navigate = useNavigate();
 
   const [stockRecieveNumber, setStockRecieveNumber] = useState<string>("");
+  const currentUserId = useMemo(() => {
+    const token = window.localStorage.getItem("accessToken");
+    if (!token) return "";
+    try {
+      const decoded: any = jwtDecode(token);
+      return (
+        decoded[
+          "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
+        ] ||
+        decoded.nameid ||
+        decoded.sub ||
+        ""
+      );
+    } catch {
+      return "";
+    }
+  }, []);
   const [stockRecieve, setStockRecieve] = useState<YupStockRecieveCreateEdit>({
     sellerInfo: "",
-    purchaser: "",
+    purchaser: currentUserId || "",
     dateOfPurchase: new Date().toISOString().split("T")[0],
     warehouseId: EMPTY_GUID as guid,
     stockRecieveItems: [],
@@ -132,6 +105,55 @@ const StockRecieveCreateEditPage: React.FC = () => {
   const [StockRecieveItemTable] = useStockRecieveItemTable();
   const [pageBlocker, setPageBlocker] = useState(false);
   const [pageReady, setPageReady] = useState<boolean>(() => !id);
+
+  const buildStockRecievePayload = useCallback(
+    (values: YupStockRecieveCreateEdit) => {
+      const stockRecieveItems = values.stockRecieveItems.map((item) => {
+        const sanitized: any = {
+          ...item,
+          receiveQuantity: item.receiveQuantity ?? 1,
+        };
+
+        delete sanitized.key;
+        delete sanitized.locationName;
+        delete sanitized.productName;
+        delete sanitized.gradeName;
+        delete sanitized.regionName;
+        delete sanitized.newOrUsedName;
+
+        sanitized.gradeId = isGuidString(sanitized.gradeId)
+          ? sanitized.gradeId
+          : null;
+
+        sanitized.regionId = isGuidString(sanitized.regionId)
+          ? sanitized.regionId
+          : null;
+
+        sanitized.newOrUsedId = isGuidString(sanitized.newOrUsedId)
+          ? sanitized.newOrUsedId
+          : null;
+
+        if (!sanitized.productId) {
+          delete sanitized.productId;
+        }
+
+        if (!sanitized.productCode) {
+          delete sanitized.productCode;
+        }
+
+        return sanitized;
+      });
+
+      const { stockRecieveItems: _ignored, ...rest } = values;
+
+      return {
+        ...rest,
+        purchaser: rest.purchaser || currentUserId || "",
+        StockRecieveItems: stockRecieveItems,
+      };
+    },
+    [currentUserId]
+  );
 
   let title = t("create-stock-receive");
   let breadcrumbs = [
@@ -277,6 +299,10 @@ const StockRecieveCreateEditPage: React.FC = () => {
 
           setStockRecieve({
             ...(rest as YupStockRecieveCreateEdit),
+            purchaser:
+              (rest as YupStockRecieveCreateEdit).purchaser ||
+              currentUserId ||
+              "",
             stockRecieveItems,
           });
           setStockRecieveNumber(fetchedNumber ?? "");

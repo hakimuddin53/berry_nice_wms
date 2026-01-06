@@ -488,7 +488,10 @@ function StockRecieveDetailsPage() {
                   {StockRecieve.warehouseLabel || "-"}
                 </KeyValuePair>
                 <KeyValuePair label={t("date-of-purchase")}>
-                  {new Date(StockRecieve.dateOfPurchase).toLocaleDateString()}
+                  <UserDateTime
+                    date={StockRecieve.dateOfPurchase}
+                    displayType="DATEONLY"
+                  />
                 </KeyValuePair>
                 <KeyValuePair label={t("created-at")}>
                   <UserDateTime date={StockRecieve.createdAt} />

@@ -7,6 +7,6 @@ namespace Wms.Api.Entities
     { 
         public required string DisplayName { get; set; }
         public required string Module { get; set; }
-        public required string CartonSizeId { get; set; }
+        // CartonSize support removed
     }
 }

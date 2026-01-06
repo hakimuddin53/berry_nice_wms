@@ -36,6 +36,7 @@ namespace Wms.Api.Controllers
                     inv,
                     product,
                     StockRecieveNumber = sr != null ? sr.Number : string.Empty,
+                    DateOfPurchase = sr != null ? sr.DateOfPurchase : (DateTime?)null,
                     InvoiceNumber = invc != null ? invc.Number : string.Empty,
                     MovementDate = inv.CreatedAt,
                     WarehouseLabel = warehouse != null ? warehouse.Label : string.Empty
@@ -162,7 +163,10 @@ namespace Wms.Api.Controllers
                     Model = x.product?.Model,
                     AgeDays = x.product == null
                         ? 0
-                        : Math.Max(0, (int)Math.Floor((DateTime.UtcNow - x.product.CreatedDate).TotalDays)),
+                        : Math.Max(
+                            0,
+                            (int)Math.Floor(
+                                (DateTime.UtcNow - (x.DateOfPurchase ?? x.product.CreatedDate)).TotalDays)),
                     WarehouseId = x.inv.WarehouseId,
                     WarehouseLabel = x.WarehouseLabel,
                     MovementDate = x.MovementDate,
@@ -336,6 +340,122 @@ namespace Wms.Api.Controllers
                 PageSize = search.PageSize,
                 TotalCount = totalCount,
                 Data = dtoItems
+            };
+
+            return Ok(paged);
+        }
+
+        [HttpPost("purchase-quality-report")]
+        public async Task<IActionResult> GetPurchaseQualityReportAsync([FromBody] PurchaseQualityReportSearchDto search)
+        {
+            search ??= new PurchaseQualityReportSearchDto();
+
+            var purchaseQuery =
+                from item in context.StockRecieveItems
+                join receive in context.StockRecieves on item.StockRecieveId equals receive.Id
+                join product in context.Products on item.ProductId equals product.ProductId
+                select new
+                {
+                    receive.Purchaser,
+                    receive.DateOfPurchase,
+                    item.ProductId,
+                    item.ReceiveQuantity,
+                    CostPrice = product.CostPrice ?? 0m
+                };
+
+            if (search.FromDate.HasValue)
+            {
+                purchaseQuery = purchaseQuery.Where(x => x.DateOfPurchase >= search.FromDate.Value.Date);
+            }
+
+            if (search.ToDate.HasValue)
+            {
+                var endDate = search.ToDate.Value.Date.AddDays(1).AddTicks(-1);
+                purchaseQuery = purchaseQuery.Where(x => x.DateOfPurchase <= endDate);
+            }
+
+            if (!string.IsNullOrWhiteSpace(search.Search))
+            {
+                var term = search.Search.Trim();
+                purchaseQuery = purchaseQuery.Where(x => x.Purchaser.Contains(term));
+            }
+
+            var purchaseByProduct = await purchaseQuery
+                .GroupBy(x => new { x.Purchaser, x.ProductId })
+                .Select(g => new
+                {
+                    g.Key.Purchaser,
+                    g.Key.ProductId,
+                    PurchaseTotal = g.Sum(x => x.CostPrice * x.ReceiveQuantity)
+                })
+                .ToListAsync();
+
+            var salesQuery =
+                from item in context.InvoiceItems
+                join invoice in context.Invoices on item.InvoiceId equals invoice.Id
+                where item.ProductId != null
+                select new
+                {
+                    ProductId = item.ProductId.Value,
+                    invoice.DateOfSale,
+                    item.UnitPrice,
+                    item.TotalPrice,
+                    item.Quantity
+                };
+
+            if (search.FromDate.HasValue)
+            {
+                salesQuery = salesQuery.Where(x => x.DateOfSale >= search.FromDate.Value.Date);
+            }
+
+            if (search.ToDate.HasValue)
+            {
+                var endDate = search.ToDate.Value.Date.AddDays(1).AddTicks(-1);
+                salesQuery = salesQuery.Where(x => x.DateOfSale <= endDate);
+            }
+
+            var salesByProduct = await salesQuery
+                .GroupBy(x => x.ProductId)
+                .Select(g => new
+                {
+                    ProductId = g.Key,
+                    SoldTotal = g.Sum(x => x.TotalPrice > 0 ? x.TotalPrice : x.UnitPrice * x.Quantity)
+                })
+                .ToListAsync();
+
+            var salesMap = salesByProduct.ToDictionary(x => x.ProductId, x => x.SoldTotal);
+
+            var reportRows = purchaseByProduct
+                .Select(p => new
+                {
+                    p.Purchaser,
+                    p.PurchaseTotal,
+                    SoldTotal = salesMap.TryGetValue(p.ProductId, out var sold) ? sold : 0m
+                })
+                .GroupBy(x => x.Purchaser)
+                .Select(g => new PurchaseQualityReportRowDto
+                {
+                    Purchaser = g.Key,
+                    PurchaseTotal = g.Sum(x => x.PurchaseTotal),
+                    SoldTotal = g.Sum(x => x.SoldTotal),
+                    Profit = g.Sum(x => x.SoldTotal) - g.Sum(x => x.PurchaseTotal)
+                })
+                .OrderBy(x => x.Purchaser)
+                .ToList();
+
+            var totalCount = reportRows.Count;
+
+            var pagedItems = reportRows
+                .Skip((search.Page - 1) * search.PageSize)
+                .Take(search.PageSize)
+                .ToList();
+
+            var paged = new PagedListDto<PurchaseQualityReportRowDto>
+            {
+                CurrentPage = search.Page,
+                PageSize = search.PageSize,
+                TotalCount = totalCount,
+                Data = pagedItems
             };
 
             return Ok(paged);

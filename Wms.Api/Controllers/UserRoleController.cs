@@ -77,17 +77,6 @@ namespace Wms.Api.Controllers
 
             var userRoleDtos = _autoMapperService.Map<PagedListDto<UserRoleDetailsDto>>(pagedResult);
 
-            foreach (var roles in userRoleDtos.Data)
-            {
-                var stockGroups = new List<string>(); 
-                foreach (var sizeId in roles.CartonSizeId)
-                {
-                    //stockGroups.Add(_context.CartonSizes?.Where(x => x.Id == sizeId)?.FirstOrDefault()?.Name ?? "");                    
-                }
-               
-                roles.CartonSizeName = stockGroups; 
-            }
-
             return Ok(userRoleDtos);
         }         
 
@@ -107,14 +96,6 @@ namespace Wms.Api.Controllers
             if (user == null)
                 return NotFound();
             var userRoleDtos = _autoMapperService.Map<UserRoleDetailsDto>(user);
-
-            var stockGroups = new List<string>();
-
-            foreach (var sizeId in userRoleDtos.CartonSizeId)
-            {
-                //stockGroups.Add(_context.CartonSizes?.Where(x => x.Id == sizeId)?.FirstOrDefault()?.Name ?? "");
-            }
-            userRoleDtos.CartonSizeName = stockGroups;
 
             return Ok(userRoleDtos);
         }

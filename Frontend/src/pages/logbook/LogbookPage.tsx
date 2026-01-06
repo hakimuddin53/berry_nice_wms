@@ -20,6 +20,7 @@ import { DataTable } from "components/platbricks/shared";
 import { DataTableHeaderCell } from "components/platbricks/shared/dataTable/DataTable";
 import Page from "components/platbricks/shared/Page";
 import { useDatatableControls } from "hooks/useDatatableControls";
+import { useUserDateTime } from "hooks/useUserDateTime";
 import { PagedListDto } from "interfaces/general/pagedList/PagedListDto";
 import {
   LogbookAvailabilityDto,
@@ -40,6 +41,7 @@ const statusOptions = [
 const LogbookPage: React.FC = () => {
   const { t } = useTranslation();
   const logbookService = useLogbookService();
+  const { getLocalDateAndTime } = useUserDateTime();
 
   const [filters, setFilters] = useState<{
     search: string;
@@ -83,9 +85,7 @@ const LogbookPage: React.FC = () => {
         id: "statusChangedAt",
         label: t("status-updated-at", { defaultValue: "Status updated" }),
         render: (row) =>
-          row.statusChangedAt
-            ? new Date(row.statusChangedAt).toLocaleString()
-            : "",
+          row.statusChangedAt ? getLocalDateAndTime(row.statusChangedAt) : "",
       },
       {
         id: "status",
@@ -239,6 +239,8 @@ const LogbookPage: React.FC = () => {
     } catch {
       setHistoryDialog((prev) => ({ ...prev, loading: false }));
     }
+
+    setHistoryDialog((prev) => ({ ...prev, open: false }));
   };
 
   return (
@@ -395,9 +397,9 @@ const LogbookPage: React.FC = () => {
                 {historyDialog.history.map((item) => (
                   <ListItem key={item.id} divider disableGutters>
                     <ListItemText
-                      primary={`${new Date(
-                        item.changedAt
-                      ).toLocaleString()} - ${item.status}`}
+                      primary={`${getLocalDateAndTime(item.changedAt)} - ${
+                        item.status
+                      }`}
                       secondary={
                         item.remark
                           ? `${item.userName} - ${item.remark}`

@@ -10,8 +10,6 @@ namespace Wms.Api.Dto.UserRole
         public required string Name { get; set; }
         public required string DisplayName { get; set; }
         public ICollection<ModuleEnum> Module { get; set; }
-        public ICollection<Guid> CartonSizeId { get; set; }
-        public ICollection<string> CartonSizeName { get; set; }
     }
 
     public class UserRoleCreateUpdateDto

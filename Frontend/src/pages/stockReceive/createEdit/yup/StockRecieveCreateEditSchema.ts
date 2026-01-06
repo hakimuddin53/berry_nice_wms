@@ -3,7 +3,7 @@ import * as yup from "yup";
 
 export interface YupStockRecieveCreateEdit {
   sellerInfo: string;
-  purchaser: string;
+  purchaser?: string | null;
   dateOfPurchase: string;
   warehouseId: guid;
   stockRecieveItems: YupStockRecieveItemCreateEdit[];
@@ -43,7 +43,7 @@ const GUID_REGEX =
 
 export const StockRecieveCreateEditSchema = yup.object().shape({
   sellerInfo: yup.string().required(),
-  purchaser: yup.string().required(),
+  purchaser: yup.string().nullable(),
   dateOfPurchase: yup.string().required(),
   warehouseId: yup.string().required(),
   stockRecieveItems: yup

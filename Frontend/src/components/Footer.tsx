@@ -1,11 +1,12 @@
 import styled from "@emotion/styled";
-
 import {
   Grid,
   List,
   ListItemButton as MuiListItemButton,
   ListItemText as MuiListItemText,
 } from "@mui/material";
+import jwtDecode from "jwt-decode";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 interface ListItemButtonProps {
@@ -47,8 +48,30 @@ const LangdonButton = styled(ListItemButton)`
   }
 `;
 
-function Footer() {
+const Footer = () => {
   const { t } = useTranslation("navbar");
+  const userLabel = useMemo(() => {
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
+    if (!token) return "";
+    try {
+      const decoded: any = jwtDecode(token);
+      return (
+        decoded[
+          "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
+        ] ||
+        decoded.email ||
+        decoded.sub ||
+        decoded.name ||
+        ""
+      );
+    } catch {
+      return "";
+    }
+  }, []);
+
   return (
     <Wrapper>
       <Grid container spacing={0}>
@@ -60,14 +83,6 @@ function Footer() {
           md={6}
         >
           <List>
-            {/*
-              <ListItemButton component="a" href="#">
-                <ListItemText primary="Support" />
-              </ListItemButton>
-              <ListItemButton component="a" href="#">
-                <ListItemText primary="Help Center" />
-              </ListItemButton>
-             */}
             <ListItemButton component="a" target="_blank">
               <ListItemText primary={t("terms-of-usage")} />
             </ListItemButton>
@@ -83,14 +98,19 @@ function Footer() {
           <List>
             <ListItemButton>
               <ListItemText
-                primary={`© ${new Date().getFullYear()} - MH Global`}
+                primary={`© ${new Date().getFullYear()} - Berry Nice`}
               />
             </ListItemButton>
+            {userLabel && (
+              <ListItemButton>
+                <ListItemText primary={`Logged in as: ${userLabel}`} />
+              </ListItemButton>
+            )}
           </List>
         </Grid>
       </Grid>
     </Wrapper>
   );
-}
+};
 
 export default Footer;

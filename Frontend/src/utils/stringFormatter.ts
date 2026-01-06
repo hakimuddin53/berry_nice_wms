@@ -10,6 +10,7 @@ const format = (message: string, ...replacements: string[]) => {
 const formatMonthToDigits = (month: MonthEnum) => {
   return new Date(`${month}-1-01`).toLocaleDateString(`en`, {
     month: `2-digit`,
+    timeZone: "Asia/Kuala_Lumpur",
   });
 };
 

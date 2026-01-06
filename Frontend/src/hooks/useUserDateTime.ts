@@ -2,23 +2,28 @@ export const useUserDateTime = () => {
   const locale = "en-MY";
   const timeZone = "Asia/Kuala_Lumpur";
 
-  const getLocalDateAndTime = (date: string) => {
+  const normalizeToDate = (date: string | Date) => {
+    if (date instanceof Date) {
+      return date;
+    }
     const normalizedUtcDateString = date.endsWith("Z") ? date : date + "Z";
-    const normalizeDate = new Date(normalizedUtcDateString);
+    return new Date(normalizedUtcDateString);
+  };
+
+  const getLocalDateAndTime = (date: string | Date) => {
+    const normalizeDate = normalizeToDate(date);
 
     return normalizeDate.toLocaleString(locale, { timeZone });
   };
 
-  const getLocalDate = (date: string) => {
-    const normalizedUtcDateString = date.endsWith("Z") ? date : date + "Z";
-    const normalizeDate = new Date(normalizedUtcDateString);
+  const getLocalDate = (date: string | Date) => {
+    const normalizeDate = normalizeToDate(date);
 
     return normalizeDate.toLocaleDateString(locale, { timeZone });
   };
 
-  const getLocalTime = (date: string) => {
-    const normalizedUtcDateString = date.endsWith("Z") ? date : date + "Z";
-    const normalizeDate = new Date(normalizedUtcDateString);
+  const getLocalTime = (date: string | Date) => {
+    const normalizeDate = normalizeToDate(date);
     return normalizeDate.toLocaleTimeString(locale, { timeZone });
   };
 

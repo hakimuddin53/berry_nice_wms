@@ -1,4 +1,3 @@
-﻿import { CartonSizeServiceProvider } from "./CartonSizeService";
 import { CustomerServiceProvider } from "./CustomerService";
 import { ExpenseServiceProvider } from "./ExpenseService";
 import { InventoryServiceProvider } from "./InventoryService";
@@ -15,7 +14,6 @@ import { UserServiceProvider } from "./UserService";
 
 const serviceProviders = [
   LookupServiceProvider,
-  CartonSizeServiceProvider,
   InventoryServiceProvider,
   ProductServiceProvider,
   UserServiceProvider,

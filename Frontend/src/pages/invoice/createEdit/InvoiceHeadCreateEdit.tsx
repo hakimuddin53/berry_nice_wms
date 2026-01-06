@@ -10,7 +10,6 @@ import { LookupGroupKey } from "interfaces/v12/lookup/lookup";
 import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useCustomerService } from "services/CustomerService";
-import { useUserService } from "services/UserService";
 import { isRequiredField } from "utils/formikHelpers";
 import {
   invoiceCreateEditSchema,
@@ -23,7 +22,6 @@ const InvoiceHeadCreateEdit = (props: {
   const { t } = useTranslation();
   const formik = props.formik;
   const customerService = useCustomerService();
-  const userService = useUserService();
 
   const customerIds = useMemo(
     () =>
@@ -31,11 +29,6 @@ const InvoiceHeadCreateEdit = (props: {
         ? [formik.values.customerId as unknown as string]
         : [],
     [formik.values.customerId]
-  );
-
-  const salesPersonIds = useMemo(
-    () => (formik.values.salesPersonId ? [formik.values.salesPersonId] : []),
-    [formik.values.salesPersonId]
   );
 
   const createStaticOptions = useCallback((ids?: string[]) => {
@@ -75,17 +68,6 @@ const InvoiceHeadCreateEdit = (props: {
       return normalizeOptions(options);
     },
     [createStaticOptions, customerService, normalizeOptions]
-  );
-
-  const salesPersonAsync = useCallback(
-    async (input: string, page: number, pageSize: number, ids?: string[]) => {
-      if (ids && ids.length > 0) {
-        return createStaticOptions(ids);
-      }
-      const options = await userService.getSelectOptions(input, page, pageSize);
-      return normalizeOptions(options);
-    },
-    [createStaticOptions, normalizeOptions, userService]
   );
 
   return (
@@ -179,37 +161,6 @@ const InvoiceHeadCreateEdit = (props: {
                   touched={formik.touched.warehouseId}
                   error={formik.errors.warehouseId}
                   translatedFieldName={t("warehouse")}
-                />
-              }
-            />
-          ),
-        },
-        {
-          label: t("sales-person"),
-          required: isRequiredField(
-            invoiceCreateEditSchema,
-            "salesPersonId",
-            formik.values
-          ),
-          value: (
-            <SelectAsync2
-              name="salesPersonId"
-              suggestionsIfEmpty
-              error={
-                formik.touched.salesPersonId &&
-                Boolean(formik.errors.salesPersonId)
-              }
-              onBlur={() => formik.setFieldTouched("salesPersonId")}
-              ids={salesPersonIds}
-              asyncFunc={salesPersonAsync}
-              onSelectionChange={(option) =>
-                formik.setFieldValue("salesPersonId", option?.value ?? "")
-              }
-              helperText={
-                <FormikErrorMessage
-                  touched={formik.touched.salesPersonId}
-                  error={formik.errors.salesPersonId}
-                  translatedFieldName={t("sales-person")}
                 />
               }
             />

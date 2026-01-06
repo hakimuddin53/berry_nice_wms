@@ -17,6 +17,7 @@ import { useTranslation } from "react-i18next";
 import { useInventoryService } from "services/InventoryService";
 import { useProductService } from "services/ProductService";
 import { guid } from "types/guid";
+import { useUserDateTime } from "hooks/useUserDateTime";
 
 type ReportRow = InvoicedProductReportRowDto & { rowId: number };
 
@@ -44,6 +45,7 @@ const InvoicedProductsReportPage = () => {
   const { t } = useTranslation();
   const inventoryService = useInventoryService();
   const productService = useProductService();
+  const { getLocalDate } = useUserDateTime();
 
   const [filters, setFilters] = useState<ReportFilters>({
     search: "",
@@ -84,10 +86,11 @@ const InvoicedProductsReportPage = () => {
 
   const formatDate = (value?: string | null) => {
     if (!value) return "-";
-    const date = new Date(value);
-    return Number.isNaN(date.getTime())
-      ? String(value)
-      : date.toLocaleDateString();
+    try {
+      return getLocalDate(value);
+    } catch {
+      return String(value);
+    }
   };
 
   const selectPlaceholder = t("select", { defaultValue: "Select" });

@@ -27,6 +27,7 @@ import {
   formatWarrantyExpiry,
   warrantyLabelFromMonths,
 } from "utils/warranty";
+import { useUserDateTime } from "hooks/useUserDateTime";
 
 const InvoiceDetailsPage = () => {
   const { t } = useTranslation();
@@ -35,6 +36,7 @@ const InvoiceDetailsPage = () => {
   const invoiceService = useInvoiceService();
   const productService = useProductService();
   const customerService = useCustomerService();
+  const { getLocalDateAndTime } = useUserDateTime();
   const [invoice, setInvoice] = useState<InvoiceDetailsDto | null>(null);
   const [productLabels, setProductLabels] = useState<Record<string, string>>(
     {}
@@ -113,9 +115,9 @@ const InvoiceDetailsPage = () => {
         <body>
           <h1>Invoice ${invoice.number}</h1>
           <div class="meta">
-            <div><strong>Date:</strong> ${new Date(
+            <div><strong>Date:</strong> ${getLocalDateAndTime(
               invoice.dateOfSale
-            ).toLocaleString()}</div>
+            )}</div>
             <div><strong>Customer:</strong> ${customerText}</div>
             <div><strong>Salesperson:</strong> ${
               invoice.salesPersonName ?? invoice.salesPersonId

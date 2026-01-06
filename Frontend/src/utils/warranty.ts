@@ -35,7 +35,9 @@ export const formatWarrantyExpiry = (isoDate?: string | null) => {
   if (!isoDate) return "";
   const date = new Date(isoDate);
   if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleDateString();
+  return date.toLocaleDateString("en-MY", {
+    timeZone: "Asia/Kuala_Lumpur",
+  });
 };
 
 export const WARRANTY_OPTIONS = [

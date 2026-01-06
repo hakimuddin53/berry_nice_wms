@@ -36,6 +36,7 @@ import {
   useProductSelectOptionsFetcher,
 } from "hooks/queries/useProductQueries";
 import { useDatatableControls } from "hooks/useDatatableControls";
+import { useUserDateTime } from "hooks/useUserDateTime";
 import { InventoryAuditDto } from "interfaces/v12/inventory/inventoryAuditDto";
 import { UpdateInventoryBalanceDto } from "interfaces/v12/inventory/updateInventoryBalanceDto";
 import { LookupGroupKey } from "interfaces/v12/lookup/lookup";
@@ -51,8 +52,6 @@ type BalanceRow = InventoryAuditDto & { rowId: number };
 type ProductExtras = {
   remark?: string | null;
   internalRemark?: string | null;
-  agentPrice?: number | null;
-  dealerPrice?: number | null;
   retailPrice?: number | null;
   costPrice?: number | null;
   locationId?: string | null;
@@ -118,6 +117,7 @@ const InventoryPage = () => {
   const fetchProductOptions = useProductSelectOptionsFetcher();
   const fetchLookupById = useLookupByIdFetcher();
   const fetchLookupOptions = useLookupSelectOptionsFetcher();
+  const { getLocalDateAndTime } = useUserDateTime();
 
   const [filters, setFilters] = useState<InventorySearchFilters>({
     search: "",
@@ -197,7 +197,7 @@ const InventoryPage = () => {
   const formatDateTime = (value?: string | Date | null) => {
     if (!value) return "-";
     try {
-      return new Date(value).toLocaleString();
+      return getLocalDateAndTime(value);
     } catch {
       return String(value);
     }
@@ -306,19 +306,6 @@ const InventoryPage = () => {
           formatText(productExtras[row.productId]?.internalRemark),
       },
       {
-        id: "agentPrice",
-        label: t("agent-selling-price"),
-        align: "right",
-        render: (row) => formatNumber(productExtras[row.productId]?.agentPrice),
-      },
-      {
-        id: "dealerPrice",
-        label: t("dealer-selling-price"),
-        align: "right",
-        render: (row) =>
-          formatNumber(productExtras[row.productId]?.dealerPrice),
-      },
-      {
         id: "retailPrice",
         label: t("retail-selling-price"),
         align: "right",
@@ -354,6 +341,16 @@ const InventoryPage = () => {
             >
               <HistoryIcon fontSize="small" />
             </IconButton>
+            <Button
+              size="small"
+              variant="contained"
+              onClick={(event) => {
+                event.stopPropagation();
+                setActiveBalanceRow(row);
+              }}
+            >
+              {t("view", { defaultValue: "View" })}
+            </Button>
             <IconButton
               size="small"
               color="primary"
@@ -364,7 +361,7 @@ const InventoryPage = () => {
             </IconButton>
             <Button
               size="small"
-              variant="outlined"
+              variant="text"
               onClick={() => openEdit(row.productId as string)}
             >
               {t("edit")}
@@ -396,8 +393,6 @@ const InventoryPage = () => {
   const buildExtras = (product: ProductDetailsDto): ProductExtras => ({
     remark: product.remark ?? "",
     internalRemark: product.internalRemark ?? "",
-    agentPrice: product.agentPrice ?? null,
-    dealerPrice: product.dealerPrice ?? null,
     retailPrice: product.retailPrice ?? null,
     costPrice: product.costPrice ?? null,
     locationId: product.locationId ?? null,
@@ -607,11 +602,11 @@ const InventoryPage = () => {
     }
   }, [printRequested, labelData, handlePrint]);
 
-  const printLabel = (row: BalanceRow) => {
+  const buildLabelPayload = (row: BalanceRow): BarcodeLabelData => {
     const extras = productExtras[row.productId] || {};
     const code = extras.productCode ?? row.productCode ?? row.productId ?? "";
 
-    setLabelData({
+    return {
       code,
       model: extras.model ?? row.model ?? null,
       ram: extras.ram ?? null,
@@ -623,7 +618,11 @@ const InventoryPage = () => {
       serialNumber: extras.serialNumber ?? null,
       brand: extras.brand ?? null,
       category: extras.category ?? null,
-    });
+    };
+  };
+
+  const printLabel = (row: BalanceRow) => {
+    setLabelData(buildLabelPayload(row));
     setPrintRequested(true);
   };
 
@@ -632,8 +631,6 @@ const InventoryPage = () => {
     const payload: UpdateInventoryBalanceDto = {
       remark: formValues.remark ?? null,
       internalRemark: formValues.internalRemark ?? null,
-      agentPrice: formValues.agentPrice ?? null,
-      dealerPrice: formValues.dealerPrice ?? null,
       retailPrice: formValues.retailPrice ?? null,
       costPrice: formValues.costPrice ?? null,
       locationId: formValues.locationId ?? null,
@@ -680,10 +677,6 @@ const InventoryPage = () => {
         value: formatText(extras.productCode ?? activeBalanceRow.productCode),
       },
       {
-        label: t("product-id", { defaultValue: "Product Id" }),
-        value: formatText(activeBalanceRow.productId as unknown as string),
-      },
-      {
         label: t("model"),
         value: formatText(extras.model ?? activeBalanceRow.model),
       },
@@ -698,14 +691,6 @@ const InventoryPage = () => {
       { label: t("remark"), value: formatText(extras.remark) },
       { label: t("internal-remark"), value: formatText(extras.internalRemark) },
       {
-        label: t("agent-selling-price"),
-        value: formatNumber(extras.agentPrice),
-      },
-      {
-        label: t("dealer-selling-price"),
-        value: formatNumber(extras.dealerPrice),
-      },
-      {
         label: t("retail-selling-price"),
         value: formatNumber(extras.retailPrice),
       },
@@ -718,34 +703,6 @@ const InventoryPage = () => {
       { label: t("processor"), value: formatText(extras.processor) },
       { label: t("screen-size"), value: formatText(extras.screenSize) },
       { label: t("grade"), value: formatText(extras.gradeName) },
-      {
-        label: t("movement-type", { defaultValue: "Movement Type" }),
-        value: formatText(activeBalanceRow.movementType),
-      },
-      {
-        label: t("reference-number", { defaultValue: "Reference Number" }),
-        value: formatText(activeBalanceRow.referenceNumber),
-      },
-      {
-        label: t("movement-date", { defaultValue: "Movement Date" }),
-        value: formatDateTime(activeBalanceRow.movementDate),
-      },
-      {
-        label: t("quantity-in", { defaultValue: "Quantity In" }),
-        value: formatText(activeBalanceRow.quantityIn),
-      },
-      {
-        label: t("quantity-out", { defaultValue: "Quantity Out" }),
-        value: formatText(activeBalanceRow.quantityOut),
-      },
-      {
-        label: t("old-balance", { defaultValue: "Old Balance" }),
-        value: formatText(activeBalanceRow.oldBalance),
-      },
-      {
-        label: t("new-balance", { defaultValue: "New Balance" }),
-        value: formatText(activeBalanceRow.newBalance),
-      },
     ];
   }, [
     activeBalanceRow,
@@ -1094,30 +1051,8 @@ const InventoryPage = () => {
               minRows={2}
             />
             <Stack direction="row" spacing={2}>
-              <TextField
-                label={t("agent-selling-price")}
-                type="number"
-                value={formValues.agentPrice ?? ""}
-                onChange={(e) =>
-                  updateField(
-                    "agentPrice",
-                    e.target.value === "" ? null : Number(e.target.value)
-                  )
-                }
-                fullWidth
-              />
-              <TextField
-                label={t("dealer-selling-price")}
-                type="number"
-                value={formValues.dealerPrice ?? ""}
-                onChange={(e) =>
-                  updateField(
-                    "dealerPrice",
-                    e.target.value === "" ? null : Number(e.target.value)
-                  )
-                }
-                fullWidth
-              />
+              <Box sx={{ flex: 1 }} />
+              <Box sx={{ flex: 1 }} />
             </Stack>
             <Stack direction="row" spacing={2}>
               <TextField
@@ -1246,7 +1181,7 @@ const InventoryPage = () => {
                     {log.propertyName}
                   </Typography>
                   <Typography variant="caption" color="textSecondary">
-                    {new Date(log.changedAt).toLocaleString()}
+                    {getLocalDateAndTime(log.changedAt)}
                   </Typography>
                 </Stack>
                 <Stack direction="row" spacing={1} alignItems="center" mt={0.5}>

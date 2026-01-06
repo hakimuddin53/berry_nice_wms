@@ -11,6 +11,10 @@ import {
   InvoicedProductReportRowDto,
   InvoicedProductReportSearchDto,
 } from "interfaces/v12/inventory/invoicedProductReportDto";
+import {
+  PurchaseQualityReportRowDto,
+  PurchaseQualityReportSearchDto,
+} from "interfaces/v12/inventory/purchaseQualityReportDto";
 import { UpdateInventoryBalanceDto } from "interfaces/v12/inventory/updateInventoryBalanceDto";
 import { UpdateProductPricingDto } from "interfaces/v12/inventory/updateProductPricingDto";
 import { ProductAuditLogDto } from "interfaces/v12/product/productAuditLogDto";
@@ -32,6 +36,9 @@ interface IInventoryService {
   searchSummary: (
     dto: InventorySummarySearchDto
   ) => Promise<PagedListDto<InventorySummaryRowDto>>;
+  searchPurchaseQualityReport: (
+    dto: PurchaseQualityReportSearchDto
+  ) => Promise<PagedListDto<PurchaseQualityReportRowDto>>;
   getProductAuditLog: (productId: string) => Promise<ProductAuditLogDto[]>;
   updatePricing: (
     productId: string,
@@ -59,6 +66,9 @@ export type InventoryServiceProviderProps = {
   searchSummary?: (
     dto: InventorySummarySearchDto
   ) => Promise<PagedListDto<InventorySummaryRowDto>>;
+  searchPurchaseQualityReport?: (
+    dto: PurchaseQualityReportSearchDto
+  ) => Promise<PagedListDto<PurchaseQualityReportRowDto>>;
   getProductAuditLog?: (productId: string) => Promise<ProductAuditLogDto[]>;
   updatePricing?: (
     productId: string,
@@ -93,6 +103,12 @@ export const InventoryServiceProvider: React.FC<
     return axios.post("/inventory/summary", dto).then((res) => res.data);
   };
 
+  const searchPurchaseQualityReport = (dto: PurchaseQualityReportSearchDto) => {
+    return axios
+      .post("/inventory/purchase-quality-report", dto)
+      .then((res) => res.data);
+  };
+
   const getProductAuditLog = (productId: string) => {
     return axios
       .get<ProductAuditLogDto[]>(`/inventory/product/${productId}/audit-log`)
@@ -117,6 +133,8 @@ export const InventoryServiceProvider: React.FC<
     getInvoicedReportTotal:
       props.getInvoicedReportTotal || getInvoicedReportTotal,
     searchSummary: props.searchSummary || searchSummary,
+    searchPurchaseQualityReport:
+      props.searchPurchaseQualityReport || searchPurchaseQualityReport,
     getProductAuditLog: props.getProductAuditLog || getProductAuditLog,
     updatePricing: props.updatePricing || updatePricing,
     updateBalance: props.updateBalance || updateBalance,

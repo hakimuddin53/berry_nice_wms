@@ -214,7 +214,7 @@ namespace Wms.Api.Context
             var currentUser = "System";
             try
             {
-                currentUser = currentUserService.UserId();
+                currentUser = currentUserService.UserEmailOrId();
             }
             catch (Exception)
             {

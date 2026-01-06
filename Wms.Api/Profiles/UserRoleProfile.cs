@@ -13,19 +13,16 @@ namespace Wms.Api.Profiles
             CreateMap<ApplicationRole, UserRoleDetailsDto>()
                    .ForMember(dest => dest.Id, opt => opt.MapFrom(src => Guid.Parse(src.Id))) // Note: This still assumes src.Id is never null and always a valid Guid string. Consider Guid.TryParse for more robustness if needed.
                    .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
-                   .ForMember(dest => dest.DisplayName, opt => opt.MapFrom(src => src.DisplayName))
+                    .ForMember(dest => dest.DisplayName, opt => opt.MapFrom(src => src.DisplayName))
                     // Simplified mapping using helper methods
                     .ForMember(dest => dest.Module, opt => opt.MapFrom(src =>
-                        MappingHelpers.ParseEnumList<ModuleEnum>(src.Module))) // Use helper
-                    .ForMember(dest => dest.CartonSizeId, opt => opt.MapFrom(src =>
-                        MappingHelpers.ParseGuidList(src.CartonSizeId))); // Use helper
+                        MappingHelpers.ParseEnumList<ModuleEnum>(src.Module))); // Use helper
 
             CreateMap<UserRoleDetailsDto, ApplicationRole>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id.ToString()))
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
                 .ForMember(dest => dest.DisplayName, opt => opt.MapFrom(src => src.DisplayName))
-                .ForMember(dest => dest.Module, opt => opt.MapFrom(src => string.Join(",", src.Module)))
-                .ForMember(dest => dest.CartonSizeId, opt => opt.MapFrom(src => string.Join(",", src.CartonSizeId)));
+                .ForMember(dest => dest.Module, opt => opt.MapFrom(src => string.Join(",", src.Module)));
 
             CreateMap<ApplicationRole, SelectOptionV12Dto>()
                 .ForMember(x => x.Value, option => option.MapFrom(y => y.Id))

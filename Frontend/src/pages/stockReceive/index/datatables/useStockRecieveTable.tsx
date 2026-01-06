@@ -1,5 +1,6 @@
 ﻿import { Link } from "@mui/material";
 import { useCreatedChangeDate } from "hooks/useCreatedChangeDate";
+import { useUserDateTime } from "hooks/useUserDateTime";
 import { StockRecieveDetailsDto } from "interfaces/v12/StockRecieve/StockRecieveDetails/StockRecieveDetailsDto";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -11,6 +12,7 @@ const hidden = true;
 
 export const useStockRecieveTable = () => {
   const { t } = useTranslation("common");
+  const { getLocalDate } = useUserDateTime();
 
   /* eslint-disable react-hooks/exhaustive-deps */
   const StockRecieveData = useMemo<
@@ -49,10 +51,10 @@ export const useStockRecieveTable = () => {
       {
         id: "dateOfPurchase",
         label: t("date-of-purchase"),
-        render: (row) => new Date(row.dateOfPurchase).toLocaleDateString(),
+        render: (row) => getLocalDate(row.dateOfPurchase),
       },
     ],
-    [t]
+    [getLocalDate, t]
   );
   /* eslint-enable */
   useCreatedChangeDate(StockRecieveData);

@@ -8,8 +8,6 @@ export interface UserRoleDetailsDto extends CreatedChangedEntity {
   name: string;
   displayName: string;
   module: ModuleEnum[];
-  cartonSizeId: guid[];
-  cartonSizeName: string[];
 }
 
 export interface UserRoleSearchDto extends PagedRequestAbstractDto {

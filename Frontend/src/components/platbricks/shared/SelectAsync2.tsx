@@ -115,6 +115,7 @@ const SelectAsync2 = (props: SingleProps | MultiProps) => {
       placeholder={props.placeholder ?? undefined}
       InputProps={{
         ...params.InputProps,
+        readOnly: props.readOnly,
         endAdornment: (
           <React.Fragment>
             {loading ? <CircularProgress color="inherit" size={20} /> : null}
@@ -228,6 +229,9 @@ const SelectAsync2 = (props: SingleProps | MultiProps) => {
         })
       }
       onInputChange={(event, newInputValue, reason) => {
+        if (props.readOnly) {
+          return;
+        }
         if (reason === "input") {
           setInputValue(newInputValue);
         }

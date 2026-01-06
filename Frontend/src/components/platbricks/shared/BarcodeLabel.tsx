@@ -50,7 +50,7 @@ const BarcodeLabel = forwardRef<HTMLDivElement, BarcodeLabelProps>(
         ref={ref}
         style={{
           width: "60mm",
-          height: "33mm",
+          height: "30mm",
           padding: "2mm",
           boxSizing: "border-box",
           display: "flex",
@@ -72,7 +72,7 @@ const BarcodeLabel = forwardRef<HTMLDivElement, BarcodeLabelProps>(
           <div style={{ width: "18mm", height: "18mm" }}>
             <QRCodeSVG
               value={data.code}
-              size={72}
+              size={64}
               style={{ width: "100%", height: "100%" }}
             />
           </div>

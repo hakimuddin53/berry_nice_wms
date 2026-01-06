@@ -20,14 +20,12 @@ import GuestGuard from "components/guards/GuestGuard";
 import ModuleGuard from "components/guards/ModuleGuard";
 import { HomePageNavigator } from "components/platbricks/shared/HomePageNavigator";
 import { ModuleEnum } from "interfaces/enums/GlobalEnums";
-import CartonSizeCreateEditPage from "pages/cartonSize/createEdit/CartonSizeCreateEditPage";
-import CartonSizeDetailsPage from "pages/cartonSize/details/CartonSizeDetailsPage";
-import CartonSizeListPage from "pages/cartonSize/index/CartonSizeListPage";
 
 import DashboardPage from "pages/dashboard/DashboardPage";
 
 import InventoryPage from "pages/inventory/InventoryPage";
 import InvoicedProductsReportPage from "pages/inventory/InvoicedProductsReportPage";
+import PurchaseQualityReportPage from "pages/inventory/PurchaseQualityReportPage";
 
 import CustomerCreateEditPage from "pages/customer/createEdit/CustomerCreateEditPage";
 import CustomerDetailsPage from "pages/customer/details/CustomerDetailsPage";
@@ -308,6 +306,14 @@ const routes = [
               </ModuleGuard>
             ),
           },
+          {
+            path: "purchase-quality",
+            element: (
+              <ModuleGuard requiredModule={ModuleEnum.INVENTORY}>
+                <PurchaseQualityReportPage />
+              </ModuleGuard>
+            ),
+          },
         ],
       },
       {
@@ -430,43 +436,6 @@ const routes = [
         ],
       },
 
-      {
-        path: "stock-group", // Note: Maps to CartonSize components
-        children: [
-          {
-            index: true,
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.STOCKGROUP}>
-                <CartonSizeListPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: "new",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.STOCKGROUP}>
-                <CartonSizeCreateEditPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: ":id",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.STOCKGROUP}>
-                <CartonSizeDetailsPage />
-              </ModuleGuard>
-            ),
-          },
-          {
-            path: ":id/edit",
-            element: (
-              <ModuleGuard requiredModule={ModuleEnum.STOCKGROUP}>
-                <CartonSizeCreateEditPage />
-              </ModuleGuard>
-            ),
-          },
-        ],
-      },
       {
         path: "lookups",
         children: [

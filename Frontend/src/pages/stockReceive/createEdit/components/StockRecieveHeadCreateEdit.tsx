@@ -10,7 +10,6 @@ import { LookupGroupKey } from "interfaces/v12/lookup/lookup";
 import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useSupplierService } from "services/SupplierService";
-import { useUserService } from "services/UserService";
 import { isRequiredField } from "utils/formikHelpers";
 import {
   StockRecieveCreateEditSchema,
@@ -23,17 +22,13 @@ const StockRecieveHeadCreateEdit = (props: {
   const { t } = useTranslation("common");
   const formik = props.formik;
   const supplierService = useSupplierService();
-  const userService = useUserService();
 
   const sellerInfoIds = useMemo(
     () => (formik.values.sellerInfo?.trim() ? [formik.values.sellerInfo] : []),
     [formik.values.sellerInfo]
   );
 
-  const purchaserIds = useMemo(
-    () => (formik.values.purchaser?.trim() ? [formik.values.purchaser] : []),
-    [formik.values.purchaser]
-  );
+  const purchaserIds = useMemo(() => [] as string[], []);
 
   const createStaticOptions = useCallback((ids?: string[]) => {
     if (!ids || ids.length === 0) {
@@ -77,17 +72,7 @@ const StockRecieveHeadCreateEdit = (props: {
     [createStaticOptions, normalizeOptions, supplierService]
   );
 
-  const userAsync = useCallback(
-    async (input: string, page: number, pageSize: number, ids?: string[]) => {
-      if (ids && ids.length > 0) {
-        return createStaticOptions(ids);
-      }
-
-      const options = await userService.getSelectOptions(input, page, pageSize);
-      return normalizeOptions(options);
-    },
-    [createStaticOptions, normalizeOptions, userService]
-  );
+  const userAsync = useCallback(async () => [] as SelectAsyncOption[], []);
 
   return (
     <DataList
@@ -124,37 +109,7 @@ const StockRecieveHeadCreateEdit = (props: {
             />
           ),
         },
-        {
-          label: t("purchaser"),
-          required: isRequiredField(
-            StockRecieveCreateEditSchema,
-            "purchaser",
-            formik.values
-          ),
-          value: (
-            <SelectAsync2
-              name="purchaser"
-              placeholder={t("purchaser")}
-              ids={purchaserIds}
-              asyncFunc={userAsync}
-              suggestionsIfEmpty
-              onSelectionChange={(option?: SelectAsyncOption) =>
-                formik.setFieldValue("purchaser", option?.value ?? "")
-              }
-              onBlur={() => formik.setFieldTouched("purchaser", true)}
-              error={
-                formik.touched.purchaser && Boolean(formik.errors.purchaser)
-              }
-              helperText={
-                <FormikErrorMessage
-                  touched={formik.touched.purchaser}
-                  error={formik.errors.purchaser}
-                  translatedFieldName={t("purchaser")}
-                />
-              }
-            />
-          ),
-        },
+        // Purchaser removed: set automatically to current user in page logic
         {
           label: t("date-of-purchase"),
           required: isRequiredField(

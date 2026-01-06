@@ -30,14 +30,16 @@
         PRODUCT = 8,
         INVENTORY = 9,
         SIZE = 10,
-        STOCKGROUP = 11,
-        WAREHOUSE = 12,
-        USER = 13,
-        USERROLE = 14, 
-        CLIENTCODE = 15,
-        STOCKADJUSTMENT = 16,
-        INVOICE = 17,
-        STOCKTAKE = 18
+        WAREHOUSE = 11,
+        USER = 12,
+        USERROLE = 13, 
+        STOCKADJUSTMENT = 14,
+        INVOICE = 15,
+        STOCKTAKE = 16,
+        LOOKUP = 17,
+        CUSTOMER = 18,
+        SUPPLIER = 19,
+        EXPENSE = 20
     }
 
     public enum ReservationStatusEnum

@@ -13,7 +13,7 @@ import { FormikProvider, setNestedObjectValues, useFormik } from "formik";
 import { useDatatableControls } from "hooks/useDatatableControls";
 import { useFormikDatatable } from "hooks/useFormikDatatable";
 import { InvoiceCreateUpdateDto } from "interfaces/v12/invoice/invoiceCreateUpdateDto";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { useInvoiceService } from "services/InvoiceService";
@@ -32,6 +32,7 @@ import {
   YupInvoiceCreateEdit,
   YupInvoiceItemCreateEdit,
 } from "./yup/invoiceCreateEditSchema";
+import jwtDecode from "jwt-decode";
 
 const createEmptyItem = (): YupInvoiceItemCreateEdit => ({
   id: undefined,
@@ -91,12 +92,29 @@ const InvoiceCreateEditPage = () => {
   const [tab, setTab] = useState(0);
   const invoiceService = useInvoiceService();
   const notificationService = useNotificationService();
+  const currentUserId = useMemo(() => {
+    const token = window.localStorage.getItem("accessToken");
+    if (!token) return "";
+    try {
+      const decoded: any = jwtDecode(token);
+      return (
+        decoded[
+          "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
+        ] ||
+        decoded.nameid ||
+        decoded.sub ||
+        ""
+      );
+    } catch {
+      return "";
+    }
+  }, []);
   const [invoiceNumber, setInvoiceNumber] = useState<string>("");
   const [initialValues, setInitialValues] = useState<YupInvoiceCreateEdit>({
     customerId: undefined,
     customerName: "",
     dateOfSale: formatDateInput(),
-    salesPersonId: "",
+    salesPersonId: currentUserId || "",
     warehouseId: EMPTY_GUID as guid,
     salesTypeId: undefined,
     paymentTypeId: undefined,
@@ -120,7 +138,10 @@ const InvoiceCreateEditPage = () => {
     invoiceService
       .getInvoiceById(id)
       .then((invoice) => {
-        const formValue = mapDetailsToForm(invoice);
+        const formValue = mapDetailsToForm({
+          ...invoice,
+          salesPersonId: invoice.salesPersonId ?? currentUserId,
+        });
         setInvoiceNumber(invoice.number ?? "");
         if (formValue.invoiceItems.length === 0) {
           formValue.invoiceItems = [createEmptyItem()];
@@ -148,7 +169,7 @@ const InvoiceCreateEditPage = () => {
         customerId: values.customerId || undefined,
         customerName: values.customerName || undefined,
         dateOfSale: values.dateOfSale,
-        salesPersonId: values.salesPersonId,
+        salesPersonId: values.salesPersonId || currentUserId || "",
         warehouseId: values.warehouseId,
         salesTypeId: values.salesTypeId || undefined,
         paymentTypeId: values.paymentTypeId || undefined,
