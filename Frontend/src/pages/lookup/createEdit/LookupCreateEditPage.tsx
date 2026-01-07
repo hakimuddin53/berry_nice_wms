@@ -41,7 +41,6 @@ const LookupCreateEditPage: React.FC = () => {
       label: entity?.label ?? "",
       sortOrder: entity?.sortOrder ?? 10,
       isActive: entity?.isActive ?? true,
-      metaJson: entity?.metaJson ?? "",
     }),
     [entity]
   );
@@ -64,6 +63,7 @@ const LookupCreateEditPage: React.FC = () => {
       try {
         if (id) {
           await lookupService.update(id, payload);
+          formik.resetForm({ values });
           notificationService.handleApiSuccessMessage(
             "lookup",
             "updated",
@@ -72,6 +72,7 @@ const LookupCreateEditPage: React.FC = () => {
           navigate(`/lookups/${group}/${id}`);
         } else {
           const created = await lookupService.create(payload);
+          formik.resetForm({ values });
           notificationService.handleApiSuccessMessage(
             "lookup",
             "created",
@@ -120,7 +121,7 @@ const LookupCreateEditPage: React.FC = () => {
       ]}
       hasSingleActionButton
     >
-      <NavBlocker when={formik.dirty} />
+      <NavBlocker when={formik.dirty && !formik.isSubmitting && !pageBlocker} />
       <FormikProvider value={formik}>
         <form onSubmit={formik.handleSubmit}>
           <PbCard px={2} pt={2}>

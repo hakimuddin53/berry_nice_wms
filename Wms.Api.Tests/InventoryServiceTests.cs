@@ -33,7 +33,6 @@ public class InventoryServiceTests
         {
             Id = categoryId,
             GroupKey = LookupGroupKey.ProductCategory,
-            Code = "CAT",
             Label = "Category",
             SortOrder = 1
         });

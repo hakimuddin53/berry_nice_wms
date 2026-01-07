@@ -16,17 +16,17 @@ namespace Wms.Api.Data.Seeding
 
             var lookups = await db.Lookups
                 .Where(l =>
-                    (l.GroupKey == LookupGroupKey.ProductCategory && l.Code == "SERVICE") ||
-                    (l.GroupKey == LookupGroupKey.Location && l.Code == "STOCK") ||
-                    (l.GroupKey == LookupGroupKey.NewOrUsed && l.Code == "NEW") ||
-                    (l.GroupKey == LookupGroupKey.Grade && l.Code == "AA"))
-                .Select(l => new { l.Id, l.GroupKey, l.Code })
+                    (l.GroupKey == LookupGroupKey.ProductCategory && l.Label == "Service") ||
+                    (l.GroupKey == LookupGroupKey.Location && l.Label == "STOCK") ||
+                    (l.GroupKey == LookupGroupKey.NewOrUsed && l.Label == "NEW") ||
+                    (l.GroupKey == LookupGroupKey.Grade && l.Label == "AA"))
+                .Select(l => new { l.Id, l.GroupKey, l.Label })
                 .ToListAsync(ct);
 
-            var serviceCategoryId = lookups.FirstOrDefault(l => l.GroupKey == LookupGroupKey.ProductCategory && l.Code == "SERVICE")?.Id ?? Guid.Empty;
-            var stockLocationId = lookups.FirstOrDefault(l => l.GroupKey == LookupGroupKey.Location && l.Code == "STOCK")?.Id ?? Guid.Empty;
-            var newConditionId = lookups.FirstOrDefault(l => l.GroupKey == LookupGroupKey.NewOrUsed && l.Code == "NEW")?.Id ?? Guid.Empty;
-            var gradeAaId = lookups.FirstOrDefault(l => l.GroupKey == LookupGroupKey.Grade && l.Code == "AA")?.Id ?? Guid.Empty;
+            var serviceCategoryId = lookups.FirstOrDefault(l => l.GroupKey == LookupGroupKey.ProductCategory && l.Label == "Service")?.Id ?? Guid.Empty;
+            var stockLocationId = lookups.FirstOrDefault(l => l.GroupKey == LookupGroupKey.Location && l.Label == "STOCK")?.Id ?? Guid.Empty;
+            var newConditionId = lookups.FirstOrDefault(l => l.GroupKey == LookupGroupKey.NewOrUsed && l.Label == "NEW")?.Id ?? Guid.Empty;
+            var gradeAaId = lookups.FirstOrDefault(l => l.GroupKey == LookupGroupKey.Grade && l.Label == "AA")?.Id ?? Guid.Empty;
 
             if (serviceCategoryId == Guid.Empty || stockLocationId == Guid.Empty || newConditionId == Guid.Empty || gradeAaId == Guid.Empty)
             {

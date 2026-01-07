@@ -347,10 +347,10 @@ namespace Wms.Api.Services
 				return new HashSet<Guid>();
 			}
 
-			var serviceCategoryId = await _context.Lookups
-				.Where(l => l.GroupKey == LookupGroupKey.ProductCategory && l.Code == "SERVICE")
-				.Select(l => l.Id)
-				.FirstOrDefaultAsync();
+            var serviceCategoryId = await _context.Lookups
+                .Where(l => l.GroupKey == LookupGroupKey.ProductCategory && l.Label == "Service")
+                .Select(l => l.Id)
+                .FirstOrDefaultAsync();
 
 			var products = await _context.Products
 				.Where(p => ids.Contains(p.ProductId))

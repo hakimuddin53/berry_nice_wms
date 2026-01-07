@@ -77,5 +77,6 @@
         Model = 16,
         Warehouse = 17,
         Grade = 18,
+        Remark = 19,
     }
 } 

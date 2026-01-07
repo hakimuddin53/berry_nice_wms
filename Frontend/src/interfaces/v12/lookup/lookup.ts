@@ -22,6 +22,7 @@ export enum LookupGroupKey {
   Brand = "Brand",
   Model = "Model",
   Warehouse = "Warehouse",
+  Remark = "Remark",
 }
 
 export interface LookupDetailsDto {
@@ -30,7 +31,6 @@ export interface LookupDetailsDto {
   label: string;
   sortOrder: number;
   isActive: boolean;
-  metaJson?: string | null;
   createdAt?: string;
   changedAt?: string;
   createdById?: string;
@@ -42,7 +42,6 @@ export interface LookupCreateUpdateDto {
   label: string;
   sortOrder: number;
   isActive: boolean;
-  metaJson?: string | null;
 }
 
 export interface LookupSearchDto extends PagedRequestAbstractDto {

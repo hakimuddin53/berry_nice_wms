@@ -68,12 +68,6 @@ const LookupDetailsPage = () => {
               <KeyValuePair label={t("active")}>
                 {entity.isActive ? t("common:yes") : t("common:no")}
               </KeyValuePair>
-              {entity.metaJson && (
-                <KeyValuePair label={t("meta-json")}>
-                  <pre style={{ margin: 0 }}>{entity.metaJson}</pre>
-                </KeyValuePair>
-              )}
-
               {entity.createdAt && (
                 <KeyValuePair label={t("created-at")}>
                   <UserDateTime date={entity.createdAt} />

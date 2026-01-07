@@ -86,15 +86,6 @@ type InventorySearchFilters = {
   newOrUsed: SelectAsyncOption | null;
 };
 
-const PRESET_REMARK_OPTIONS = [
-  "Faulty",
-  "Screen Crack",
-  "No Dispaly",
-  "Battery rosak",
-  "Motherboard faulty",
-  "Power adapter issue",
-];
-
 const parseRemarkSelections = (value?: string | null) => {
   if (!value) {
     return [];
@@ -167,25 +158,42 @@ const InventoryPage = () => {
     [formValues.remark]
   );
 
-  const remarkOptions = useMemo(() => {
-    const additionalSelections = selectedRemarks.filter(
-      (option) => !PRESET_REMARK_OPTIONS.includes(option)
-    );
-
-    return [...PRESET_REMARK_OPTIONS, ...additionalSelections];
-  }, [selectedRemarks]);
-
   const remarkAsync = useCallback(
-    async (input: string, _page: number, _pageSize: number, ids?: string[]) => {
-      const merged = [...remarkOptions, ...(ids ?? [])].filter(Boolean);
+    async (input: string, page: number, pageSize: number, ids?: string[]) => {
+      let lookupRemarkOptions: string[] = [];
+
+      try {
+        const chunk =
+          (await fetchLookupOptions(
+            LookupGroupKey.Remark,
+            input ?? "",
+            page,
+            pageSize
+          )) ?? [];
+        lookupRemarkOptions = chunk
+          .map((option) => option.label?.trim() ?? "")
+          .filter((label) => label.length > 0);
+      } catch (err) {
+        if (process.env.NODE_ENV !== "production") {
+          // eslint-disable-next-line no-console
+          console.error("Failed to load remark lookups", err);
+        }
+      }
+
+      const merged = [
+        ...lookupRemarkOptions,
+        ...selectedRemarks,
+        ...(ids ?? []),
+      ].filter(Boolean);
+
       const unique = Array.from(new Set(merged));
-      const term = input.trim().toLowerCase();
+      const term = (input ?? "").trim().toLowerCase();
       const filtered = term
         ? unique.filter((option) => option.toLowerCase().includes(term))
         : unique;
       return filtered.map((option) => ({ label: option, value: option }));
     },
-    [remarkOptions]
+    [fetchLookupOptions, selectedRemarks]
   );
 
   const formatNumber = (value?: number | null) =>

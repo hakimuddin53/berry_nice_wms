@@ -14,6 +14,9 @@ public class LookupProfile : Profile
         CreateMap<Lookup, LookupDetailsDto>();  
         #endregion
 
+        // DTO -> Entity (create/update)
+        CreateMap<LookupCreateUpdateDto, Lookup>();
+
         CreateMap<Lookup, SelectOptionV12Dto>()
             .ForMember(x => x.Value, option => option.MapFrom(y => y.Id))
             .ForMember(x => x.Label, option => option.MapFrom(y => y.Label));

@@ -51,7 +51,7 @@ namespace Wms.Api.Controllers
             if (!string.IsNullOrWhiteSpace(filter.SearchString))
             {
                 var s = filter.SearchString!;
-                predicate = predicate.And(l => l.Code.Contains(s) || l.Label.Contains(s));
+                predicate = predicate.And(l => l.Label.Contains(s));
             }
 
             var pagedQuery = await _service.GetPaginatedAsync(
@@ -81,7 +81,7 @@ namespace Wms.Api.Controllers
             if (!string.IsNullOrWhiteSpace(search.Search))
             {
                 var s = search.Search!;
-                predicate = predicate.And(l => l.Code.Contains(s) || l.Label.Contains(s));
+                predicate = predicate.And(l => l.Label.Contains(s));
             }
 
             if (search.ActiveOnly) predicate = predicate.And(l => l.IsActive);
@@ -108,7 +108,7 @@ namespace Wms.Api.Controllers
             if (!string.IsNullOrWhiteSpace(search.Search))
             {
                 var s = search.Search!;
-                predicate = predicate.And(l => l.Code.Contains(s) || l.Label.Contains(s));
+                predicate = predicate.And(l => l.Label.Contains(s));
             }
 
             if (search.ActiveOnly) predicate = predicate.And(l => l.IsActive);
@@ -146,10 +146,10 @@ namespace Wms.Api.Controllers
         [ProducesResponseType(typeof(LookupDetailsDto), StatusCodes.Status201Created)]
         public async Task<IActionResult> Create([FromBody] LookupCreateUpdateDto dto)
         {
-            // Enforce unique (GroupKey, Code)
-            var exists = (await _service.GetAllAsync(l => l.GroupKey == dto.GroupKey && l.Code == dto.Code)).Any();
-            if (exists) 
-                return Conflict($"Code '{dto.Code}' already exists for group '{dto.GroupKey}'.");
+            // Enforce unique (GroupKey, Label)
+            var exists = (await _service.GetAllAsync(l => l.GroupKey == dto.GroupKey && l.Label == dto.Label)).Any();
+            if (exists)
+                return Conflict($"Label '{dto.Label}' already exists for group '{dto.GroupKey}'.");
 
             var entity = _mapper.Map<Lookup>(dto);
             await _service.AddAsync(entity);
@@ -164,13 +164,13 @@ namespace Wms.Api.Controllers
             var entity = await _service.GetByIdAsync(id);
             if (entity == null) return NotFound();
 
-            // If GroupKey or Code changed, re-check uniqueness
-            var willChangeKey = entity.GroupKey != dto.GroupKey || !string.Equals(entity.Code, dto.Code, StringComparison.Ordinal);
+            // If GroupKey or Label changed, re-check uniqueness
+            var willChangeKey = entity.GroupKey != dto.GroupKey || !string.Equals(entity.Label, dto.Label, StringComparison.Ordinal);
             if (willChangeKey)
             {
-                var dup = (await _service.GetAllAsync(l => l.Id != id && l.GroupKey == dto.GroupKey && l.Code == dto.Code)).Any();
-                if (dup) 
-                    return Conflict($"Code '{dto.Code}' already exists for group '{dto.GroupKey}'.");
+                var dup = (await _service.GetAllAsync(l => l.Id != id && l.GroupKey == dto.GroupKey && l.Label == dto.Label)).Any();
+                if (dup)
+                    return Conflict($"Label '{dto.Label}' already exists for group '{dto.GroupKey}'.");
             }
 
             _mapper.Map(dto, entity);

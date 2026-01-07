@@ -22,8 +22,9 @@ import {
 import FormikErrorMessage from "components/platbricks/shared/ErrorMessage";
 import LookupAutocomplete from "components/platbricks/shared/LookupAutocomplete";
 import { FormikErrors, FormikProps } from "formik";
+import { useLookupSelectOptionsFetcher } from "hooks/queries/useLookupQueries";
 import { LookupGroupKey } from "interfaces/v12/lookup/lookup";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { EMPTY_GUID } from "types/guid";
 import { isRequiredField } from "utils/formikHelpers";
@@ -31,15 +32,6 @@ import {
   StockRecieveCreateEditSchema,
   YupStockRecieveCreateEdit,
 } from "../yup/StockRecieveCreateEditSchema";
-
-const PRESET_REMARK_OPTIONS = [
-  "Faulty",
-  "Screen Crack",
-  "No Dispaly",
-  "Battery rosak",
-  "Motherboard faulty",
-  "Power adapter issue",
-];
 
 const parseRemarkSelections = (value?: string) => {
   if (!value) {
@@ -61,10 +53,12 @@ const StockRecieveItemCreateEdit = (props: {
   itemIndex: number;
 }) => {
   const { t } = useTranslation("common");
+  const fetchLookupOptions = useLookupSelectOptionsFetcher();
   const formik = props.formik;
   const itemIndex = props.itemIndex;
 
   const [activeTab, setActiveTab] = useState(0);
+  const [remarkOptions, setRemarkOptions] = useState<string[]>([]);
 
   const item = formik.values.stockRecieveItems[itemIndex];
   type ItemField = keyof typeof item;
@@ -101,13 +95,61 @@ const StockRecieveItemCreateEdit = (props: {
     [item.remark]
   );
 
-  const remarkOptions = useMemo(() => {
-    const additionalSelections = selectedRemarks.filter(
-      (option) => !PRESET_REMARK_OPTIONS.includes(option)
-    );
+  const allRemarkOptions = useMemo(
+    () => Array.from(new Set([...remarkOptions, ...selectedRemarks])),
+    [remarkOptions, selectedRemarks]
+  );
 
-    return [...PRESET_REMARK_OPTIONS, ...additionalSelections];
-  }, [selectedRemarks]);
+  useEffect(() => {
+    let isActive = true;
+    const PAGE_SIZE = 50;
+
+    const loadRemarkOptions = async () => {
+      try {
+        const labels: string[] = [];
+        let page = 1;
+        while (true) {
+          const chunk =
+            (await fetchLookupOptions(
+              LookupGroupKey.Remark,
+              "",
+              page,
+              PAGE_SIZE
+            )) ?? [];
+
+          if (chunk.length === 0) break;
+
+          labels.push(
+            ...chunk
+              .map((option) => option.label?.trim() ?? "")
+              .filter((label) => label.length > 0)
+          );
+
+          if (chunk.length < PAGE_SIZE) break;
+          page += 1;
+        }
+
+        if (isActive) {
+          const unique = Array.from(new Set([...labels]));
+          setRemarkOptions(unique);
+        }
+      } catch (err) {
+        if (process.env.NODE_ENV !== "production") {
+          // eslint-disable-next-line no-console
+          console.error("Failed to load remark lookup options", err);
+        }
+        if (isActive) {
+          setRemarkOptions([]);
+        }
+      }
+    };
+
+    loadRemarkOptions();
+
+    return () => {
+      isActive = false;
+    };
+  }, [fetchLookupOptions]);
 
   const updateRemarkSelections = (selections: string[]) => {
     formik.setFieldTouched(fieldName("remark"), true, false);
@@ -756,7 +798,7 @@ const StockRecieveItemCreateEdit = (props: {
                           </Box>
                         )}
                       >
-                        {remarkOptions.map((option) => (
+                        {allRemarkOptions.map((option) => (
                           <MenuItem key={option} value={option}>
                             <Checkbox
                               checked={selectedRemarks.indexOf(option) > -1}

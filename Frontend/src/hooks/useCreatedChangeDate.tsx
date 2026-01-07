@@ -30,7 +30,12 @@ export const useCreatedChangeDate = (
     {
       id: "createdById",
       label: i18next.t("common:created-by"),
-      render: (row) => <UserName userId={row.createdById} />,
+      render: (row) => {
+        const userId: string | undefined = row.createdById;
+        const emptyGuid = "00000000-0000-0000-0000-000000000000";
+        if (!userId || userId === emptyGuid) return "-";
+        return <UserName userId={userId} />;
+      },
       hidden: (hidesAll ?? false) || (hideCreatedById ?? false),
     },
     {
@@ -42,7 +47,12 @@ export const useCreatedChangeDate = (
     {
       id: "changedById",
       label: i18next.t("common:changed-by"),
-      render: (row) => <UserName userId={row.changedById} />,
+      render: (row) => {
+        const userId: string | undefined = row.changedById;
+        const emptyGuid = "00000000-0000-0000-0000-000000000000";
+        if (!userId || userId === emptyGuid) return "-";
+        return <UserName userId={userId} />;
+      },
       hidden: (hidesAll ?? false) || (hideChangedById ?? false),
     }
   );
