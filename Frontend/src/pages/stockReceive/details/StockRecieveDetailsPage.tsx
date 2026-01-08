@@ -1,4 +1,4 @@
-import {
+﻿import {
   Box,
   Button,
   CardContent,
@@ -9,6 +9,7 @@ import {
   Grid,
   Typography,
 } from "@mui/material";
+import UserName from "components/platbricks/entities/UserName";
 import {
   DataTable,
   EasyCopy,
@@ -29,6 +30,10 @@ import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { useLookupService } from "services/LookupService";
 import { useStockRecieveService } from "services/StockRecieveService";
+const GUID_REGEX =
+  /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+const isGuidString = (value?: any) =>
+  typeof value === "string" && GUID_REGEX.test(value);
 
 function StockRecieveDetailsPage() {
   const { t } = useTranslation("common");
@@ -478,7 +483,13 @@ function StockRecieveDetailsPage() {
                   {StockRecieve.sellerInfo}
                 </KeyValuePair>
                 <KeyValuePair label={t("purchaser")}>
-                  {StockRecieve.purchaser}
+                  {StockRecieve.purchaserName ? (
+                    StockRecieve.purchaserName
+                  ) : isGuidString(StockRecieve.purchaser) ? (
+                    <UserName userId={StockRecieve.purchaser} placeholder="-" />
+                  ) : (
+                    StockRecieve.purchaser || "-"
+                  )}
                 </KeyValuePair>
               </KeyValueList>
             </Grid>

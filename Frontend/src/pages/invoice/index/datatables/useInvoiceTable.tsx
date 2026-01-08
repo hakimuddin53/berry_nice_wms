@@ -2,6 +2,7 @@ import { Link } from "@mui/material";
 import EasyCopy from "components/platbricks/shared/EasyCopy";
 import { DataTableHeaderCell } from "components/platbricks/shared/dataTable/DataTable";
 import { useCreatedChangeDate } from "hooks/useCreatedChangeDate";
+import { useUserDateTime } from "hooks/useUserDateTime";
 import { InvoiceDetailsDto } from "interfaces/v12/invoice/invoiceDetailsDto";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -11,6 +12,7 @@ const hidden = true;
 
 export const useInvoiceTable = () => {
   const { t } = useTranslation();
+  const { getLocalDate } = useUserDateTime();
   const columns = useMemo<DataTableHeaderCell<InvoiceDetailsDto>[]>(
     () => [
       {
@@ -37,6 +39,7 @@ export const useInvoiceTable = () => {
       {
         id: "dateOfSale",
         label: t("date-of-sale"),
+        render: (row) => getLocalDate(row.dateOfSale),
       },
       {
         id: "grandTotal",
@@ -45,7 +48,7 @@ export const useInvoiceTable = () => {
         render: (row) => row.grandTotal.toFixed(2),
       },
     ],
-    [t]
+    [getLocalDate, t]
   );
   useCreatedChangeDate(columns);
 

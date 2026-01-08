@@ -23,6 +23,7 @@ export interface YupStockRecieveItemCreateEdit {
   gradeName?: string;
   locationId: guid;
   locationName?: string;
+  locationLabel?: string;
   serialNumber?: string;
   regionId?: guid;
   regionName?: string;

@@ -21,6 +21,10 @@ namespace Wms.Api.Dto.Invoice.InvoiceDetails
         public decimal GrandTotal { get; set; }
         public Guid WarehouseId { get; set; }
         public string WarehouseLabel { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
+        public Guid CreatedById { get; set; }
+        public DateTime? ChangedAt { get; set; }
+        public Guid? ChangedById { get; set; }
 
         public ICollection<InvoiceItemDetailsDto> InvoiceItems { get; set; } = new List<InvoiceItemDetailsDto>();
     }

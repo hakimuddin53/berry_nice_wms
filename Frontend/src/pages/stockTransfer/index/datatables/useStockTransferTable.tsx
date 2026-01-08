@@ -1,4 +1,5 @@
 import { DataTableHeaderCell } from "components/platbricks/shared/dataTable/DataTable";
+import UserDateTime from "components/platbricks/shared/UserDateTime";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -30,6 +31,7 @@ export const useStockTransferTable = () => {
       {
         id: "createdAt",
         label: t("common:created-at"),
+        render: (row) => <UserDateTime date={row.createdAt} />,
       },
     ],
     [t]

@@ -1,4 +1,5 @@
 ﻿import { Link } from "@mui/material";
+import UserName from "components/platbricks/entities/UserName";
 import { useCreatedChangeDate } from "hooks/useCreatedChangeDate";
 import { useUserDateTime } from "hooks/useUserDateTime";
 import { StockRecieveDetailsDto } from "interfaces/v12/StockRecieve/StockRecieveDetails/StockRecieveDetailsDto";
@@ -9,6 +10,10 @@ import EasyCopy from "../../../../components/platbricks/shared/EasyCopy";
 import { DataTableHeaderCell } from "../../../../components/platbricks/shared/dataTable/DataTable";
 
 const hidden = true;
+const GUID_REGEX =
+  /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+const isGuidString = (value?: any) =>
+  typeof value === "string" && GUID_REGEX.test(value);
 
 export const useStockRecieveTable = () => {
   const { t } = useTranslation("common");
@@ -42,6 +47,18 @@ export const useStockRecieveTable = () => {
       {
         id: "purchaser",
         label: t("purchaser"),
+        render: (row) =>
+          row.purchaserName ? (
+            row.purchaserName
+          ) : row.purchaser ? (
+            isGuidString(row.purchaser) ? (
+              <UserName userId={row.purchaser} placeholder="-" />
+            ) : (
+              row.purchaser
+            )
+          ) : (
+            "-"
+          ),
       },
       {
         id: "warehouseLabel",

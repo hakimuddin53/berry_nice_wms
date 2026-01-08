@@ -9,6 +9,9 @@ const hidden = true;
 export const useStockRecieveItemTable = () => {
   const { t } = useTranslation("common");
 
+  const formatNumber = (value?: number | null) =>
+    value == null ? "-" : value.toString();
+
   const StockRecieveItemData = useMemo<
     DataTableHeaderCell<YupStockRecieveItemCreateEdit>[]
   >(
@@ -36,28 +39,23 @@ export const useStockRecieveItemTable = () => {
       {
         id: "locationId",
         label: t("location"),
-        render: (row) => row.locationName || row.locationId || "-",
+        render: (row) =>
+          row.locationName || row.locationLabel || row.locationId || "-",
       },
       {
         id: "cost",
         label: t("cost"),
-        render: (row) => (row.cost !== undefined ? row.cost.toString() : "-"),
+        render: (row) => formatNumber(row.cost),
       },
       {
         id: "retailSellingPrice",
         label: t("retail-selling-price"),
-        render: (row) =>
-          row.retailSellingPrice !== undefined
-            ? row.retailSellingPrice.toString()
-            : "-",
+        render: (row) => formatNumber(row.retailSellingPrice),
       },
       {
         id: "dealerSellingPrice",
         label: t("dealer-selling-price"),
-        render: (row) =>
-          row.dealerSellingPrice !== undefined
-            ? row.dealerSellingPrice.toString()
-            : "-",
+        render: (row) => formatNumber(row.dealerSellingPrice),
       },
     ],
     [t]

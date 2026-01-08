@@ -6,6 +6,7 @@ export interface StockRecieveDetailsDto {
   number: string;
   sellerInfo: string;
   purchaser: string;
+  purchaserName?: string;
   dateOfPurchase: string;
   warehouseId: guid;
   warehouseLabel: string;

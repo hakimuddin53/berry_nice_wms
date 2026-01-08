@@ -18,5 +18,9 @@ export interface InvoiceDetailsDto {
   grandTotal: number;
   warehouseId: guid;
   warehouseLabel?: string | null;
+  createdAt?: string;
+  createdById?: string;
+  changedAt?: string | null;
+  changedById?: string | null;
   invoiceItems: InvoiceItemDetailsDto[];
 }

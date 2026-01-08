@@ -4,6 +4,12 @@ import { DataTableHeaderCell } from "components/platbricks/shared/dataTable/Data
 import i18next from "i18next";
 import { RemoveExistingCreatedChanged } from "utils/helper";
 
+const GUID_REGEX =
+  /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+
+const isGuidString = (value?: any) =>
+  typeof value === "string" && GUID_REGEX.test(value);
+
 export const useCreatedChangeDate = (
   columns: DataTableHeaderCell<any>[],
   hidesAll?: boolean,
@@ -34,6 +40,7 @@ export const useCreatedChangeDate = (
         const userId: string | undefined = row.createdById;
         const emptyGuid = "00000000-0000-0000-0000-000000000000";
         if (!userId || userId === emptyGuid) return "-";
+        if (!isGuidString(userId)) return userId;
         return <UserName userId={userId} />;
       },
       hidden: (hidesAll ?? false) || (hideCreatedById ?? false),
@@ -51,6 +58,7 @@ export const useCreatedChangeDate = (
         const userId: string | undefined = row.changedById;
         const emptyGuid = "00000000-0000-0000-0000-000000000000";
         if (!userId || userId === emptyGuid) return "-";
+        if (!isGuidString(userId)) return userId;
         return <UserName userId={userId} />;
       },
       hidden: (hidesAll ?? false) || (hideChangedById ?? false),

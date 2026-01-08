@@ -35,9 +35,18 @@ export const formatWarrantyExpiry = (isoDate?: string | null) => {
   if (!isoDate) return "";
   const date = new Date(isoDate);
   if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleDateString("en-MY", {
-    timeZone: "Asia/Kuala_Lumpur",
-  });
+  const locale =
+    typeof navigator !== "undefined" && navigator.language
+      ? navigator.language
+      : "en-MY";
+  const timeZone = (() => {
+    try {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone;
+    } catch {
+      return undefined;
+    }
+  })();
+  return date.toLocaleDateString(locale, timeZone ? { timeZone } : undefined);
 };
 
 export const WARRANTY_OPTIONS = [

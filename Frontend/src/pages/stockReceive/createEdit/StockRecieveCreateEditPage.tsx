@@ -12,10 +12,12 @@ import {
 import { FormikProvider, setNestedObjectValues, useFormik } from "formik";
 import { useDatatableControls } from "hooks/useDatatableControls";
 import { useFormikDatatable } from "hooks/useFormikDatatable";
+import { LookupGroupKey } from "interfaces/v12/lookup/lookup";
 import jwtDecode from "jwt-decode";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
+import { useLookupService } from "services/LookupService";
 import { useNotificationService } from "services/NotificationService";
 import { useStockRecieveService } from "services/StockRecieveService";
 import { EMPTY_GUID, guid } from "types/guid";
@@ -38,6 +40,12 @@ const GUID_REGEX =
 const isGuidString = (value?: any) =>
   typeof value === "string" && GUID_REGEX.test(value);
 
+const toDateOnly = (value?: string) => {
+  if (!value) return "";
+  const datePart = value.split("T")[0];
+  return datePart || value;
+};
+
 const createDefaultItem = (): YupStockRecieveItemCreateEdit => ({
   productCode: "",
   categoryId: EMPTY_GUID as guid,
@@ -52,6 +60,7 @@ const createDefaultItem = (): YupStockRecieveItemCreateEdit => ({
   gradeName: "",
   locationId: EMPTY_GUID as guid,
   locationName: "",
+  locationLabel: "",
   serialNumber: "",
   regionId: EMPTY_GUID as guid,
   regionName: "",
@@ -73,6 +82,7 @@ const StockRecieveCreateEditPage: React.FC = () => {
   const [tab, setTab] = useState(0);
 
   const StockRecieveService = useStockRecieveService();
+  const lookupService = useLookupService();
   const notificationService = useNotificationService();
   const navigate = useNavigate();
 
@@ -116,6 +126,7 @@ const StockRecieveCreateEditPage: React.FC = () => {
 
         delete sanitized.key;
         delete sanitized.locationName;
+        delete sanitized.locationLabel;
         delete sanitized.productName;
         delete sanitized.gradeName;
         delete sanitized.regionName;
@@ -269,6 +280,8 @@ const StockRecieveCreateEditPage: React.FC = () => {
         "";
       const resolvedNewOrUsedName =
         newOrUsedName ?? (typeof newOrUsed === "string" ? newOrUsed : "");
+      const resolvedLocationName =
+        rest.locationName ?? rest.locationLabel ?? "";
 
       return {
         ...rest,
@@ -279,7 +292,8 @@ const StockRecieveCreateEditPage: React.FC = () => {
         regionName: resolvedRegionName ?? "",
         newOrUsedId: resolvedNewOrUsedId ?? "",
         newOrUsedName: resolvedNewOrUsedName ?? "",
-        locationName: rest.locationName ?? "",
+        locationName: resolvedLocationName ?? "",
+        locationLabel: rest.locationLabel ?? resolvedLocationName ?? "",
         productName: rest.productName ?? "",
         serialNumber: rest.serialNumber ?? "",
         remark: remarkText,
@@ -291,18 +305,66 @@ const StockRecieveCreateEditPage: React.FC = () => {
   useEffect(() => {
     if (id) {
       StockRecieveService.getStockRecieveById(id as guid)
-        .then((stockRecieveData: any) => {
-          const stockRecieveItems = normalizeStockRecieveItems(
+        .then(async (stockRecieveData: any) => {
+          let stockRecieveItems = normalizeStockRecieveItems(
             stockRecieveData.stockRecieveItems ?? []
           );
           const { number: fetchedNumber, ...rest } = stockRecieveData;
+          const restDto = rest as YupStockRecieveCreateEdit;
+          const resolvedDateOfPurchase = toDateOnly(restDto.dateOfPurchase);
+          const missingLocationIds = Array.from(
+            new Set(
+              stockRecieveItems
+                .filter(
+                  (item) =>
+                    item.locationId && !item.locationName && !item.locationLabel
+                )
+                .map((item) => item.locationId as string)
+            )
+          );
+
+          if (missingLocationIds.length > 0) {
+            try {
+              const options =
+                (await lookupService.getSelectOptions(
+                  LookupGroupKey.Location,
+                  "",
+                  1,
+                  Math.max(missingLocationIds.length, 10),
+                  missingLocationIds
+                )) ?? [];
+              const locationMap = Object.fromEntries(
+                options
+                  .filter((option) => option.value)
+                  .map((option) => [
+                    String(option.value),
+                    option.label ?? String(option.value),
+                  ])
+              );
+
+              stockRecieveItems = stockRecieveItems.map((item) => {
+                if (item.locationName || item.locationLabel) {
+                  return item;
+                }
+                const locationLabel = locationMap[item.locationId as string];
+                if (!locationLabel) {
+                  return item;
+                }
+                return {
+                  ...item,
+                  locationName: locationLabel,
+                  locationLabel,
+                };
+              });
+            } catch {
+              // ignore lookup failures; fallback to id
+            }
+          }
 
           setStockRecieve({
-            ...(rest as YupStockRecieveCreateEdit),
-            purchaser:
-              (rest as YupStockRecieveCreateEdit).purchaser ||
-              currentUserId ||
-              "",
+            ...restDto,
+            dateOfPurchase: resolvedDateOfPurchase || "",
+            purchaser: restDto.purchaser || currentUserId || "",
             stockRecieveItems,
           });
           setStockRecieveNumber(fetchedNumber ?? "");

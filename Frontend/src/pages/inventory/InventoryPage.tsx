@@ -1,5 +1,7 @@
+import EditIcon from "@mui/icons-material/Edit";
 import HistoryIcon from "@mui/icons-material/History";
 import PrintIcon from "@mui/icons-material/Print";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import {
   Box,
   Button,
@@ -15,6 +17,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import UserName from "components/platbricks/entities/UserName";
 import { DataTable, PbCard } from "components/platbricks/shared";
 import BarcodeLabel, {
   BarcodeLabelData,
@@ -331,16 +334,6 @@ const InventoryPage = () => {
         label: "",
         render: (row) => (
           <Stack direction="row" spacing={1}>
-            <Button
-              size="small"
-              variant="outlined"
-              onClick={(event) => {
-                event.stopPropagation();
-                setActiveBalanceRow(row);
-              }}
-            >
-              {t("view", { defaultValue: "View" })}
-            </Button>
             <IconButton
               size="small"
               color="primary"
@@ -349,16 +342,28 @@ const InventoryPage = () => {
             >
               <HistoryIcon fontSize="small" />
             </IconButton>
-            <Button
+            <IconButton
               size="small"
-              variant="contained"
+              color="primary"
               onClick={(event) => {
                 event.stopPropagation();
                 setActiveBalanceRow(row);
               }}
+              aria-label={t("view", { defaultValue: "View" })}
             >
-              {t("view", { defaultValue: "View" })}
-            </Button>
+              <VisibilityIcon fontSize="small" />
+            </IconButton>
+            <IconButton
+              size="small"
+              color="primary"
+              onClick={(event) => {
+                event.stopPropagation();
+                openEdit(row.productId as string);
+              }}
+              aria-label={t("edit")}
+            >
+              <EditIcon fontSize="small" />
+            </IconButton>
             <IconButton
               size="small"
               color="primary"
@@ -367,13 +372,6 @@ const InventoryPage = () => {
             >
               <PrintIcon fontSize="small" />
             </IconButton>
-            <Button
-              size="small"
-              variant="text"
-              onClick={() => openEdit(row.productId as string)}
-            >
-              {t("edit")}
-            </Button>
           </Stack>
         ),
       },
@@ -1209,7 +1207,7 @@ const InventoryPage = () => {
                 </Stack>
                 <Typography variant="caption" color="textSecondary">
                   {t("changed-by", { defaultValue: "Changed by" })}:{" "}
-                  {log.changedBy}
+                  <UserName userId={log.changedBy} placeholder="-" />
                 </Typography>
               </Box>
             ))}

@@ -1,6 +1,18 @@
 export const useUserDateTime = () => {
-  const locale = "en-MY";
-  const timeZone = "Asia/Kuala_Lumpur";
+  const locale =
+    typeof navigator !== "undefined" && navigator.language
+      ? navigator.language
+      : "en-MY";
+  const timeZone = (() => {
+    try {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone;
+    } catch {
+      return undefined;
+    }
+  })();
+
+  const buildOptions = (options: Intl.DateTimeFormatOptions = {}) =>
+    timeZone ? { ...options, timeZone } : options;
 
   const normalizeToDate = (date: string | Date) => {
     if (date instanceof Date) {
@@ -13,18 +25,18 @@ export const useUserDateTime = () => {
   const getLocalDateAndTime = (date: string | Date) => {
     const normalizeDate = normalizeToDate(date);
 
-    return normalizeDate.toLocaleString(locale, { timeZone });
+    return normalizeDate.toLocaleString(locale, buildOptions());
   };
 
   const getLocalDate = (date: string | Date) => {
     const normalizeDate = normalizeToDate(date);
 
-    return normalizeDate.toLocaleDateString(locale, { timeZone });
+    return normalizeDate.toLocaleDateString(locale, buildOptions());
   };
 
   const getLocalTime = (date: string | Date) => {
     const normalizeDate = normalizeToDate(date);
-    return normalizeDate.toLocaleTimeString(locale, { timeZone });
+    return normalizeDate.toLocaleTimeString(locale, buildOptions());
   };
 
   const isIsoDate = (date: string) => {
