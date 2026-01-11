@@ -51,6 +51,7 @@ const createDefaultItem = (): YupStockRecieveItemCreateEdit => ({
   categoryId: EMPTY_GUID as guid,
   brandId: undefined,
   model: "",
+  year: undefined,
   colorId: undefined,
   storageId: undefined,
   ramId: undefined,
@@ -106,7 +107,7 @@ const StockRecieveCreateEditPage: React.FC = () => {
   }, []);
   const [stockRecieve, setStockRecieve] = useState<YupStockRecieveCreateEdit>({
     sellerInfo: "",
-    purchaser: currentUserId || "",
+    purchaser: "",
     dateOfPurchase: new Date().toISOString().split("T")[0],
     warehouseId: EMPTY_GUID as guid,
     stockRecieveItems: [],
@@ -143,6 +144,13 @@ const StockRecieveCreateEditPage: React.FC = () => {
         sanitized.newOrUsedId = isGuidString(sanitized.newOrUsedId)
           ? sanitized.newOrUsedId
           : null;
+
+        const parsedYear =
+          typeof sanitized.year === "string"
+            ? Number.parseInt(sanitized.year, 10)
+            : sanitized.year;
+        sanitized.year =
+          Number.isFinite(parsedYear) && parsedYear ? parsedYear : null;
 
         if (!sanitized.productId) {
           delete sanitized.productId;
@@ -242,6 +250,7 @@ const StockRecieveCreateEditPage: React.FC = () => {
         grade,
         gradeId,
         gradeName,
+        year,
         regionId,
         regionName,
         region,
@@ -282,10 +291,17 @@ const StockRecieveCreateEditPage: React.FC = () => {
         newOrUsedName ?? (typeof newOrUsed === "string" ? newOrUsed : "");
       const resolvedLocationName =
         rest.locationName ?? rest.locationLabel ?? "";
+      const resolvedYear =
+        typeof year === "number"
+          ? year
+          : typeof year === "string" && year.trim().length > 0
+          ? Number.parseInt(year, 10)
+          : undefined;
 
       return {
         ...rest,
         key: index,
+        year: Number.isFinite(resolvedYear) ? resolvedYear : undefined,
         gradeId: resolvedGradeId ?? "",
         gradeName: resolvedGradeName ?? "",
         regionId: resolvedRegionId ?? "",
@@ -364,7 +380,7 @@ const StockRecieveCreateEditPage: React.FC = () => {
           setStockRecieve({
             ...restDto,
             dateOfPurchase: resolvedDateOfPurchase || "",
-            purchaser: restDto.purchaser || currentUserId || "",
+            purchaser: restDto.purchaser || "",
             stockRecieveItems,
           });
           setStockRecieveNumber(fetchedNumber ?? "");

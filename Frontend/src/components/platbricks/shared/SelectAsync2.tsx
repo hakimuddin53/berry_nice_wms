@@ -18,6 +18,7 @@ export interface SelectAsyncProps extends InputProps {
   label?: string;
   name: string;
   placeholder?: string;
+  allowCustom?: boolean;
   getOptionDisabled?: (option: SelectAsyncOption) => boolean;
   disableClearable?: boolean;
   asyncFunc: (
@@ -179,7 +180,11 @@ const SelectAsync2 = (props: SingleProps | MultiProps) => {
         setOpen(false);
       }}
       getOptionLabel={(option) =>
-        Array.isArray(option) ? "" : option?.label ?? ""
+        Array.isArray(option)
+          ? ""
+          : typeof option === "string"
+          ? option
+          : option?.label ?? ""
       }
       isOptionEqualToValue={isOptionEqualToValue}
       options={options}
@@ -211,7 +216,26 @@ const SelectAsync2 = (props: SingleProps | MultiProps) => {
         reason: AutocompleteChangeReason
       ) => {
         setReason(reason);
-        setSelection(newValue);
+        const toOption = (
+          value: SelectAsyncOption | string
+        ): SelectAsyncOption | null => {
+          if (!value) return null;
+          if (typeof value === "string") {
+            const trimmed = value.trim();
+            if (trimmed.length === 0) return null;
+            return { label: trimmed, value: trimmed };
+          }
+          return value;
+        };
+
+        const normalizedSelection =
+          props.isMulti === true && Array.isArray(newValue)
+            ? (newValue
+                .map((v: any) => toOption(v))
+                .filter(Boolean) as SelectAsyncOption[])
+            : toOption(newValue);
+
+        setSelection(normalizedSelection);
       }}
       renderTags={(values, getTagProps) =>
         values.map((value, index) => {
@@ -239,6 +263,7 @@ const SelectAsync2 = (props: SingleProps | MultiProps) => {
       renderInput={selectDropdown}
       getOptionDisabled={props.getOptionDisabled}
       disableClearable={props.disableClearable}
+      freeSolo={props.allowCustom ?? false}
     />
   );
 };

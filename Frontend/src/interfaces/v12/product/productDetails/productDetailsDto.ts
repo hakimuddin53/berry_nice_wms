@@ -18,6 +18,7 @@ export interface ProductDetailsDto {
   category: string;
   brand?: string;
   model?: string;
+  year?: number | null;
   color?: string;
   storage?: string;
   ram?: string;

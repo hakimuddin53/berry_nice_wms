@@ -18,7 +18,8 @@ interface IUserService {
   getSelectOptions: (
     label: string,
     resultPage: number,
-    resultSize: number
+    resultSize: number,
+    ids?: string[]
   ) => Promise<SelectAsyncOption[]>;
   getByParameters: (
     userIds: guid[],
@@ -100,7 +101,8 @@ export const UserServiceProvider: React.FC<UserServiceProviderProps> = (
   const getSelectOptions = (
     userName: string,
     resultPage: number,
-    resultSize: number
+    resultSize: number,
+    ids?: string[]
   ) => {
     return axios
       .get("/v12/user/select-options", {
@@ -108,6 +110,7 @@ export const UserServiceProvider: React.FC<UserServiceProviderProps> = (
           searchString: userName,
           page: resultPage,
           pageSize: resultSize,
+          ids: ids ?? [],
         },
       })
       .then((res) => res.data.data);

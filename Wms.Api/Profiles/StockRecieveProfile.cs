@@ -20,6 +20,7 @@ public class StockRecieveProfile : Profile
             .ForMember(dest => dest.CategoryId, opt => opt.MapFrom(src => src.Product != null ? src.Product.CategoryId : Guid.Empty))
             .ForMember(dest => dest.BrandId, opt => opt.MapFrom(src => src.Product != null ? src.Product.BrandId : null))
             .ForMember(dest => dest.Model, opt => opt.MapFrom(src => src.Product != null ? src.Product.Model : null))
+            .ForMember(dest => dest.Year, opt => opt.MapFrom(src => src.Product != null ? src.Product.Year : null))
             .ForMember(dest => dest.ColorId, opt => opt.MapFrom(src => src.Product != null ? src.Product.ColorId : null))
             .ForMember(dest => dest.StorageId, opt => opt.MapFrom(src => src.Product != null ? src.Product.StorageId : null))
             .ForMember(dest => dest.RamId, opt => opt.MapFrom(src => src.Product != null ? src.Product.RamId : null))

@@ -6,6 +6,7 @@ export interface StockRecieveItemCreateUpdateDto {
   categoryId: guid;
   brandId?: guid;
   model?: string;
+  year?: number;
   colorId?: guid;
   storageId?: guid;
   ramId?: guid;

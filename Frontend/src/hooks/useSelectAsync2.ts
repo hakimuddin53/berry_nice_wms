@@ -51,7 +51,8 @@ const useSelectAsync2 = (
         }
       }
       if (ids && ids.length > 0) {
-        setInitialSelection([...newOptions]);
+        const idSet = new Set(ids);
+        setInitialSelection(newOptions.filter((opt) => idSet.has(opt.value)));
       }
       setLoading(false);
     },

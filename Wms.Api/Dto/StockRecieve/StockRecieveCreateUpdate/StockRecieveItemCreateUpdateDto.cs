@@ -16,6 +16,7 @@ namespace Wms.Api.Dto.StockRecieve.StockRecieveCreateUpdate
         public Guid? BrandId { get; set; }
 
         public string? Model { get; set; }
+        public int? Year { get; set; }
 
         public Guid? ColorId { get; set; }
 

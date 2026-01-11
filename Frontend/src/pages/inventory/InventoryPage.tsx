@@ -56,6 +56,8 @@ type ProductExtras = {
   remark?: string | null;
   internalRemark?: string | null;
   retailPrice?: number | null;
+  dealerPrice?: number | null;
+  agentPrice?: number | null;
   costPrice?: number | null;
   locationId?: string | null;
   locationLabel?: string;
@@ -400,6 +402,8 @@ const InventoryPage = () => {
     remark: product.remark ?? "",
     internalRemark: product.internalRemark ?? "",
     retailPrice: product.retailPrice ?? null,
+    dealerPrice: product.dealerPrice ?? null,
+    agentPrice: product.agentPrice ?? null,
     costPrice: product.costPrice ?? null,
     locationId: product.locationId ?? null,
     model: product.model ?? null,
@@ -551,6 +555,13 @@ const InventoryPage = () => {
       loadDataCount,
     });
 
+  useEffect(() => {
+    // Auto-load latest balances on first render
+    updateDatatableControls({ searchValue: filters.search, page: 0 });
+    reloadData(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const onSearch = () => {
     updateDatatableControls({ searchValue: filters.search, page: 0 });
     reloadData(true);
@@ -558,7 +569,11 @@ const InventoryPage = () => {
 
   const openEdit = async (productId: string) => {
     let extras = productExtras[productId];
-    if (!extras) {
+    if (
+      !extras ||
+      extras.dealerPrice === undefined ||
+      extras.agentPrice === undefined
+    ) {
       try {
         const product = await fetchProductById(productId);
         extras = buildExtras(product);
@@ -637,6 +652,8 @@ const InventoryPage = () => {
     const payload: UpdateInventoryBalanceDto = {
       remark: formValues.remark ?? null,
       internalRemark: formValues.internalRemark ?? null,
+      agentPrice: formValues.agentPrice ?? null,
+      dealerPrice: formValues.dealerPrice ?? null,
       retailPrice: formValues.retailPrice ?? null,
       costPrice: formValues.costPrice ?? null,
       locationId: formValues.locationId ?? null,
@@ -649,6 +666,14 @@ const InventoryPage = () => {
         [editingProductId]: {
           ...(prev[editingProductId] || {}),
           ...payload,
+          retailPrice:
+            payload.retailPrice ?? prev[editingProductId]?.retailPrice ?? null,
+          dealerPrice:
+            payload.dealerPrice ?? prev[editingProductId]?.dealerPrice ?? null,
+          agentPrice:
+            payload.agentPrice ?? prev[editingProductId]?.agentPrice ?? null,
+          costPrice:
+            payload.costPrice ?? prev[editingProductId]?.costPrice ?? null,
         },
       }));
       if (payload.locationId) {
@@ -699,6 +724,14 @@ const InventoryPage = () => {
       {
         label: t("retail-selling-price"),
         value: formatNumber(extras.retailPrice),
+      },
+      {
+        label: t("dealer-selling-price"),
+        value: formatNumber(extras.dealerPrice),
+      },
+      {
+        label: t("agent-selling-price"),
+        value: formatNumber(extras.agentPrice),
       },
       {
         label: t("cost"),
@@ -1039,6 +1072,7 @@ const InventoryPage = () => {
               placeholder={t("remark")}
               ids={selectedRemarks}
               isMulti
+              allowCustom
               suggestionsIfEmpty
               asyncFunc={remarkAsync}
               onSelectionChange={(options) => {
@@ -1063,7 +1097,9 @@ const InventoryPage = () => {
             <Stack direction="row" spacing={2}>
               <TextField
                 label={t("retail-selling-price")}
+                size="small"
                 type="number"
+                inputProps={{ min: 0, step: "0.01" }}
                 value={formValues.retailPrice ?? ""}
                 onChange={(e) =>
                   updateField(
@@ -1074,8 +1110,38 @@ const InventoryPage = () => {
                 fullWidth
               />
               <TextField
-                label={t("cost")}
+                label={t("dealer-selling-price")}
+                size="small"
                 type="number"
+                inputProps={{ min: 0, step: "0.01" }}
+                value={formValues.dealerPrice ?? ""}
+                onChange={(e) =>
+                  updateField(
+                    "dealerPrice",
+                    e.target.value === "" ? null : Number(e.target.value)
+                  )
+                }
+                fullWidth
+              />
+              <TextField
+                label={t("agent-selling-price")}
+                size="small"
+                type="number"
+                inputProps={{ min: 0, step: "0.01" }}
+                value={formValues.agentPrice ?? ""}
+                onChange={(e) =>
+                  updateField(
+                    "agentPrice",
+                    e.target.value === "" ? null : Number(e.target.value)
+                  )
+                }
+                fullWidth
+              />
+              <TextField
+                label={t("cost")}
+                size="small"
+                type="number"
+                inputProps={{ min: 0, step: "0.01" }}
                 value={formValues.costPrice ?? ""}
                 onChange={(e) =>
                   updateField(

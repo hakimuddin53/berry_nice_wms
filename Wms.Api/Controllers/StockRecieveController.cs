@@ -305,6 +305,7 @@ namespace Wms.Api.Controllers
                         CategoryId = dtoItem.CategoryId,
                         BrandId = dtoItem.BrandId,
                         Model = dtoItem.Model,
+                        Year = dtoItem.Year,
                         ColorId = dtoItem.ColorId,
                         StorageId = dtoItem.StorageId,
                         RamId = dtoItem.RamId,
@@ -334,6 +335,7 @@ namespace Wms.Api.Controllers
                     product.CategoryId = dtoItem.CategoryId;
                     product.BrandId = dtoItem.BrandId;
                     product.Model = dtoItem.Model;
+                    product.Year = dtoItem.Year ?? product.Year;
                     product.ColorId = dtoItem.ColorId;
                     product.StorageId = dtoItem.StorageId;
                     product.RamId = dtoItem.RamId;

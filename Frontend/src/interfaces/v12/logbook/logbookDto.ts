@@ -14,6 +14,7 @@ export interface LogbookEntryDto {
 export interface LogbookAvailabilityDto {
   productId: string;
   productCode: string;
+  productName?: string | null;
   userName?: string | null;
   remark?: string | null;
   status?: string | null;

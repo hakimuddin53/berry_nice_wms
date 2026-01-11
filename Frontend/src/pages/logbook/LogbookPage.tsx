@@ -29,7 +29,7 @@ import {
   LogbookStatusHistoryDto,
   LogbookUpdateDto,
 } from "interfaces/v12/logbook/logbookDto";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLogbookService } from "services/LogbookService";
 
@@ -47,6 +47,7 @@ const LogbookPage: React.FC = () => {
     search: string;
     status: string;
   }>({ search: "", status: "" });
+  const filtersRef = useRef(filters);
 
   const [historyDialog, setHistoryDialog] = useState<{
     open: boolean;
@@ -70,6 +71,11 @@ const LogbookPage: React.FC = () => {
         id: "productCode",
         label: t("product-code", { defaultValue: "Product code" }),
         render: (row) => row.productCode,
+      },
+      {
+        id: "productName",
+        label: t("product-name", { defaultValue: "Product Name" }),
+        render: (row) => row.productName || "",
       },
       {
         id: "userName",
@@ -105,16 +111,22 @@ const LogbookPage: React.FC = () => {
     [t]
   );
 
-  const getSearchOptions = (
-    page: number,
-    pageSize: number,
-    searchValue: string
-  ): LogbookSearchDto => ({
-    search: searchValue || filters.search || undefined,
-    status: filters.status ? filters.status.toUpperCase() : undefined,
-    page: page + 1,
-    pageSize,
-  });
+  useEffect(() => {
+    filtersRef.current = filters;
+  }, [filters]);
+
+  const getSearchOptions = useCallback(
+    (page: number, pageSize: number, searchValue: string): LogbookSearchDto => {
+      const current = filtersRef.current;
+      return {
+        search: searchValue || current.search || undefined,
+        status: current.status ? current.status.toUpperCase() : undefined,
+        page: page + 1,
+        pageSize,
+      };
+    },
+    []
+  );
 
   const loadData = useCallback(
     (
@@ -130,7 +142,7 @@ const LogbookPage: React.FC = () => {
         .then((res: PagedListDto<LogbookAvailabilityDto>) => res.data)
         .catch(() => []);
     },
-    [filters.search, filters.status, logbookService]
+    [getSearchOptions, logbookService]
   );
 
   const loadDataCount = useCallback(
@@ -144,7 +156,7 @@ const LogbookPage: React.FC = () => {
       const searchOptions = getSearchOptions(page, pageSize, searchValue);
       return logbookService.countAvailable(searchOptions).catch(() => 0);
     },
-    [filters.search, filters.status, logbookService]
+    [getSearchOptions, logbookService]
   );
 
   const { tableProps, reloadData } =

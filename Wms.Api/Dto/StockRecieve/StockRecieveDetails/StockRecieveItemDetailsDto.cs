@@ -11,6 +11,7 @@ namespace Wms.Api.Dto.StockRecieve.StockRecieveDetails
         public Guid CategoryId { get; set; }
         public Guid? BrandId { get; set; }
         public string? Model { get; set; }
+        public int? Year { get; set; }
         public Guid? ColorId { get; set; }
         public Guid? StorageId { get; set; }
         public Guid? RamId { get; set; }

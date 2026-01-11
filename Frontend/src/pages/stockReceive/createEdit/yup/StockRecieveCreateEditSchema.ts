@@ -14,6 +14,7 @@ export interface YupStockRecieveItemCreateEdit {
   categoryId: guid;
   brandId?: guid;
   model?: string;
+  year?: number | null;
   colorId?: guid;
   storageId?: guid;
   ramId?: guid;
@@ -54,6 +55,13 @@ export const StockRecieveCreateEditSchema = yup.object().shape({
         categoryId: yup.string().required(),
         brandId: yup.string().nullable(),
         model: yup.string().nullable(),
+        year: yup
+          .number()
+          .typeError("invalid")
+          .integer()
+          .min(1900)
+          .max(new Date().getFullYear() + 1)
+          .nullable(),
         colorId: yup.string().nullable(),
         storageId: yup.string().nullable(),
         ramId: yup.string().nullable(),
