@@ -34,11 +34,14 @@ namespace Wms.Api.Controllers
                 var term = search.Search.Trim();
                 query = query.Where(l =>
                     l.Barcode.Contains(term) ||
-                    l.UserName.Contains(term));
+                    l.UserName.Contains(term) ||
+                    (l.Product != null && l.Product.ProductCode.Contains(term)) ||
+                    (l.Product != null && l.Product.Model != null && l.Product.Model.Contains(term)));
             }
 
-            if (!string.IsNullOrWhiteSpace(search.Status) &&
-                Enum.TryParse<LogbookStatus>(search.Status, true, out var statusFilter))
+            var statusText = search.Status?.Trim();
+            if (!string.IsNullOrWhiteSpace(statusText) &&
+                Enum.TryParse<LogbookStatus>(statusText, true, out var statusFilter))
             {
                 query = query.Where(l => l.Status == statusFilter);
             }
@@ -54,8 +57,8 @@ namespace Wms.Api.Controllers
             }
 
             var ordered = query
-                .OrderByDescending(l => l.DateUtc)
-                .ThenByDescending(l => l.CreatedAt);
+                .OrderByDescending(l => l.CreatedAt)
+                .ThenByDescending(l => l.DateUtc);
 
             var totalCount = await ordered.CountAsync();
 
@@ -87,7 +90,8 @@ namespace Wms.Api.Controllers
             var totalCount = await query.CountAsync();
 
             var items = await query
-                .OrderBy(x => x.ProductCode)
+                .OrderByDescending(x => x.StatusChangedAt)
+                .ThenByDescending(x => x.ProductCode)
                 .Skip((search.Page - 1) * search.PageSize)
                 .Take(search.PageSize)
                 .ToListAsync();
@@ -370,6 +374,8 @@ namespace Wms.Api.Controllers
                 {
                     row.product.ProductId,
                     row.product.ProductCode,
+                    row.product.Model,
+                    row.product.CreatedDate,
                     Latest = context.LogbookEntries
                         .Where(l => l.ProductId == row.product.ProductId)
                         .OrderByDescending(l => l.StatusChangedAt)
@@ -385,8 +391,9 @@ namespace Wms.Api.Controllers
                         .FirstOrDefault()
                 });
 
-            if (!string.IsNullOrWhiteSpace(search.Status) &&
-                Enum.TryParse<LogbookStatus>(search.Status, true, out var statusFilter))
+            var statusText = search.Status?.Trim();
+            if (!string.IsNullOrWhiteSpace(statusText) &&
+                Enum.TryParse<LogbookStatus>(statusText, true, out var statusFilter))
             {
                 query = query.Where(x => x.Latest != null && x.Latest.Status == statusFilter);
             }
@@ -395,6 +402,7 @@ namespace Wms.Api.Controllers
             {
                 ProductId = x.ProductId,
                 ProductCode = x.ProductCode,
+                ProductName = x.Model,
                 UserName = x.Latest != null ? x.Latest.UserName : null,
                 Remark = x.Latest != null ? x.Latest.Purpose : null,
                 Status = x.Latest != null ? x.Latest.Status.ToString() : null,

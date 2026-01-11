@@ -114,7 +114,7 @@ const InvoiceCreateEditPage = () => {
     customerId: undefined,
     customerName: "",
     dateOfSale: formatDateInput(),
-    salesPersonId: currentUserId || "",
+    salesPersonId: "",
     warehouseId: EMPTY_GUID as guid,
     salesTypeId: undefined,
     paymentTypeId: undefined,
@@ -140,7 +140,6 @@ const InvoiceCreateEditPage = () => {
       .then((invoice) => {
         const formValue = mapDetailsToForm({
           ...invoice,
-          salesPersonId: invoice.salesPersonId ?? currentUserId,
         });
         setInvoiceNumber(invoice.number ?? "");
         if (formValue.invoiceItems.length === 0) {

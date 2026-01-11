@@ -27,6 +27,11 @@ export const useStockRecieveItemTable = () => {
         render: (row) => row.model || "-",
       },
       {
+        id: "year",
+        label: t("year", { defaultValue: "Year" }),
+        render: (row) => (row.year != null ? row.year.toString() : "-"),
+      },
+      {
         id: "gradeId",
         label: t("grade"),
         render: (row) => row.gradeName || row.gradeId || "-",

@@ -10,6 +10,7 @@ import { LookupGroupKey } from "interfaces/v12/lookup/lookup";
 import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useSupplierService } from "services/SupplierService";
+import { useUserService } from "services/UserService";
 import { isRequiredField } from "utils/formikHelpers";
 import {
   StockRecieveCreateEditSchema,
@@ -22,13 +23,17 @@ const StockRecieveHeadCreateEdit = (props: {
   const { t } = useTranslation("common");
   const formik = props.formik;
   const supplierService = useSupplierService();
+  const userService = useUserService();
 
   const sellerInfoIds = useMemo(
     () => (formik.values.sellerInfo?.trim() ? [formik.values.sellerInfo] : []),
     [formik.values.sellerInfo]
   );
 
-  const purchaserIds = useMemo(() => [] as string[], []);
+  const purchaserIds = useMemo(
+    () => (formik.values.purchaser ? [formik.values.purchaser] : []),
+    [formik.values.purchaser]
+  );
 
   const createStaticOptions = useCallback((ids?: string[]) => {
     if (!ids || ids.length === 0) {
@@ -56,6 +61,19 @@ const StockRecieveHeadCreateEdit = (props: {
     );
   }, []);
 
+  const normalizeUserOptions = useCallback(
+    (options: SelectAsyncOption[] = []) => {
+      return options.map(
+        (option) =>
+          ({
+            label: option.label ?? "",
+            value: option.value ?? option.label ?? "",
+          } as SelectAsyncOption)
+      );
+    },
+    []
+  );
+
   const supplierAsync = useCallback(
     async (input: string, page: number, pageSize: number, ids?: string[]) => {
       if (ids && ids.length > 0) {
@@ -72,7 +90,32 @@ const StockRecieveHeadCreateEdit = (props: {
     [createStaticOptions, normalizeOptions, supplierService]
   );
 
-  const userAsync = useCallback(async () => [] as SelectAsyncOption[], []);
+  const userAsync = useCallback(
+    async (input: string, page: number, pageSize: number, ids?: string[]) => {
+      const results = await userService.getSelectOptions(
+        input ?? "",
+        page,
+        pageSize,
+        ids
+      );
+
+      // If we have preselected ids and no search text, include the first page of all users too
+      if ((ids?.length ?? 0) > 0 && (input ?? "").trim().length === 0) {
+        const general = await userService.getSelectOptions("", 1, pageSize, []);
+        const seen = new Set<string>();
+        const merged = [...results, ...general].filter((opt) => {
+          const key = opt.value ?? opt.label ?? "";
+          if (!key || seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+        return normalizeUserOptions(merged);
+      }
+
+      return normalizeUserOptions(results);
+    },
+    [normalizeUserOptions, userService]
+  );
 
   return (
     <DataList
@@ -109,7 +152,37 @@ const StockRecieveHeadCreateEdit = (props: {
             />
           ),
         },
-        // Purchaser removed: set automatically to current user in page logic
+        {
+          label: t("purchaser"),
+          required: isRequiredField(
+            StockRecieveCreateEditSchema,
+            "purchaser",
+            formik.values
+          ),
+          value: (
+            <SelectAsync2
+              name="purchaser"
+              placeholder={t("purchaser")}
+              ids={purchaserIds}
+              asyncFunc={userAsync}
+              suggestionsIfEmpty
+              onSelectionChange={(option?: SelectAsyncOption) =>
+                formik.setFieldValue("purchaser", option?.value ?? "")
+              }
+              onBlur={() => formik.setFieldTouched("purchaser", true)}
+              error={
+                formik.touched.purchaser && Boolean(formik.errors.purchaser)
+              }
+              helperText={
+                <FormikErrorMessage
+                  touched={formik.touched.purchaser}
+                  error={formik.errors.purchaser}
+                  translatedFieldName={t("purchaser")}
+                />
+              }
+            />
+          ),
+        },
         {
           label: t("date-of-purchase"),
           required: isRequiredField(

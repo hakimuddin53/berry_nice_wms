@@ -7,7 +7,8 @@ import {
   PurchaseQualityReportRowDto,
   PurchaseQualityReportSearchDto,
 } from "interfaces/v12/inventory/purchaseQualityReportDto";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import UserName from "components/platbricks/entities/UserName";
 import { useTranslation } from "react-i18next";
 import { useInventoryService } from "services/InventoryService";
 
@@ -43,7 +44,19 @@ const PurchaseQualityReportPage = () => {
       {
         id: "purchaser",
         label: t("user", { defaultValue: "User" }),
-        render: (row) => row.purchaser,
+        render: (row) => {
+          const value = row.purchaser;
+          const isGuid =
+            typeof value === "string" &&
+            /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(
+              value
+            );
+          return isGuid ? (
+            <UserName userId={value} placeholder="-" />
+          ) : (
+            value || "-"
+          );
+        },
       },
       {
         id: "purchaseTotal",
@@ -116,6 +129,12 @@ const PurchaseQualityReportPage = () => {
     updateDatatableControls({ searchValue: filters.search, page: 0 });
     reloadData(true);
   };
+
+  useEffect(() => {
+    // Auto-load latest purchase quality report on first render
+    onSearch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <Page

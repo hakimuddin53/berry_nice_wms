@@ -54,6 +54,7 @@ namespace Wms.Api.Dto.Logbook
     {
         public Guid ProductId { get; set; }
         public string ProductCode { get; set; } = string.Empty;
+        public string? ProductName { get; set; }
         public string? UserName { get; set; }
         public string? Remark { get; set; }
         public string? Status { get; set; }

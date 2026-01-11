@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -8,9 +9,13 @@ using static Wms.Api.Model.Constants;
 
 namespace Wms.Api.Services
 {
-    public class TokenService(RoleManager<ApplicationRole> roleManager) : ITokenService
+    public class TokenService(
+        RoleManager<ApplicationRole> roleManager,
+        IConfiguration configuration
+    ) : ITokenService
     {
         protected readonly RoleManager<ApplicationRole> _roleManager = roleManager;
+        private readonly IConfiguration _configuration = configuration;
 
         public async Task<string> GenerateJwtTokenAsync(ApplicationUser? user)
         {
@@ -38,11 +43,18 @@ namespace Wms.Api.Services
                     new Claim("Role", userRoleName),
             };
 
+            var accessTokenMinutes =
+                _configuration.GetValue<int?>("Jwt:AccessTokenMinutes") ?? 10080;
+            if (accessTokenMinutes <= 0)
+            {
+                accessTokenMinutes = 10080;
+            }
+
             var token = new JwtSecurityToken(
                 issuer: TokenConstant.Issuer,
                 audience: TokenConstant.Audience,
                 claims: claims,
-                expires: DateTime.Now.AddMinutes(30),
+                expires: DateTime.UtcNow.AddMinutes(accessTokenMinutes),
                 signingCredentials: credentials
             );
             return new JwtSecurityTokenHandler().WriteToken(token);
