@@ -11,7 +11,6 @@ import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { EMPTY_GUID } from "types/guid";
 import { ListBox } from "./ListBox";
-import { guid } from "types/guid";
 
 export interface SelectAsyncProps extends InputProps {
   ids?: string[];

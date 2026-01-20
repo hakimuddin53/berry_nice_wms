@@ -31,7 +31,7 @@ interface PageHeaderProps {
   showLoading?: boolean;
   parametersModal?: any;
   disable?: boolean;
-  showSearch?: boolean;
+  showSearch?: boolean; // indicates page supports search toggle
   renderSearch?: () => ReactElement<any>;
   onParametersModalClose?: () => void;
 }
@@ -47,9 +47,9 @@ const Breadcrumbs = styled(MuiBreadcrumbs)(spacing);
 
 const Page: React.FC<PageHeaderProps> = (props) => {
   const [showParametersModal, setShowParametersModal] = useState(false);
-  const [showSearch, setShowSearch] = useState(props.showSearch ?? false);
+  const [showSearch, setShowSearch] = useState(false);
   const showLoading = props.showLoading;
-  const SearchSection = props.renderSearch?.();
+  const hasSearch = props.showSearch && !!props.renderSearch;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
@@ -146,7 +146,7 @@ const Page: React.FC<PageHeaderProps> = (props) => {
               <Settings />
             </IconButton>
           )}
-          {SearchSection && (
+          {hasSearch && (
             <IconButton
               onClick={() => setShowSearch((s) => !s)}
               color="inherit"
@@ -205,7 +205,7 @@ const Page: React.FC<PageHeaderProps> = (props) => {
         <Skeleton variant="rectangular" height={200} />
       ) : (
         <div style={{ overflow: "auto", flexGrow: 1 }}>
-          {showSearch && SearchSection}
+          {showSearch && props.renderSearch?.()}
           {props.children}
         </div>
       )}

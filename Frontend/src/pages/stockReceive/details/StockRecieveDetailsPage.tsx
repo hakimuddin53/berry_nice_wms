@@ -138,7 +138,10 @@ function StockRecieveDetailsPage() {
         id: "model",
         label: t("model"),
         render: (item) =>
-          formatLookup(item.modelName ?? null, item.modelId as unknown as string),
+          formatLookup(
+            item.modelName ?? null,
+            item.modelId as unknown as string
+          ),
       },
       {
         id: "batteryHealth",

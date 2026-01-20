@@ -173,10 +173,17 @@ const StockRecieveItemCreateEdit = (props: {
                   value={item.modelId ?? ""}
                   onChange={(newValue, option) => {
                     formik.setFieldValue(fieldName("modelId"), newValue || "");
-                    formik.setFieldValue(fieldName("modelName"), option?.label ?? "");
+                    formik.setFieldValue(
+                      fieldName("modelName"),
+                      option?.label ?? ""
+                    );
                   }}
-                  onBlur={() => formik.setFieldTouched(fieldName("modelId"), true, false)}
-                  error={fieldTouched("modelId") && Boolean(fieldError("modelId"))}
+                  onBlur={() =>
+                    formik.setFieldTouched(fieldName("modelId"), true, false)
+                  }
+                  error={
+                    fieldTouched("modelId") && Boolean(fieldError("modelId"))
+                  }
                   helperText={
                     <FormikErrorMessage
                       touched={fieldTouched("modelId")}

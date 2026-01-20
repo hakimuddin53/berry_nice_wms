@@ -18,6 +18,7 @@ import {
   Typography,
 } from "@mui/material";
 import InputAdornment from "@mui/material/InputAdornment";
+import { useQueryClient } from "@tanstack/react-query";
 import UserName from "components/platbricks/entities/UserName";
 import { DataTable, PbCard } from "components/platbricks/shared";
 import BarcodeLabel, {
@@ -30,6 +31,7 @@ import SelectAsync, {
   type SelectAsyncOption,
 } from "components/platbricks/shared/SelectAsync";
 import SelectAsync2 from "components/platbricks/shared/SelectAsync2";
+import { productQueryKeys } from "hooks/queries/queryKeys";
 import { useInventoryAuditLogQuery } from "hooks/queries/useInventoryQueries";
 import {
   useLookupByIdFetcher,
@@ -112,6 +114,7 @@ const parseRemarkSelections = (value?: string | null) => {
 
 const InventoryPage = () => {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const inventoryService = useInventoryService();
   const fetchProductById = useProductByIdFetcher();
   const fetchProductOptions = useProductSelectOptionsFetcher();
@@ -653,21 +656,6 @@ const InventoryPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    const handleFocus = () => reloadData(true);
-    const handleVisibility = () => {
-      if (!document.hidden) {
-        reloadData(true);
-      }
-    };
-    window.addEventListener("focus", handleFocus);
-    document.addEventListener("visibilitychange", handleVisibility);
-    return () => {
-      window.removeEventListener("focus", handleFocus);
-      document.removeEventListener("visibilitychange", handleVisibility);
-    };
-  }, [reloadData]);
-
   const onSearch = () => {
     updateDatatableControls({ searchValue: filters.search, page: 0 });
     reloadData(true);
@@ -768,27 +756,20 @@ const InventoryPage = () => {
     setSaving(true);
     try {
       await inventoryService.updateBalance(editingProductId, payload);
+      // Invalidate the cache to ensure fresh data is fetched
+      await queryClient.invalidateQueries({
+        queryKey: productQueryKeys.byId(editingProductId),
+      });
+      // Fetch the updated product to get fresh data
+      const updatedProduct = await fetchProductById(editingProductId);
+      const freshExtras = buildExtras(updatedProduct);
       setProductExtras((prev) => ({
         ...prev,
-        [editingProductId]: {
-          ...(prev[editingProductId] || {}),
-          ...payload,
-          retailPrice:
-            payload.retailPrice ?? prev[editingProductId]?.retailPrice ?? null,
-          dealerPrice:
-            payload.dealerPrice ?? prev[editingProductId]?.dealerPrice ?? null,
-          agentPrice:
-            payload.agentPrice ?? prev[editingProductId]?.agentPrice ?? null,
-          costPrice:
-            payload.costPrice ?? prev[editingProductId]?.costPrice ?? null,
-          batteryHealth:
-            payload.batteryHealth ??
-            prev[editingProductId]?.batteryHealth ??
-            null,
-        },
+        [editingProductId]: freshExtras,
       }));
-      if (payload.locationId) {
-        await hydrateLocationLabels([payload.locationId]);
+      // Hydrate location label if needed
+      if (freshExtras.locationId) {
+        await hydrateLocationLabels([freshExtras.locationId]);
       }
       closeDialog();
       reloadData();

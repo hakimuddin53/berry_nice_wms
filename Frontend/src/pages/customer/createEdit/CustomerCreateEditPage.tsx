@@ -18,7 +18,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCustomerService } from "services/CustomerService";
 import { useNotificationService } from "services/NotificationService";
-import { guid } from "types/guid";
+import { EMPTY_GUID, guid } from "types/guid";
 import { isRequiredField } from "utils/formikHelpers";
 import {
   customerCreateEditSchema,
@@ -42,7 +42,7 @@ const CustomerCreateEditPage: React.FC = () => {
     phone: "",
     email: "",
     address: "",
-    customerTypeId: "",
+    customerTypeId: EMPTY_GUID as guid,
   });
 
   let title = t("create-customer");
@@ -149,6 +149,8 @@ const CustomerCreateEditPage: React.FC = () => {
       setPageReady(true);
     }
   }, [id, CustomerService]);
+
+  console.log(formik.values);
 
   useEffect(() => {
     if (formik.submitCount > 0 && !formik.isSubmitting && !formik.isValid) {

@@ -132,238 +132,243 @@ const InvoiceHeadCreateEdit = (props: {
   return (
     <>
       <DataList
-      hideDevider
-      data={[
-        {
-          label: t("customer"),
-          required: isRequiredField(
-            invoiceCreateEditSchema,
-            "customerId",
-            formik.values
-          ),
-          value: (
-            <SelectAsync2
-              name="customerId"
-              placeholder={t("customer")}
-              suggestionsIfEmpty
-              error={
-                formik.touched.customerId && Boolean(formik.errors.customerId)
-              }
-              onBlur={() => formik.setFieldTouched("customerId")}
-              ids={customerIds}
-              asyncFunc={customerAsync}
-              renderNoOptions={(input) =>
-                customerExistsSelected ||
-                (input ?? "").trim().length === 0 ? null : (
-                  <Button
-                    fullWidth
-                    size="small"
-                    onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => {
-                      setCustomerDraftName(input ?? "");
-                      setCustomerDraftPhone("");
-                      setCustomerDialogOpen(true);
-                    }}
-                  >
-                    {t("add-customer")}
-                  </Button>
-                )
-              }
-              onSearchChange={(value) => {
-                setCustomerInput(value ?? "");
-                setCustomerExistsSelected(false);
-              }}
-              onSelectionChange={(option) => {
-                formik.setFieldValue("customerId", option?.value ?? undefined);
-                formik.setFieldValue("customerName", option?.label ?? "");
-                setCustomerExistsSelected(Boolean(option?.value));
-                if (!option?.value) {
-                  setCustomerInput("");
+        hideDevider
+        data={[
+          {
+            label: t("customer"),
+            required: isRequiredField(
+              invoiceCreateEditSchema,
+              "customerId",
+              formik.values
+            ),
+            value: (
+              <SelectAsync2
+                name="customerId"
+                placeholder={t("customer")}
+                suggestionsIfEmpty
+                error={
+                  formik.touched.customerId && Boolean(formik.errors.customerId)
                 }
-              }}
-              helperText={
-                <FormikErrorMessage
-                  touched={formik.touched.customerId}
-                  error={formik.errors.customerId}
-                  translatedFieldName={t("customer")}
-                />
-              }
-            />
-          ),
-        },
-        {
-          label: t("date-of-sale"),
-          required: isRequiredField(
-            invoiceCreateEditSchema,
-            "dateOfSale",
-            formik.values
-          ),
-          value: (
-            <TextField
-              fullWidth
-              size="small"
-              id="dateOfSale"
-              name="dateOfSale"
-              type="date"
-              value={formik.values.dateOfSale}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              InputLabelProps={{ shrink: true }}
-              error={
-                formik.touched.dateOfSale && Boolean(formik.errors.dateOfSale)
-              }
-              helperText={
-                <FormikErrorMessage
-                  touched={formik.touched.dateOfSale}
-                  error={formik.errors.dateOfSale}
-                  translatedFieldName={t("date-of-sale")}
-                />
-              }
-            />
-          ),
-        },
-        {
-          label: t("sales-person"),
-          required: isRequiredField(
-            invoiceCreateEditSchema,
-            "salesPersonId",
-            formik.values
-          ),
-          value: (
-            <SelectAsync2
-              name="salesPersonId"
-              placeholder={t("sales-person")}
-              suggestionsIfEmpty
-              ids={salesPersonIds}
-              asyncFunc={userAsync}
-              error={
-                formik.touched.salesPersonId &&
-                Boolean(formik.errors.salesPersonId)
-              }
-              onBlur={() => formik.setFieldTouched("salesPersonId")}
-              onSelectionChange={(option) =>
-                formik.setFieldValue("salesPersonId", option?.value ?? "")
-              }
-              helperText={
-                <FormikErrorMessage
-                  touched={formik.touched.salesPersonId}
-                  error={formik.errors.salesPersonId}
-                  translatedFieldName={t("sales-person")}
-                />
-              }
-            />
-          ),
-        },
-        {
-          label: t("warehouse"),
-          required: isRequiredField(
-            invoiceCreateEditSchema,
-            "warehouseId",
-            formik.values
-          ),
-          value: (
-            <LookupAutocomplete
-              groupKey={LookupGroupKey.Warehouse}
-              name="warehouseId"
-              value={formik.values.warehouseId ?? ""}
-              onChange={(newValue) =>
-                formik.setFieldValue("warehouseId", newValue || "")
-              }
-              onBlur={() => formik.setFieldTouched("warehouseId")}
-              error={
-                formik.touched.warehouseId && Boolean(formik.errors.warehouseId)
-              }
-              helperText={
-                <FormikErrorMessage
-                  touched={formik.touched.warehouseId}
-                  error={formik.errors.warehouseId}
-                  translatedFieldName={t("warehouse")}
-                />
-              }
-            />
-          ),
-        },
-        {
-          label: t("sales-type"),
-          value: (
-            <LookupAutocomplete
-              groupKey={LookupGroupKey.SalesType}
-              name="salesTypeId"
-              value={formik.values.salesTypeId ?? ""}
-              onChange={(newValue) =>
-                formik.setFieldValue("salesTypeId", newValue || undefined)
-              }
-              onBlur={() => formik.setFieldTouched("salesTypeId")}
-              error={
-                formik.touched.salesTypeId && Boolean(formik.errors.salesTypeId)
-              }
-              helperText={
-                <FormikErrorMessage
-                  touched={formik.touched.salesTypeId}
-                  error={formik.errors.salesTypeId}
-                  translatedFieldName={t("sales-type")}
-                />
-              }
-            />
-          ),
-        },
-        {
-          label: t("payment-type"),
-          value: (
-            <LookupAutocomplete
-              groupKey={LookupGroupKey.PaymentType}
-              name="paymentTypeId"
-              value={formik.values.paymentTypeId ?? ""}
-              onChange={(newValue) =>
-                formik.setFieldValue("paymentTypeId", newValue || undefined)
-              }
-              onBlur={() => formik.setFieldTouched("paymentTypeId")}
-              error={
-                formik.touched.paymentTypeId &&
-                Boolean(formik.errors.paymentTypeId)
-              }
-              helperText={
-                <FormikErrorMessage
-                  touched={formik.touched.paymentTypeId}
-                  error={formik.errors.paymentTypeId}
-                  translatedFieldName={t("payment-type")}
-                />
-              }
-            />
-          ),
-        },
-        {
-          label: t("payment-reference"),
-          value: (
-            <TextField
-              fullWidth
-              size="small"
-              id="paymentReference"
-              name="paymentReference"
-              value={formik.values.paymentReference ?? ""}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-            />
-          ),
-        },
-        {
-          label: t("remark"),
-          value: (
-            <TextField
-              fullWidth
-              size="small"
-              id="remark"
-              name="remark"
-              value={formik.values.remark ?? ""}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              multiline
-              minRows={2}
-            />
-          ),
-        },
-      ]}
-    />
+                onBlur={() => formik.setFieldTouched("customerId")}
+                ids={customerIds}
+                asyncFunc={customerAsync}
+                renderNoOptions={(input) =>
+                  customerExistsSelected ||
+                  (input ?? "").trim().length === 0 ? null : (
+                    <Button
+                      fullWidth
+                      size="small"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => {
+                        setCustomerDraftName(input ?? "");
+                        setCustomerDraftPhone("");
+                        setCustomerDialogOpen(true);
+                      }}
+                    >
+                      {t("add-customer")}
+                    </Button>
+                  )
+                }
+                onSearchChange={(value) => {
+                  setCustomerInput(value ?? "");
+                  setCustomerExistsSelected(false);
+                }}
+                onSelectionChange={(option) => {
+                  formik.setFieldValue(
+                    "customerId",
+                    option?.value ?? undefined
+                  );
+                  formik.setFieldValue("customerName", option?.label ?? "");
+                  setCustomerExistsSelected(Boolean(option?.value));
+                  if (!option?.value) {
+                    setCustomerInput("");
+                  }
+                }}
+                helperText={
+                  <FormikErrorMessage
+                    touched={formik.touched.customerId}
+                    error={formik.errors.customerId}
+                    translatedFieldName={t("customer")}
+                  />
+                }
+              />
+            ),
+          },
+          {
+            label: t("date-of-sale"),
+            required: isRequiredField(
+              invoiceCreateEditSchema,
+              "dateOfSale",
+              formik.values
+            ),
+            value: (
+              <TextField
+                fullWidth
+                size="small"
+                id="dateOfSale"
+                name="dateOfSale"
+                type="date"
+                value={formik.values.dateOfSale}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                InputLabelProps={{ shrink: true }}
+                error={
+                  formik.touched.dateOfSale && Boolean(formik.errors.dateOfSale)
+                }
+                helperText={
+                  <FormikErrorMessage
+                    touched={formik.touched.dateOfSale}
+                    error={formik.errors.dateOfSale}
+                    translatedFieldName={t("date-of-sale")}
+                  />
+                }
+              />
+            ),
+          },
+          {
+            label: t("sales-person"),
+            required: isRequiredField(
+              invoiceCreateEditSchema,
+              "salesPersonId",
+              formik.values
+            ),
+            value: (
+              <SelectAsync2
+                name="salesPersonId"
+                placeholder={t("sales-person")}
+                suggestionsIfEmpty
+                ids={salesPersonIds}
+                asyncFunc={userAsync}
+                error={
+                  formik.touched.salesPersonId &&
+                  Boolean(formik.errors.salesPersonId)
+                }
+                onBlur={() => formik.setFieldTouched("salesPersonId")}
+                onSelectionChange={(option) =>
+                  formik.setFieldValue("salesPersonId", option?.value ?? "")
+                }
+                helperText={
+                  <FormikErrorMessage
+                    touched={formik.touched.salesPersonId}
+                    error={formik.errors.salesPersonId}
+                    translatedFieldName={t("sales-person")}
+                  />
+                }
+              />
+            ),
+          },
+          {
+            label: t("warehouse"),
+            required: isRequiredField(
+              invoiceCreateEditSchema,
+              "warehouseId",
+              formik.values
+            ),
+            value: (
+              <LookupAutocomplete
+                groupKey={LookupGroupKey.Warehouse}
+                name="warehouseId"
+                value={formik.values.warehouseId ?? ""}
+                onChange={(newValue) =>
+                  formik.setFieldValue("warehouseId", newValue || "")
+                }
+                onBlur={() => formik.setFieldTouched("warehouseId")}
+                error={
+                  formik.touched.warehouseId &&
+                  Boolean(formik.errors.warehouseId)
+                }
+                helperText={
+                  <FormikErrorMessage
+                    touched={formik.touched.warehouseId}
+                    error={formik.errors.warehouseId}
+                    translatedFieldName={t("warehouse")}
+                  />
+                }
+              />
+            ),
+          },
+          {
+            label: t("sales-type"),
+            value: (
+              <LookupAutocomplete
+                groupKey={LookupGroupKey.SalesType}
+                name="salesTypeId"
+                value={formik.values.salesTypeId ?? ""}
+                onChange={(newValue) =>
+                  formik.setFieldValue("salesTypeId", newValue || undefined)
+                }
+                onBlur={() => formik.setFieldTouched("salesTypeId")}
+                error={
+                  formik.touched.salesTypeId &&
+                  Boolean(formik.errors.salesTypeId)
+                }
+                helperText={
+                  <FormikErrorMessage
+                    touched={formik.touched.salesTypeId}
+                    error={formik.errors.salesTypeId}
+                    translatedFieldName={t("sales-type")}
+                  />
+                }
+              />
+            ),
+          },
+          {
+            label: t("payment-type"),
+            value: (
+              <LookupAutocomplete
+                groupKey={LookupGroupKey.PaymentType}
+                name="paymentTypeId"
+                value={formik.values.paymentTypeId ?? ""}
+                onChange={(newValue) =>
+                  formik.setFieldValue("paymentTypeId", newValue || undefined)
+                }
+                onBlur={() => formik.setFieldTouched("paymentTypeId")}
+                error={
+                  formik.touched.paymentTypeId &&
+                  Boolean(formik.errors.paymentTypeId)
+                }
+                helperText={
+                  <FormikErrorMessage
+                    touched={formik.touched.paymentTypeId}
+                    error={formik.errors.paymentTypeId}
+                    translatedFieldName={t("payment-type")}
+                  />
+                }
+              />
+            ),
+          },
+          {
+            label: t("payment-reference"),
+            value: (
+              <TextField
+                fullWidth
+                size="small"
+                id="paymentReference"
+                name="paymentReference"
+                value={formik.values.paymentReference ?? ""}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+              />
+            ),
+          },
+          {
+            label: t("remark"),
+            value: (
+              <TextField
+                fullWidth
+                size="small"
+                id="remark"
+                name="remark"
+                value={formik.values.remark ?? ""}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                multiline
+                minRows={2}
+              />
+            ),
+          },
+        ]}
+      />
       <CustomerQuickCreateDialog
         open={customerDialogOpen}
         initialName={customerDraftName}

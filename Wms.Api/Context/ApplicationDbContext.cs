@@ -214,7 +214,8 @@ namespace Wms.Api.Context
                 nameof(Product.RetailPrice),
                 nameof(Product.LocationId),
                 nameof(Product.GradeId),
-                nameof(Product.CostPrice)
+                nameof(Product.CostPrice),
+                nameof(Product.BatteryHealth)
             };
 
             var currentUser = "System";

@@ -159,7 +159,7 @@ const LookupAutocomplete: React.FC<LookupAutocompleteProps> = ({
         readOnly={readOnly}
         inputValue={inputValue}
         onInputChange={(_, newValue, reason) => {
-          if (reason === "input") {
+          if (reason === "input" || reason === "reset") {
             setInputValue(newValue);
           }
         }}
@@ -168,6 +168,7 @@ const LookupAutocomplete: React.FC<LookupAutocompleteProps> = ({
           option.value === optionValue.value
         }
         onChange={(_, newValue) => {
+          console.log(newValue);
           onChange(newValue?.value ?? "", newValue ?? null);
         }}
         onBlur={onBlur}
