@@ -13,7 +13,7 @@ namespace Wms.Api.Entities
          
         public Guid CategoryId { get; set; }
         public Guid? BrandId { get; set; }
-        public string? Model { get; set; }
+        public Guid? ModelId { get; set; }
         public int? Year { get; set; }
         public Guid? ColorId { get; set; }
         public Guid? StorageId { get; set; }
@@ -38,11 +38,17 @@ namespace Wms.Api.Entities
         [Column(TypeName = "decimal(18,4)")]
         public decimal? CostPrice { get; set; }
 
+        /// <summary>
+        /// Battery health percentage (0-100) for devices with batteries.
+        /// </summary>
+        public int? BatteryHealth { get; set; }
+
         public string? SerialNumber { get; set; }         
 
         // Navigation properties
         public virtual Lookup Category { get; set; } = default!;
         public virtual Lookup? Brand { get; set; }
+        public virtual Lookup? Model { get; set; }
         public virtual Lookup? Color { get; set; }
         public virtual Lookup? Storage { get; set; }
         public virtual Lookup? Ram { get; set; }

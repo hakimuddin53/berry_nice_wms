@@ -10,7 +10,8 @@ namespace Wms.Api.Dto.Customer.CustomerDetails
         public string? Phone { get; set; }
         public string? Email { get; set; }
         public string? Address { get; set; }
-        public string CustomerType { get; set; } = "Retail"; // Retail / Dealer / Agent
+        public Guid CustomerTypeId { get; set; }
+        public string? CustomerTypeLabel { get; set; }
 
         public DateTime CreatedAt { get; set; }
         public Guid CreatedById { get; set; }

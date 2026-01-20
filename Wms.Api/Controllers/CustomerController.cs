@@ -11,6 +11,7 @@ using Wms.Api.Dto.Customer.CustomerDetails;
 using Wms.Api.Dto.Customer.CustomerSearch;
 using Wms.Api.Dto.PagedList;
 using Wms.Api.Entities;
+using Wms.Api.Model;
 using Wms.Api.Services;
 
 namespace Wms.Api.Controllers
@@ -21,7 +22,8 @@ namespace Wms.Api.Controllers
     public class CustomerController(
         IService<Customer> service,
         IMapper autoMapperService,
-        ApplicationDbContext context)
+        ApplicationDbContext context,
+        IRunningNumberService runningNumberService)
         : ControllerBase
     {
         [HttpGet("select-options")]
@@ -69,12 +71,17 @@ namespace Wms.Api.Controllers
         [HttpPost("search", Name = "SearchCustomersAsync")]
         public async Task<IActionResult> SearchCustomersAsync([FromBody] CustomerSearchDto customerSearch)
         {
-            var customers = await service.GetAllAsync(e => e.Name.Contains(customerSearch.search) || e.CustomerCode.Contains(customerSearch.search));
+            var query = context.Customers
+                .AsNoTracking()
+                .Include(c => c.CustomerType)
+                .Where(e => e.Name.Contains(customerSearch.search) || e.CustomerCode.Contains(customerSearch.search));
 
-            var result = customers.Skip((customerSearch.Page - 1) * customerSearch.PageSize).Take(customerSearch.PageSize).ToList();
+            var result = await query
+                .Skip((customerSearch.Page - 1) * customerSearch.PageSize)
+                .Take(customerSearch.PageSize)
+                .ToListAsync();
 
             PagedList<Customer> pagedResult = new PagedList<Customer>(result, customerSearch.Page, customerSearch.PageSize);
-
             var customerDtos = autoMapperService.Map<PagedListDto<CustomerDetailsDto>>(pagedResult);
 
             return Ok(customerDtos);
@@ -83,16 +90,21 @@ namespace Wms.Api.Controllers
         [HttpPost("count", Name = "CountCustomersAsync")]
         public async Task<IActionResult> CountCustomersAsync([FromBody] CustomerSearchDto customerSearch)
         {
-            var customers = await service.GetAllAsync(e => e.Name.Contains(customerSearch.search) || e.CustomerCode.Contains(customerSearch.search));
+            var count = await context.Customers
+                .AsNoTracking()
+                .Where(e => e.Name.Contains(customerSearch.search) || e.CustomerCode.Contains(customerSearch.search))
+                .CountAsync();
 
-            var customerDtos = autoMapperService.Map<List<CustomerDetailsDto>>(customers);
-            return Ok(customerDtos.Count);
+            return Ok(count);
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
-            var customer = await service.GetByIdAsync(id);
+            var customer = await context.Customers
+                .AsNoTracking()
+                .Include(c => c.CustomerType)
+                .FirstOrDefaultAsync(c => c.Id == id);
 
             if (customer == null)
                 return NotFound();
@@ -106,6 +118,7 @@ namespace Wms.Api.Controllers
         public async Task<IActionResult> Create([FromBody] CustomerCreateUpdateDto customerCreateUpdateDto)
         {
             var customer = autoMapperService.Map<Customer>(customerCreateUpdateDto);
+            customer.CustomerCode = await runningNumberService.GenerateRunningNumberAsync(OperationTypeEnum.CUSTOMER);
 
             await service.AddAsync(customer);
             return CreatedAtAction(nameof(GetById), new { id = customer.Id }, customer);
@@ -118,7 +131,9 @@ namespace Wms.Api.Controllers
             if (customer == null)
                 return NotFound();
 
+            var existingCode = customer.CustomerCode;
             autoMapperService.Map(customerCreateUpdateDto, customer);
+            customer.CustomerCode = existingCode;
 
             await service.UpdateAsync(customer);
             return NoContent();
@@ -136,12 +151,15 @@ namespace Wms.Api.Controllers
         {
             var customerIdsAsString = customerFindByParametersDto.CustomerIds.Select(id => id.ToString()).ToArray();
 
-            var customersQuery = await service.GetAllAsync(e => customerIdsAsString.Contains(e.Id.ToString()));
+            var customersQuery = context.Customers
+                .AsNoTracking()
+                .Include(c => c.CustomerType)
+                .Where(e => customerIdsAsString.Contains(e.Id.ToString()));
 
-            var result = customersQuery
+            var result = await customersQuery
                 .Skip((customerFindByParametersDto.Page - 1) * customerFindByParametersDto.PageSize)
                 .Take(customerFindByParametersDto.PageSize)
-                .ToList();
+                .ToListAsync();
 
             PagedList<Customer> pagedResult = new PagedList<Customer>(
                 result,

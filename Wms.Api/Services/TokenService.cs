@@ -44,10 +44,10 @@ namespace Wms.Api.Services
             };
 
             var accessTokenMinutes =
-                _configuration.GetValue<int?>("Jwt:AccessTokenMinutes") ?? 10080;
+                _configuration.GetValue<int?>("Jwt:AccessTokenMinutes") ?? 1440;
             if (accessTokenMinutes <= 0)
             {
-                accessTokenMinutes = 10080;
+                accessTokenMinutes = 1440;
             }
 
             var token = new JwtSecurityToken(

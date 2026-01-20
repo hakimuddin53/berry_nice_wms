@@ -397,7 +397,7 @@ namespace Wms.Api.Controllers
 
                 item.ProductCode ??= product.ProductCode;
                 item.ProductName ??= product.ProductCode;
-                item.Model ??= product.Model;
+                item.Model ??= product.Model?.Label;
 
                 if (product.BrandId.HasValue &&
                     lookupLabels.TryGetValue(product.BrandId.Value, out var brand))

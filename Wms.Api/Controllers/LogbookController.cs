@@ -36,7 +36,7 @@ namespace Wms.Api.Controllers
                     l.Barcode.Contains(term) ||
                     l.UserName.Contains(term) ||
                     (l.Product != null && l.Product.ProductCode.Contains(term)) ||
-                    (l.Product != null && l.Product.Model != null && l.Product.Model.Contains(term)));
+                    (l.Product != null && l.Product.Model != null && l.Product.Model.Label.Contains(term)));
             }
 
             var statusText = search.Status?.Trim();
@@ -354,7 +354,7 @@ namespace Wms.Api.Controllers
                 var term = search.Search.Trim();
                 inventoryQuery = inventoryQuery.Where(x =>
                     x.product.ProductCode.Contains(term) ||
-                    (x.product.Model != null && x.product.Model.Contains(term)));
+                    (x.product.Model != null && x.product.Model.Label.Contains(term)));
             }
 
             var latestInventoryIds = inventoryQuery
@@ -374,7 +374,7 @@ namespace Wms.Api.Controllers
                 {
                     row.product.ProductId,
                     row.product.ProductCode,
-                    row.product.Model,
+                    ModelLabel = row.product.Model != null ? row.product.Model.Label : null,
                     row.product.CreatedDate,
                     Latest = context.LogbookEntries
                         .Where(l => l.ProductId == row.product.ProductId)
@@ -402,7 +402,7 @@ namespace Wms.Api.Controllers
             {
                 ProductId = x.ProductId,
                 ProductCode = x.ProductCode,
-                ProductName = x.Model,
+                ProductName = x.ModelLabel,
                 UserName = x.Latest != null ? x.Latest.UserName : null,
                 Remark = x.Latest != null ? x.Latest.Purpose : null,
                 Status = x.Latest != null ? x.Latest.Status.ToString() : null,

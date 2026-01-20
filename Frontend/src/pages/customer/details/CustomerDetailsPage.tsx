@@ -129,7 +129,7 @@ function CustomerDetailsPage() {
                     {customer.address || "-"}
                   </KeyValuePair>
                   <KeyValuePair label={t("customer-type")}>
-                    {customer.customerType}
+                    {customer.customerTypeLabel || customer.customerTypeId}
                   </KeyValuePair>
                   <KeyValuePair label={t("created-at")}>
                     <UserDateTime date={customer.createdAt} />

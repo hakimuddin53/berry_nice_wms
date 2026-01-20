@@ -7,7 +7,8 @@ export interface StockRecieveItemDetailsDto {
   productCode: string;
   categoryId: guid;
   brandId?: guid;
-  model?: string;
+  modelId?: guid;
+  modelName?: string;
   year?: number;
   colorId?: guid;
   storageId?: guid;
@@ -17,6 +18,7 @@ export interface StockRecieveItemDetailsDto {
   gradeId?: guid;
   // Display-friendly grade label from lookup
   gradeName?: string;
+  batteryHealth?: number;
   locationId: guid;
   locationName?: string;
   locationLabel?: string;

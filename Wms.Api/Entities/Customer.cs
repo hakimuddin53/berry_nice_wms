@@ -14,6 +14,9 @@ namespace Wms.Api.Entities
         public string? Email { get; set; }
         public string? Address { get; set; }
         [Required]
-        public string CustomerType { get; set; } = "Retail"; // Retail / Dealer / Agent
+        public Guid CustomerTypeId { get; set; }
+
+        // Navigation
+        public virtual Lookup CustomerType { get; set; } = default!;
     }
 }

@@ -74,6 +74,8 @@ namespace Wms.Api.Controllers
                 .Include(x => x.Product)
                     .ThenInclude(p => p.Grade)
                 .Include(x => x.Product)
+                    .ThenInclude(p => p.Model)
+                .Include(x => x.Product)
                     .ThenInclude(p => p.Region)
                 .Include(x => x.Product)
                     .ThenInclude(p => p.NewOrUsed)
@@ -304,7 +306,7 @@ namespace Wms.Api.Controllers
                         ProductCode = normalizedCode!,
                         CategoryId = dtoItem.CategoryId,
                         BrandId = dtoItem.BrandId,
-                        Model = dtoItem.Model,
+                        ModelId = dtoItem.ModelId,
                         Year = dtoItem.Year,
                         ColorId = dtoItem.ColorId,
                         StorageId = dtoItem.StorageId,
@@ -320,6 +322,7 @@ namespace Wms.Api.Controllers
                         SerialNumber = string.IsNullOrWhiteSpace(dtoItem.SerialNumber) ? null : dtoItem.SerialNumber.Trim(),                        
                         RegionId = dtoItem.RegionId.HasValue && dtoItem.RegionId.Value != Guid.Empty ? dtoItem.RegionId : null,
                         NewOrUsedId = dtoItem.NewOrUsedId.HasValue && dtoItem.NewOrUsedId.Value != Guid.Empty ? dtoItem.NewOrUsedId : null,
+                        BatteryHealth = dtoItem.BatteryHealth,
                         CreatedDate = DateTime.UtcNow,
                         Remark = string.IsNullOrWhiteSpace(dtoItem.Remark) ? null : dtoItem.Remark.Trim(),
                         InternalRemark = string.IsNullOrWhiteSpace(dtoItem.InternalRemark) ? null : dtoItem.InternalRemark.Trim()
@@ -334,7 +337,7 @@ namespace Wms.Api.Controllers
                 {
                     product.CategoryId = dtoItem.CategoryId;
                     product.BrandId = dtoItem.BrandId;
-                    product.Model = dtoItem.Model;
+                    product.ModelId = dtoItem.ModelId ?? product.ModelId;
                     product.Year = dtoItem.Year ?? product.Year;
                     product.ColorId = dtoItem.ColorId;
                     product.StorageId = dtoItem.StorageId;
@@ -350,6 +353,7 @@ namespace Wms.Api.Controllers
                     product.DealerPrice = dtoItem.DealerSellingPrice ?? product.DealerPrice;
                     product.AgentPrice = dtoItem.AgentSellingPrice ?? product.AgentPrice;
                     product.CostPrice = dtoItem.Cost ?? product.CostPrice;
+                    product.BatteryHealth = dtoItem.BatteryHealth ?? product.BatteryHealth;
 
                     if (!string.IsNullOrWhiteSpace(dtoItem.SerialNumber))
                     {

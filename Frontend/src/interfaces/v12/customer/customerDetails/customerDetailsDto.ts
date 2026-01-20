@@ -8,7 +8,8 @@ export interface CustomerDetailsDto extends CreatedChangedEntity {
   phone?: string;
   email?: string;
   address?: string;
-  customerType: string; // Retail / Dealer / Agent
+  customerTypeId: guid;
+  customerTypeLabel?: string;
 }
 
 export interface CustomerFindByParametersDto {

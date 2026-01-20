@@ -93,6 +93,7 @@ type DataTableProps<T> = {
   showSearch?: boolean;
   paddingEnabled?: boolean;
   enableMultiselect?: boolean;
+  hidePagination?: boolean;
 };
 
 const DataTable: React.FC<DataTableProps<any>> = (props) => {
@@ -440,24 +441,26 @@ const DataTable: React.FC<DataTableProps<any>> = (props) => {
               </p>
             )}
           </TableContainer>
-          <TablePagination
-            rowsPerPageOptions={[5, 10, 25, 100]}
-            component="div"
-            count={Math.max(
-              props.data.totalCount ?? 0,
-              props.data.data.length ?? 0
-            )}
-            rowsPerPage={props.data.pageSize ?? 10}
-            page={props.data.page}
-            onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-            labelRowsPerPage={t("common:rows-per-page")}
-            labelDisplayedRows={({ from, to, count }) => {
-              return `${from}–${to} ${t("common:of")} ${
-                count !== -1 ? count : `${t("common:more-than")} ${to}`
-              }`;
-            }}
-          />
+          {!props.hidePagination && (
+            <TablePagination
+              rowsPerPageOptions={[5, 10, 25, 100]}
+              component="div"
+              count={Math.max(
+                props.data.totalCount ?? 0,
+                props.data.data.length ?? 0
+              )}
+              rowsPerPage={props.data.pageSize ?? 10}
+              page={props.data.page}
+              onPageChange={handleChangePage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+              labelRowsPerPage={t("common:rows-per-page")}
+              labelDisplayedRows={({ from, to, count }) => {
+                return `${from}–${to} ${t("common:of")} ${
+                  count !== -1 ? count : `${t("common:more-than")} ${to}`
+                }`;
+              }}
+            />
+          )}
         </PbCardBody>
       </PbCard>
     </>

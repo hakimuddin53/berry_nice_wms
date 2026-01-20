@@ -50,8 +50,10 @@ const createDefaultItem = (): YupStockRecieveItemCreateEdit => ({
   productCode: "",
   categoryId: EMPTY_GUID as guid,
   brandId: undefined,
-  model: "",
+  modelId: undefined,
+  modelName: "",
   year: undefined,
+  batteryHealth: null,
   colorId: undefined,
   storageId: undefined,
   ramId: undefined,
@@ -152,6 +154,14 @@ const StockRecieveCreateEditPage: React.FC = () => {
         sanitized.year =
           Number.isFinite(parsedYear) && parsedYear ? parsedYear : null;
 
+        const parsedBatteryHealth =
+          typeof sanitized.batteryHealth === "string"
+            ? Number.parseFloat(sanitized.batteryHealth)
+            : sanitized.batteryHealth;
+        sanitized.batteryHealth = Number.isFinite(parsedBatteryHealth)
+          ? Math.min(100, Math.max(0, parsedBatteryHealth))
+          : null;
+
         if (!sanitized.productId) {
           delete sanitized.productId;
         }
@@ -247,10 +257,13 @@ const StockRecieveCreateEditPage: React.FC = () => {
       const {
         remarks: legacyRemark,
         StockRecieveItemRemarks,
+        modelId,
+        modelName,
         grade,
         gradeId,
         gradeName,
         year,
+        batteryHealth,
         regionId,
         regionName,
         region,
@@ -275,6 +288,7 @@ const StockRecieveCreateEditPage: React.FC = () => {
         (isGuidString(gradeId) && gradeId) ||
         (isGuidString(grade) && (grade as string)) ||
         "";
+      const resolvedModelId = isGuidString(modelId) ? modelId : "";
       const resolvedGradeName =
         gradeName ?? (typeof grade === "string" ? grade : "");
       const resolvedRegionId =
@@ -297,12 +311,23 @@ const StockRecieveCreateEditPage: React.FC = () => {
           : typeof year === "string" && year.trim().length > 0
           ? Number.parseInt(year, 10)
           : undefined;
+      const resolvedBatteryHealth =
+        typeof batteryHealth === "number"
+          ? batteryHealth
+          : typeof batteryHealth === "string" && batteryHealth.trim().length > 0
+          ? Number.parseFloat(batteryHealth)
+          : undefined;
 
       return {
         ...rest,
         key: index,
         year: Number.isFinite(resolvedYear) ? resolvedYear : undefined,
+        batteryHealth: Number.isFinite(resolvedBatteryHealth)
+          ? Math.min(100, Math.max(0, resolvedBatteryHealth!))
+          : null,
         gradeId: resolvedGradeId ?? "",
+        modelId: resolvedModelId ?? "",
+        modelName: modelName ?? "",
         gradeName: resolvedGradeName ?? "",
         regionId: resolvedRegionId ?? "",
         regionName: resolvedRegionName ?? "",

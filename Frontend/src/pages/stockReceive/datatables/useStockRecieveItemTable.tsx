@@ -22,14 +22,20 @@ export const useStockRecieveItemTable = () => {
         hidden,
       },
       {
-        id: "model",
+        id: "modelId",
         label: t("model"),
-        render: (row) => row.model || "-",
+        render: (row) => (row as any).modelName || (row as any).model || "-",
       },
       {
         id: "year",
         label: t("year", { defaultValue: "Year" }),
         render: (row) => (row.year != null ? row.year.toString() : "-"),
+      },
+      {
+        id: "batteryHealth",
+        label: t("battery-health", { defaultValue: "Battery Health (%)" }),
+        render: (row) =>
+          row.batteryHealth != null ? `${row.batteryHealth}%` : "-",
       },
       {
         id: "gradeId",

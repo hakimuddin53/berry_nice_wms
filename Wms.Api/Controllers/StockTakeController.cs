@@ -38,7 +38,7 @@ namespace Wms.Api.Controllers
                 {
                     ProductId = i.ProductId,
                     ScannedBarcode = string.IsNullOrWhiteSpace(i.ScannedBarcode) ? null : i.ScannedBarcode,
-                    CountedQuantity = i.CountedQuantity,
+                    CountedQuantity = 0,
                     Remark = i.Remark
                 }).ToList()
             };

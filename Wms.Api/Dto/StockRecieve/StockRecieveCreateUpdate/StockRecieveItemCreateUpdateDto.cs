@@ -15,7 +15,7 @@ namespace Wms.Api.Dto.StockRecieve.StockRecieveCreateUpdate
 
         public Guid? BrandId { get; set; }
 
-        public string? Model { get; set; }
+        public Guid? ModelId { get; set; }
         public int? Year { get; set; }
 
         public Guid? ColorId { get; set; }
@@ -41,6 +41,8 @@ namespace Wms.Api.Dto.StockRecieve.StockRecieveCreateUpdate
         public decimal? DealerSellingPrice { get; set; }
         public decimal? AgentSellingPrice { get; set; }
         public decimal? Cost { get; set; }
+        [Range(0, 100)]
+        public int? BatteryHealth { get; set; }
 
         // Free-text, comma-delimited chips input (stored on Product)
         public string? Remark { get; set; }

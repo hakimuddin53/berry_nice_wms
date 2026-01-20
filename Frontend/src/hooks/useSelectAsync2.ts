@@ -7,7 +7,7 @@ const useSelectAsync2 = (
     value: string,
     page: number,
     pageSize: number,
-    ids?: string[]
+    ids?: any[]
   ) => Promise<SelectAsyncOption[]>,
   settings?: {
     loadSuggestionsIfEmpty?: boolean;

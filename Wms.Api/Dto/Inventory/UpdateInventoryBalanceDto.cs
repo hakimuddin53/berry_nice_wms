@@ -9,5 +9,6 @@ namespace Wms.Api.Dto.Inventory
         public decimal? RetailPrice { get; set; }
         public decimal? CostPrice { get; set; }
         public Guid? LocationId { get; set; }
+        public int? BatteryHealth { get; set; }
     }
 }

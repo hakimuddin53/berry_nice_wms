@@ -24,6 +24,8 @@ namespace Wms.Api.Dto.Product.ProductDetails
         // Display names from lookups
         public string Category { get; set; } = default!;
         public string? Brand { get; set; }
+        public Guid? ModelId { get; set; }
+        public string? ModelName { get; set; }
         public string? Model { get; set; }
         public string? Color { get; set; }
         public string? Storage { get; set; }
@@ -40,6 +42,7 @@ namespace Wms.Api.Dto.Product.ProductDetails
         public decimal? RetailPrice { get; set; }
         public decimal? CostPrice { get; set; }
         public Guid? LocationId { get; set; }
+        public int? BatteryHealth { get; set; }
 
         public int LowQty { get; set; } = 0;
         public DateTime CreatedDate { get; set; }

@@ -10,7 +10,8 @@ namespace Wms.Api.Dto.StockRecieve.StockRecieveDetails
         public string ProductCode { get; set; } = default!;
         public Guid CategoryId { get; set; }
         public Guid? BrandId { get; set; }
-        public string? Model { get; set; }
+        public Guid? ModelId { get; set; }
+        public string? ModelName { get; set; }
         public int? Year { get; set; }
         public Guid? ColorId { get; set; }
         public Guid? StorageId { get; set; }
@@ -30,6 +31,7 @@ namespace Wms.Api.Dto.StockRecieve.StockRecieveDetails
         public decimal? DealerSellingPrice { get; set; }
         public decimal? AgentSellingPrice { get; set; }
         public decimal? Cost { get; set; }
+        public int? BatteryHealth { get; set; }
         public int ReceiveQuantity { get; set; }
 
         // Aggregated, free-text remark(s) stored on Product

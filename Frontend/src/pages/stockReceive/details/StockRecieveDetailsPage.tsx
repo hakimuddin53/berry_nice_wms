@@ -137,7 +137,14 @@ function StockRecieveDetailsPage() {
       {
         id: "model",
         label: t("model"),
-        render: (item) => formatText(item.model),
+        render: (item) =>
+          formatLookup(item.modelName ?? null, item.modelId as unknown as string),
+      },
+      {
+        id: "batteryHealth",
+        label: t("battery-health", { defaultValue: "Battery Health (%)" }),
+        render: (item) =>
+          item.batteryHealth != null ? `${item.batteryHealth}%` : "-",
       },
       {
         id: "location",
@@ -189,7 +196,13 @@ function StockRecieveDetailsPage() {
         label: t("product-name", { defaultValue: "Product Name" }),
         value: formatText(activeItem.productName),
       },
-      { label: t("model"), value: formatText(activeItem.model) },
+      {
+        label: t("model"),
+        value: formatLookup(
+          activeItem.modelName ?? null,
+          activeItem.modelId as unknown as string
+        ),
+      },
       {
         label: t("imei", { defaultValue: "IMEI/Serial Number" }),
         value: formatText(activeItem.serialNumber),
@@ -254,6 +267,13 @@ function StockRecieveDetailsPage() {
           activeItem.newOrUsedName ?? null,
           activeItem.newOrUsedId as unknown as string
         ),
+      },
+      {
+        label: t("battery-health", { defaultValue: "Battery Health (%)" }),
+        value:
+          activeItem.batteryHealth != null
+            ? `${activeItem.batteryHealth}%`
+            : formatText(activeItem.batteryHealth),
       },
       { label: t("location"), value: getLocationLabel(activeItem) },
       { label: t("quantity"), value: formatText(activeItem.receiveQuantity) },

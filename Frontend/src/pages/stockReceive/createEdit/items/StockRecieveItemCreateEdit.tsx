@@ -4,6 +4,7 @@
   Chip,
   Divider,
   Grid,
+  InputAdornment,
   TextField,
   Typography,
 } from "@mui/material";
@@ -165,23 +166,25 @@ const StockRecieveItemCreateEdit = (props: {
             </Typography>
             <Grid container spacing={2}>
               <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
+                <LookupAutocomplete
+                  groupKey={LookupGroupKey.Model}
+                  name={fieldName("modelId")}
                   label={t("model")}
-                  id={fieldName("model")}
-                  name={fieldName("model")}
-                  size="small"
-                  value={item.model}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={fieldTouched("model") && Boolean(fieldError("model"))}
+                  value={item.modelId ?? ""}
+                  onChange={(newValue, option) => {
+                    formik.setFieldValue(fieldName("modelId"), newValue || "");
+                    formik.setFieldValue(fieldName("modelName"), option?.label ?? "");
+                  }}
+                  onBlur={() => formik.setFieldTouched(fieldName("modelId"), true, false)}
+                  error={fieldTouched("modelId") && Boolean(fieldError("modelId"))}
                   helperText={
                     <FormikErrorMessage
-                      touched={fieldTouched("model")}
-                      error={fieldError("model")}
+                      touched={fieldTouched("modelId")}
+                      error={fieldError("modelId")}
                       translatedFieldName={t("model")}
                     />
                   }
+                  allowCreate
                 />
               </Grid>
               <Grid item xs={12} md={4}>
@@ -246,6 +249,47 @@ const StockRecieveItemCreateEdit = (props: {
                       ),
                     },
                   }}
+                />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <TextField
+                  fullWidth
+                  label={t("battery-health", {
+                    defaultValue: "Battery Health",
+                  })}
+                  id={fieldName("batteryHealth")}
+                  name={fieldName("batteryHealth")}
+                  size="small"
+                  type="number"
+                  value={item.batteryHealth ?? ""}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    const parsed =
+                      value === "" ? null : Number.parseFloat(value);
+                    formik.setFieldValue(fieldName("batteryHealth"), parsed);
+                  }}
+                  onBlur={() =>
+                    formik.setFieldTouched(fieldName("batteryHealth"), true)
+                  }
+                  inputProps={{ min: 0, max: 100, step: 1 }}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">%</InputAdornment>
+                    ),
+                  }}
+                  error={
+                    fieldTouched("batteryHealth") &&
+                    Boolean(fieldError("batteryHealth"))
+                  }
+                  helperText={
+                    <FormikErrorMessage
+                      touched={fieldTouched("batteryHealth")}
+                      error={fieldError("batteryHealth")}
+                      translatedFieldName={t("battery-health", {
+                        defaultValue: "Battery Health",
+                      })}
+                    />
+                  }
                 />
               </Grid>
               <Grid item xs={12} md={4}>

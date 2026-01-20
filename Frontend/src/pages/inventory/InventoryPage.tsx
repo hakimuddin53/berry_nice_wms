@@ -17,6 +17,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import InputAdornment from "@mui/material/InputAdornment";
 import UserName from "components/platbricks/entities/UserName";
 import { DataTable, PbCard } from "components/platbricks/shared";
 import BarcodeLabel, {
@@ -61,7 +62,9 @@ type ProductExtras = {
   costPrice?: number | null;
   locationId?: string | null;
   locationLabel?: string;
-  model?: string | null;
+  batteryHealth?: number | null;
+  modelId?: string | null;
+  modelName?: string | null;
   ram?: string | null;
   storage?: string | null;
   processor?: string | null;
@@ -76,7 +79,7 @@ type ProductExtras = {
 type InventorySearchFilters = {
   search: string;
   product: SelectAsyncOption | null;
-  model: string;
+  model: SelectAsyncOption | null;
   warehouse: SelectAsyncOption | null;
   location: SelectAsyncOption | null;
   category: SelectAsyncOption | null;
@@ -89,6 +92,7 @@ type InventorySearchFilters = {
   grade: SelectAsyncOption | null;
   region: SelectAsyncOption | null;
   newOrUsed: SelectAsyncOption | null;
+  batteryHealth: number | null;
 };
 
 const parseRemarkSelections = (value?: string | null) => {
@@ -118,7 +122,7 @@ const InventoryPage = () => {
   const [filters, setFilters] = useState<InventorySearchFilters>({
     search: "",
     product: null,
-    model: "",
+    model: null,
     warehouse: null,
     location: null,
     category: null,
@@ -131,6 +135,7 @@ const InventoryPage = () => {
     grade: null,
     region: null,
     newOrUsed: null,
+    batteryHealth: null,
   });
   const [productExtras, setProductExtras] = useState<
     Record<string, ProductExtras>
@@ -145,6 +150,10 @@ const InventoryPage = () => {
   const [labelData, setLabelData] = useState<BarcodeLabelData | null>(null);
   const [printRequested, setPrintRequested] = useState(false);
   const labelRef = useRef<HTMLDivElement | null>(null);
+  const auditRequestRef = useRef<{
+    key: string;
+    promise: Promise<{ data?: InventoryAuditDto[] }>;
+  } | null>(null);
   const { data: historyLogs = [], isLoading: historyLoading } =
     useInventoryAuditLogQuery(historyProductId);
 
@@ -257,6 +266,32 @@ const InventoryPage = () => {
                   </Grid>
                 ))}
               </Grid>
+              <Grid item xs={12} md={6}>
+                {renderFilterField(
+                  t("battery-health", { defaultValue: "Battery Health (%)" }),
+                  <TextField
+                    fullWidth
+                    type="number"
+                    size="small"
+                    inputProps={{ min: 0, max: 100, step: 1 }}
+                    value={filters.batteryHealth ?? ""}
+                    onChange={(e) =>
+                      updateFilter(
+                        "batteryHealth",
+                        e.target.value === ""
+                          ? null
+                          : Math.max(
+                              0,
+                              Math.min(100, Number(e.target.value) || 0)
+                            )
+                      )
+                    }
+                    placeholder={t("battery-health", {
+                      defaultValue: "Battery Health (%)",
+                    })}
+                  />
+                )}
+              </Grid>
             </Box>
           ))}
         </Box>
@@ -289,7 +324,8 @@ const InventoryPage = () => {
       {
         id: "model",
         label: t("model"),
-        render: (row) => formatText(row.model),
+        render: (row) =>
+          formatText((row as any).modelName ?? (row as any).model),
       },
       {
         id: "ageDays",
@@ -324,6 +360,15 @@ const InventoryPage = () => {
         align: "right",
         render: (row) =>
           formatNumber(productExtras[row.productId]?.retailPrice),
+      },
+      {
+        id: "batteryHealth",
+        label: t("battery-health", { defaultValue: "Battery Health (%)" }),
+        align: "right",
+        render: (row) => {
+          const value = productExtras[row.productId]?.batteryHealth;
+          return value !== null && value !== undefined ? `${value}%` : "-";
+        },
       },
       {
         id: "costPrice",
@@ -398,6 +443,28 @@ const InventoryPage = () => {
     return Array.from(map.values());
   };
 
+  const sortByName = useCallback(
+    (a: InventoryAuditDto, b: InventoryAuditDto) => {
+      const labelA = `${(
+        a.modelName ??
+        a.productCode ??
+        ""
+      ).trim()}`.toLowerCase();
+      const labelB = `${(
+        b.modelName ??
+        b.productCode ??
+        ""
+      ).trim()}`.toLowerCase();
+
+      if (labelA === labelB) {
+        return (a.productCode ?? "").localeCompare(b.productCode ?? "");
+      }
+
+      return labelA.localeCompare(labelB);
+    },
+    []
+  );
+
   const buildExtras = (product: ProductDetailsDto): ProductExtras => ({
     remark: product.remark ?? "",
     internalRemark: product.internalRemark ?? "",
@@ -406,7 +473,9 @@ const InventoryPage = () => {
     agentPrice: product.agentPrice ?? null,
     costPrice: product.costPrice ?? null,
     locationId: product.locationId ?? null,
-    model: product.model ?? null,
+    batteryHealth: product.batteryHealth ?? null,
+    modelId: (product as any).modelId ?? null,
+    modelName: (product as any).modelName ?? (product as any).model ?? null,
     ram: product.ram ?? null,
     storage: product.storage ?? null,
     processor: product.processor ?? null,
@@ -498,12 +567,11 @@ const InventoryPage = () => {
   const buildPayload = useCallback(
     (page: number, pageSize: number, searchValue: string) => {
       const searchText = (searchValue ?? filters.search).trim();
-      const modelText = filters.model.trim();
 
       return {
         search: searchText.length > 0 ? searchText : null,
         productId: toGuid(filters.product?.value),
-        model: modelText.length > 0 ? modelText : null,
+        modelId: toGuid(filters.model?.value),
         warehouseId: toGuid(filters.warehouse?.value),
         locationId: toGuid(filters.location?.value),
         categoryId: toGuid(filters.category?.value),
@@ -516,6 +584,10 @@ const InventoryPage = () => {
         gradeId: toGuid(filters.grade?.value),
         regionId: toGuid(filters.region?.value),
         newOrUsedId: toGuid(filters.newOrUsed?.value),
+        batteryHealth:
+          typeof filters.batteryHealth === "number"
+            ? filters.batteryHealth
+            : null,
         page: page + 1,
         pageSize,
       };
@@ -523,29 +595,48 @@ const InventoryPage = () => {
     [filters, toGuid]
   );
 
+  const fetchAudit = useCallback(
+    (page: number, pageSize: number, searchValue: string) => {
+      const payload = buildPayload(page, pageSize, searchValue);
+      const key = JSON.stringify(payload);
+
+      if (!auditRequestRef.current || auditRequestRef.current.key !== key) {
+        const request = inventoryService.searchAudit(payload);
+        auditRequestRef.current = {
+          key,
+          promise: request.finally(() => {
+            if (auditRequestRef.current?.key === key) {
+              auditRequestRef.current = null;
+            }
+          }),
+        };
+      }
+
+      return auditRequestRef.current.promise;
+    },
+    [buildPayload, inventoryService]
+  );
+
   const loadData = useCallback(
     async (page: number, pageSize: number, searchValue: string) => {
-      const res = await inventoryService.searchAudit(
-        buildPayload(page, pageSize, searchValue)
-      );
+      const res = await fetchAudit(page, pageSize, searchValue);
       const deduped = dedupeLatestBalances(res.data || []);
-      hydrateProductExtras(deduped.map((d) => d.productId as string));
-      return deduped.map((item, index) => ({
+      const sorted = [...deduped].sort(sortByName);
+      hydrateProductExtras(sorted.map((d) => d.productId as string));
+      return sorted.map((item, index) => ({
         ...item,
-        rowId: page * pageSize + index,
+        rowId: index,
       }));
     },
-    [inventoryService, buildPayload, hydrateProductExtras]
+    [fetchAudit, dedupeLatestBalances, hydrateProductExtras, sortByName]
   );
 
   const loadDataCount = useCallback(
     async (page: number, pageSize: number, searchValue: string) => {
-      const res = await inventoryService.searchAudit(
-        buildPayload(page, pageSize, searchValue)
-      );
+      const res = await fetchAudit(page, pageSize, searchValue);
       return dedupeLatestBalances(res.data || []).length;
     },
-    [inventoryService, buildPayload]
+    [fetchAudit, dedupeLatestBalances]
   );
 
   const { tableProps, reloadData, updateDatatableControls } =
@@ -561,6 +652,21 @@ const InventoryPage = () => {
     reloadData(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const handleFocus = () => reloadData(true);
+    const handleVisibility = () => {
+      if (!document.hidden) {
+        reloadData(true);
+      }
+    };
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [reloadData]);
 
   const onSearch = () => {
     updateDatatableControls({ searchValue: filters.search, page: 0 });
@@ -629,7 +735,7 @@ const InventoryPage = () => {
 
     return {
       code,
-      model: extras.model ?? row.model ?? null,
+      model: extras.modelName ?? (row as any).modelName ?? null,
       ram: extras.ram ?? null,
       storage: extras.storage ?? null,
       processor: extras.processor ?? null,
@@ -657,6 +763,7 @@ const InventoryPage = () => {
       retailPrice: formValues.retailPrice ?? null,
       costPrice: formValues.costPrice ?? null,
       locationId: formValues.locationId ?? null,
+      batteryHealth: formValues.batteryHealth ?? null,
     };
     setSaving(true);
     try {
@@ -674,6 +781,10 @@ const InventoryPage = () => {
             payload.agentPrice ?? prev[editingProductId]?.agentPrice ?? null,
           costPrice:
             payload.costPrice ?? prev[editingProductId]?.costPrice ?? null,
+          batteryHealth:
+            payload.batteryHealth ??
+            prev[editingProductId]?.batteryHealth ??
+            null,
         },
       }));
       if (payload.locationId) {
@@ -709,7 +820,9 @@ const InventoryPage = () => {
       },
       {
         label: t("model"),
-        value: formatText(extras.model ?? activeBalanceRow.model),
+        value: formatText(
+          extras.modelName ?? (activeBalanceRow as any).modelName
+        ),
       },
       {
         label: t("warehouse"),
@@ -736,6 +849,10 @@ const InventoryPage = () => {
       {
         label: t("cost"),
         value: formatNumber(extras.costPrice ?? 0),
+      },
+      {
+        label: t("battery-health", { defaultValue: "Battery Health (%)" }),
+        value: extras.batteryHealth != null ? `${extras.batteryHealth}%` : "-",
       },
       { label: t("ram"), value: formatText(extras.ram) },
       { label: t("storage"), value: formatText(extras.storage) },
@@ -800,12 +917,19 @@ const InventoryPage = () => {
               <Grid item xs={12} md={6}>
                 {renderFilterField(
                   t("model"),
-                  <TextField
-                    size="small"
-                    placeholder={t("model")}
-                    value={filters.model}
-                    onChange={(e) => updateFilter("model", e.target.value)}
-                    fullWidth
+                  <LookupAutocomplete
+                    name="modelId"
+                    groupKey={LookupGroupKey.Model}
+                    placeholder={selectPlaceholder}
+                    value={filters.model?.value ?? ""}
+                    onChange={(_, option) =>
+                      updateFilter(
+                        "model",
+                        option
+                          ? { label: option.label, value: option.value }
+                          : null
+                      )
+                    }
                   />
                 )}
               </Grid>
@@ -1054,6 +1178,7 @@ const InventoryPage = () => {
           headerCells={headerCells}
           data={tableProps}
           dataKey="rowId"
+          hidePagination
         />
       </Page>
 
@@ -1089,6 +1214,30 @@ const InventoryPage = () => {
               onChange={(e) => updateField("internalRemark", e.target.value)}
               multiline
               minRows={2}
+            />
+            <TextField
+              label={t("battery-health", {
+                defaultValue: "Battery Health (%)",
+              })}
+              size="small"
+              type="number"
+              inputProps={{ min: 0, max: 100, step: 1 }}
+              InputProps={{
+                endAdornment: <InputAdornment position="end">%</InputAdornment>,
+              }}
+              value={formValues.batteryHealth ?? ""}
+              onChange={(e) =>
+                updateField(
+                  "batteryHealth",
+                  e.target.value === ""
+                    ? null
+                    : Math.max(
+                        0,
+                        Math.min(100, Number.parseFloat(e.target.value) || 0)
+                      )
+                )
+              }
+              fullWidth
             />
             <Stack direction="row" spacing={2}>
               <Box sx={{ flex: 1 }} />

@@ -15,6 +15,7 @@ import {
   PbCard,
 } from "components/platbricks/shared";
 import UserDateTime from "components/platbricks/shared/UserDateTime";
+import { CustomerDetailsDto } from "interfaces/v12/customer/customerDetails/customerDetailsDto";
 import { InvoiceDetailsDto } from "interfaces/v12/invoice/invoiceDetailsDto";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -27,7 +28,6 @@ import {
   formatWarrantyExpiry,
   warrantyLabelFromMonths,
 } from "utils/warranty";
-import { useUserDateTime } from "hooks/useUserDateTime";
 
 const InvoiceDetailsPage = () => {
   const { t } = useTranslation();
@@ -36,7 +36,6 @@ const InvoiceDetailsPage = () => {
   const invoiceService = useInvoiceService();
   const productService = useProductService();
   const customerService = useCustomerService();
-  const { getLocalDateAndTime } = useUserDateTime();
   const [invoice, setInvoice] = useState<InvoiceDetailsDto | null>(null);
   const [productLabels, setProductLabels] = useState<Record<string, string>>(
     {}
@@ -44,6 +43,8 @@ const InvoiceDetailsPage = () => {
   const [resolvedCustomerName, setResolvedCustomerName] = useState<
     string | null
   >(null);
+  const [customerDetails, setCustomerDetails] =
+    useState<CustomerDetailsDto | null>(null);
 
   const displayProduct = useCallback(
     (item: any) =>
@@ -59,12 +60,6 @@ const InvoiceDetailsPage = () => {
     [productLabels]
   );
 
-  const formatMoney = (value: number) =>
-    new Intl.NumberFormat(undefined, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(value);
-
   const loadInvoice = useCallback(() => {
     if (!id) return;
     invoiceService
@@ -72,96 +67,6 @@ const InvoiceDetailsPage = () => {
       .then((result) => setInvoice(result))
       .catch(() => navigate("/invoice"));
   }, [id, invoiceService, navigate]);
-
-  const printInvoice = () => {
-    if (!invoice) return;
-    const rowsHtml = invoice.invoiceItems
-      .map(
-        (item) => `
-        <tr>
-          <td>${displayProduct(item)}</td>
-          <td style="text-align:right;">${formatMoney(item.unitPrice)}</td>
-          <td style="text-align:right;">${item.quantity}</td>
-          <td style="text-align:right;">${formatMoney(
-            item.totalPrice || item.unitPrice * item.quantity
-          )}</td>
-        </tr>
-      `
-      )
-      .join("");
-
-    const customerText =
-      resolvedCustomerName ??
-      invoice.customerName ??
-      (invoice.customerId as unknown as string) ??
-      "-";
-
-    const html = `
-      <!doctype html>
-      <html>
-        <head>
-          <meta charset="utf-8" />
-          <style>
-            body { font-family: Arial, sans-serif; padding: 16px; }
-            h1 { margin: 0 0 8px 0; }
-            .meta { margin-bottom: 12px; }
-            .meta div { margin: 2px 0; }
-            table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-            th, td { border: 1px solid #ddd; padding: 8px; font-size: 12px; }
-            th { background: #f5f5f5; text-align: left; }
-            tfoot td { font-weight: bold; }
-          </style>
-        </head>
-        <body>
-          <h1>Invoice ${invoice.number}</h1>
-          <div class="meta">
-            <div><strong>Date:</strong> ${getLocalDateAndTime(
-              invoice.dateOfSale
-            )}</div>
-            <div><strong>Customer:</strong> ${customerText}</div>
-            <div><strong>Salesperson:</strong> ${
-              invoice.salesPersonName ?? invoice.salesPersonId
-            }</div>
-            <div><strong>Warehouse:</strong> ${
-              invoice.warehouseLabel ?? "-"
-            }</div>
-            <div><strong>Payment:</strong> ${
-              invoice.paymentTypeName ?? "-"
-            }</div>
-            <div><strong>Remark:</strong> ${invoice.remark ?? "-"}</div>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th>Product</th>
-                <th style="text-align:right;">Unit Price</th>
-                <th style="text-align:right;">Qty</th>
-                <th style="text-align:right;">Total</th>
-              </tr>
-            </thead>
-            <tbody>${rowsHtml}</tbody>
-            <tfoot>
-              <tr>
-                <td colspan="3" style="text-align:right;">Grand Total</td>
-                <td style="text-align:right;">${formatMoney(
-                  invoice.grandTotal
-                )}</td>
-              </tr>
-            </tfoot>
-          </table>
-          <script>
-            window.onload = function() { window.print(); window.close(); };
-          </script>
-        </body>
-      </html>
-    `;
-
-    const printWindow = window.open("", "_blank", "width=900,height=650");
-    if (printWindow) {
-      printWindow.document.write(html);
-      printWindow.document.close();
-    }
-  };
 
   useEffect(() => {
     loadInvoice();
@@ -178,29 +83,38 @@ const InvoiceDetailsPage = () => {
         resolvedCustomerName !== invoice.customerName
       ) {
         setResolvedCustomerName(invoice.customerName);
-      } else if (
-        !invoice.customerName &&
-        invoice.customerId &&
-        !resolvedCustomerName
-      ) {
+      }
+
+      if (invoice.customerId && !customerDetails) {
         try {
           const customer = await customerService.getCustomerById(
             invoice.customerId
           );
           const customerLabel =
-            (customer as any)?.name ??
+            customer?.name ??
             (customer as any)?.customerName ??
             (customer as any)?.companyName ??
             (customer as any)?.contactName ??
             String(invoice.customerId);
           if (isMounted) {
-            setResolvedCustomerName(customerLabel);
+            setCustomerDetails(customer);
+            if (!resolvedCustomerName) {
+              setResolvedCustomerName(customerLabel);
+            }
           }
         } catch {
-          if (isMounted) {
+          if (isMounted && !resolvedCustomerName) {
             setResolvedCustomerName(String(invoice.customerId));
           }
         }
+      } else if (customerDetails && !resolvedCustomerName) {
+        const fallbackLabel =
+          customerDetails.name ??
+          (customerDetails as any)?.customerName ??
+          (customerDetails as any)?.companyName ??
+          (customerDetails as any)?.contactName ??
+          "-";
+        setResolvedCustomerName(fallbackLabel);
       }
 
       const missingProductIds = Array.from(
@@ -257,6 +171,7 @@ const InvoiceDetailsPage = () => {
     };
   }, [
     customerService,
+    customerDetails,
     invoice,
     productLabels,
     productService,
@@ -275,10 +190,8 @@ const InvoiceDetailsPage = () => {
         { label: t("invoice"), to: "/invoice" },
         { label: invoice.number },
       ]}
-      actions={[
-        { title: t("print"), icon: "Print", onclick: printInvoice },
-        { title: t("edit"), icon: "Edit", to: "edit" },
-      ]}
+      actions={[{ title: t("edit"), icon: "Edit", to: "edit" }]}
+      hasSingleActionButton
     >
       <PbCard>
         <CardContent>

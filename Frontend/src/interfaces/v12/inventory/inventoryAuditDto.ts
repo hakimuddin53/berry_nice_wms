@@ -3,6 +3,8 @@ import { guid } from "types/guid";
 export interface InventoryAuditDto {
   productId: guid;
   productCode: string;
+  modelId?: guid | null;
+  modelName?: string | null;
   model?: string | null;
   ageDays: number;
   warehouseId: guid;
@@ -19,7 +21,7 @@ export interface InventoryAuditDto {
 export interface InventoryAuditSearchDto {
   search?: string | null;
   productId?: guid | null;
-  model?: string | null;
+  modelId?: guid | null;
   warehouseId?: guid | null;
   locationId?: guid | null;
   categoryId?: guid | null;
@@ -32,6 +34,7 @@ export interface InventoryAuditSearchDto {
   gradeId?: guid | null;
   regionId?: guid | null;
   newOrUsedId?: guid | null;
+  batteryHealth?: number | null;
   page: number;
   pageSize: number;
 }

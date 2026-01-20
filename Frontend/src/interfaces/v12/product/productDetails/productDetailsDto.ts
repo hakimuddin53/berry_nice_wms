@@ -13,11 +13,13 @@ export interface ProductDetailsDto {
   processorId?: guid;
   screenSizeId?: guid;
   gradeId?: guid;
+  modelId?: guid | null;
+  model?: string | null;
 
   // Display names from lookups
   category: string;
   brand?: string;
-  model?: string;
+  modelName?: string;
   year?: number | null;
   color?: string;
   storage?: string;
@@ -38,4 +40,5 @@ export interface ProductDetailsDto {
   retailPrice?: number | null;
   costPrice?: number | null;
   locationId?: guid | null;
+  batteryHealth?: number | null;
 }

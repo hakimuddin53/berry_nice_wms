@@ -19,7 +19,6 @@ namespace Wms.Api.Model
 
         public string? ScannedBarcode { get; set; }
 
-        [Range(1, int.MaxValue)]
         public int CountedQuantity { get; set; }
 
         public string? Remark { get; set; }

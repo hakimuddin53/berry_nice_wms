@@ -6,4 +6,5 @@ export interface UpdateInventoryBalanceDto {
   retailPrice?: number | null;
   costPrice?: number | null;
   locationId?: string | null;
+  batteryHealth?: number | null;
 }

@@ -1,8 +1,14 @@
-import { Autocomplete, CircularProgress, TextField } from "@mui/material";
+import {
+  Autocomplete,
+  Button,
+  CircularProgress,
+  TextField,
+} from "@mui/material";
 import { useLookupSelectOptionsFetcher } from "hooks/queries/useLookupQueries";
 import { LookupGroupKey } from "interfaces/v12/lookup/lookup";
 import React from "react";
 import { useTranslation } from "react-i18next";
+import LookupQuickCreateDialog from "./dialogs/LookupQuickCreateDialog";
 
 interface LookupAutocompleteProps {
   groupKey: LookupGroupKey;
@@ -16,6 +22,7 @@ interface LookupAutocompleteProps {
   placeholder?: string;
   onBlur?: () => void;
   disableClearable?: boolean;
+  allowCreate?: boolean;
   onChange: (value: string, option?: LookupOption | null) => void;
 }
 
@@ -47,6 +54,7 @@ const LookupAutocomplete: React.FC<LookupAutocompleteProps> = ({
   placeholder,
   onBlur,
   disableClearable,
+  allowCreate,
   onChange,
 }) => {
   const { t } = useTranslation();
@@ -54,6 +62,9 @@ const LookupAutocomplete: React.FC<LookupAutocompleteProps> = ({
 
   const [options, setOptions] = React.useState<LookupOption[]>([]);
   const [loading, setLoading] = React.useState(false);
+  const [inputValue, setInputValue] = React.useState("");
+  const [showCreateDialog, setShowCreateDialog] = React.useState(false);
+  const [pendingLabel, setPendingLabel] = React.useState("");
 
   /* eslint-disable react-hooks/exhaustive-deps */
   React.useEffect(() => {
@@ -115,48 +126,103 @@ const LookupAutocomplete: React.FC<LookupAutocompleteProps> = ({
     );
   }, [options, value]);
 
+  const handleAddClicked = (label: string) => {
+    const trimmed = label.trim();
+    if (!trimmed) return;
+    setPendingLabel(trimmed);
+    setShowCreateDialog(true);
+  };
+
+  const handleCreated = (created: { id: string; label: string }) => {
+    const newOption = { value: created.id, label: created.label };
+    setOptions((prev) => dedupeOptions([...prev, newOption]));
+    setShowCreateDialog(false);
+    setPendingLabel("");
+    onChange(newOption.value, newOption);
+  };
+
+  const canShowCreate =
+    allowCreate !== false &&
+    !readOnly &&
+    !disabled &&
+    inputValue.trim().length > 0;
+
   return (
-    <Autocomplete<LookupOption, false, boolean | undefined, false>
-      disableClearable={disableClearable}
-      disabled={disabled}
-      fullWidth
-      loading={loading}
-      options={options}
-      value={selectedOption}
-      readOnly={readOnly}
-      getOptionLabel={(option) => option?.label ?? ""}
-      isOptionEqualToValue={(option, optionValue) =>
-        option.value === optionValue.value
-      }
-      onChange={(_, newValue) => {
-        onChange(newValue?.value ?? "", newValue ?? null);
-      }}
-      onBlur={onBlur}
-      noOptionsText={t("common:no-result")}
-      loadingText={t("common:loading")}
-      renderInput={(params) => (
-        <TextField
-          {...params}
-          name={name}
-          label={label}
-          size="small"
-          placeholder={placeholder}
-          error={error}
-          helperText={helperText}
-          InputProps={{
-            ...params.InputProps,
-            endAdornment: (
-              <>
-                {loading ? (
-                  <CircularProgress color="inherit" size={20} />
-                ) : null}
-                {params.InputProps.endAdornment}
-              </>
-            ),
+    <>
+      <Autocomplete<LookupOption, false, boolean | undefined, false>
+        disableClearable={disableClearable}
+        disabled={disabled}
+        fullWidth
+        loading={loading}
+        options={options}
+        value={selectedOption}
+        readOnly={readOnly}
+        inputValue={inputValue}
+        onInputChange={(_, newValue, reason) => {
+          if (reason === "input") {
+            setInputValue(newValue);
+          }
+        }}
+        getOptionLabel={(option) => option?.label ?? ""}
+        isOptionEqualToValue={(option, optionValue) =>
+          option.value === optionValue.value
+        }
+        onChange={(_, newValue) => {
+          onChange(newValue?.value ?? "", newValue ?? null);
+        }}
+        onBlur={onBlur}
+        noOptionsText={
+          canShowCreate ? (
+            <Button
+              fullWidth
+              size="small"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => handleAddClicked(inputValue)}
+            >
+              {t("common:add")}
+            </Button>
+          ) : (
+            t("common:no-result")
+          )
+        }
+        loadingText={t("common:loading")}
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            name={name}
+            label={label}
+            size="small"
+            placeholder={placeholder}
+            error={error}
+            helperText={helperText}
+            InputProps={{
+              ...params.InputProps,
+              endAdornment: (
+                <>
+                  {loading ? (
+                    <CircularProgress color="inherit" size={20} />
+                  ) : null}
+                  {params.InputProps.endAdornment}
+                </>
+              ),
+            }}
+          />
+        )}
+      />
+      {allowCreate !== false && !readOnly && !disabled && (
+        <LookupQuickCreateDialog
+          open={showCreateDialog}
+          initialLabel={pendingLabel || inputValue}
+          groupKey={groupKey}
+          initialSortOrder={options.length + 1}
+          onClose={() => {
+            setShowCreateDialog(false);
+            setPendingLabel("");
           }}
+          onCreated={handleCreated}
         />
       )}
-    />
+    </>
   );
 };
 

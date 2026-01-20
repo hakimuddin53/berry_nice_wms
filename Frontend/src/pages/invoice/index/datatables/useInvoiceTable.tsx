@@ -1,4 +1,5 @@
-import { Link } from "@mui/material";
+import PrintIcon from "@mui/icons-material/Print";
+import { IconButton, Link, Tooltip } from "@mui/material";
 import EasyCopy from "components/platbricks/shared/EasyCopy";
 import { DataTableHeaderCell } from "components/platbricks/shared/dataTable/DataTable";
 import { useCreatedChangeDate } from "hooks/useCreatedChangeDate";
@@ -10,7 +11,7 @@ import { NavLink } from "react-router-dom";
 
 const hidden = true;
 
-export const useInvoiceTable = () => {
+export const useInvoiceTable = (onPrint?: (row: InvoiceDetailsDto) => void) => {
   const { t } = useTranslation();
   const { getLocalDate } = useUserDateTime();
   const columns = useMemo<DataTableHeaderCell<InvoiceDetailsDto>[]>(
@@ -51,6 +52,27 @@ export const useInvoiceTable = () => {
     [getLocalDate, t]
   );
   useCreatedChangeDate(columns);
+
+  if (onPrint) {
+    columns.push({
+      id: "print",
+      label: "",
+      render: (row) => (
+        <Tooltip title={t("print")}>
+          <IconButton
+            size="small"
+            onClick={(event) => {
+              event.stopPropagation();
+              onPrint(row);
+            }}
+            aria-label={t("print")}
+          >
+            <PrintIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      ),
+    });
+  }
 
   return [columns] as const;
 };

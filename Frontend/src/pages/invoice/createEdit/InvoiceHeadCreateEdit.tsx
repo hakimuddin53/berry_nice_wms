@@ -1,13 +1,16 @@
-import { TextField } from "@mui/material";
+import { Button, TextField } from "@mui/material";
 import DataList from "components/platbricks/shared/DataList";
 import FormikErrorMessage from "components/platbricks/shared/ErrorMessage";
 import LookupAutocomplete from "components/platbricks/shared/LookupAutocomplete";
 import SelectAsync2, {
   SelectAsyncOption,
 } from "components/platbricks/shared/SelectAsync2";
+import CustomerQuickCreateDialog, {
+  CustomerQuickCreateResult,
+} from "components/platbricks/shared/dialogs/CustomerQuickCreateDialog";
 import { FormikProps } from "formik";
 import { LookupGroupKey } from "interfaces/v12/lookup/lookup";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useCustomerService } from "services/CustomerService";
 import { useUserService } from "services/UserService";
@@ -24,6 +27,11 @@ const InvoiceHeadCreateEdit = (props: {
   const formik = props.formik;
   const customerService = useCustomerService();
   const userService = useUserService();
+  const [customerDialogOpen, setCustomerDialogOpen] = useState(false);
+  const [customerDraftName, setCustomerDraftName] = useState("");
+  const [customerDraftPhone, setCustomerDraftPhone] = useState("");
+  const [customerExistsSelected, setCustomerExistsSelected] = useState(false);
+  const [customerInput, setCustomerInput] = useState("");
 
   const customerIds = useMemo(
     () =>
@@ -38,18 +46,25 @@ const InvoiceHeadCreateEdit = (props: {
     [formik.values.salesPersonId]
   );
 
-  const createStaticOptions = useCallback((ids?: string[]) => {
-    if (!ids || ids.length === 0) return [] as SelectAsyncOption[];
-    return ids
-      .filter((value) => !!value)
-      .map(
-        (value) =>
-          ({
-            label: value,
-            value,
-          } as SelectAsyncOption)
-      );
-  }, []);
+  const createStaticOptions = useCallback(
+    (ids?: string[]) => {
+      if (!ids || ids.length === 0) return [] as SelectAsyncOption[];
+      return ids
+        .filter((value) => !!value)
+        .map(
+          (value) =>
+            ({
+              label:
+                value === (formik.values.customerId as unknown as string) &&
+                formik.values.customerName
+                  ? formik.values.customerName
+                  : value,
+              value,
+            } as SelectAsyncOption)
+        );
+    },
+    [formik.values.customerId, formik.values.customerName]
+  );
 
   const normalizeOptions = useCallback((options: SelectAsyncOption[] = []) => {
     return options.map(
@@ -103,8 +118,20 @@ const InvoiceHeadCreateEdit = (props: {
     [normalizeOptions, userService]
   );
 
+  const handleCustomerCreated = useCallback(
+    (customer: CustomerQuickCreateResult) => {
+      formik.setFieldValue("customerId", customer.id);
+      formik.setFieldValue("customerName", customer.name);
+      formik.setFieldTouched("customerId", true, false);
+      setCustomerDialogOpen(false);
+      setCustomerExistsSelected(true);
+    },
+    [formik]
+  );
+
   return (
-    <DataList
+    <>
+      <DataList
       hideDevider
       data={[
         {
@@ -125,9 +152,34 @@ const InvoiceHeadCreateEdit = (props: {
               onBlur={() => formik.setFieldTouched("customerId")}
               ids={customerIds}
               asyncFunc={customerAsync}
+              renderNoOptions={(input) =>
+                customerExistsSelected ||
+                (input ?? "").trim().length === 0 ? null : (
+                  <Button
+                    fullWidth
+                    size="small"
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => {
+                      setCustomerDraftName(input ?? "");
+                      setCustomerDraftPhone("");
+                      setCustomerDialogOpen(true);
+                    }}
+                  >
+                    {t("add-customer")}
+                  </Button>
+                )
+              }
+              onSearchChange={(value) => {
+                setCustomerInput(value ?? "");
+                setCustomerExistsSelected(false);
+              }}
               onSelectionChange={(option) => {
                 formik.setFieldValue("customerId", option?.value ?? undefined);
                 formik.setFieldValue("customerName", option?.label ?? "");
+                setCustomerExistsSelected(Boolean(option?.value));
+                if (!option?.value) {
+                  setCustomerInput("");
+                }
               }}
               helperText={
                 <FormikErrorMessage
@@ -312,6 +364,14 @@ const InvoiceHeadCreateEdit = (props: {
         },
       ]}
     />
+      <CustomerQuickCreateDialog
+        open={customerDialogOpen}
+        initialName={customerDraftName}
+        initialPhone={customerDraftPhone}
+        onClose={() => setCustomerDialogOpen(false)}
+        onCreated={handleCustomerCreated}
+      />
+    </>
   );
 };
 

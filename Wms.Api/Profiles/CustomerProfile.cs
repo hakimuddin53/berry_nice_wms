@@ -11,11 +11,13 @@ public class CustomerProfile : Profile
     public CustomerProfile()
     {
         #region DetailsDto
-        CreateMap<Customer, CustomerDetailsDto>();
+        CreateMap<Customer, CustomerDetailsDto>()
+            .ForMember(dest => dest.CustomerTypeLabel, opt => opt.MapFrom(src => src.CustomerType.Label));
         #endregion
 
         #region CreateUpdateDto
-        CreateMap<CustomerCreateUpdateDto, Customer>();
+        CreateMap<CustomerCreateUpdateDto, Customer>()
+            .ForMember(dest => dest.CustomerCode, opt => opt.Ignore());
         #endregion
 
         CreateMap<Customer, SelectOptionV12Dto>()

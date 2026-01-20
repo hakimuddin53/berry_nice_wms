@@ -150,6 +150,12 @@ namespace Wms.Api.Context
                 .HasForeignKey(p => p.GradeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<Customer>()
+                .HasOne(c => c.CustomerType)
+                .WithMany()
+                .HasForeignKey(c => c.CustomerTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<StockRecieveItem>()
                 .HasOne(i => i.Product)
                 .WithMany()

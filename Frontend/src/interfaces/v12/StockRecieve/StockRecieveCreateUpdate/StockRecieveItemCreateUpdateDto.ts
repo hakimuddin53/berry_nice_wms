@@ -5,7 +5,7 @@ export interface StockRecieveItemCreateUpdateDto {
   productCode: string;
   categoryId: guid;
   brandId?: guid;
-  model?: string;
+  modelId?: guid;
   year?: number;
   colorId?: guid;
   storageId?: guid;
@@ -13,6 +13,7 @@ export interface StockRecieveItemCreateUpdateDto {
   processorId?: guid;
   screenSizeId?: guid;
   gradeId: guid;
+  batteryHealth?: number;
   locationId: guid;
   serialNumber?: string;
   regionId?: guid;

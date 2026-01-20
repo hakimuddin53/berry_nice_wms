@@ -15,6 +15,7 @@ import { LookupGroupKey } from "interfaces/v12/lookup/lookup";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
+import { CustomerCreateUpdateDto } from "interfaces/v12/customer/customerCreateUpdate/customerCreateUpdateDto";
 import { useCustomerService } from "services/CustomerService";
 import { useNotificationService } from "services/NotificationService";
 import { guid } from "types/guid";
@@ -37,12 +38,11 @@ const CustomerCreateEditPage: React.FC = () => {
   const [pageBlocker, setPageBlocker] = useState(false);
 
   const [customer, setCustomer] = useState<YupCustomerCreateEdit>({
-    customerCode: "",
     name: "",
     phone: "",
     email: "",
     address: "",
-    customerType: "",
+    customerTypeId: "",
   });
 
   let title = t("create-customer");
@@ -79,10 +79,11 @@ const CustomerCreateEditPage: React.FC = () => {
     onSubmit: (values, { resetForm }) => {
       setPageBlocker(true);
 
-      // Ensure phone is a string
-      const submitValues = {
+      // Ensure phone is a string and coerce guid type
+      const submitValues: CustomerCreateUpdateDto = {
         ...values,
         phone: String(values.phone || ""),
+        customerTypeId: guid(values.customerTypeId || ""),
       };
 
       if (!id) {
@@ -127,7 +128,17 @@ const CustomerCreateEditPage: React.FC = () => {
     if (id) {
       CustomerService.getCustomerById(id as guid)
         .then((customer: any) => {
-          setCustomer(customer);
+          const customerData = {
+            ...customer,
+            customerTypeId:
+              typeof customer.customerTypeId === "object"
+                ? customer.customerTypeId?.id ||
+                  customer.customerTypeId?.value ||
+                  ""
+                : customer.customerTypeId || "",
+          };
+
+          setCustomer(customerData);
 
           setPageReady(true);
         })
@@ -196,35 +207,6 @@ const CustomerCreateEditPage: React.FC = () => {
               <DataList
                 hideDevider={true}
                 data={[
-                  {
-                    label: t("customer-code"),
-                    required: isRequiredField(
-                      customerCreateEditSchema,
-                      "customerCode"
-                    ),
-                    value: (
-                      <TextField
-                        fullWidth
-                        id="customerCode"
-                        name="customerCode"
-                        size="small"
-                        value={formik.values.customerCode}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={
-                          formik.touched.customerCode &&
-                          Boolean(formik.errors.customerCode)
-                        }
-                        helperText={
-                          <FormikErrorMessage
-                            touched={formik.touched.customerCode}
-                            error={formik.errors.customerCode}
-                            translatedFieldName={t("customer-code")}
-                          />
-                        }
-                      />
-                    ),
-                  },
                   {
                     label: t("name"),
                     required: isRequiredField(customerCreateEditSchema, "name"),
@@ -310,25 +292,30 @@ const CustomerCreateEditPage: React.FC = () => {
                     label: t("customer-type"),
                     required: isRequiredField(
                       customerCreateEditSchema,
-                      "customerType"
+                      "customerTypeId"
                     ),
                     value: (
                       <LookupAutocomplete
                         groupKey={LookupGroupKey.CustomerType}
-                        name="customerType"
-                        value={formik.values.customerType}
-                        onChange={(newValue) =>
-                          formik.setFieldValue("customerType", newValue || "")
+                        name="customerTypeId"
+                        value={formik.values.customerTypeId}
+                        onChange={(newValue, option) => {
+                          formik.setFieldValue(
+                            "customerTypeId",
+                            newValue || ""
+                          );
+                        }}
+                        onBlur={() =>
+                          formik.setFieldTouched("customerTypeId")
                         }
-                        onBlur={() => formik.setFieldTouched("customerType")}
                         error={
-                          formik.touched.customerType &&
-                          Boolean(formik.errors.customerType)
+                          formik.touched.customerTypeId &&
+                          Boolean(formik.errors.customerTypeId)
                         }
                         helperText={
                           <FormikErrorMessage
-                            touched={formik.touched.customerType}
-                            error={formik.errors.customerType}
+                            touched={formik.touched.customerTypeId}
+                            error={formik.errors.customerTypeId}
                             translatedFieldName={t("customer-type")}
                           />
                         }

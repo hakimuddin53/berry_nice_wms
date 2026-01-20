@@ -48,8 +48,9 @@ export const useCustomerTable = () => {
         label: t("address"),
       },
       {
-        id: "customerType",
+        id: "customerTypeId",
         label: t("customer-type"),
+        render: (row) => row.customerTypeLabel || row.customerTypeId || "-",
       },
     ],
     [t]

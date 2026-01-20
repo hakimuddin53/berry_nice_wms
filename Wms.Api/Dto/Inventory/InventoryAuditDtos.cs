@@ -7,7 +7,7 @@ public class InventoryAuditSearchDto : PagedRequestAbstractDto
 {
     public string? Search { get; set; }
     public Guid? ProductId { get; set; }
-    public string? Model { get; set; }
+    public Guid? ModelId { get; set; }
     public Guid? WarehouseId { get; set; }
     public Guid? LocationId { get; set; }
     public Guid? CategoryId { get; set; }
@@ -20,12 +20,15 @@ public class InventoryAuditSearchDto : PagedRequestAbstractDto
     public Guid? GradeId { get; set; }
     public Guid? RegionId { get; set; }
     public Guid? NewOrUsedId { get; set; }
+    public int? BatteryHealth { get; set; }
 }
 
 public class InventoryAuditDto
 {
     public Guid ProductId { get; set; }
     public string ProductCode { get; set; } = string.Empty;
+    public Guid? ModelId { get; set; }
+    public string? ModelName { get; set; }
     public string? Model { get; set; }
     public int AgeDays { get; set; }
     public Guid WarehouseId { get; set; }
@@ -38,6 +41,7 @@ public class InventoryAuditDto
     public int OldBalance { get; set; }
     public int NewBalance { get; set; }
     public decimal? CostPrice { get; set; }
+    public int? BatteryHealth { get; set; }
 }
 
 public class InventorySummarySearchDto : PagedRequestAbstractDto

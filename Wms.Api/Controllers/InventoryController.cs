@@ -31,6 +31,8 @@ namespace Wms.Api.Controllers
                 from invc in invoiceJoin.DefaultIfEmpty()
                 join warehouse in context.Lookups on inv.WarehouseId equals warehouse.Id into warehouseJoin
                 from warehouse in warehouseJoin.DefaultIfEmpty()
+                join modelLookup in context.Lookups on product.ModelId equals modelLookup.Id into modelJoin
+                from modelLookup in modelJoin.DefaultIfEmpty()
                 select new
                 {
                     inv,
@@ -39,7 +41,8 @@ namespace Wms.Api.Controllers
                     DateOfPurchase = sr != null ? sr.DateOfPurchase : (DateTime?)null,
                     InvoiceNumber = invc != null ? invc.Number : string.Empty,
                     MovementDate = inv.CreatedAt,
-                    WarehouseLabel = warehouse != null ? warehouse.Label : string.Empty
+                    WarehouseLabel = warehouse != null ? warehouse.Label : string.Empty,
+                    ModelLabel = modelLookup != null ? modelLookup.Label : null
                 };
 
             if (search.ProductId.HasValue)
@@ -47,13 +50,10 @@ namespace Wms.Api.Controllers
                 inventoryQuery = inventoryQuery.Where(x => x.inv.ProductId == search.ProductId.Value);
             }
 
-            if (!string.IsNullOrWhiteSpace(search.Model))
+            if (search.ModelId.HasValue)
             {
-                var modelTerm = search.Model.Trim();
                 inventoryQuery = inventoryQuery.Where(x =>
-                    x.product != null &&
-                    x.product.Model != null &&
-                    x.product.Model.Contains(modelTerm));
+                    x.product != null && x.product.ModelId == search.ModelId.Value);
             }
 
             if (search.WarehouseId.HasValue)
@@ -116,14 +116,20 @@ namespace Wms.Api.Controllers
                 inventoryQuery = inventoryQuery.Where(x => x.product != null && x.product.NewOrUsedId == search.NewOrUsedId.Value);
             }
 
+            if (search.BatteryHealth.HasValue)
+            {
+                inventoryQuery = inventoryQuery.Where(x =>
+                    x.product != null && x.product.BatteryHealth == search.BatteryHealth.Value);
+            }
+
             if (!string.IsNullOrWhiteSpace(search.Search))
             {
                 var term = search.Search.Trim();
                 inventoryQuery = inventoryQuery.Where(x =>
                     (x.product != null && x.product.ProductCode.Contains(term)) ||
+                    (!string.IsNullOrEmpty(x.ModelLabel) && x.ModelLabel.Contains(term)) ||
                     (!string.IsNullOrEmpty(x.StockRecieveNumber) && x.StockRecieveNumber.Contains(term)) ||
-                    (!string.IsNullOrEmpty(x.InvoiceNumber) && x.InvoiceNumber.Contains(term)) ||
-                    (x.product != null && x.product.Model != null && x.product.Model.Contains(term)));
+                    (!string.IsNullOrEmpty(x.InvoiceNumber) && x.InvoiceNumber.Contains(term)));
             }
 
             var latestIdsQuery = inventoryQuery
@@ -138,16 +144,16 @@ namespace Wms.Api.Controllers
                 .Join(latestIdsQuery, row => row.inv.Id, id => id, (row, _) => row)
                 .Where(row => row.inv.NewBalance > 0);
 
-            var totalCount = await latestQuery.CountAsync();
-
-            var pagedItems = await latestQuery
-                .OrderByDescending(x => x.MovementDate)
+            var latestItems = await latestQuery
+                .OrderBy(x => x.ModelLabel ?? string.Empty)
+                .ThenBy(x => x.product != null ? x.product.ProductCode : string.Empty)
+                .ThenByDescending(x => x.MovementDate)
                 .ThenByDescending(x => x.inv.Id)
-                .Skip((search.Page - 1) * search.PageSize)
-                .Take(search.PageSize)
                 .ToListAsync();
 
-            var dtoItems = pagedItems.Select(x =>
+            var totalCount = latestItems.Count;
+
+            var dtoItems = latestItems.Select(x =>
             {
                 var movementType = Enum.GetName(typeof(TransactionTypeEnum), x.inv.TransactionType) ?? x.inv.TransactionType.ToString();
                 var referenceNumber = !string.IsNullOrEmpty(x.StockRecieveNumber)
@@ -160,7 +166,9 @@ namespace Wms.Api.Controllers
                 {
                     ProductId = x.inv.ProductId,
                     ProductCode = x.product?.ProductCode ?? string.Empty,
-                    Model = x.product?.Model,
+                    ModelId = x.product?.ModelId,
+                    ModelName = x.ModelLabel,
+                    Model = x.ModelLabel,
                     AgeDays = x.product == null
                         ? 0
                         : Math.Max(
@@ -176,14 +184,15 @@ namespace Wms.Api.Controllers
                     QuantityOut = x.inv.QuantityOut,
                     OldBalance = x.inv.OldBalance,
                     NewBalance = x.inv.NewBalance,
-                    CostPrice = x.product?.CostPrice
+                    CostPrice = x.product?.CostPrice,
+                    BatteryHealth = x.product?.BatteryHealth
                 };
             }).ToList();
 
             var paged = new PagedListDto<InventoryAuditDto>
             {
-                CurrentPage = search.Page,
-                PageSize = search.PageSize,
+                CurrentPage = 1,
+                PageSize = totalCount,
                 TotalCount = totalCount,
                 Data = dtoItems
             };
@@ -236,7 +245,7 @@ namespace Wms.Api.Controllers
                 reportQuery = reportQuery.Where(x =>
                     x.product != null &&
                     x.product.Model != null &&
-                    x.product.Model.Contains(modelTerm));
+                    x.product.Model.Label.Contains(modelTerm));
             }
 
             if (search.WarehouseId.HasValue)
@@ -304,7 +313,7 @@ namespace Wms.Api.Controllers
                 var term = search.Search.Trim();
                 reportQuery = reportQuery.Where(x =>
                     (x.product != null && x.product.ProductCode.Contains(term)) ||
-                    (x.product != null && x.product.Model != null && x.product.Model.Contains(term)) ||
+                    (x.product != null && x.product.Model != null && x.product.Model.Label.Contains(term)) ||
                     x.invoice.Number.Contains(term));
             }
 
@@ -324,7 +333,7 @@ namespace Wms.Api.Controllers
                 DateOfSale = x.invoice.DateOfSale,
                 ProductId = x.item.ProductId,
                 ProductCode = x.product?.ProductCode ?? string.Empty,
-                Model = x.product?.Model,
+                Model = x.product?.Model?.Label,
                 WarehouseId = x.invoice.WarehouseId,
                 WarehouseLabel = x.WarehouseLabel,
                 LocationId = x.product?.LocationId,
@@ -506,7 +515,7 @@ namespace Wms.Api.Controllers
                 reportQuery = reportQuery.Where(x =>
                     x.product != null &&
                     x.product.Model != null &&
-                    x.product.Model.Contains(modelTerm));
+                    x.product.Model.Label.Contains(modelTerm));
             }
 
             if (search.WarehouseId.HasValue)
@@ -574,7 +583,7 @@ namespace Wms.Api.Controllers
                 var term = search.Search.Trim();
                 reportQuery = reportQuery.Where(x =>
                     (x.product != null && x.product.ProductCode.Contains(term)) ||
-                    (x.product != null && x.product.Model != null && x.product.Model.Contains(term)) ||
+                    (x.product != null && x.product.Model != null && x.product.Model.Label.Contains(term)) ||
                     x.invoice.Number.Contains(term));
             }
 
@@ -630,7 +639,7 @@ namespace Wms.Api.Controllers
                 var term = search.Search.Trim();
                 baseQuery = baseQuery.Where(x =>
                     x.product.ProductCode.Contains(term) ||
-                    (x.product.Model != null && x.product.Model.Contains(term)));
+                    (x.product.Model != null && x.product.Model.Label.Contains(term)));
             }
 
             if (search.WarehouseId.HasValue)
@@ -655,7 +664,7 @@ namespace Wms.Api.Controllers
             {
                 ProductId = x.inv.ProductId,
                 ProductCode = x.product.ProductCode,
-                Model = x.product.Model,
+                Model = x.product.Model != null ? x.product.Model.Label : null,
                 AvailableQuantity = x.inv.NewBalance,
                 WarehouseId = x.inv.WarehouseId,
                 WarehouseLabel = x.WarehouseLabel,
@@ -710,6 +719,7 @@ namespace Wms.Api.Controllers
             product.DealerPrice = balance.DealerPrice;
             product.RetailPrice = balance.RetailPrice;
             product.CostPrice = balance.CostPrice;
+            product.BatteryHealth = balance.BatteryHealth ?? product.BatteryHealth;
             if (balance.LocationId.HasValue)
             {
                 product.LocationId = balance.LocationId.Value;

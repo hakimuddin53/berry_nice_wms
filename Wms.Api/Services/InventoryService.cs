@@ -410,23 +410,15 @@ namespace Wms.Api.Services
 						? item.ProductId
 						: null;
 
-					var systemQty = 0;
-
-					if (productId.HasValue)
-					{
-						systemQty = await GetCurrentBalanceAsync(productId.Value, request.WarehouseId);
-					}
-
-					var diff = item.CountedQuantity - systemQty;
-
+					// Backend no longer tracks counted vs system quantities; store zeroed quantities
 					itemEntities.Add(new StockTakeItem
 					{
 						Id = Guid.NewGuid(),
 						StockTakeId = stockTake.Id,
 						ProductId = productId,
-						CountedQuantity = item.CountedQuantity,
-						SystemQuantity = systemQty,
-						DifferenceQuantity = diff,
+						CountedQuantity = 0,
+						SystemQuantity = 0,
+						DifferenceQuantity = 0,
 						ScannedBarcode = productId.HasValue ? null : item.ScannedBarcode,
 						Remark = item.Remark
 					});

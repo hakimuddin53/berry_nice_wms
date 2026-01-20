@@ -11,6 +11,7 @@ import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { EMPTY_GUID } from "types/guid";
 import { ListBox } from "./ListBox";
+import { guid } from "types/guid";
 
 export interface SelectAsyncProps extends InputProps {
   ids?: string[];
@@ -20,11 +21,14 @@ export interface SelectAsyncProps extends InputProps {
   placeholder?: string;
   allowCustom?: boolean;
   getOptionDisabled?: (option: SelectAsyncOption) => boolean;
+  renderNoOptions?: (inputValue: string) => React.ReactNode;
+  onSearchChange?: (inputValue: string) => void;
   disableClearable?: boolean;
   asyncFunc: (
     value: string,
     page: number,
-    pageSize: number
+    pageSize: number,
+    ids?: any[]
   ) => Promise<SelectAsyncOption[]>;
   suggestionsIfEmpty?: boolean;
   helperText?: React.ReactNode;
@@ -191,7 +195,9 @@ const SelectAsync2 = (props: SingleProps | MultiProps) => {
       loading={loading}
       multiple={props.isMulti ?? false}
       noOptionsText={
-        inputValue === "" && !props.suggestionsIfEmpty
+        props.renderNoOptions
+          ? props.renderNoOptions(inputValue)
+          : inputValue === "" && !props.suggestionsIfEmpty
           ? t("common:tap-to-search")
           : t("common:no-result")
       }
@@ -258,6 +264,7 @@ const SelectAsync2 = (props: SingleProps | MultiProps) => {
         }
         if (reason === "input") {
           setInputValue(newInputValue);
+          props.onSearchChange?.(newInputValue);
         }
       }}
       renderInput={selectDropdown}

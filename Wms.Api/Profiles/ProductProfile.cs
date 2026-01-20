@@ -14,14 +14,17 @@ public class ProductProfile : Profile
         CreateMap<Product, ProductDetailsDto>()
             .ForMember(dest => dest.Category, opt => opt.MapFrom(src => src.Category.Label))
             .ForMember(dest => dest.Brand, opt => opt.MapFrom(src => src.Brand != null ? src.Brand.Label : null))
-            .ForMember(dest => dest.Model, opt => opt.MapFrom(src => src.Model))
             .ForMember(dest => dest.Year, opt => opt.MapFrom(src => src.Year))
             .ForMember(dest => dest.Color, opt => opt.MapFrom(src => src.Color != null ? src.Color.Label : null))
             .ForMember(dest => dest.Storage, opt => opt.MapFrom(src => src.Storage != null ? src.Storage.Label : null))
             .ForMember(dest => dest.Ram, opt => opt.MapFrom(src => src.Ram != null ? src.Ram.Label : null))
             .ForMember(dest => dest.Processor, opt => opt.MapFrom(src => src.Processor != null ? src.Processor.Label : null))
             .ForMember(dest => dest.ScreenSize, opt => opt.MapFrom(src => src.ScreenSize != null ? src.ScreenSize.Label : null))
-            .ForMember(dest => dest.GradeName, opt => opt.MapFrom(src => src.Grade != null ? src.Grade.Label : null));
+            .ForMember(dest => dest.ModelId, opt => opt.MapFrom(src => src.ModelId))
+            .ForMember(dest => dest.ModelName, opt => opt.MapFrom(src => src.Model != null ? src.Model.Label : null))
+            .ForMember(dest => dest.Model, opt => opt.MapFrom(src => src.Model != null ? src.Model.Label : null))
+            .ForMember(dest => dest.GradeName, opt => opt.MapFrom(src => src.Grade != null ? src.Grade.Label : null))
+            .ForMember(dest => dest.BatteryHealth, opt => opt.MapFrom(src => src.BatteryHealth));
 
         #endregion
 
@@ -39,7 +42,7 @@ public class ProductProfile : Profile
                 {
                     y.ProductId,
                     y.ProductCode,
-                    y.Model,
+                    Model = y.Model != null ? y.Model.Label : null,
                     y.SerialNumber, 
                     y.RetailPrice,
                     y.DealerPrice,

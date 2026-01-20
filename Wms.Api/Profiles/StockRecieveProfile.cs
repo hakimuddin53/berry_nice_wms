@@ -19,7 +19,8 @@ public class StockRecieveProfile : Profile
             .ForMember(dest => dest.ProductCode, opt => opt.MapFrom(src => src.Product != null ? src.Product.ProductCode : string.Empty))
             .ForMember(dest => dest.CategoryId, opt => opt.MapFrom(src => src.Product != null ? src.Product.CategoryId : Guid.Empty))
             .ForMember(dest => dest.BrandId, opt => opt.MapFrom(src => src.Product != null ? src.Product.BrandId : null))
-            .ForMember(dest => dest.Model, opt => opt.MapFrom(src => src.Product != null ? src.Product.Model : null))
+            .ForMember(dest => dest.ModelId, opt => opt.MapFrom(src => src.Product != null ? src.Product.ModelId : null))
+            .ForMember(dest => dest.ModelName, opt => opt.MapFrom(src => src.Product != null && src.Product.Model != null ? src.Product.Model.Label : null))
             .ForMember(dest => dest.Year, opt => opt.MapFrom(src => src.Product != null ? src.Product.Year : null))
             .ForMember(dest => dest.ColorId, opt => opt.MapFrom(src => src.Product != null ? src.Product.ColorId : null))
             .ForMember(dest => dest.StorageId, opt => opt.MapFrom(src => src.Product != null ? src.Product.StorageId : null))
@@ -29,7 +30,7 @@ public class StockRecieveProfile : Profile
             .ForMember(dest => dest.GradeId, opt => opt.MapFrom(src => src.Product != null ? src.Product.GradeId : null))
             .ForMember(dest => dest.GradeName, opt => opt.MapFrom(src => src.Product != null && src.Product.Grade != null ? src.Product.Grade.Label : null))
             .ForMember(dest => dest.LocationId, opt => opt.MapFrom(src => src.Product != null ? src.Product.LocationId : Guid.Empty))
-            .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product != null ? src.Product.Model : null))
+            .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product != null ? (src.Product.Model != null ? src.Product.Model.Label : null) : null))
             .ForMember(dest => dest.SerialNumber, opt => opt.MapFrom(src => src.Product != null ? src.Product.SerialNumber : null))            
             .ForMember(dest => dest.RegionId, opt => opt.MapFrom(src => src.Product != null ? src.Product.RegionId : null))
             .ForMember(dest => dest.RegionName, opt => opt.MapFrom(src => src.Product != null && src.Product.Region != null ? src.Product.Region.Label : null))
@@ -39,9 +40,10 @@ public class StockRecieveProfile : Profile
             .ForMember(dest => dest.DealerSellingPrice, opt => opt.MapFrom(src => src.Product != null ? src.Product.DealerPrice : null))
             .ForMember(dest => dest.AgentSellingPrice, opt => opt.MapFrom(src => src.Product != null ? src.Product.AgentPrice : null))
             .ForMember(dest => dest.Cost, opt => opt.MapFrom(src => src.Product != null ? src.Product.CostPrice : null))
+            .ForMember(dest => dest.BatteryHealth, opt => opt.MapFrom(src => src.Product != null ? src.Product.BatteryHealth : null))
             .ForMember(dest => dest.Remark, opt => opt.MapFrom(src => src.Product != null ? src.Product.Remark : null))
             .ForMember(dest => dest.InternalRemark, opt => opt.MapFrom(src => src.Product != null ? src.Product.InternalRemark : null));
-        #endregion
+#endregion
 
         #region CreateUpdateV12Dto
         CreateMap<StockRecieveCreateUpdateDto, StockRecieve>()

@@ -362,36 +362,13 @@ const StockTakeCreatePage = () => {
                               primary={item.productCode || item.productId}
                               secondary={item.model}
                             />
-                            <Stack direction="row" spacing={1}>
-                              <Chip
-                                label={`${t("counted-quantity", {
-                                  defaultValue: "Counted Qty",
-                                })}: ${item.count}`}
-                                color="primary"
-                                size="small"
-                              />
-                              <Chip
-                                label={`${t("system-quantity", {
-                                  defaultValue: "System",
-                                })}: ${
-                                  item.systemQty ?? item.availableQuantity ?? 0
-                                }`}
-                                variant="outlined"
-                                size="small"
-                              />
-                              <Chip
-                                label={`${t("difference", {
-                                  defaultValue: "Diff",
-                                })}: ${
-                                  item.count -
-                                  (item.systemQty ??
-                                    item.availableQuantity ??
-                                    0)
-                                }`}
-                                variant="outlined"
-                                size="small"
-                              />
-                            </Stack>
+                            <Chip
+                              label={t("in-inventory", {
+                                defaultValue: "In inventory",
+                              })}
+                              color="success"
+                              size="small"
+                            />
                           </ListItem>
                         ))}
                       </List>
@@ -428,9 +405,9 @@ const StockTakeCreatePage = () => {
                               }
                             />
                             <Chip
-                              label={`${t("scanned", {
-                                defaultValue: "Scanned",
-                              })}: ${item.count}`}
+                              label={t("not-in-inventory", {
+                                defaultValue: "Not in inventory",
+                              })}
                               color="warning"
                               size="small"
                             />
