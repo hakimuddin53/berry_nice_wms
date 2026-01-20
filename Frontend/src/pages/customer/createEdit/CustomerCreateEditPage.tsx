@@ -11,11 +11,11 @@ import { NavBlocker } from "components/platbricks/shared/NavBlocker";
 import Page from "components/platbricks/shared/Page";
 import { PbCard } from "components/platbricks/shared/PbCard";
 import { FormikProvider, setNestedObjectValues, useFormik } from "formik";
+import { CustomerCreateUpdateDto } from "interfaces/v12/customer/customerCreateUpdate/customerCreateUpdateDto";
 import { LookupGroupKey } from "interfaces/v12/lookup/lookup";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
-import { CustomerCreateUpdateDto } from "interfaces/v12/customer/customerCreateUpdate/customerCreateUpdateDto";
 import { useCustomerService } from "services/CustomerService";
 import { useNotificationService } from "services/NotificationService";
 import { guid } from "types/guid";
@@ -305,9 +305,7 @@ const CustomerCreateEditPage: React.FC = () => {
                             newValue || ""
                           );
                         }}
-                        onBlur={() =>
-                          formik.setFieldTouched("customerTypeId")
-                        }
+                        onBlur={() => formik.setFieldTouched("customerTypeId")}
                         error={
                           formik.touched.customerTypeId &&
                           Boolean(formik.errors.customerTypeId)
