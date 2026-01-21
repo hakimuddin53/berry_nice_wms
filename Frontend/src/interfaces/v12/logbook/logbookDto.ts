@@ -35,14 +35,14 @@ export interface LogbookCreateDto {
   dateUtc?: string | null;
   barcode: string;
   productId?: string | null;
-  userName?: string | null;
+  userName: string;
   purpose?: string | null;
   status?: string | null;
 }
 
 export interface LogbookUpdateDto {
   dateUtc?: string | null;
-  userName?: string | null;
+  userName: string;
   purpose?: string | null;
   status?: string | null;
 }

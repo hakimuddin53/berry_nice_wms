@@ -1,4 +1,4 @@
-import { Button, TextField } from "@mui/material";
+import { Box, Button, TextField } from "@mui/material";
 import DataList from "components/platbricks/shared/DataList";
 import FormikErrorMessage from "components/platbricks/shared/ErrorMessage";
 import LookupAutocomplete from "components/platbricks/shared/LookupAutocomplete";
@@ -142,56 +142,75 @@ const InvoiceHeadCreateEdit = (props: {
               formik.values
             ),
             value: (
-              <SelectAsync2
-                name="customerId"
-                placeholder={t("customer")}
-                suggestionsIfEmpty
-                error={
-                  formik.touched.customerId && Boolean(formik.errors.customerId)
-                }
-                onBlur={() => formik.setFieldTouched("customerId")}
-                ids={customerIds}
-                asyncFunc={customerAsync}
-                renderNoOptions={(input) =>
-                  customerExistsSelected ||
-                  (input ?? "").trim().length === 0 ? null : (
-                    <Button
-                      fullWidth
-                      size="small"
-                      onMouseDown={(event) => event.preventDefault()}
-                      onClick={() => {
-                        setCustomerDraftName(input ?? "");
-                        setCustomerDraftPhone("");
-                        setCustomerDialogOpen(true);
-                      }}
-                    >
-                      {t("add-customer")}
-                    </Button>
-                  )
-                }
-                onSearchChange={(value) => {
-                  setCustomerInput(value ?? "");
-                  setCustomerExistsSelected(false);
-                }}
-                onSelectionChange={(option) => {
-                  formik.setFieldValue(
-                    "customerId",
-                    option?.value ?? undefined
-                  );
-                  formik.setFieldValue("customerName", option?.label ?? "");
-                  setCustomerExistsSelected(Boolean(option?.value));
-                  if (!option?.value) {
-                    setCustomerInput("");
+              <Box display="flex" flexDirection="column" gap={1} width="100%">
+                <SelectAsync2
+                  name="customerId"
+                  placeholder={t("customer")}
+                  suggestionsIfEmpty
+                  error={
+                    formik.touched.customerId &&
+                    Boolean(formik.errors.customerId)
                   }
-                }}
-                helperText={
-                  <FormikErrorMessage
-                    touched={formik.touched.customerId}
-                    error={formik.errors.customerId}
-                    translatedFieldName={t("customer")}
-                  />
-                }
-              />
+                  onBlur={() => formik.setFieldTouched("customerId")}
+                  ids={customerIds}
+                  asyncFunc={customerAsync}
+                  renderNoOptions={(input) =>
+                    customerExistsSelected ||
+                    (input ?? "").trim().length === 0 ? null : (
+                      <Button
+                        fullWidth
+                        size="small"
+                        onMouseDown={(event) => event.preventDefault()}
+                        onClick={() => {
+                          setCustomerDraftName(
+                            input ?? formik.values.customerName ?? ""
+                          );
+                          setCustomerDraftPhone("");
+                          setCustomerDialogOpen(true);
+                        }}
+                      >
+                        {t("add-customer")}
+                      </Button>
+                    )
+                  }
+                  onSearchChange={(value) => {
+                    setCustomerInput(value ?? "");
+                    setCustomerExistsSelected(false);
+                  }}
+                  onSelectionChange={(option) => {
+                    formik.setFieldValue(
+                      "customerId",
+                      option?.value ?? undefined
+                    );
+                    formik.setFieldValue("customerName", option?.label ?? "");
+                    setCustomerExistsSelected(Boolean(option?.value));
+                    if (!option?.value) {
+                      setCustomerInput("");
+                    }
+                  }}
+                  helperText={
+                    <FormikErrorMessage
+                      touched={formik.touched.customerId}
+                      error={formik.errors.customerId}
+                      translatedFieldName={t("customer")}
+                    />
+                  }
+                />
+                <Button
+                  size="small"
+                  variant="text"
+                  onClick={() => {
+                    setCustomerDraftName(
+                      customerInput || formik.values.customerName || ""
+                    );
+                    setCustomerDraftPhone("");
+                    setCustomerDialogOpen(true);
+                  }}
+                  sx={{ alignSelf: "flex-start" }}
+                >
+                  {t("add-customer")}
+                </Button>
+              </Box>
             ),
           },
           {

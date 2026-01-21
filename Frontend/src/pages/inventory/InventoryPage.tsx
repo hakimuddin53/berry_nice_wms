@@ -269,32 +269,6 @@ const InventoryPage = () => {
                   </Grid>
                 ))}
               </Grid>
-              <Grid item xs={12} md={6}>
-                {renderFilterField(
-                  t("battery-health", { defaultValue: "Battery Health (%)" }),
-                  <TextField
-                    fullWidth
-                    type="number"
-                    size="small"
-                    inputProps={{ min: 0, max: 100, step: 1 }}
-                    value={filters.batteryHealth ?? ""}
-                    onChange={(e) =>
-                      updateFilter(
-                        "batteryHealth",
-                        e.target.value === ""
-                          ? null
-                          : Math.max(
-                              0,
-                              Math.min(100, Number(e.target.value) || 0)
-                            )
-                      )
-                    }
-                    placeholder={t("battery-health", {
-                      defaultValue: "Battery Health (%)",
-                    })}
-                  />
-                )}
-              </Grid>
             </Box>
           ))}
         </Box>

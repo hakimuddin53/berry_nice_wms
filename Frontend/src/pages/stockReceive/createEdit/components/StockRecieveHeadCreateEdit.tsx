@@ -198,6 +198,20 @@ const StockRecieveHeadCreateEdit = (props: {
                     />
                   }
                 />
+                <Button
+                  size="small"
+                  variant="text"
+                  onClick={() => {
+                    setSupplierDraftCode(formik.values.sellerInfo ?? "");
+                    setSupplierDraftName(
+                      supplierInput || formik.values.sellerInfo || ""
+                    );
+                    setSupplierDialogOpen(true);
+                  }}
+                  sx={{ alignSelf: "flex-start" }}
+                >
+                  {t("add-supplier")}
+                </Button>
               </Box>
             ),
           },

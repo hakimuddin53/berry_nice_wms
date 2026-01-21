@@ -19,6 +19,9 @@ import {
 import { DataTable } from "components/platbricks/shared";
 import { DataTableHeaderCell } from "components/platbricks/shared/dataTable/DataTable";
 import Page from "components/platbricks/shared/Page";
+import SelectAsync, {
+  type SelectAsyncOption,
+} from "components/platbricks/shared/SelectAsync";
 import { useDatatableControls } from "hooks/useDatatableControls";
 import { useUserDateTime } from "hooks/useUserDateTime";
 import { PagedListDto } from "interfaces/general/pagedList/PagedListDto";
@@ -32,6 +35,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLogbookService } from "services/LogbookService";
+import { useUserService } from "services/UserService";
 
 const statusOptions = [
   { value: "OUT", label: "Out" },
@@ -41,6 +45,7 @@ const statusOptions = [
 const LogbookPage: React.FC = () => {
   const { t } = useTranslation();
   const logbookService = useLogbookService();
+  const userService = useUserService();
   const { getLocalDateAndTime } = useUserDateTime();
 
   const [filters, setFilters] = useState<{
@@ -56,6 +61,8 @@ const LogbookPage: React.FC = () => {
     history: LogbookStatusHistoryDto[];
     status: string;
     remark: string;
+    user: SelectAsyncOption | null;
+    userError?: boolean;
   }>({
     open: false,
     loading: false,
@@ -63,6 +70,8 @@ const LogbookPage: React.FC = () => {
     history: [],
     status: "OUT",
     remark: "",
+    user: null,
+    userError: false,
   });
 
   const headerCells: DataTableHeaderCell<LogbookAvailabilityDto>[] = useMemo(
@@ -178,6 +187,8 @@ const LogbookPage: React.FC = () => {
       history: [],
       status: row.status ?? "OUT",
       remark: row.remark ?? "",
+      user: row.userName ? { label: row.userName, value: row.userName } : null,
+      userError: false,
     });
     if (row.logbookEntryId) {
       try {
@@ -198,12 +209,20 @@ const LogbookPage: React.FC = () => {
 
   const handleHistorySave = async () => {
     const entry = historyDialog.entry;
+    const selectedUser = historyDialog.user;
+    if (!selectedUser || !selectedUser.label?.trim()) {
+      setHistoryDialog((prev) => ({ ...prev, userError: true }));
+      return;
+    }
+    const trimmedUser = selectedUser.label.trim();
+
     try {
       setHistoryDialog((prev) => ({ ...prev, loading: true }));
       if (entry?.logbookEntryId) {
         const dto: LogbookUpdateDto = {
           status: historyDialog.status,
           purpose: historyDialog.remark,
+          userName: trimmedUser,
         };
         await logbookService.update(entry.logbookEntryId, dto);
         const refreshedHistory = await logbookService.getHistory(
@@ -218,6 +237,7 @@ const LogbookPage: React.FC = () => {
             status: dto.status ?? entry.status,
             remark: dto.purpose ?? entry.remark,
             statusChangedAt: new Date().toISOString(),
+            userName: trimmedUser,
           },
         }));
       } else if (entry?.productCode) {
@@ -227,6 +247,7 @@ const LogbookPage: React.FC = () => {
           purpose: historyDialog.remark,
           status: historyDialog.status,
           dateUtc: new Date().toISOString(),
+          userName: trimmedUser,
         };
         const created = await logbookService.create(createDto);
         const refreshedHistory = await logbookService.getHistory(created.id);
@@ -241,7 +262,7 @@ const LogbookPage: React.FC = () => {
             remark: historyDialog.remark,
             statusChangedAt:
               created.statusChangedAt ?? new Date().toISOString(),
-            userName: created.userName ?? entry.userName,
+            userName: created.userName ?? trimmedUser,
           },
         }));
       } else {
@@ -379,6 +400,29 @@ const LogbookPage: React.FC = () => {
                 </MenuItem>
               ))}
             </TextField>
+            <SelectAsync
+              name="user"
+              label={t("user", { defaultValue: "User" })}
+              placeholder={t("user", { defaultValue: "User" })}
+              asyncFunc={(value, page, pageSize) =>
+                userService.getSelectOptions(value, page, pageSize)
+              }
+              suggestionsIfEmpty
+              initValue={historyDialog.user ?? undefined}
+              onSelectionChange={(option) =>
+                setHistoryDialog((prev) => ({
+                  ...prev,
+                  user: option,
+                  userError: !option,
+                }))
+              }
+              error={historyDialog.userError}
+              helperText={
+                historyDialog.userError
+                  ? t("user-required", { defaultValue: "User is required" })
+                  : undefined
+              }
+            />
             <TextField
               fullWidth
               label={t("remark", { defaultValue: "Remark" })}
@@ -431,7 +475,7 @@ const LogbookPage: React.FC = () => {
           <Button
             variant="contained"
             onClick={handleHistorySave}
-            disabled={!historyDialog.entry}
+            disabled={!historyDialog.entry || !historyDialog.user}
           >
             {t("common:save", { defaultValue: "Save" })}
           </Button>

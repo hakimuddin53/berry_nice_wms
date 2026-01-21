@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
-using System.Security.Claims;
 using Wms.Api.Context;
 using Wms.Api.Dto.Logbook;
 using Wms.Api.Dto.PagedList;
@@ -176,10 +175,16 @@ namespace Wms.Api.Controllers
                 return ValidationProblem(ModelState);
             }
 
+            if (string.IsNullOrWhiteSpace(dto.UserName))
+            {
+                ModelState.AddModelError(nameof(dto.UserName), "User is required.");
+                return ValidationProblem(ModelState);
+            }
+
             var status = ParseStatus(dto.Status) ?? LogbookStatus.OUT;
             var dateUtc = dto.DateUtc ?? DateTime.UtcNow;
             var userId = currentUserService.UserId();
-            var userName = ResolveUserName(dto.UserName);
+            var userName = dto.UserName.Trim();
 
             Guid? resolvedProductId = dto.ProductId == Guid.Empty ? null : dto.ProductId;
             if (resolvedProductId == null)
@@ -227,6 +232,17 @@ namespace Wms.Api.Controllers
         [HttpPut("{id:guid}")]
         public async Task<IActionResult> UpdateAsync(Guid id, [FromBody] LogbookUpdateDto dto)
         {
+            if (!ModelState.IsValid)
+            {
+                return ValidationProblem(ModelState);
+            }
+
+            if (string.IsNullOrWhiteSpace(dto.UserName))
+            {
+                ModelState.AddModelError(nameof(dto.UserName), "User is required.");
+                return ValidationProblem(ModelState);
+            }
+
             var entry = await context.LogbookEntries.FirstOrDefaultAsync(l => l.Id == id);
             if (entry == null)
             {
@@ -235,10 +251,13 @@ namespace Wms.Api.Controllers
 
             var statusChanged = false;
             var remarkChanged = false;
+            var userChanged = false;
 
-            if (!string.IsNullOrWhiteSpace(dto.UserName))
+            var trimmedUserName = dto.UserName.Trim();
+            if (!string.Equals(trimmedUserName, entry.UserName, StringComparison.Ordinal))
             {
-                entry.UserName = dto.UserName.Trim();
+                entry.UserName = trimmedUserName;
+                userChanged = true;
             }
 
             if (dto.DateUtc.HasValue)
@@ -277,7 +296,7 @@ namespace Wms.Api.Controllers
             }
             entry.ChangedAt = DateTime.UtcNow;
 
-            if (statusChanged || remarkChanged)
+            if (statusChanged || remarkChanged || userChanged)
             {
                 var history = new LogbookStatusHistory
                 {
@@ -285,7 +304,7 @@ namespace Wms.Api.Controllers
                     LogbookEntryId = entry.Id,
                     Status = entry.Status,
                     Remark = entry.Purpose,
-                    UserName = string.IsNullOrWhiteSpace(dto.UserName) ? entry.UserName : dto.UserName.Trim(),
+                    UserName = entry.UserName,
                     ChangedAt = statusChanged ? entry.StatusChangedAt : DateTime.UtcNow
                 };
                 context.LogbookStatusHistories.Add(history);
@@ -317,29 +336,6 @@ namespace Wms.Api.Controllers
         {
             if (string.IsNullOrWhiteSpace(status)) return null;
             return Enum.TryParse<LogbookStatus>(status, true, out var parsed) ? parsed : null;
-        }
-
-        private string ResolveUserName(string? provided)
-        {
-            if (!string.IsNullOrWhiteSpace(provided))
-            {
-                return provided.Trim();
-            }
-
-            var user = HttpContext?.User;
-            var email = user?.FindFirstValue(ClaimTypes.Email);
-            if (!string.IsNullOrWhiteSpace(email))
-            {
-                return email;
-            }
-
-            var name = user?.Identity?.Name;
-            if (!string.IsNullOrWhiteSpace(name))
-            {
-                return name;
-            }
-
-            return "System";
         }
 
         private IQueryable<LogbookAvailabilityDto> BuildAvailableQuery(LogbookSearchDto search)

@@ -19,7 +19,9 @@ namespace Wms.Api.Dto.Logbook
 
         public Guid? ProductId { get; set; }
 
-        public string? UserName { get; set; }
+        [Required]
+        [MaxLength(128)]
+        public string UserName { get; set; } = string.Empty;
 
         public string? Purpose { get; set; }
 
@@ -30,7 +32,9 @@ namespace Wms.Api.Dto.Logbook
 
     public class LogbookUpdateDto
     {
-        public string? UserName { get; set; }
+        [Required]
+        [MaxLength(128)]
+        public string UserName { get; set; } = string.Empty;
         public string? Purpose { get; set; }
         public string? Status { get; set; }
         public DateTime? DateUtc { get; set; }
