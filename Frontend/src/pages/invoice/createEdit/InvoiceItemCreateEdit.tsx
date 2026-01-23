@@ -133,11 +133,21 @@ const InvoiceItemCreateEdit = (props: {
       }
 
       const hasBrand =
-        data?.brand ?? data?.brandName ?? data?.brandLabel ?? data?.brandId;
+        data?.brand ??
+        data?.Brand ??
+        data?.brandName ??
+        data?.BrandName ??
+        data?.brandLabel ??
+        data?.BrandLabel ??
+        data?.brandId ??
+        data?.BrandId;
       const hasModel =
         data?.model ??
+        data?.Model ??
         data?.productName ??
+        data?.ProductName ??
         data?.modelName ??
+        data?.ModelName ??
         data?.productModel;
       const hasLocation = data?.locationId ?? data?.currentLocationId;
 
@@ -200,14 +210,59 @@ const InvoiceItemCreateEdit = (props: {
       formik.setFieldValue(fieldName("locationId"), normalizedLocationId);
       formik.setFieldValue(fieldName("locationName"), normalizedLocationName);
 
-      const brand =
-        data.brand ?? data.brandName ?? data.brandLabel ?? data.brandId ?? "";
-      const model =
-        data.model ??
-        data.productName ??
-        data.modelName ??
-        data.productModel ??
+      let brand =
+        data.brand ??
+        data.Brand ??
+        data.brandName ??
+        data.BrandName ??
+        data.brandLabel ??
+        data.BrandLabel ??
+        data.brandId ??
+        data.BrandId ??
         "";
+      let model =
+        data.model ??
+        data.Model ??
+        data.productName ??
+        data.ProductName ??
+        data.modelName ??
+        data.ModelName ??
+        data.productModel ??
+        data.ProductModel ??
+        "";
+
+      // Fallback: if model/brand are still empty, try a select-options lookup by id
+      if ((!brand || !model) && productId) {
+        try {
+          const opts =
+            (await productService.getSelectOptions("", 1, 1, [productId])) ??
+            [];
+          const hit = opts[0] as any;
+          if (!brand) {
+            brand =
+              hit?.brand ??
+              hit?.Brand ??
+              hit?.brandName ??
+              hit?.BrandName ??
+              hit?.data?.brand ??
+              hit?.data?.Brand ??
+              "";
+          }
+          if (!model) {
+            model =
+              hit?.model ??
+              hit?.Model ??
+              hit?.data?.model ??
+              hit?.data?.Model ??
+              hit?.data?.productName ??
+              hit?.data?.ProductName ??
+              "";
+          }
+        } catch {
+          // ignore lookup failures
+        }
+      }
+
       formik.setFieldValue(fieldName("brand"), brand ?? "");
       formik.setFieldValue(fieldName("model"), model ?? "");
 
