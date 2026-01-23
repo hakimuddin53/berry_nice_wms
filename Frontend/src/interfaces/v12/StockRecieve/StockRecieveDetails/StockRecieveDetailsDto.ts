@@ -8,6 +8,7 @@ export interface StockRecieveDetailsDto {
   purchaser: string;
   purchaserName?: string;
   dateOfPurchase: string;
+  invoiceNumber?: string;
   warehouseId: guid;
   warehouseLabel: string;
 

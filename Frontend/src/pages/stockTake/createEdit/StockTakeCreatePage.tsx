@@ -362,13 +362,6 @@ const StockTakeCreatePage = () => {
                               primary={item.productCode || item.productId}
                               secondary={item.model}
                             />
-                            <Chip
-                              label={t("in-inventory", {
-                                defaultValue: "In inventory",
-                              })}
-                              color="success"
-                              size="small"
-                            />
                           </ListItem>
                         ))}
                       </List>

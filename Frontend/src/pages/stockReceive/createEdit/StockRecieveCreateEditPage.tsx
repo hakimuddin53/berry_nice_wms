@@ -9,6 +9,7 @@ import {
   PbTabPanel,
   PbTabs,
 } from "components/platbricks/shared";
+import MessageDialog from "components/platbricks/shared/dialogs/MessageDialog";
 import { FormikProvider, setNestedObjectValues, useFormik } from "formik";
 import { useDatatableControls } from "hooks/useDatatableControls";
 import { useFormikDatatable } from "hooks/useFormikDatatable";
@@ -21,6 +22,10 @@ import { useLookupService } from "services/LookupService";
 import { useNotificationService } from "services/NotificationService";
 import { useStockRecieveService } from "services/StockRecieveService";
 import { EMPTY_GUID, guid } from "types/guid";
+import {
+  extractApiErrorMessages,
+  flattenFormikErrors,
+} from "utils/errorDialogHelpers";
 import {
   formikObjectHasHeadTouchedErrors,
   formikObjectHasTouchedErrors,
@@ -107,10 +112,12 @@ const StockRecieveCreateEditPage: React.FC = () => {
       return "";
     }
   }, []);
+
   const [stockRecieve, setStockRecieve] = useState<YupStockRecieveCreateEdit>({
     sellerInfo: "",
     purchaser: "",
     dateOfPurchase: new Date().toISOString().split("T")[0],
+    invoiceNumber: "",
     warehouseId: EMPTY_GUID as guid,
     stockRecieveItems: [],
   });
@@ -118,6 +125,11 @@ const StockRecieveCreateEditPage: React.FC = () => {
   const [StockRecieveItemTable] = useStockRecieveItemTable();
   const [pageBlocker, setPageBlocker] = useState(false);
   const [pageReady, setPageReady] = useState<boolean>(() => !id);
+  const [errorDialog, setErrorDialog] = useState<{
+    open: boolean;
+    title: string;
+    messages: string[];
+  }>({ open: false, title: "", messages: [] });
 
   const buildStockRecievePayload = useCallback(
     (values: YupStockRecieveCreateEdit) => {
@@ -162,10 +174,6 @@ const StockRecieveCreateEditPage: React.FC = () => {
           ? Math.min(100, Math.max(0, parsedBatteryHealth))
           : null;
 
-        if (!sanitized.productId) {
-          delete sanitized.productId;
-        }
-
         if (!sanitized.productCode) {
           delete sanitized.productCode;
         }
@@ -173,10 +181,12 @@ const StockRecieveCreateEditPage: React.FC = () => {
         return sanitized;
       });
 
-      const { stockRecieveItems: _ignored, ...rest } = values;
+      const { stockRecieveItems: _ignored, invoiceNumber, ...rest } = values;
+      const trimmedInvoiceNumber = (invoiceNumber ?? "").trim();
 
       return {
         ...rest,
+        invoiceNumber: trimmedInvoiceNumber || undefined,
         purchaser: rest.purchaser || currentUserId || "",
         StockRecieveItems: stockRecieveItems,
       };
@@ -225,7 +235,14 @@ const StockRecieveCreateEditPage: React.FC = () => {
           })
           .catch((err) => {
             setPageBlocker(false);
-            notificationService.handleApiErrorMessage(err.data, "common");
+            const messages = extractApiErrorMessages(err, t, "common");
+            setErrorDialog({
+              open: true,
+              title: t("common:request-failed", {
+                defaultValue: "Request failed",
+              }),
+              messages,
+            });
           });
       } else {
         StockRecieveService.updateStockRecieve(id as guid, payload as any)
@@ -243,13 +260,25 @@ const StockRecieveCreateEditPage: React.FC = () => {
           })
           .catch((err) => {
             setPageBlocker(false);
-            notificationService.handleApiErrorMessage(err.data, "common");
+            const messages = extractApiErrorMessages(err, t, "common");
+            setErrorDialog({
+              open: true,
+              title: t("common:request-failed", {
+                defaultValue: "Request failed",
+              }),
+              messages,
+            });
           });
       }
     },
     onReset: () => {},
     enableReinitialize: true,
   });
+
+  const validationMessages = useMemo(
+    () => flattenFormikErrors(formik.errors),
+    [formik.errors]
+  );
 
   /* eslint-disable react-hooks/exhaustive-deps */
   const normalizeStockRecieveItems = (items: any[] = []) =>
@@ -350,7 +379,11 @@ const StockRecieveCreateEditPage: React.FC = () => {
           let stockRecieveItems = normalizeStockRecieveItems(
             stockRecieveData.stockRecieveItems ?? []
           );
-          const { number: fetchedNumber, ...rest } = stockRecieveData;
+          const {
+            number: fetchedNumber,
+            invoiceNumber,
+            ...rest
+          } = stockRecieveData;
           const restDto = rest as YupStockRecieveCreateEdit;
           const resolvedDateOfPurchase = toDateOnly(restDto.dateOfPurchase);
           const missingLocationIds = Array.from(
@@ -406,6 +439,7 @@ const StockRecieveCreateEditPage: React.FC = () => {
             ...restDto,
             dateOfPurchase: resolvedDateOfPurchase || "",
             purchaser: restDto.purchaser || "",
+            invoiceNumber: invoiceNumber || "",
             stockRecieveItems,
           });
           setStockRecieveNumber(fetchedNumber ?? "");
@@ -416,7 +450,14 @@ const StockRecieveCreateEditPage: React.FC = () => {
           setPageReady(true);
         })
         .catch((err) => {
-          console.log(err);
+          const messages = extractApiErrorMessages(err, t, "common");
+          setErrorDialog({
+            open: true,
+            title: t("common:request-failed", {
+              defaultValue: "Request failed",
+            }),
+            messages,
+          });
           setPageReady(true);
         });
     }
@@ -425,16 +466,20 @@ const StockRecieveCreateEditPage: React.FC = () => {
 
   useEffect(() => {
     if (formik.submitCount > 0 && !formik.isSubmitting && !formik.isValid) {
-      notificationService.handleErrorMessage(
-        t("common:please-fix-the-errors-and-try-again")
-      );
+      setErrorDialog({
+        open: true,
+        title: t("common:please-fix-the-errors-and-try-again", {
+          defaultValue: "Please fix the errors and try again",
+        }),
+        messages: validationMessages,
+      });
     }
   }, [
     formik.submitCount,
     formik.isValid,
     formik.isSubmitting,
-    notificationService,
     t,
+    validationMessages,
   ]);
 
   const {
@@ -499,77 +544,87 @@ const StockRecieveCreateEditPage: React.FC = () => {
   }
 
   return (
-    <Page
-      breadcrumbs={breadcrumbs}
-      title={title}
-      subtitle={id ? stockRecieveNumber : ""}
-      showLoading={!pageReady}
-      showBackdrop={pageBlocker}
-      actions={[
-        {
-          title: t("common:save"),
-          onclick: formik.handleSubmit,
-          icon: "Save",
-        },
-      ]}
-      hasSingleActionButton={true}
-    >
-      <NavBlocker when={formik.dirty}></NavBlocker>
-      <FormikProvider value={formik}>
-        <PbCard px={2} pt={2}>
-          <PbTabs
-            value={tab}
-            onChange={(event: React.SyntheticEvent, newValue: number) => {
-              changeTab(newValue);
-            }}
-          >
-            <PbTab
-              label={t("common:details")}
-              haserror={formikObjectHasHeadTouchedErrors(
-                formik.errors,
-                formik.touched
-              )}
-            />
-            <PbTab
-              label={
-                <BadgeText
-                  number={formik.values.stockRecieveItems.length}
-                  label={t("common:items")}
-                />
-              }
-              haserror={formikObjectHasTouchedErrors(
-                formik.errors.stockRecieveItems,
-                formik.touched.stockRecieveItems
-              )}
-            />
-          </PbTabs>
-          <CardContent>
-            <PbTabPanel value={tab} index={0}>
-              <StockRecieveHeadCreateEdit formik={formik} />
-            </PbTabPanel>
-            <PbTabPanel value={tab} index={1}>
-              <DataTable
-                title={t("common:items")}
-                tableKey="StockRecieveCreateEditPage-Items"
-                headerCells={StockRecieveItemTable}
-                data={stockRecieveItemsTableProps}
-                onAdd={addStockRecieveItemHandler}
-                onDelete={(d) => removeStockRecieveItemHandler(d)}
-                dataKey="key"
-                paddingEnabled={false}
+    <>
+      <Page
+        breadcrumbs={breadcrumbs}
+        title={title}
+        subtitle={id ? stockRecieveNumber : ""}
+        showLoading={!pageReady}
+        showBackdrop={pageBlocker}
+        actions={[
+          {
+            title: t("common:save"),
+            onclick: formik.handleSubmit,
+            icon: "Save",
+          },
+        ]}
+        hasSingleActionButton={true}
+      >
+        <NavBlocker when={formik.dirty}></NavBlocker>
+        <FormikProvider value={formik}>
+          <PbCard px={2} pt={2}>
+            <PbTabs
+              value={tab}
+              onChange={(event: React.SyntheticEvent, newValue: number) => {
+                changeTab(newValue);
+              }}
+            >
+              <PbTab
+                label={t("common:details")}
+                haserror={formikObjectHasHeadTouchedErrors(
+                  formik.errors,
+                  formik.touched
+                )}
               />
-            </PbTabPanel>
-          </CardContent>
-        </PbCard>
+              <PbTab
+                label={
+                  <BadgeText
+                    number={formik.values.stockRecieveItems.length}
+                    label={t("common:items")}
+                  />
+                }
+                haserror={formikObjectHasTouchedErrors(
+                  formik.errors.stockRecieveItems,
+                  formik.touched.stockRecieveItems
+                )}
+              />
+            </PbTabs>
+            <CardContent>
+              <PbTabPanel value={tab} index={0}>
+                <StockRecieveHeadCreateEdit formik={formik} />
+              </PbTabPanel>
+              <PbTabPanel value={tab} index={1}>
+                <DataTable
+                  title={t("common:items")}
+                  tableKey="StockRecieveCreateEditPage-Items"
+                  headerCells={StockRecieveItemTable}
+                  data={stockRecieveItemsTableProps}
+                  onAdd={addStockRecieveItemHandler}
+                  onDelete={(d) => removeStockRecieveItemHandler(d)}
+                  dataKey="key"
+                  paddingEnabled={false}
+                />
+              </PbTabPanel>
+            </CardContent>
+          </PbCard>
 
-        {tab === 1 && selectedStockRecieveItem !== undefined && (
-          <StockRecieveItemCreateEdit
-            formik={formik}
-            itemIndex={selectedStockRecieveItem}
-          />
-        )}
-      </FormikProvider>
-    </Page>
+          {tab === 1 && selectedStockRecieveItem !== undefined && (
+            <StockRecieveItemCreateEdit
+              formik={formik}
+              itemIndex={selectedStockRecieveItem}
+            />
+          )}
+        </FormikProvider>
+      </Page>
+      <MessageDialog
+        open={errorDialog.open}
+        title={
+          errorDialog.title || t("common:error", { defaultValue: "Error" })
+        }
+        messages={errorDialog.messages}
+        onClose={() => setErrorDialog((prev) => ({ ...prev, open: false }))}
+      />
+    </>
   );
 };
 

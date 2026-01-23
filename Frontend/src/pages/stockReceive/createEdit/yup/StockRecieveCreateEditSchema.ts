@@ -5,6 +5,7 @@ export interface YupStockRecieveCreateEdit {
   sellerInfo: string;
   purchaser?: string | null;
   dateOfPurchase: string;
+  invoiceNumber?: string;
   warehouseId: guid;
   stockRecieveItems: YupStockRecieveItemCreateEdit[];
 }
@@ -49,6 +50,7 @@ export const StockRecieveCreateEditSchema = yup.object().shape({
   sellerInfo: yup.string().required(),
   purchaser: yup.string().nullable(),
   dateOfPurchase: yup.string().required(),
+  invoiceNumber: yup.string().nullable(),
   warehouseId: yup.string().required(),
   stockRecieveItems: yup
     .array()

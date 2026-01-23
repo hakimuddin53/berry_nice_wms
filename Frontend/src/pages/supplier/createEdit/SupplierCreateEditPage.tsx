@@ -81,11 +81,19 @@ const SupplierCreateEditPage: React.FC = () => {
     validationSchema: supplierCreateEditSchema,
     onSubmit: (values, { resetForm }) => {
       setPageBlocker(true);
+      const contactNo =
+        values.contactNo !== undefined && values.contactNo !== null
+          ? String(values.contactNo).trim()
+          : "";
+      const payload = {
+        ...values,
+        contactNo,
+      };
 
       if (!id) {
-        SupplierService.createSupplier(values)
+        SupplierService.createSupplier(payload)
           .then((result) => {
-            resetForm({ values });
+            resetForm({ values: payload });
             setPageBlocker(false);
             notificationService.handleApiSuccessMessage(
               "supplier",
@@ -99,9 +107,9 @@ const SupplierCreateEditPage: React.FC = () => {
             notificationService.handleApiErrorMessage(err.data, "supplier");
           });
       } else {
-        SupplierService.updateSupplier(id as guid, values)
+        SupplierService.updateSupplier(id as guid, payload)
           .then((result) => {
-            resetForm({ values });
+            resetForm({ values: payload });
             setPageBlocker(false);
             notificationService.handleApiSuccessMessage(
               "supplier",
@@ -338,7 +346,7 @@ const SupplierCreateEditPage: React.FC = () => {
                         fullWidth
                         id="contactNo"
                         name="contactNo"
-                        type="number"
+                        inputMode="tel"
                         size="small"
                         value={formik.values.contactNo}
                         onChange={formik.handleChange}

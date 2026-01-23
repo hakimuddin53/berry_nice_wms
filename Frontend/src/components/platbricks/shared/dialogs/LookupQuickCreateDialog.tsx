@@ -83,7 +83,7 @@ const LookupQuickCreateDialog = ({
       <form onSubmit={handleSubmit}>
         <DialogTitle>{t("add")}</DialogTitle>
         <DialogContent sx={{ px: 3, pt: 1.5, pb: 1 }}>
-          <Stack spacing={2} mt={0.5}>
+          <Stack spacing={2} mt={2}>
             <TextField
               autoFocus
               required

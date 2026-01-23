@@ -135,29 +135,6 @@ const StockTakeDetailsPage: React.FC = () => {
                             }
                             secondary={item.remark || ""}
                           />
-                          <Stack direction="row" spacing={1}>
-                            <Chip
-                              label={`${t("counted-quantity", {
-                                defaultValue: "Counted",
-                              })}: ${item.countedQuantity}`}
-                              color="primary"
-                              size="small"
-                            />
-                            <Chip
-                              label={`${t("system-quantity", {
-                                defaultValue: "System",
-                              })}: ${item.systemQuantity}`}
-                              variant="outlined"
-                              size="small"
-                            />
-                            <Chip
-                              label={`${t("difference", {
-                                defaultValue: "Diff",
-                              })}: ${item.differenceQuantity}`}
-                              variant="outlined"
-                              size="small"
-                            />
-                          </Stack>
                         </ListItem>
                       ))}
                     </List>

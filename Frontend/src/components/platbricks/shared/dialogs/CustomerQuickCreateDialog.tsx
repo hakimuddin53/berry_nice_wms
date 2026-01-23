@@ -46,6 +46,8 @@ const CustomerQuickCreateDialog = ({
 
   const [name, setName] = useState(initialName ?? "");
   const [phone, setPhone] = useState(initialPhone ?? "");
+  const [email, setEmail] = useState("");
+  const [address, setAddress] = useState("");
   const [customerTypeId, setCustomerTypeId] = useState(
     initialCustomerTypeId ?? ""
   );
@@ -55,6 +57,8 @@ const CustomerQuickCreateDialog = ({
     if (open) {
       setName(initialName ?? "");
       setPhone(initialPhone ?? "");
+      setEmail("");
+      setAddress("");
       setCustomerTypeId(initialCustomerTypeId ?? "");
     }
   }, [open, initialName, initialPhone, initialCustomerTypeId]);
@@ -63,6 +67,8 @@ const CustomerQuickCreateDialog = ({
     event?.preventDefault();
     const trimmedName = name.trim();
     const trimmedPhone = phone.trim();
+    const trimmedEmail = email.trim();
+    const trimmedAddress = address.trim();
     if (!trimmedName || !customerTypeId) {
       return;
     }
@@ -72,6 +78,8 @@ const CustomerQuickCreateDialog = ({
       const payload: CustomerCreateUpdateDto = {
         name: trimmedName,
         phone: trimmedPhone || undefined,
+        email: trimmedEmail || undefined,
+        address: trimmedAddress || undefined,
         customerTypeId: guid(customerTypeId),
       };
       const id = await customerService.createCustomer(payload);
@@ -102,7 +110,7 @@ const CustomerQuickCreateDialog = ({
       <form onSubmit={handleSubmit}>
         <DialogTitle>{t("add-customer")}</DialogTitle>
         <DialogContent>
-          <Stack spacing={2} mt={1}>
+          <Stack spacing={2} mt={4}>
             <TextField
               autoFocus
               required
@@ -118,6 +126,25 @@ const CustomerQuickCreateDialog = ({
               label={t("phone")}
               value={phone}
               onChange={(event) => setPhone(event.target.value)}
+              size="small"
+              disabled={submitting}
+            />
+            <TextField
+              fullWidth
+              label={t("email")}
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              size="small"
+              disabled={submitting}
+            />
+            <TextField
+              fullWidth
+              label={t("address")}
+              multiline
+              rows={2}
+              value={address}
+              onChange={(event) => setAddress(event.target.value)}
               size="small"
               disabled={submitting}
             />

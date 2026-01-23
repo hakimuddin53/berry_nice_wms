@@ -11,6 +11,7 @@ import {
   PbTabs,
 } from "components/platbricks/shared";
 import UserDateTime from "components/platbricks/shared/UserDateTime";
+import { useLookupByIdFetcher } from "hooks/queries/useLookupQueries";
 import useDeleteConfirmationDialog from "hooks/useDeleteConfimationDialog";
 import { ExpenseDetailsDto } from "interfaces/v12/expense/expenseDetails/expenseDetailsDto";
 
@@ -26,7 +27,9 @@ function ExpenseDetailsPage() {
   const [tab, setTab] = useState(0);
 
   const ExpenseService = useExpenseService();
+  const fetchLookupById = useLookupByIdFetcher();
   const [expense, setExpense] = useState<ExpenseDetailsDto | null>(null);
+  const [categoryLabel, setCategoryLabel] = useState<string | null>(null);
 
   const { OpenDeleteConfirmationDialog } = useDeleteConfirmationDialog();
 
@@ -34,9 +37,20 @@ function ExpenseDetailsPage() {
 
   const loadExpense = useCallback(() => {
     ExpenseService.getExpenseById(id as guid)
-      .then((expense) => setExpense(expense))
+      .then((expense) => {
+        setExpense(expense);
+        if (expense.category) {
+          fetchLookupById(expense.category)
+            .then((lookup) =>
+              setCategoryLabel(lookup?.label ?? expense.category)
+            )
+            .catch(() => setCategoryLabel(expense.category));
+        } else {
+          setCategoryLabel(null);
+        }
+      })
       .catch((err) => {});
-  }, [ExpenseService, id]);
+  }, [ExpenseService, fetchLookupById, id]);
 
   useEffect(() => {
     loadExpense();
@@ -120,7 +134,7 @@ function ExpenseDetailsPage() {
                     </EasyCopy>
                   </KeyValuePair>
                   <KeyValuePair label={t("category")}>
-                    {expense.category}
+                    {categoryLabel ?? expense.category}
                   </KeyValuePair>
                   <KeyValuePair label={t("remark")}>
                     {expense.remark || "-"}

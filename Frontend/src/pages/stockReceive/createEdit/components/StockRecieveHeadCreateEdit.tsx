@@ -279,6 +279,20 @@ const StockRecieveHeadCreateEdit = (props: {
             ),
           },
           {
+            label: t("invoice-number"),
+            value: (
+              <TextField
+                fullWidth
+                id="invoiceNumber"
+                name="invoiceNumber"
+                size="small"
+                value={formik.values.invoiceNumber ?? ""}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+              />
+            ),
+          },
+          {
             label: t("warehouse"),
             required: isRequiredField(
               StockRecieveCreateEditSchema,

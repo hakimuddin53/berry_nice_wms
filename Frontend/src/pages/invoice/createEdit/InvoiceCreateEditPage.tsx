@@ -9,16 +9,22 @@ import {
   PbTabPanel,
   PbTabs,
 } from "components/platbricks/shared";
+import MessageDialog from "components/platbricks/shared/dialogs/MessageDialog";
 import { FormikProvider, setNestedObjectValues, useFormik } from "formik";
 import { useDatatableControls } from "hooks/useDatatableControls";
 import { useFormikDatatable } from "hooks/useFormikDatatable";
 import { InvoiceCreateUpdateDto } from "interfaces/v12/invoice/invoiceCreateUpdateDto";
+import jwtDecode from "jwt-decode";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { useInvoiceService } from "services/InvoiceService";
 import { useNotificationService } from "services/NotificationService";
 import { EMPTY_GUID, guid } from "types/guid";
+import {
+  extractApiErrorMessages,
+  flattenFormikErrors,
+} from "utils/errorDialogHelpers";
 import {
   formikObjectHasHeadTouchedErrors,
   formikObjectHasTouchedErrors,
@@ -32,7 +38,6 @@ import {
   YupInvoiceCreateEdit,
   YupInvoiceItemCreateEdit,
 } from "./yup/invoiceCreateEditSchema";
-import jwtDecode from "jwt-decode";
 
 const createEmptyItem = (): YupInvoiceItemCreateEdit => ({
   id: undefined,
@@ -126,6 +131,11 @@ const InvoiceCreateEditPage = () => {
   const [allowNavigationAfterSave, setAllowNavigationAfterSave] =
     useState(false);
   const [pageReady, setPageReady] = useState<boolean>(() => !id);
+  const [errorDialog, setErrorDialog] = useState<{
+    open: boolean;
+    title: string;
+    messages: string[];
+  }>({ open: false, title: "", messages: [] });
 
   const [invoiceItemTable] = useInvoiceItemTable();
 
@@ -148,8 +158,14 @@ const InvoiceCreateEditPage = () => {
         setInitialValues(formValue);
       })
       .catch((err) => {
-        notificationService.handleApiErrorMessage(err.data, "common");
-        navigate("/invoice");
+        const messages = extractApiErrorMessages(err, t, "common");
+        setErrorDialog({
+          open: true,
+          title: t("common:request-failed", {
+            defaultValue: "Request failed",
+          }),
+          messages,
+        });
       })
       .finally(() => {
         setAllowNavigationAfterSave(false);
@@ -209,13 +225,25 @@ const InvoiceCreateEditPage = () => {
           navigate(`/invoice/${created.id}`);
         }
       } catch (error: any) {
-        notificationService.handleApiErrorMessage(error.data, "common");
+        const messages = extractApiErrorMessages(error, t, "common");
+        setErrorDialog({
+          open: true,
+          title: t("common:request-failed", {
+            defaultValue: "Request failed",
+          }),
+          messages,
+        });
       } finally {
         helpers.setSubmitting(false);
         setPageBlocker(false);
       }
     },
   });
+
+  const validationMessages = useMemo(
+    () => flattenFormikErrors(formik.errors),
+    [formik.errors]
+  );
 
   useEffect(() => {
     formik.values.invoiceItems.forEach((item, index) => {
@@ -257,6 +285,24 @@ const InvoiceCreateEditPage = () => {
     formik.values.invoiceItems
       .map((item) => `${item.warrantyDurationMonths ?? ""}`)
       .join("|"),
+  ]);
+
+  useEffect(() => {
+    if (formik.submitCount > 0 && !formik.isSubmitting && !formik.isValid) {
+      setErrorDialog({
+        open: true,
+        title: t("common:please-fix-the-errors-and-try-again", {
+          defaultValue: "Please fix the errors and try again",
+        }),
+        messages: validationMessages,
+      });
+    }
+  }, [
+    formik.submitCount,
+    formik.isSubmitting,
+    formik.isValid,
+    t,
+    validationMessages,
   ]);
 
   const pageTitle = id ? t("edit-invoice") : t("create-invoice");
@@ -323,100 +369,110 @@ const InvoiceCreateEditPage = () => {
   const selectedInvoiceItem = invoiceItemsTableProps.selections[0];
 
   return (
-    <Page
-      title={pageTitle}
-      subtitle={id ? invoiceNumber : ""}
-      breadcrumbs={breadcrumbs}
-      showLoading={!pageReady}
-      showBackdrop={pageBlocker}
-      actions={[
-        {
-          title: t("save"),
-          onclick: formik.handleSubmit,
-          icon: "Save",
-        },
-      ]}
-      hasSingleActionButton
-    >
-      <NavBlocker
-        when={
-          !allowNavigationAfterSave &&
-          !formik.isSubmitting &&
-          !pageBlocker &&
-          formik.dirty
-        }
-      ></NavBlocker>
-      <FormikProvider value={formik}>
-        <PbCard px={2} pt={2}>
-          <PbTabs
-            value={tab}
-            onChange={(event: React.SyntheticEvent, newValue: number) => {
-              changeTab(newValue);
-            }}
-          >
-            <PbTab
-              label={t("details")}
-              haserror={formikObjectHasHeadTouchedErrors(
-                formik.errors,
-                formik.touched
-              )}
-            />
-            <PbTab
-              label={
-                <BadgeText
-                  number={formik.values.invoiceItems.length}
-                  label={t("invoice-items")}
-                />
-              }
-              haserror={formikObjectHasTouchedErrors(
-                formik.errors.invoiceItems,
-                formik.touched.invoiceItems
-              )}
-            />
-          </PbTabs>
-          <CardContent>
-            <PbTabPanel value={tab} index={0}>
-              <InvoiceHeadCreateEdit formik={formik} />
-            </PbTabPanel>
-            <PbTabPanel value={tab} index={1}>
-              <DataTable
-                title={t("invoice-items")}
-                tableKey="InvoiceCreateEditPage-Items"
-                headerCells={invoiceItemTable}
-                data={invoiceItemsTableProps}
-                onAdd={addInvoiceItemHandler}
-                onDelete={(d) => removeInvoiceItemHandler(d)}
-                dataKey="key"
-                paddingEnabled={false}
+    <>
+      <Page
+        title={pageTitle}
+        subtitle={id ? invoiceNumber : ""}
+        breadcrumbs={breadcrumbs}
+        showLoading={!pageReady}
+        showBackdrop={pageBlocker}
+        actions={[
+          {
+            title: t("save"),
+            onclick: formik.handleSubmit,
+            icon: "Save",
+          },
+        ]}
+        hasSingleActionButton
+      >
+        <NavBlocker
+          when={
+            !allowNavigationAfterSave &&
+            !formik.isSubmitting &&
+            !pageBlocker &&
+            formik.dirty
+          }
+        ></NavBlocker>
+        <FormikProvider value={formik}>
+          <PbCard px={2} pt={2}>
+            <PbTabs
+              value={tab}
+              onChange={(event: React.SyntheticEvent, newValue: number) => {
+                changeTab(newValue);
+              }}
+            >
+              <PbTab
+                label={t("details")}
+                haserror={formikObjectHasHeadTouchedErrors(
+                  formik.errors,
+                  formik.touched
+                )}
               />
-              <Stack
-                direction="row"
-                justifyContent="space-between"
-                alignItems="center"
-                mt={2}
-              >
-                <Typography variant="body2" color="text.secondary">
-                  {t("select-row-to-edit")}
-                </Typography>
-                <Typography variant="h6">
-                  {t("grand-total")}: {""}
-                  {formik.values.invoiceItems
-                    .reduce((sum, item) => sum + (item.totalPrice ?? 0), 0)
-                    .toFixed(2)}
-                </Typography>
-              </Stack>
-            </PbTabPanel>
-          </CardContent>
-        </PbCard>
+              <PbTab
+                label={
+                  <BadgeText
+                    number={formik.values.invoiceItems.length}
+                    label={t("invoice-items")}
+                  />
+                }
+                haserror={formikObjectHasTouchedErrors(
+                  formik.errors.invoiceItems,
+                  formik.touched.invoiceItems
+                )}
+              />
+            </PbTabs>
+            <CardContent>
+              <PbTabPanel value={tab} index={0}>
+                <InvoiceHeadCreateEdit formik={formik} />
+              </PbTabPanel>
+              <PbTabPanel value={tab} index={1}>
+                <DataTable
+                  title={t("invoice-items")}
+                  tableKey="InvoiceCreateEditPage-Items"
+                  headerCells={invoiceItemTable}
+                  data={invoiceItemsTableProps}
+                  onAdd={addInvoiceItemHandler}
+                  onDelete={(d) => removeInvoiceItemHandler(d)}
+                  dataKey="key"
+                  paddingEnabled={false}
+                />
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  mt={2}
+                >
+                  <Typography variant="body2" color="text.secondary">
+                    {t("select-row-to-edit")}
+                  </Typography>
+                  <Typography variant="h6">
+                    {t("grand-total")}: {""}
+                    {formik.values.invoiceItems
+                      .reduce((sum, item) => sum + (item.totalPrice ?? 0), 0)
+                      .toFixed(2)}
+                  </Typography>
+                </Stack>
+              </PbTabPanel>
+            </CardContent>
+          </PbCard>
 
-        {tab === 1 && selectedInvoiceItem !== undefined && (
-          <InvoiceItemCreateEdit
-            formik={formik}
-            itemIndex={selectedInvoiceItem}
-          />
-        )}
-      </FormikProvider>
-    </Page>
+          {tab === 1 && selectedInvoiceItem !== undefined && (
+            <InvoiceItemCreateEdit
+              formik={formik}
+              itemIndex={selectedInvoiceItem}
+            />
+          )}
+        </FormikProvider>
+      </Page>
+      <MessageDialog
+        open={errorDialog.open}
+        title={
+          errorDialog.title || t("common:error", { defaultValue: "Error" })
+        }
+        messages={errorDialog.messages}
+        onClose={() => setErrorDialog((prev) => ({ ...prev, open: false }))}
+      />
+    </>
   );
 };
 

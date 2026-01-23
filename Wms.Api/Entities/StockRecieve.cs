@@ -19,6 +19,8 @@ namespace Wms.Api.Entities
         [Required]
         public DateTime DateOfPurchase { get; set; }
 
+        public string? InvoiceNumber { get; set; }
+
         [Required]
         public Guid WarehouseId { get; set; }
 

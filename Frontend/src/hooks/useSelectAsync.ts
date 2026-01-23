@@ -22,8 +22,8 @@ const useSelectAsync = (
   );
   const [loading, setLoading] = React.useState(false);
   const [optionsIfEmpty, setOptionsIfEmpty] = React.useState<
-    SelectAsyncOption[]
-  >([]);
+    SelectAsyncOption[] | undefined
+  >();
 
   //if strictSearch = true, useSelectAsync will not perform a search if the previous search did not find any result
   //and the new search value is just an extension of the previous search value
@@ -59,10 +59,13 @@ const useSelectAsync = (
       let newOptions = await asyncFunc(label, 1, pageSize);
       if (newOptions) {
         setOptions([...newOptions]);
+        if (loadSuggestionsIfEmpty && label === "") {
+          setOptionsIfEmpty([...newOptions]);
+        }
       }
       setLoading(false);
     },
-    [asyncFunc, strictSearch]
+    [asyncFunc, strictSearch, loadSuggestionsIfEmpty, pageSize]
   );
   /* eslint-enable */
 
@@ -85,7 +88,7 @@ const useSelectAsync = (
   useEffect(() => {
     if (searchValue === "") {
       previousSearchValue.current = "";
-      if (optionsIfEmpty) {
+      if (optionsIfEmpty && optionsIfEmpty.length > 0) {
         setOptions(optionsIfEmpty);
         return undefined;
       }

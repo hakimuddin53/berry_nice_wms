@@ -5,6 +5,7 @@ export interface StockRecieveCreateUpdateDto {
   sellerInfo: string;
   purchaser: string;
   dateOfPurchase: string;
+  invoiceNumber?: string;
   warehouseId: guid;
   StockRecieveItems?: StockRecieveItemCreateUpdateDto[];
 }
