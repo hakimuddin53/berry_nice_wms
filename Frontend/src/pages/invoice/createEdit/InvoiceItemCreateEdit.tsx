@@ -293,7 +293,7 @@ const InvoiceItemCreateEdit = (props: {
       return;
     }
 
-    const numericValue = Number(value);
+    const numericValue = Math.max(0, Number(value));
     formik.setFieldValue(fieldName("warrantyDurationMonths"), numericValue);
     formik.setFieldValue(
       fieldName("warrantyExpiryDate"),

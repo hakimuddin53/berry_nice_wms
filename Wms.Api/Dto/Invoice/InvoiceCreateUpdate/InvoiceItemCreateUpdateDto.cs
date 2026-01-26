@@ -8,7 +8,7 @@ namespace Wms.Api.Dto.Invoice.InvoiceCreateUpdate
 
         public Guid? ProductId { get; set; }
 
-        public int WarrantyDurationMonths { get; set; }
+        public decimal WarrantyDurationMonths { get; set; }
 
         public int Quantity { get; set; }
 

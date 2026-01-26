@@ -417,7 +417,7 @@ namespace Wms.Api.Controllers
             }
         }
 
-        private static DateTime? CalculateWarrantyExpiryDate(DateTime dateOfSale, int warrantyDurationMonths)
+        private static DateTime? CalculateWarrantyExpiryDate(DateTime dateOfSale, decimal warrantyDurationMonths)
         {
             if (warrantyDurationMonths <= 0)
             {
@@ -426,7 +426,17 @@ namespace Wms.Api.Controllers
 
             try
             {
-                return dateOfSale.AddMonths(warrantyDurationMonths);
+                var wholeMonths = (int)Math.Truncate(warrantyDurationMonths);
+                var fractional = warrantyDurationMonths - wholeMonths;
+                var weeksFromFraction = (int)Math.Round(fractional * 4, MidpointRounding.AwayFromZero);
+
+                var date = dateOfSale.AddMonths(wholeMonths);
+                if (weeksFromFraction > 0)
+                {
+                    date = date.AddDays(weeksFromFraction * 7);
+                }
+
+                return date;
             }
             catch (ArgumentOutOfRangeException)
             {

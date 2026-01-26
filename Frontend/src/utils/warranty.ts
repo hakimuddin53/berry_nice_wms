@@ -9,23 +9,19 @@ export const calculateWarrantyExpiryDate = (
   )
     return null;
 
+  const months = Number(durationInMonths);
+  if (!Number.isFinite(months) || months <= 0) return null;
+
   const base = new Date(dateOfSale);
   if (Number.isNaN(base.getTime())) return null;
 
-  const months = Number(durationInMonths);
-  if (Number.isNaN(months)) return null;
+  const wholeMonths = Math.trunc(months);
+  const fractional = months - wholeMonths;
+  const weeksFromFraction = Math.round(fractional * 4); // map quarter months to weeks
 
-  if (months < 1) {
-    // Weeks are expressed as fractional months; convert to days (approx. 30 days per month)
-    const days = Math.round(months * 30);
-    base.setDate(base.getDate() + days);
-  } else {
-    const fullMonths = Math.floor(months);
-    const extraDays = Math.round((months - fullMonths) * 30);
-    base.setMonth(base.getMonth() + fullMonths);
-    if (extraDays) {
-      base.setDate(base.getDate() + extraDays);
-    }
+  base.setMonth(base.getMonth() + wholeMonths);
+  if (weeksFromFraction > 0) {
+    base.setDate(base.getDate() + weeksFromFraction * 7);
   }
 
   return base.toISOString();
@@ -65,5 +61,11 @@ export const warrantyLabelFromMonths = (months?: number | null) => {
   if (months === undefined || months === null) return "";
   const match = WARRANTY_OPTIONS.find((option) => option.value === months);
   if (match) return match.label;
+  if (months < 1) {
+    const weeks = Math.round(months * 4);
+    if (weeks > 0) {
+      return `${weeks} Week${weeks === 1 ? "" : "s"}`;
+    }
+  }
   return `${months} Months`;
 };

@@ -12,7 +12,7 @@ namespace Wms.Api.Dto.Invoice.InvoiceDetails
         public Guid? LocationId { get; set; }
         public string? LocationName { get; set; }
         public string? LocationLabel { get; set; }
-        public int WarrantyDurationMonths { get; set; }
+        public decimal WarrantyDurationMonths { get; set; }
         public int Quantity { get; set; }
         public decimal UnitPrice { get; set; }
         public decimal TotalPrice { get; set; }

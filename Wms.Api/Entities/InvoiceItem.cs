@@ -13,7 +13,8 @@ namespace Wms.Api.Entities
 
         public Guid? ProductId { get; set; }
 
-        public int WarrantyDurationMonths { get; set; }
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal WarrantyDurationMonths { get; set; }
 
         public DateTime? WarrantyExpiryDate { get; set; }
 
