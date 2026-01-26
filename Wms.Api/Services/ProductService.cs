@@ -170,6 +170,7 @@ namespace Wms.Api.Services
                 .Include(p => p.Ram)
                 .Include(p => p.Processor)
                 .Include(p => p.ScreenSize)
+                .Include(p => p.Model)
                 .Include(p => p.Grade);
 
             return asNoTracking ? query.AsNoTracking() : query;
