@@ -10,210 +10,85 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  NODE_VERSION: '20.x'             # Upgraded from 16.17.0 (EOL)
+  NODE_VERSION: '20.x'
   API_PROJECT: 'Wms.Api/Wms.Api.csproj'
   TEST_PROJECT: 'Wms.Api.Tests/Wms.Api.Tests.csproj'
   FRONTEND_DIR: 'Frontend'
-  # Set these to match your IIS/site layout on the VM
-  API_PUBLISH_DIR: 'C:\\inetpub\\wwwroot\\wms-bn-api'
-  FRONTEND_PUBLISH_DIR: 'C:\\inetpub\\wwwroot\\wms-bn-web'
+  API_PUBLISH_DIR: 'C:\inetpub\wwwroot\wms-bn-api'
+  FRONTEND_PUBLISH_DIR: 'C:\inetpub\wwwroot\wms-bn-web'
 
 jobs:
   build-and-deploy:
-    name: Build and Deploy on self-hosted Windows
+    name: Build and Deploy
     runs-on: [ self-hosted, Windows ]
+    defaults:
+      run:
+        shell: powershell
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Cleanup old build artifacts and logs
-        shell: powershell
-        run: |
-          Write-Host "Cleaning up temporary files and logs..."
-          
-          # Clean npm cache
-          if (Test-Path "$env:FRONTEND_DIR\node_modules\.cache") {
-            Write-Host "Removing npm cache..."
-            Remove-Item -Path "$env:FRONTEND_DIR\node_modules\.cache" -Recurse -Force -ErrorAction SilentlyContinue
-          }
-          
-          # Clean old build output
-          if (Test-Path "$env:FRONTEND_DIR\build") {
-            Write-Host "Removing old frontend build..."
-            Remove-Item -Path "$env:FRONTEND_DIR\build" -Recurse -Force -ErrorAction SilentlyContinue
-          }
-          
-          # Clean .NET bin/obj folders
-          Get-ChildItem -Path . -Include bin,obj -Recurse -Directory | ForEach-Object {
-            Write-Host "Removing $_"
-            Remove-Item $_.FullName -Recurse -Force -ErrorAction SilentlyContinue
-          }
-          
-          # Clean runner temp directory
-          if (Test-Path $env:RUNNER_TEMP) {
-            Write-Host "Cleaning runner temp directory..."
-            Get-ChildItem -Path $env:RUNNER_TEMP -File -Recurse | Where-Object { 
-              $_.LastWriteTime -lt (Get-Date).AddDays(-1) 
-            } | Remove-Item -Force -ErrorAction SilentlyContinue
-          }
-          
-          Write-Host "Cleanup completed."
-
+      # --- FRONTEND STEPS ---
       - name: Set up Node ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: Install Frontend dependencies
-        working-directory: ${{ env.FRONTEND_DIR }}
-        shell: powershell
-        run: |
-          npm ci
-
       - name: Build Frontend
         working-directory: ${{ env.FRONTEND_DIR }}
-        shell: powershell
         env:
-          NODE_OPTIONS: --max_old_space_size=4096
           CI: false
         run: |
+          npm ci
           npm run build
 
-      - name: Verify .NET installation
-        shell: powershell
+      - name: Deploy Frontend
         run: |
-          dotnet --version
-          dotnet --list-sdks
+          if (!(Test-Path $env:FRONTEND_PUBLISH_DIR)) { New-Item -ItemType Directory -Force -Path $env:FRONTEND_PUBLISH_DIR | Out-Null }
+          robocopy "$env:FRONTEND_DIR\build" "$env:FRONTEND_PUBLISH_DIR" /MIR
+          if ($LASTEXITCODE -lt 8) { $global:LASTEXITCODE = 0 }
 
-      - name: Restore .NET dependencies
-        shell: powershell
+      # --- BACKEND STEPS ---
+      - name: Build and Test .NET API
         run: |
           dotnet restore $env:API_PROJECT
-
-      - name: Build .NET API (Release)
-        shell: powershell
-        run: |
           dotnet build $env:API_PROJECT -c Release --no-restore
+          dotnet test $env:TEST_PROJECT --no-build --verbosity normal
 
-      - name: Run Unit Tests
-        shell: powershell
+      - name: Publish .NET API to Temp
         run: |
-          Write-Host "Running unit tests..."
-          dotnet test $env:TEST_PROJECT --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
-          
-          # Check if tests passed
-          if ($LASTEXITCODE -ne 0) {
-            Write-Error "Unit tests failed!"
-            exit 1
-          }
-          
-          Write-Host "All tests passed successfully."
-
-      - name: Publish .NET API to temp folder
-        shell: powershell
-        run: |
-          $publishTemp = "$env:RUNNER_TEMP\\api_publish"
-          if (Test-Path $publishTemp) { Remove-Item -Recurse -Force $publishTemp }
+          $publishTemp = "$env:RUNNER_TEMP\api_publish"
           dotnet publish $env:API_PROJECT -c Release -o $publishTemp
           echo "PUBLISH_TEMP=$publishTemp" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
-      - name: Prepare Frontend publish folder
-        shell: powershell
-        run: |
-          if (!(Test-Path $env:FRONTEND_PUBLISH_DIR)) { New-Item -ItemType Directory -Force -Path $env:FRONTEND_PUBLISH_DIR | Out-Null }
-          # Clean destination
-          Get-ChildItem -Path $env:FRONTEND_PUBLISH_DIR -Force | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
-          # Copy build output
-          robocopy "$env:FRONTEND_DIR\build" "$env:FRONTEND_PUBLISH_DIR" /MIR
-          # Robocopy exit codes 0-7 are success
-          if ($LASTEXITCODE -gt 7) { exit $LASTEXITCODE } else { exit 0 }
-
-      - name: Prepare API publish folder (atomic replace)
-        shell: powershell
+      - name: Deploy .NET API
         run: |
           if (!(Test-Path $env:API_PUBLISH_DIR)) { New-Item -ItemType Directory -Force -Path $env:API_PUBLISH_DIR | Out-Null }
           
-          # Drop app_offline to release file locks during copy
           $offlineFile = Join-Path $env:API_PUBLISH_DIR "app_offline.htm"
-          "Temporarily offline for deployment $(Get-Date -Format o)" | Out-File -FilePath $offlineFile -Encoding utf8
-          Start-Sleep -Seconds 10 # give IIS a moment to unload after app_offline
-
-          $robocopyCode = 0
+          "Deploying..." | Out-File -FilePath $offlineFile -Encoding utf8
+          Start-Sleep -Seconds 5
 
           try {
-            # Mirror published output (limited retries to avoid long hangs on locked files)
-            robocopy "$env:PUBLISH_TEMP" "$env:API_PUBLISH_DIR" /MIR /R:3 /W:10
-            $robocopyCode = $LASTEXITCODE
-          } finally {
+            robocopy "$env:PUBLISH_TEMP" "$env:API_PUBLISH_DIR" /MIR /R:2 /W:5
+            if ($LASTEXITCODE -lt 8) { $global:LASTEXITCODE = 0 }
+          }
+          finally {
             if (Test-Path $offlineFile) { Remove-Item $offlineFile -Force -ErrorAction SilentlyContinue }
           }
 
-          # Robocopy exit codes 0-7 are success
-          if ($robocopyCode -gt 7) { exit $robocopyCode } else { exit 0 }
-
-      - name: Done
-        shell: powershell
+      # --- CLEANUP STEP ---
+      - name: Cleanup on Success
+        if: success() # Only runs if all previous steps passed
         run: |
-          Write-Host "Deployment completed at $(Get-Date)"
-
-      - name: Cleanup post-deployment
-        if: always()
-        continue-on-error: true
-        shell: powershell
-        run: |
-          Write-Host "Running post-deployment cleanup..."
+          Write-Host "Cleaning up build artifacts to save disk space..."
           
-          # Remove temp publish folder
-          if (Test-Path $env:PUBLISH_TEMP) {
-            Write-Host "Removing temp publish folder: $env:PUBLISH_TEMP"
-            Remove-Item -Path $env:PUBLISH_TEMP -Recurse -Force -ErrorAction SilentlyContinue
-          }
+          # 1. Remove the temp folder used for file transfer
+          if (Test-Path $env:PUBLISH_TEMP) { Remove-Item $env:PUBLISH_TEMP -Recurse -Force -ErrorAction SilentlyContinue }
           
-          # Clean test results
-          Get-ChildItem -Path . -Filter "*.trx" -Recurse | ForEach-Object {
-            Write-Host "Removing test result: $_"
-            Remove-Item $_.FullName -Force -ErrorAction SilentlyContinue
-          }
+          # 2. Remove frontend build output
+          if (Test-Path "$env:FRONTEND_DIR\build") { Remove-Item "$env:FRONTEND_DIR\build" -Recurse -Force -ErrorAction SilentlyContinue }
           
-          # Clean coverage files
-          Get-ChildItem -Path . -Filter "coverage.*" -Recurse | ForEach-Object {
-            Write-Host "Removing coverage file: $_"
-            Remove-Item $_.FullName -Force -ErrorAction SilentlyContinue
-          }
-          
-          # Clean NuGet packages cache (optional - keeps only last 7 days)
-          $nugetCache = "$env:USERPROFILE\.nuget\packages"
-          if (Test-Path $nugetCache) {
-            Write-Host "Cleaning old NuGet cache packages..."
-            Get-ChildItem -Path $nugetCache -Directory | ForEach-Object {
-              Get-ChildItem -Path $_.FullName -Directory | Where-Object {
-                $_.LastWriteTime -lt (Get-Date).AddDays(-7)
-              } | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
-            }
-          }
-          
-          # Clean npm cache (optional - aggressive cleanup)
-          Write-Host "Cleaning npm cache..."
-          npm cache clean --force 2>$null
-          if ($LASTEXITCODE -ne 0) {
-            Write-Warning "npm cache clean exited with code $LASTEXITCODE; ignoring."
-            $LASTEXITCODE = 0
-          }
-          
-          # Clean Windows temp folder - only workflow related files
-          $tempPath = [System.IO.Path]::GetTempPath()
-          Get-ChildItem -Path $tempPath -Filter "*github*" -Recurse -ErrorAction SilentlyContinue | Where-Object {
-            $_.LastWriteTime -lt (Get-Date).AddDays(-1)
-          } | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
-          
-          Write-Host "Post-deployment cleanup completed."
-          
-          # Display disk space
-          Write-Host "`nDisk space after cleanup:"
-          Get-PSDrive -PSProvider FileSystem | Where-Object { $_.Used -gt 0 } | ForEach-Object {
-            $used = [math]::Round($_.Used / 1GB, 2)
-            $free = [math]::Round($_.Free / 1GB, 2)
-            $total = $used + $free
-            $percentFree = [math]::Round(($free / $total) * 100, 2)
-            Write-Host "$($_.Name): drive - Used: ${used}GB, Free: ${free}GB ($percentFree% free)"
-          }
+          # 3. Remove .NET bin and obj folders (reclaims the most space)
+          Get-ChildItem -Path . -Include bin,obj -Recurse -Directory | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
