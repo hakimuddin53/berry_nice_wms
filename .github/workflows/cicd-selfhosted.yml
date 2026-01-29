@@ -70,18 +70,13 @@ jobs:
 
       - name: Deploy .NET API
         run: |
-          if (!(Test-Path $env:API_PUBLISH_DIR)) { New-Item -ItemType Directory -Force -Path $env:API_PUBLISH_DIR | Out-Null }
-          
-          $offlineFile = Join-Path $env:API_PUBLISH_DIR "app_offline.htm"
-          "Deploying..." | Out-File -FilePath $offlineFile -Encoding utf8
-          Start-Sleep -Seconds 5
+          if (!(Test-Path $env:API_PUBLISH_DIR)) { New-Item -ItemType Directory -Force -Path $env:API_PUBLISH_DIR | Out-Null }                  
 
           try {
             robocopy "$env:PUBLISH_TEMP" "$env:API_PUBLISH_DIR" /MIR /R:2 /W:5
             if ($LASTEXITCODE -lt 8) { $global:LASTEXITCODE = 0 }
           }
-          finally {
-            if (Test-Path $offlineFile) { Remove-Item $offlineFile -Force -ErrorAction SilentlyContinue }
+          finally {            
           }
 
       # --- CLEANUP STEP ---
