@@ -33,6 +33,8 @@ public class InventoryAuditDto
     public int AgeDays { get; set; }
     public Guid WarehouseId { get; set; }
     public string WarehouseLabel { get; set; } = string.Empty;
+    public Guid? LocationId { get; set; }
+    public string? LocationLabel { get; set; }
     public DateTime MovementDate { get; set; }
     public string MovementType { get; set; } = string.Empty; // StockRecieve | INVOICE | STOCKTRANSFERIN | STOCKTRANSFEROUT
     public string ReferenceNumber { get; set; } = string.Empty; // StockRecieve number or Invoice number or transfer id
@@ -42,6 +44,11 @@ public class InventoryAuditDto
     public int NewBalance { get; set; }
     public decimal? CostPrice { get; set; }
     public int? BatteryHealth { get; set; }
+    public decimal? RetailPrice { get; set; }
+    public decimal? DealerPrice { get; set; }
+    public decimal? AgentPrice { get; set; }
+    public string? Remark { get; set; }
+    public string? InternalRemark { get; set; }
 }
 
 public class InventorySummarySearchDto : PagedRequestAbstractDto

@@ -14,6 +14,7 @@ interface IProductService {
   ) => Promise<PagedListDto<ProductDetailsDto>>;
   countProducts: (searchDto: ProductSearchDto) => Promise<number>;
   getProductById: (productId: string) => Promise<ProductDetailsDto>;
+  getProductsByIds: (ids: string[]) => Promise<PagedListDto<ProductDetailsDto>>;
   getSelectOptions: (
     search: string,
     page: number,
@@ -31,6 +32,9 @@ export type ProductServiceProviderProps = {
   ) => Promise<PagedListDto<ProductDetailsDto>>;
   countProducts?: (searchDto: ProductSearchDto) => Promise<number>;
   getProductById?: (productId: string) => Promise<ProductDetailsDto>;
+  getProductsByIds?: (
+    ids: string[]
+  ) => Promise<PagedListDto<ProductDetailsDto>>;
   getSelectOptions?: (
     search: string,
     page: number,
@@ -53,6 +57,17 @@ export const ProductServiceProvider: React.FC<ProductServiceProviderProps> = (
   const getProductById = (productId: string) => {
     return axios
       .get<ProductDetailsDto>("/product/" + productId)
+      .then((res) => res.data);
+  };
+
+  const getProductsByIds = (ids: string[]) => {
+    const pageSize = Math.max(1, ids.length);
+    return axios
+      .get<PagedListDto<ProductDetailsDto>>("/product", {
+        params: { productIds: ids, page: 1, pageSize },
+        paramsSerializer: (params) =>
+          queryString.stringify(params, { arrayFormat: "none" }),
+      })
       .then((res) => res.data);
   };
 
@@ -79,6 +94,7 @@ export const ProductServiceProvider: React.FC<ProductServiceProviderProps> = (
     searchProducts: props.searchProducts || searchProducts,
     countProducts: props.countProducts || countProducts,
     getProductById: props.getProductById || getProductById,
+    getProductsByIds: props.getProductsByIds || getProductsByIds,
     getSelectOptions: props.getSelectOptions || getSelectOptions,
   };
 

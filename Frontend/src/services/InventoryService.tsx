@@ -17,6 +17,7 @@ import {
 } from "interfaces/v12/inventory/purchaseQualityReportDto";
 import { UpdateInventoryBalanceDto } from "interfaces/v12/inventory/updateInventoryBalanceDto";
 import { UpdateProductPricingDto } from "interfaces/v12/inventory/updateProductPricingDto";
+import { UpdateRetailPriceDto } from "interfaces/v12/inventory/updateRetailPriceDto";
 import { ProductAuditLogDto } from "interfaces/v12/product/productAuditLogDto";
 import React from "react";
 import axios from "../utils/axios";
@@ -43,6 +44,10 @@ interface IInventoryService {
   updatePricing: (
     productId: string,
     dto: UpdateProductPricingDto
+  ) => Promise<void>;
+  updateRetailPrice: (
+    productId: string,
+    dto: UpdateRetailPriceDto
   ) => Promise<void>;
   updateBalance: (
     productId: string,
@@ -73,6 +78,10 @@ export type InventoryServiceProviderProps = {
   updatePricing?: (
     productId: string,
     dto: UpdateProductPricingDto
+  ) => Promise<void>;
+  updateRetailPrice?: (
+    productId: string,
+    dto: UpdateRetailPriceDto
   ) => Promise<void>;
   updateBalance?: (
     productId: string,
@@ -121,6 +130,12 @@ export const InventoryServiceProvider: React.FC<
       .then(() => undefined);
   };
 
+  const updateRetailPrice = (productId: string, dto: UpdateRetailPriceDto) => {
+    return axios
+      .put(`/inventory/pricing/${productId}/retail`, dto)
+      .then(() => undefined);
+  };
+
   const updateBalance = (productId: string, dto: UpdateInventoryBalanceDto) => {
     return axios
       .put(`/inventory/balance/${productId}`, dto)
@@ -137,6 +152,7 @@ export const InventoryServiceProvider: React.FC<
       props.searchPurchaseQualityReport || searchPurchaseQualityReport,
     getProductAuditLog: props.getProductAuditLog || getProductAuditLog,
     updatePricing: props.updatePricing || updatePricing,
+    updateRetailPrice: props.updateRetailPrice || updateRetailPrice,
     updateBalance: props.updateBalance || updateBalance,
   };
 

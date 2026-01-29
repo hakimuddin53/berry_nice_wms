@@ -31,6 +31,8 @@ namespace Wms.Api.Controllers
                 from invc in invoiceJoin.DefaultIfEmpty()
                 join warehouse in context.Lookups on inv.WarehouseId equals warehouse.Id into warehouseJoin
                 from warehouse in warehouseJoin.DefaultIfEmpty()
+                join location in context.Lookups on product.LocationId equals location.Id into locationJoin
+                from location in locationJoin.DefaultIfEmpty()
                 join modelLookup in context.Lookups on product.ModelId equals modelLookup.Id into modelJoin
                 from modelLookup in modelJoin.DefaultIfEmpty()
                 select new
@@ -42,6 +44,7 @@ namespace Wms.Api.Controllers
                     InvoiceNumber = invc != null ? invc.Number : string.Empty,
                     MovementDate = inv.CreatedAt,
                     WarehouseLabel = warehouse != null ? warehouse.Label : string.Empty,
+                    LocationLabel = location != null ? location.Label : string.Empty,
                     ModelLabel = modelLookup != null ? modelLookup.Label : null
                 };
 
@@ -144,16 +147,16 @@ namespace Wms.Api.Controllers
                 .Join(latestIdsQuery, row => row.inv.Id, id => id, (row, _) => row)
                 .Where(row => row.inv.NewBalance > 0);
 
-            var latestItems = await latestQuery
+            var orderedItems = await latestQuery
                 .OrderBy(x => x.ModelLabel ?? string.Empty)
                 .ThenBy(x => x.product != null ? x.product.ProductCode : string.Empty)
                 .ThenByDescending(x => x.MovementDate)
                 .ThenByDescending(x => x.inv.Id)
                 .ToListAsync();
 
-            var totalCount = latestItems.Count;
+            var totalCount = orderedItems.Count;
 
-            var dtoItems = latestItems.Select(x =>
+            var dtoItems = orderedItems.Select(x =>
             {
                 var movementType = Enum.GetName(typeof(TransactionTypeEnum), x.inv.TransactionType) ?? x.inv.TransactionType.ToString();
                 var referenceNumber = !string.IsNullOrEmpty(x.StockRecieveNumber)
@@ -185,7 +188,14 @@ namespace Wms.Api.Controllers
                     OldBalance = x.inv.OldBalance,
                     NewBalance = x.inv.NewBalance,
                     CostPrice = x.product?.CostPrice,
-                    BatteryHealth = x.product?.BatteryHealth
+                    BatteryHealth = x.product?.BatteryHealth,
+                    RetailPrice = x.product?.RetailPrice,
+                    DealerPrice = x.product?.DealerPrice,
+                    AgentPrice = x.product?.AgentPrice,
+                    Remark = x.product?.Remark,
+                    InternalRemark = x.product?.InternalRemark,
+                    LocationId = x.product?.LocationId,
+                    LocationLabel = x.LocationLabel
                 };
             }).ToList();
 
@@ -214,13 +224,16 @@ namespace Wms.Api.Controllers
                 from warehouse in warehouseJoin.DefaultIfEmpty()
                 join location in context.Lookups on product.LocationId equals location.Id into locationJoin
                 from location in locationJoin.DefaultIfEmpty()
+                join model in context.Lookups on product.ModelId equals model.Id into modelJoin
+                from model in modelJoin.DefaultIfEmpty()
                 select new
                 {
                     item,
                     invoice,
                     product,
                     WarehouseLabel = warehouse != null ? warehouse.Label : string.Empty,
-                    LocationLabel = location != null ? location.Label : string.Empty
+                    LocationLabel = location != null ? location.Label : string.Empty,
+                    ModelLabel = model != null ? model.Label : string.Empty
                 };
 
             if (search.FromDate.HasValue)
@@ -317,23 +330,21 @@ namespace Wms.Api.Controllers
                     x.invoice.Number.Contains(term));
             }
 
-            var totalCount = await reportQuery.CountAsync();
-
-            var pagedItems = await reportQuery
+            var items = await reportQuery
                 .OrderByDescending(x => x.invoice.DateOfSale)
                 .ThenByDescending(x => x.invoice.Number)
-                .Skip((search.Page - 1) * search.PageSize)
-                .Take(search.PageSize)
                 .ToListAsync();
 
-            var dtoItems = pagedItems.Select(x => new InvoicedProductReportRowDto
+            var totalCount = items.Count;
+
+            var dtoItems = items.Select(x => new InvoicedProductReportRowDto
             {
                 InvoiceId = x.invoice.Id,
                 InvoiceNumber = x.invoice.Number,
                 DateOfSale = x.invoice.DateOfSale,
                 ProductId = x.item.ProductId,
                 ProductCode = x.product?.ProductCode ?? string.Empty,
-                Model = x.product?.Model?.Label,
+                Model = !string.IsNullOrEmpty(x.ModelLabel) ? x.ModelLabel : x.product?.Model?.Label,
                 WarehouseId = x.invoice.WarehouseId,
                 WarehouseLabel = x.WarehouseLabel,
                 LocationId = x.product?.LocationId,
@@ -345,8 +356,8 @@ namespace Wms.Api.Controllers
 
             var paged = new PagedListDto<InvoicedProductReportRowDto>
             {
-                CurrentPage = search.Page,
-                PageSize = search.PageSize,
+                CurrentPage = 1,
+                PageSize = totalCount,
                 TotalCount = totalCount,
                 Data = dtoItems
             };
@@ -587,10 +598,12 @@ namespace Wms.Api.Controllers
                     x.invoice.Number.Contains(term));
             }
 
+            // Use a nullable projection so EF can translate the ternary and still return 0 when no rows match.
             var total = await reportQuery
-                .Select(x => x.item.TotalPrice > 0 ? x.item.TotalPrice : x.item.UnitPrice * x.item.Quantity)
-                .DefaultIfEmpty(0m)
-                .SumAsync();
+                .Select(x => (decimal?)(x.item.TotalPrice > 0
+                    ? x.item.TotalPrice
+                    : x.item.UnitPrice * (decimal)x.item.Quantity))
+                .SumAsync() ?? 0m;
 
             return Ok(total);
         }
@@ -699,6 +712,21 @@ namespace Wms.Api.Controllers
             product.DealerPrice = pricing.DealerPrice ?? product.DealerPrice;
             product.RetailPrice = pricing.RetailPrice ?? product.RetailPrice;
 
+            await context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        [HttpPut("pricing/{productId:guid}/retail")]
+        public async Task<IActionResult> UpdateRetailPriceAsync(Guid productId, [FromBody] UpdateRetailPriceDto dto)
+        {
+            var product = await context.Products.FirstOrDefaultAsync(p => p.ProductId == productId);
+            if (product == null)
+            {
+                return NotFound();
+            }
+
+            product.RetailPrice = dto.RetailPrice;
             await context.SaveChangesAsync();
 
             return NoContent();

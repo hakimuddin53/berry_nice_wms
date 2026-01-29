@@ -26,7 +26,7 @@ import {
   InvoicedProductReportSearchDto,
 } from "interfaces/v12/inventory/invoicedProductReportDto";
 import { LookupGroupKey } from "interfaces/v12/lookup/lookup";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useInventoryService } from "services/InventoryService";
 import { useProductService } from "services/ProductService";
@@ -82,6 +82,20 @@ const InvoicedProductsReportPage = () => {
   const [reportTotal, setReportTotal] = useState<number | null>(null);
   const [reportTotalLoading, setReportTotalLoading] = useState(false);
   const [activeRow, setActiveRow] = useState<ReportRow | null>(null);
+  const [pageBlocker, setPageBlocker] = useState(false);
+  const pendingLoadsRef = useRef(0);
+
+  const startLoading = useCallback(() => {
+    pendingLoadsRef.current += 1;
+    setPageBlocker(true);
+  }, []);
+
+  const finishLoading = useCallback(() => {
+    pendingLoadsRef.current = Math.max(0, pendingLoadsRef.current - 1);
+    if (pendingLoadsRef.current === 0) {
+      setPageBlocker(false);
+    }
+  }, []);
 
   const updateFilter = useCallback(
     <K extends keyof ReportFilters>(key: K, value: ReportFilters[K]) => {
@@ -128,7 +142,6 @@ const InvoicedProductsReportPage = () => {
     () => [
       { id: "productCode", label: t("product-code") },
       { id: "model", label: t("model") },
-      { id: "warehouseLabel", label: t("warehouse") },
       {
         id: "locationLabel",
         label: t("location"),
@@ -142,11 +155,6 @@ const InvoicedProductsReportPage = () => {
         id: "dateOfSale",
         label: t("date-of-sale"),
         render: (row) => formatDate(row.dateOfSale),
-      },
-      {
-        id: "quantity",
-        label: t("quantity"),
-        align: "right",
       },
       {
         id: "unitPrice",
@@ -206,26 +214,48 @@ const InvoicedProductsReportPage = () => {
   );
 
   const loadData = useCallback(
-    async (page: number, pageSize: number, searchValue: string) => {
-      const res = await inventoryService.searchInvoicedReport(
-        buildPayload(page, pageSize, searchValue)
-      );
-      return (res.data || []).map((item, index) => ({
-        ...item,
-        rowId: page * pageSize + index,
-      }));
+    async (
+      page: number,
+      pageSize: number,
+      searchValue: string,
+      _orderBy: string,
+      _order: "asc" | "desc"
+    ) => {
+      startLoading();
+      try {
+        const res = await inventoryService.searchInvoicedReport(
+          buildPayload(page, pageSize, searchValue)
+        );
+        return (res.data || []).map((item, index) => ({
+          ...item,
+          rowId: page * pageSize + index,
+        }));
+      } finally {
+        finishLoading();
+      }
     },
-    [inventoryService, buildPayload]
+    [buildPayload, finishLoading, inventoryService, startLoading]
   );
 
   const loadDataCount = useCallback(
-    async (page: number, pageSize: number, searchValue: string) => {
-      const res = await inventoryService.searchInvoicedReport(
-        buildPayload(page, pageSize, searchValue)
-      );
-      return res.totalCount ?? res.data.length ?? 0;
+    async (
+      page: number,
+      pageSize: number,
+      searchValue: string,
+      _orderBy: string,
+      _order: "asc" | "desc"
+    ) => {
+      startLoading();
+      try {
+        const res = await inventoryService.searchInvoicedReport(
+          buildPayload(page, pageSize, searchValue)
+        );
+        return res.totalCount ?? res.data.length ?? 0;
+      } finally {
+        finishLoading();
+      }
     },
-    [inventoryService, buildPayload]
+    [buildPayload, finishLoading, inventoryService, startLoading]
   );
 
   const { tableProps, reloadData, updateDatatableControls } =
@@ -320,6 +350,7 @@ const InvoicedProductsReportPage = () => {
         title={t("invoiced-products-report", {
           defaultValue: "Invoiced Products Report",
         })}
+        showBackdrop={pageBlocker}
         breadcrumbs={[
           { label: t("common:dashboard"), to: "/" },
           { label: t("inventory") },
@@ -650,6 +681,7 @@ const InvoicedProductsReportPage = () => {
           headerCells={headerCells}
           data={tableProps}
           dataKey="rowId"
+          hidePagination
         />
         {showTotal && (
           <Box sx={{ mt: 2, display: "flex", justifyContent: "flex-end" }}>

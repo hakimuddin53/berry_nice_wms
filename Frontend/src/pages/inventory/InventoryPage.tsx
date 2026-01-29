@@ -43,6 +43,7 @@ import {
 } from "hooks/queries/useProductQueries";
 import { useDatatableControls } from "hooks/useDatatableControls";
 import { useUserDateTime } from "hooks/useUserDateTime";
+import { PagedListDto } from "interfaces/general/pagedList/PagedListDto";
 import { InventoryAuditDto } from "interfaces/v12/inventory/inventoryAuditDto";
 import { UpdateInventoryBalanceDto } from "interfaces/v12/inventory/updateInventoryBalanceDto";
 import { LookupGroupKey } from "interfaces/v12/lookup/lookup";
@@ -51,6 +52,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useReactToPrint } from "react-to-print";
 import { useInventoryService } from "services/InventoryService";
+import { useProductService } from "services/ProductService";
 import { guid } from "types/guid";
 
 type BalanceRow = InventoryAuditDto & { rowId: number };
@@ -116,6 +118,7 @@ const InventoryPage = () => {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const inventoryService = useInventoryService();
+  const productService = useProductService();
   const fetchProductById = useProductByIdFetcher();
   const fetchProductOptions = useProductSelectOptionsFetcher();
   const fetchLookupById = useLookupByIdFetcher();
@@ -151,12 +154,26 @@ const InventoryPage = () => {
   const [saving, setSaving] = useState(false);
   const [historyProductId, setHistoryProductId] = useState<string | null>(null);
   const [labelData, setLabelData] = useState<BarcodeLabelData | null>(null);
+  const [pageBlocker, setPageBlocker] = useState(false);
   const [printRequested, setPrintRequested] = useState(false);
   const labelRef = useRef<HTMLDivElement | null>(null);
   const auditRequestRef = useRef<{
     key: string;
-    promise: Promise<{ data?: InventoryAuditDto[] }>;
+    promise: Promise<PagedListDto<InventoryAuditDto>>;
   } | null>(null);
+  const pendingLoadsRef = useRef(0);
+
+  const startLoading = useCallback(() => {
+    pendingLoadsRef.current += 1;
+    setPageBlocker(true);
+  }, []);
+
+  const finishLoading = useCallback(() => {
+    pendingLoadsRef.current = Math.max(0, pendingLoadsRef.current - 1);
+    if (pendingLoadsRef.current === 0) {
+      setPageBlocker(false);
+    }
+  }, []);
   const { data: historyLogs = [], isLoading: historyLoading } =
     useInventoryAuditLogQuery(historyProductId);
 
@@ -237,10 +254,46 @@ const InventoryPage = () => {
     (row: BalanceRow) =>
       formatText(
         productExtras[row.productId]?.locationLabel ??
+          row.locationLabel ??
           productExtras[row.productId]?.locationId ??
+          row.locationId ??
           t("no-location")
       ),
     [formatText, productExtras, t]
+  );
+
+  const handleInlineRetailPriceChange = useCallback(
+    (productId: string, value: string) => {
+      const numeric =
+        value.trim() === ""
+          ? null
+          : Number.isNaN(Number(value))
+          ? null
+          : Number(value);
+
+      setProductExtras((prev) => ({
+        ...prev,
+        [productId]: {
+          ...(prev[productId] ?? {}),
+          retailPrice: numeric,
+        },
+      }));
+
+      inventoryService
+        .updateRetailPrice(productId, { retailPrice: numeric })
+        .then(() =>
+          queryClient.invalidateQueries({
+            queryKey: productQueryKeys.byId(productId),
+          })
+        )
+        .catch((err) => {
+          if (process.env.NODE_ENV !== "production") {
+            // eslint-disable-next-line no-console
+            console.error("Failed to update retail price", err);
+          }
+        });
+    },
+    [inventoryService, queryClient]
   );
 
   const renderDetailRows = useCallback(
@@ -311,11 +364,6 @@ const InventoryPage = () => {
         render: (row) => formatNumber(row.ageDays),
       },
       {
-        id: "warehouseLabel",
-        label: t("warehouse"),
-        render: (row) => formatText(row.warehouseLabel),
-      },
-      {
         id: "locationId",
         label: t("location"),
         render: (row) => formatText(getLocationDisplay(row)),
@@ -326,17 +374,29 @@ const InventoryPage = () => {
         render: (row) => formatText(productExtras[row.productId]?.remark),
       },
       {
-        id: "internalRemark",
-        label: t("internal-remark"),
-        render: (row) =>
-          formatText(productExtras[row.productId]?.internalRemark),
-      },
-      {
         id: "retailPrice",
         label: t("retail-selling-price"),
         align: "right",
-        render: (row) =>
-          formatNumber(productExtras[row.productId]?.retailPrice),
+        render: (row) => {
+          const value = productExtras[row.productId]?.retailPrice;
+          return (
+            <Box display="flex" flexDirection="column" alignItems="flex-end">
+              <TextField
+                size="small"
+                type="number"
+                inputProps={{ min: 0, step: "0.01" }}
+                value={value ?? ""}
+                onChange={(e) =>
+                  handleInlineRetailPriceChange(
+                    row.productId as string,
+                    e.target.value
+                  )
+                }
+                sx={{ width: "140px", minWidth: "140px" }}
+              />
+            </Box>
+          );
+        },
       },
       {
         id: "batteryHealth",
@@ -402,23 +462,6 @@ const InventoryPage = () => {
     ],
     [formatNumber, formatText, getLocationDisplay, productExtras, t]
   );
-
-  const dedupeLatestBalances = (items: InventoryAuditDto[]) => {
-    const map = new Map<string, InventoryAuditDto>();
-    items.forEach((item) => {
-      const existing = map.get(item.productId as string);
-      if (!existing) {
-        map.set(item.productId as string, item);
-        return;
-      }
-      const currentDate = new Date(item.movementDate).getTime();
-      const existingDate = new Date(existing.movementDate).getTime();
-      if (currentDate > existingDate) {
-        map.set(item.productId as string, item);
-      }
-    });
-    return Array.from(map.values());
-  };
 
   const sortByName = useCallback(
     (a: InventoryAuditDto, b: InventoryAuditDto) => {
@@ -515,35 +558,33 @@ const InventoryPage = () => {
         return;
       }
 
-      const results = await Promise.all(
-        missing.map(async (id) => {
-          try {
-            const product = await fetchProductById(id);
-            return [id, buildExtras(product)] as [string, ProductExtras];
-          } catch (err) {
-            console.warn("Failed to load product for balance row", id, err);
-            return [id, {}] as [string, ProductExtras];
-          }
-        })
-      );
+      try {
+        const res = await productService.getProductsByIds(missing);
+        const items = res.data || [];
+        const next = { ...productExtras };
 
-      const next = { ...productExtras };
-      results.forEach(([id, extras]) => {
-        next[id] = extras;
-      });
-      setProductExtras(next);
-      await hydrateLocationLabels(
-        results
-          .map(([, extras]) => extras.locationId)
-          .filter(Boolean) as string[]
-      );
+        items.forEach((product) => {
+          next[product.productId as string] = buildExtras(product);
+        });
+
+        setProductExtras(next);
+
+        await hydrateLocationLabels(
+          items
+            .map((p) => p.locationId as string | undefined | null)
+            .filter(Boolean) as string[]
+        );
+      } catch (err) {
+        console.warn("Failed to bulk load products for balance rows", err);
+      }
     },
-    [fetchProductById, hydrateLocationLabels, productExtras]
+    [hydrateLocationLabels, productExtras, productService]
   );
 
   const buildPayload = useCallback(
     (page: number, pageSize: number, searchValue: string) => {
       const searchText = (searchValue ?? filters.search).trim();
+      const safePageSize = pageSize > 0 ? pageSize : 100;
 
       return {
         search: searchText.length > 0 ? searchText : null,
@@ -566,7 +607,7 @@ const InventoryPage = () => {
             ? filters.batteryHealth
             : null,
         page: page + 1,
-        pageSize,
+        pageSize: safePageSize,
       };
     },
     [filters, toGuid]
@@ -595,25 +636,47 @@ const InventoryPage = () => {
   );
 
   const loadData = useCallback(
-    async (page: number, pageSize: number, searchValue: string) => {
-      const res = await fetchAudit(page, pageSize, searchValue);
-      const deduped = dedupeLatestBalances(res.data || []);
-      const sorted = [...deduped].sort(sortByName);
-      hydrateProductExtras(sorted.map((d) => d.productId as string));
-      return sorted.map((item, index) => ({
-        ...item,
-        rowId: index,
-      }));
+    async (
+      _page: number,
+      _pageSize: number,
+      searchValue: string,
+      _orderBy: string,
+      _order: "asc" | "desc"
+    ) => {
+      startLoading();
+      try {
+        const res = await fetchAudit(0, 100, searchValue);
+        const items = res.data || [];
+        const sorted = [...items].sort(sortByName);
+        hydrateProductExtras(sorted.map((d) => d.productId as string));
+        return sorted.map((item, index) => ({
+          ...item,
+          rowId: index,
+        }));
+      } finally {
+        finishLoading();
+      }
     },
-    [fetchAudit, dedupeLatestBalances, hydrateProductExtras, sortByName]
+    [fetchAudit, finishLoading, hydrateProductExtras, sortByName, startLoading]
   );
 
   const loadDataCount = useCallback(
-    async (page: number, pageSize: number, searchValue: string) => {
-      const res = await fetchAudit(page, pageSize, searchValue);
-      return dedupeLatestBalances(res.data || []).length;
+    async (
+      _page: number,
+      _pageSize: number,
+      searchValue: string,
+      _orderBy: string,
+      _order: "asc" | "desc"
+    ) => {
+      startLoading();
+      try {
+        const res = await fetchAudit(0, 100, searchValue);
+        return res.totalCount ?? res.data?.length ?? 0;
+      } finally {
+        finishLoading();
+      }
     },
-    [fetchAudit, dedupeLatestBalances]
+    [fetchAudit, finishLoading, startLoading]
   );
 
   const { tableProps, reloadData, updateDatatableControls } =
@@ -833,6 +896,7 @@ const InventoryPage = () => {
           { label: t("common:dashboard"), to: "/" },
           { label: t("inventory") },
         ]}
+        showBackdrop={pageBlocker}
         showSearch
         renderSearch={() => (
           <PbCard sx={{ mb: 2 }}>
@@ -1279,12 +1343,21 @@ const InventoryPage = () => {
                     }
                   : undefined
               }
-              onSelectionChange={(option) =>
-                updateField(
-                  "locationId",
-                  option ? (option.value as string) : null
-                )
-              }
+              onSelectionChange={(option) => {
+                const nextId = option ? (option.value as string) : null;
+                updateField("locationId", nextId);
+
+                if (editingProductId) {
+                  setProductExtras((prev) => ({
+                    ...prev,
+                    [editingProductId]: {
+                      ...(prev[editingProductId] ?? {}),
+                      locationId: nextId,
+                      locationLabel: option?.label ?? undefined,
+                    },
+                  }));
+                }
+              }}
             />
             {productExtras[editingProductId ?? ""]?.locationId &&
               !productExtras[editingProductId ?? ""]?.locationLabel && (
