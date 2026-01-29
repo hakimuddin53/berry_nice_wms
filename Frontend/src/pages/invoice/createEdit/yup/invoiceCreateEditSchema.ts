@@ -15,6 +15,7 @@ export interface YupInvoiceItemCreateEdit {
   unitPrice: number;
   totalPrice?: number;
   warrantyExpiryDate?: string | null;
+  remark?: string | null;
 }
 
 export interface YupInvoiceCreateEdit {
@@ -26,7 +27,6 @@ export interface YupInvoiceCreateEdit {
   salesTypeId?: guid | null;
   paymentTypeId?: guid | null;
   paymentReference?: string | null;
-  remark?: string | null;
   invoiceItems: YupInvoiceItemCreateEdit[];
 }
 
@@ -44,6 +44,7 @@ const invoiceItemSchema = yup.object().shape({
   unitPrice: yup.number().min(0).required(),
   totalPrice: yup.number().min(0).nullable(),
   warrantyExpiryDate: yup.string().nullable(),
+  remark: yup.string().nullable(),
 });
 
 export const invoiceCreateEditSchema = yup.object().shape({
@@ -55,6 +56,5 @@ export const invoiceCreateEditSchema = yup.object().shape({
   salesTypeId: yup.string().nullable(),
   paymentTypeId: yup.string().nullable(),
   paymentReference: yup.string().nullable(),
-  remark: yup.string().nullable(),
   invoiceItems: yup.array().of(invoiceItemSchema).min(1).required(),
 });

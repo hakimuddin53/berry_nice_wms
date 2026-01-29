@@ -193,7 +193,6 @@ namespace Wms.Api.Controllers
             invoice.SalesTypeId = updateDto.SalesTypeId;
             invoice.PaymentTypeId = updateDto.PaymentTypeId;
             invoice.PaymentReference = updateDto.PaymentReference;
-            invoice.Remark = updateDto.Remark;
 
             if (invoice.InvoiceItems != null && invoice.InvoiceItems.Count > 0)
             {
@@ -210,6 +209,7 @@ namespace Wms.Api.Controllers
                 Quantity = itemDto.Quantity,
                 UnitPrice = itemDto.UnitPrice,
                 TotalPrice = itemDto.TotalPrice > 0 ? itemDto.TotalPrice : itemDto.UnitPrice * itemDto.Quantity,
+                Remark = string.IsNullOrWhiteSpace(itemDto.Remark) ? null : itemDto.Remark.Trim(),
             }).ToList();
 
             invoice.InvoiceItems = newItems;
@@ -256,6 +256,7 @@ namespace Wms.Api.Controllers
                 item.InvoiceId = invoice.Id;
                 item.TotalPrice = item.TotalPrice > 0 ? item.TotalPrice : item.UnitPrice * item.Quantity;
                 item.WarrantyExpiryDate ??= CalculateWarrantyExpiryDate(invoice.DateOfSale, item.WarrantyDurationMonths);
+                item.Remark = string.IsNullOrWhiteSpace(item.Remark) ? null : item.Remark.Trim();
             }
 
             invoice.GrandTotal = invoice.InvoiceItems.Sum(i => i.TotalPrice);

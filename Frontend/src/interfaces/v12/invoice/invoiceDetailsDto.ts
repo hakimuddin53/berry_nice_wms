@@ -14,7 +14,6 @@ export interface InvoiceDetailsDto {
   paymentTypeId?: guid | null;
   paymentTypeName?: string | null;
   paymentReference?: string | null;
-  remark?: string | null;
   grandTotal: number;
   warehouseId: guid;
   warehouseLabel?: string | null;

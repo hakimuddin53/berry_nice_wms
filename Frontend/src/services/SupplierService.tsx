@@ -1,10 +1,7 @@
 import { SelectAsyncOption } from "components/platbricks/shared/SelectAsync";
 import { PagedListDto } from "interfaces/general/pagedList/PagedListDto";
 import { SupplierCreateUpdateDto } from "interfaces/v12/supplier/supplierCreateUpdate/supplierCreateUpdateDto";
-import {
-  SupplierDetailsDto,
-  SupplierFindByParametersDto,
-} from "interfaces/v12/supplier/supplierDetails/supplierDetailsDto";
+import { SupplierDetailsDto } from "interfaces/v12/supplier/supplierDetails/supplierDetailsDto";
 import { SupplierSearchDto } from "interfaces/v12/supplier/supplierSearch/supplierSearchDto";
 import queryString from "query-string";
 import React from "react";
@@ -20,7 +17,9 @@ interface ISupplierService {
   countSuppliers: (searchDto: SupplierSearchDto) => Promise<number>;
   getSupplierById: (supplierId: guid) => Promise<SupplierDetailsDto>;
   updateSupplier: (id: guid, supplier: SupplierCreateUpdateDto) => Promise<any>;
-  createSupplier: (supplier: SupplierCreateUpdateDto) => Promise<string>;
+  createSupplier: (
+    supplier: SupplierCreateUpdateDto
+  ) => Promise<SupplierDetailsDto>;
   deleteSupplier: (supplierId: guid) => Promise<any>;
   getSelectOptions: (
     label: string,
@@ -112,8 +111,7 @@ export const SupplierServiceProvider: React.FC<SupplierServiceProviderProps> = (
 
   const createSupplier = (supplier: SupplierCreateUpdateDto) => {
     return axios.post("/supplier/", supplier).then(async (res) => {
-      let result = res.data;
-      return result.id;
+      return res.data as SupplierDetailsDto;
     });
   };
 

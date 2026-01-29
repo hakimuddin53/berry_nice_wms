@@ -15,13 +15,12 @@ import { useSupplierService } from "services/SupplierService";
 
 export interface SupplierQuickCreateResult {
   id: string;
-  supplierCode: string;
   name: string;
+  supplierCode: string;
 }
 
 type SupplierQuickCreateDialogProps = {
   open: boolean;
-  initialCode?: string;
   initialName?: string;
   onClose: () => void;
   onCreated: (supplier: SupplierQuickCreateResult) => void;
@@ -29,7 +28,6 @@ type SupplierQuickCreateDialogProps = {
 
 const SupplierQuickCreateDialog = ({
   open,
-  initialCode,
   initialName,
   onClose,
   onCreated,
@@ -38,7 +36,6 @@ const SupplierQuickCreateDialog = ({
   const supplierService = useSupplierService();
   const notificationService = useNotificationService();
 
-  const [supplierCode, setSupplierCode] = useState(initialCode ?? "");
   const [supplierName, setSupplierName] = useState(initialName ?? "");
   const [ic, setIc] = useState("");
   const [taxId, setTaxId] = useState("");
@@ -52,7 +49,6 @@ const SupplierQuickCreateDialog = ({
 
   useEffect(() => {
     if (open) {
-      setSupplierCode(initialCode ?? "");
       setSupplierName(initialName ?? "");
       setIc("");
       setTaxId("");
@@ -63,11 +59,10 @@ const SupplierQuickCreateDialog = ({
       setContactNo("");
       setEmail("");
     }
-  }, [open, initialCode, initialName]);
+  }, [open, initialName]);
 
   const handleSubmit = async (event?: React.FormEvent) => {
     event?.preventDefault();
-    const trimmedCode = supplierCode.trim();
     const trimmedName = supplierName.trim();
     const trimmedIc = ic.trim();
     const trimmedTaxId = taxId.trim();
@@ -78,14 +73,13 @@ const SupplierQuickCreateDialog = ({
     const trimmedContactNo = contactNo.trim();
     const trimmedEmail = email.trim();
 
-    if (!trimmedCode || !trimmedName) {
+    if (!trimmedName) {
       return;
     }
 
     setSubmitting(true);
     try {
       const payload: SupplierCreateUpdateDto = {
-        supplierCode: trimmedCode,
         name: trimmedName,
         ic: trimmedIc || undefined,
         taxId: trimmedTaxId || undefined,
@@ -96,8 +90,12 @@ const SupplierQuickCreateDialog = ({
         contactNo: trimmedContactNo || undefined,
         email: trimmedEmail || undefined,
       };
-      const id = await supplierService.createSupplier(payload);
-      onCreated({ id, supplierCode: payload.supplierCode, name: payload.name });
+      const supplier = await supplierService.createSupplier(payload);
+      onCreated({
+        id: supplier.id,
+        supplierCode: supplier.supplierCode,
+        name: supplier.name,
+      });
       notificationService.handleSuccessMessage(t("operation-completed"));
     } catch (error: any) {
       const apiError = error?.response?.data;
@@ -111,10 +109,7 @@ const SupplierQuickCreateDialog = ({
     }
   };
 
-  const actionDisabled =
-    submitting ||
-    supplierCode.trim().length === 0 ||
-    supplierName.trim().length === 0;
+  const actionDisabled = submitting || supplierName.trim().length === 0;
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
@@ -124,15 +119,6 @@ const SupplierQuickCreateDialog = ({
           <Stack spacing={2} mt={4}>
             <TextField
               autoFocus
-              required
-              fullWidth
-              label={t("supplier-code")}
-              value={supplierCode}
-              onChange={(event) => setSupplierCode(event.target.value)}
-              size="small"
-              disabled={submitting}
-            />
-            <TextField
               required
               fullWidth
               label={t("name")}

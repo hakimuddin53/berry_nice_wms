@@ -124,7 +124,10 @@ export const buildInvoicePrintHtml = (
               item.locationLabel || item.locationName
                 ? `Location: ${item.locationLabel || item.locationName || "-"}`
                 : "";
-            const detailParts = [warrantyInfo, locationInfo].filter(Boolean);
+            const remarkInfo = item.remark ? `Remark: ${item.remark}` : "";
+            const detailParts = [warrantyInfo, locationInfo, remarkInfo].filter(
+              Boolean
+            );
             const detailHtml =
               detailParts.length > 0
                 ? `<div class="muted">${detailParts.join(" | ")}</div>`
@@ -156,11 +159,6 @@ export const buildInvoicePrintHtml = (
     .map((line) => `<li>${line}</li>`)
     .join("");
 
-  const remarkHtml =
-    invoice.remark && invoice.remark.trim().length > 0
-      ? invoice.remark.trim().replace(/\n/g, "<br />")
-      : '<span class="muted">None</span>';
-
   const html = `
     <!doctype html>
     <html>
@@ -190,8 +188,6 @@ export const buildInvoicePrintHtml = (
           .muted { color: #666; font-size: 11px; }
           .empty { text-align: center; padding: 16px 8px; }
           .totals { display: flex; justify-content: flex-end; gap: 12px; margin-top: 12px; font-weight: 700; font-size: 14px; }
-          .remarks { margin-top: 20px; }
-          .remark-box { padding: 12px 12px 8px; border: 1px solid #dcdcdc; background: #fafafa; font-size: 12px; }
           .bank { margin-top: 12px; line-height: 1.4; }
           .terms { margin-top: 12px; }
           .terms ul { margin: 6px 0 0 16px; padding: 0; }
@@ -259,19 +255,13 @@ export const buildInvoicePrintHtml = (
             <div>Grand Total :</div>
             <div>${formatMoney(invoice.grandTotal)}</div>
           </div>
-          <div class="remarks">
-            <div class="section-title">Remark :</div>
-            <div class="remark-box">
-              ${remarkHtml}
-              <div class="bank">${bankDetailsHtml}</div>
-              <div class="terms">
-                <div class="section-title">One Week Warranty</div>
-                <ul>${warrantyTermsHtml}</ul>
-                <div class="muted" style="margin-top:8px;">
-                  All warranty claims must be accompanied by the shop's official tax invoice/receipt/proof of purchase.
-                  Goods sold are non-refundable or exchangeable. This is a computer-generated receipt. No signature needed.
-                </div>
-              </div>
+          <div class="bank">${bankDetailsHtml}</div>
+          <div class="terms">
+            <div class="section-title">One Week Warranty</div>
+            <ul>${warrantyTermsHtml}</ul>
+            <div class="muted" style="margin-top:8px;">
+              All warranty claims must be accompanied by the shop's official tax invoice/receipt/proof of purchase.
+              Goods sold are non-refundable or exchangeable. This is a computer-generated receipt. No signature needed.
             </div>
           </div>
           <div class="footer-date">${longSaleDate}</div>

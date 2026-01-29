@@ -11,6 +11,7 @@ using Wms.Api.Dto.Supplier.SupplierCreateUpdate;
 using Wms.Api.Dto.Supplier.SupplierDetails;
 using Wms.Api.Dto.Supplier.SupplierSearch;
 using Wms.Api.Entities;
+using Wms.Api.Model;
 using Wms.Api.Services;
 
 namespace Wms.Api.Controllers
@@ -21,7 +22,8 @@ namespace Wms.Api.Controllers
     public class SupplierController(
         IService<Supplier> service,
         IMapper autoMapperService,
-        ApplicationDbContext context)
+        ApplicationDbContext context,
+        IRunningNumberService runningNumberService)
         : ControllerBase
     {
         [HttpGet("select-options")]
@@ -107,6 +109,9 @@ namespace Wms.Api.Controllers
         {
             var supplier = autoMapperService.Map<Supplier>(supplierCreateUpdateDto);
 
+            // Autogenerate supplier code
+            supplier.SupplierCode = await runningNumberService.GenerateRunningNumberAsync(OperationTypeEnum.SUPPLIER);
+
             await service.AddAsync(supplier);
             return CreatedAtAction(nameof(GetById), new { id = supplier.Id }, supplier);
         }
@@ -118,7 +123,10 @@ namespace Wms.Api.Controllers
             if (supplier == null)
                 return NotFound();
 
+            // Preserve existing code when updating
+            var existingCode = supplier.SupplierCode;
             autoMapperService.Map(supplierCreateUpdateDto, supplier);
+            supplier.SupplierCode = existingCode;
 
             await service.UpdateAsync(supplier);
             return NoContent();

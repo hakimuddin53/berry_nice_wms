@@ -29,9 +29,6 @@ namespace Wms.Api.Dto.Invoice.InvoiceCreateUpdate
         [Required]
         public Guid WarehouseId { get; set; }
 
-        [MaxLength(512)]
-        public string? Remark { get; set; }
-
         [Required]
         public ICollection<InvoiceItemCreateUpdateDto> InvoiceItems { get; set; } = new List<InvoiceItemCreateUpdateDto>();
     }

@@ -370,22 +370,6 @@ const InvoiceHeadCreateEdit = (props: {
               />
             ),
           },
-          {
-            label: t("remark"),
-            value: (
-              <TextField
-                fullWidth
-                size="small"
-                id="remark"
-                name="remark"
-                value={formik.values.remark ?? ""}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                multiline
-                minRows={2}
-              />
-            ),
-          },
         ]}
       />
       <CustomerQuickCreateDialog

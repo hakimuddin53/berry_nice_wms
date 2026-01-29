@@ -17,5 +17,8 @@ namespace Wms.Api.Dto.Invoice.InvoiceCreateUpdate
 
         [Range(0, double.MaxValue)]
         public decimal TotalPrice { get; set; }
+
+        [MaxLength(512)]
+        public string? Remark { get; set; }
     }
 }

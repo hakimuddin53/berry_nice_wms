@@ -226,9 +226,6 @@ const InvoiceDetailsPage = () => {
                 <KeyValuePair label={t("payment-reference")}>
                   {invoice.paymentReference || "-"}
                 </KeyValuePair>
-                <KeyValuePair label={t("remark")}>
-                  {invoice.remark || "-"}
-                </KeyValuePair>
                 <KeyValuePair label={t("grand-total")}>
                   {invoice.grandTotal.toFixed(2)}
                 </KeyValuePair>
@@ -256,6 +253,7 @@ const InvoiceDetailsPage = () => {
                     " " +
                     t("expired", { defaultValue: "Expired" })}
                 </TableCell>
+                <TableCell>{t("remark")}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -278,12 +276,13 @@ const InvoiceDetailsPage = () => {
                     <TableCell align="right">
                       {formatWarrantyExpiry(expiryIso) || "-"}
                     </TableCell>
+                    <TableCell>{item.remark || "-"}</TableCell>
                   </TableRow>
                 );
               })}
               {invoice.invoiceItems.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={4}>
+                  <TableCell colSpan={5}>
                     <Typography variant="body2" color="text.secondary">
                       {t("no-items-added")}
                     </Typography>

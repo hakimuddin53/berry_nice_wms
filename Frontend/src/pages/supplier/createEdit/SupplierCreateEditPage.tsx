@@ -36,7 +36,6 @@ const SupplierCreateEditPage: React.FC = () => {
   const [pageBlocker, setPageBlocker] = useState(false);
 
   const [supplier, setSupplier] = useState<YupSupplierCreateEdit>({
-    supplierCode: "",
     name: "",
     ic: "",
     taxId: "",
@@ -100,7 +99,7 @@ const SupplierCreateEditPage: React.FC = () => {
               "created",
               "supplier"
             );
-            navigateToDetails(result);
+            navigateToDetails(result.id);
           })
           .catch((err) => {
             setPageBlocker(false);
@@ -132,7 +131,29 @@ const SupplierCreateEditPage: React.FC = () => {
     if (id) {
       SupplierService.getSupplierById(id as guid)
         .then((supplier: any) => {
-          setSupplier(supplier);
+          const {
+            name,
+            ic,
+            taxId,
+            address1,
+            address2,
+            address3,
+            address4,
+            contactNo,
+            email,
+          } = supplier;
+
+          setSupplier({
+            name: name ?? "",
+            ic: ic ?? "",
+            taxId: taxId ?? "",
+            address1: address1 ?? "",
+            address2: address2 ?? "",
+            address3: address3 ?? "",
+            address4: address4 ?? "",
+            contactNo: contactNo ?? "",
+            email: email ?? "",
+          });
 
           setPageReady(true);
         })
@@ -201,35 +222,6 @@ const SupplierCreateEditPage: React.FC = () => {
               <DataList
                 hideDevider={true}
                 data={[
-                  {
-                    label: t("supplier-code"),
-                    required: isRequiredField(
-                      supplierCreateEditSchema,
-                      "supplierCode"
-                    ),
-                    value: (
-                      <TextField
-                        fullWidth
-                        id="supplierCode"
-                        name="supplierCode"
-                        size="small"
-                        value={formik.values.supplierCode}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={
-                          formik.touched.supplierCode &&
-                          Boolean(formik.errors.supplierCode)
-                        }
-                        helperText={
-                          <FormikErrorMessage
-                            touched={formik.touched.supplierCode}
-                            error={formik.errors.supplierCode}
-                            translatedFieldName={t("supplier-code")}
-                          />
-                        }
-                      />
-                    ),
-                  },
                   {
                     label: t("name"),
                     required: isRequiredField(supplierCreateEditSchema, "name"),

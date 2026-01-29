@@ -17,5 +17,6 @@ namespace Wms.Api.Dto.Invoice.InvoiceDetails
         public decimal UnitPrice { get; set; }
         public decimal TotalPrice { get; set; }
         public DateTime? WarrantyExpiryDate { get; set; }
+        public string? Remark { get; set; }
     }
 }

@@ -10,6 +10,5 @@ export interface InvoiceCreateUpdateDto {
   salesTypeId?: guid | null;
   paymentTypeId?: guid | null;
   paymentReference?: string | null;
-  remark?: string | null;
   invoiceItems: InvoiceItemCreateUpdateDto[];
 }

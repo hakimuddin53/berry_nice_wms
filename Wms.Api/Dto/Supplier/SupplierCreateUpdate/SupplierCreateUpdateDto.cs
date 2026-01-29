@@ -4,8 +4,7 @@ namespace Wms.Api.Dto.Supplier.SupplierCreateUpdate
 {
     public class SupplierCreateUpdateDto
     {
-        [Required]
-        public string SupplierCode { get; set; } = default!;
+        public string? SupplierCode { get; set; }
         [Required]
         public string Name { get; set; } = default!;
         public string? IC { get; set; }

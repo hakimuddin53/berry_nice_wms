@@ -1,5 +1,4 @@
 export interface SupplierCreateUpdateDto {
-  supplierCode: string;
   name: string;
   ic?: string;
   taxId?: string;

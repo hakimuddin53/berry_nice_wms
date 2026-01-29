@@ -15,7 +15,8 @@ public class SupplierProfile : Profile
         #endregion
 
         #region CreateUpdateDto
-        CreateMap<SupplierCreateUpdateDto, Supplier>();
+        CreateMap<SupplierCreateUpdateDto, Supplier>()
+            .ForMember(dest => dest.SupplierCode, opt => opt.Ignore());
         #endregion
 
         CreateMap<Supplier, SelectOptionV12Dto>()

@@ -2,10 +2,11 @@ import { MenuItem, TextField } from "@mui/material";
 import { DataList, PageSection, PbCard } from "components/platbricks/shared";
 import FormikErrorMessage from "components/platbricks/shared/ErrorMessage";
 import ProductCodeScanInvoice from "components/platbricks/shared/ProductCodeScanInvoice";
+import SelectAsync2 from "components/platbricks/shared/SelectAsync2";
 import { FormikErrors, FormikProps } from "formik";
+import { LookupGroupKey } from "interfaces/v12/lookup/lookup";
 import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { LookupGroupKey } from "interfaces/v12/lookup/lookup";
 import { useLookupService } from "services/LookupService";
 import { useProductService } from "services/ProductService";
 import { isRequiredField } from "utils/formikHelpers";
@@ -18,7 +19,6 @@ import {
   invoiceCreateEditSchema,
   YupInvoiceCreateEdit,
 } from "./yup/invoiceCreateEditSchema";
-import SelectAsync2 from "components/platbricks/shared/SelectAsync2";
 
 type ItemField = keyof YupInvoiceCreateEdit["invoiceItems"][number];
 
@@ -538,6 +538,22 @@ const InvoiceItemCreateEdit = (props: {
                           defaultValue: "Select warranty to calculate expiry",
                         })
                   }
+                />
+              ),
+            },
+            {
+              label: t("remark"),
+              value: (
+                <TextField
+                  fullWidth
+                  size="small"
+                  multiline
+                  minRows={2}
+                  id={fieldName("remark")}
+                  name={fieldName("remark")}
+                  value={item.remark ?? ""}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                 />
               ),
             },

@@ -53,6 +53,7 @@ const createEmptyItem = (): YupInvoiceItemCreateEdit => ({
   unitPrice: 0,
   totalPrice: 0,
   warrantyExpiryDate: null,
+  remark: "",
 });
 
 const formatDateInput = (value?: string) =>
@@ -67,7 +68,6 @@ const mapDetailsToForm = (details: any): YupInvoiceCreateEdit => ({
   salesTypeId: details.salesTypeId ?? undefined,
   paymentTypeId: details.paymentTypeId ?? undefined,
   paymentReference: details.paymentReference ?? "",
-  remark: details.remark ?? "",
   invoiceItems: (details.invoiceItems ?? []).map((item: any) => ({
     id: item.id,
     productId: item.productId ?? undefined,
@@ -87,6 +87,7 @@ const mapDetailsToForm = (details: any): YupInvoiceCreateEdit => ({
         details.dateOfSale,
         item.warrantyDurationMonths
       ),
+    remark: item.remark ?? "",
   })),
 });
 
@@ -124,7 +125,6 @@ const InvoiceCreateEditPage = () => {
     salesTypeId: undefined,
     paymentTypeId: undefined,
     paymentReference: "",
-    remark: "",
     invoiceItems: [],
   });
   const [pageBlocker, setPageBlocker] = useState(false);
@@ -189,7 +189,6 @@ const InvoiceCreateEditPage = () => {
         salesTypeId: values.salesTypeId || undefined,
         paymentTypeId: values.paymentTypeId || undefined,
         paymentReference: values.paymentReference || undefined,
-        remark: values.remark || undefined,
         invoiceItems: values.invoiceItems.map((item) => ({
           id: item.id,
           productId: item.productId || undefined,
@@ -199,6 +198,7 @@ const InvoiceCreateEditPage = () => {
           unitPrice: item.unitPrice,
           totalPrice: item.totalPrice ?? item.unitPrice * item.quantity,
           warrantyExpiryDate: item.warrantyExpiryDate || undefined,
+          remark: item.remark || undefined,
         })),
       };
 

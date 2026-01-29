@@ -26,6 +26,9 @@ namespace Wms.Api.Entities
         [Column(TypeName = "decimal(18,4)")]
         public decimal TotalPrice { get; set; }
 
+        [MaxLength(512)]
+        public string? Remark { get; set; }
+
         [ForeignKey(nameof(InvoiceId))]
         public Invoice? Invoice { get; set; }
     }

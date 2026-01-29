@@ -28,7 +28,6 @@ const StockRecieveHeadCreateEdit = (props: {
   const supplierService = useSupplierService();
   const userService = useUserService();
   const [supplierDialogOpen, setSupplierDialogOpen] = useState(false);
-  const [supplierDraftCode, setSupplierDraftCode] = useState("");
   const [supplierDraftName, setSupplierDraftName] = useState("");
   const [supplierExistsSelected, setSupplierExistsSelected] = useState(false);
   const [supplierInput, setSupplierInput] = useState("");
@@ -163,7 +162,6 @@ const StockRecieveHeadCreateEdit = (props: {
                         size="small"
                         onMouseDown={(event) => event.preventDefault()}
                         onClick={() => {
-                          setSupplierDraftCode(formik.values.sellerInfo ?? "");
                           setSupplierDraftName(
                             input ?? formik.values.sellerInfo ?? ""
                           );
@@ -202,7 +200,6 @@ const StockRecieveHeadCreateEdit = (props: {
                   size="small"
                   variant="text"
                   onClick={() => {
-                    setSupplierDraftCode(formik.values.sellerInfo ?? "");
                     setSupplierDraftName(
                       supplierInput || formik.values.sellerInfo || ""
                     );
@@ -324,7 +321,6 @@ const StockRecieveHeadCreateEdit = (props: {
       ></DataList>
       <SupplierQuickCreateDialog
         open={supplierDialogOpen}
-        initialCode={supplierDraftCode}
         initialName={supplierDraftName}
         onClose={() => setSupplierDialogOpen(false)}
         onCreated={handleSupplierCreated}

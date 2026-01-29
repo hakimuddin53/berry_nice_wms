@@ -33,9 +33,6 @@ namespace Wms.Api.Entities
         [MaxLength(128)]
         public string? PaymentReference { get; set; }
 
-        [MaxLength(512)]
-        public string? Remark { get; set; }
-
         [System.ComponentModel.DataAnnotations.Schema.Column(TypeName = "decimal(18,4)")]
         public decimal GrandTotal { get; set; }
 

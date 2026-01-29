@@ -53,6 +53,11 @@ export const useInvoiceItemTable = () => {
           t("expired", { defaultValue: "Expired" }),
         render: (row) => formatWarrantyExpiry(row.warrantyExpiryDate) || "-",
       },
+      {
+        id: "remark",
+        label: t("remark"),
+        render: (row) => row.remark || "-",
+      },
     ],
     [t]
   );

@@ -1,8 +1,6 @@
-import { guid } from "types/guid";
 import * as yup from "yup";
 
 export const supplierCreateEditSchema = yup.object({
-  supplierCode: yup.string().required(),
   name: yup.string().required(),
   ic: yup.string().optional(),
   taxId: yup.string().optional(),

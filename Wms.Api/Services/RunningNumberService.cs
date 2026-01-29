@@ -21,6 +21,7 @@ namespace Wms.Api.Services
                 OperationTypeEnum.INVOICE => "INV",
                 OperationTypeEnum.STOCKTAKE => "STK",
                 OperationTypeEnum.CUSTOMER => "CUS",
+                OperationTypeEnum.SUPPLIER => "SUP",
                 _ => throw new ArgumentOutOfRangeException(nameof(operationType), "Invalid operation type")
             };
 

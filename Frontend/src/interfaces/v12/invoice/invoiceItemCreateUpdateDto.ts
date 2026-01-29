@@ -9,4 +9,5 @@ export interface InvoiceItemCreateUpdateDto {
   unitPrice: number;
   totalPrice?: number;
   warrantyExpiryDate?: string | null;
+  remark?: string | null;
 }

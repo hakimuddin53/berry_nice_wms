@@ -7,7 +7,8 @@
         PRODUCT = 2, 
         INVOICE = 3,
         STOCKTAKE = 4,
-        CUSTOMER = 5
+        CUSTOMER = 5,
+        SUPPLIER = 6
     }
 
     public enum TransactionTypeEnum
