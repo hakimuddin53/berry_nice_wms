@@ -46,8 +46,18 @@ jobs:
       - name: Deploy Frontend
         run: |
           if (!(Test-Path $env:FRONTEND_PUBLISH_DIR)) { New-Item -ItemType Directory -Force -Path $env:FRONTEND_PUBLISH_DIR | Out-Null }
-          robocopy "$env:FRONTEND_DIR\build" "$env:FRONTEND_PUBLISH_DIR" /MIR
-          if ($LASTEXITCODE -lt 8) { $global:LASTEXITCODE = 0 }
+          
+          $offlineFile = Join-Path $env:FRONTEND_PUBLISH_DIR "app_offline.htm"
+          "Deploying..." | Out-File -FilePath $offlineFile -Encoding utf8
+          Start-Sleep -Seconds 3
+
+          try {
+            robocopy "$env:FRONTEND_DIR\build" "$env:FRONTEND_PUBLISH_DIR" /MIR /R:2 /W:5
+            if ($LASTEXITCODE -lt 8) { $global:LASTEXITCODE = 0 }
+          }
+          finally {
+            if (Test-Path $offlineFile) { Remove-Item $offlineFile -Force -ErrorAction SilentlyContinue }
+          }
 
       # --- BACKEND STEPS ---
       - name: Build and Test .NET API
