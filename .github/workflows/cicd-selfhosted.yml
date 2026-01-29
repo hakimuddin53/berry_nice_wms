@@ -40,7 +40,7 @@ jobs:
         env:
           CI: false
         run: |
-          npm ci
+          npm install
           npm run build
 
       - name: Deploy Frontend
@@ -54,7 +54,8 @@ jobs:
         run: |
           dotnet restore $env:API_PROJECT
           dotnet build $env:API_PROJECT -c Release --no-restore
-          dotnet test $env:TEST_PROJECT --no-build --verbosity normal
+          dotnet build $env:TEST_PROJECT -c Release --no-restore
+          dotnet test $env:TEST_PROJECT -c Release --no-build --verbosity normal
 
       - name: Publish .NET API to Temp
         run: |
@@ -85,10 +86,31 @@ jobs:
           Write-Host "Cleaning up build artifacts to save disk space..."
           
           # 1. Remove the temp folder used for file transfer
-          if (Test-Path $env:PUBLISH_TEMP) { Remove-Item $env:PUBLISH_TEMP -Recurse -Force -ErrorAction SilentlyContinue }
+          $publishTemp = "$env:RUNNER_TEMP\api_publish"
+          if (Test-Path $publishTemp) { 
+            Write-Host "Removing temp publish folder: $publishTemp"
+            Remove-Item $publishTemp -Recurse -Force -ErrorAction SilentlyContinue 
+          }
           
           # 2. Remove frontend build output
-          if (Test-Path "$env:FRONTEND_DIR\build") { Remove-Item "$env:FRONTEND_DIR\build" -Recurse -Force -ErrorAction SilentlyContinue }
+          $frontendBuild = Join-Path $env:GITHUB_WORKSPACE "$env:FRONTEND_DIR\build"
+          if (Test-Path $frontendBuild) { 
+            Write-Host "Removing frontend build folder: $frontendBuild"
+            Remove-Item $frontendBuild -Recurse -Force -ErrorAction SilentlyContinue 
+          }
           
-          # 3. Remove .NET bin and obj folders (reclaims the most space)
-          Get-ChildItem -Path . -Include bin,obj -Recurse -Directory | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+          # 3. Remove frontend node_modules (saves the most space)
+          $nodeModules = Join-Path $env:GITHUB_WORKSPACE "$env:FRONTEND_DIR\node_modules"
+          if (Test-Path $nodeModules) { 
+            Write-Host "Removing node_modules folder: $nodeModules"
+            Remove-Item $nodeModules -Recurse -Force -ErrorAction SilentlyContinue 
+          }
+          
+          # 4. Remove .NET bin and obj folders
+          Write-Host "Removing .NET bin and obj folders..."
+          Get-ChildItem -Path $env:GITHUB_WORKSPACE -Include bin,obj -Recurse -Directory | ForEach-Object {
+            Write-Host "  Removing: $($_.FullName)"
+            Remove-Item $_.FullName -Recurse -Force -ErrorAction SilentlyContinue
+          }
+          
+          Write-Host "Cleanup completed successfully!"
