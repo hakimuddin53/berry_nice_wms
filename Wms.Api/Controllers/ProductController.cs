@@ -83,6 +83,28 @@ namespace Wms.Api.Controllers
             var productDtos = await productService.FindProductsByIdsAsync(productIds, page, pageSize);
             return Ok(productDtos);
         }
+
+        [HttpPost("find-by-ids", Name = "FindProductsByIdsAsync")]
+        public async Task<IActionResult> FindProductsByIdsAsync([FromBody] FindProductsByIdsRequest request)
+        {
+            if (request?.ProductIds == null || request.ProductIds.Length == 0)
+            {
+                return BadRequest("ProductIds are required");
+            }
+
+            var productDtos = await productService.FindProductsByIdsAsync(
+                request.ProductIds, 
+                request.Page ?? 1, 
+                request.PageSize ?? 10);
+            return Ok(productDtos);
+        }
+    }
+
+    public class FindProductsByIdsRequest
+    {
+        public Guid[] ProductIds { get; set; } = Array.Empty<Guid>();
+        public int? Page { get; set; }
+        public int? PageSize { get; set; }
     }
 }
 

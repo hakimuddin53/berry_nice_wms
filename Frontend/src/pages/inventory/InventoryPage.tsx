@@ -358,17 +358,6 @@ const InventoryPage = () => {
           formatText((row as any).modelName ?? (row as any).model),
       },
       {
-        id: "ageDays",
-        label: t("stock-age-days", { defaultValue: "Age (days)" }),
-        align: "right",
-        render: (row) => formatNumber(row.ageDays),
-      },
-      {
-        id: "locationId",
-        label: t("location"),
-        render: (row) => formatText(getLocationDisplay(row)),
-      },
-      {
         id: "remark",
         label: t("remark"),
         render: (row) => formatText(productExtras[row.productId]?.remark),
@@ -392,11 +381,17 @@ const InventoryPage = () => {
                     e.target.value
                   )
                 }
-                sx={{ width: "140px", minWidth: "140px" }}
+                sx={{ width: "80px", minWidth: "80px" }}
               />
             </Box>
           );
         },
+      },
+      {
+        id: "costPrice",
+        label: t("cost"),
+        align: "right",
+        render: (row) => formatNumber(productExtras[row.productId]?.costPrice),
       },
       {
         id: "batteryHealth",
@@ -408,10 +403,10 @@ const InventoryPage = () => {
         },
       },
       {
-        id: "costPrice",
-        label: t("cost"),
+        id: "ageDays",
+        label: t("stock-age-days", { defaultValue: "Age (days)" }),
         align: "right",
-        render: (row) => formatNumber(productExtras[row.productId]?.costPrice),
+        render: (row) => formatNumber(row.ageDays),
       },
       {
         id: "actions",

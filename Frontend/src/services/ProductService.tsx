@@ -63,10 +63,10 @@ export const ProductServiceProvider: React.FC<ProductServiceProviderProps> = (
   const getProductsByIds = (ids: string[]) => {
     const pageSize = Math.max(1, ids.length);
     return axios
-      .get<PagedListDto<ProductDetailsDto>>("/product", {
-        params: { productIds: ids, page: 1, pageSize },
-        paramsSerializer: (params) =>
-          queryString.stringify(params, { arrayFormat: "none" }),
+      .post<PagedListDto<ProductDetailsDto>>("/product/find-by-ids", {
+        productIds: ids,
+        page: 1,
+        pageSize,
       })
       .then((res) => res.data);
   };
