@@ -18,14 +18,18 @@ import {
   Typography,
 } from "@mui/material";
 import InputAdornment from "@mui/material/InputAdornment";
+import {
+  DataGrid,
+  GridColDef,
+  GridColumnVisibilityModel,
+  useGridApiRef,
+} from "@mui/x-data-grid";
 import { useQueryClient } from "@tanstack/react-query";
 import UserName from "components/platbricks/entities/UserName";
-import { DataTable, PbCard } from "components/platbricks/shared";
+import { PbCard } from "components/platbricks/shared";
 import BarcodeLabel, {
   BarcodeLabelData,
 } from "components/platbricks/shared/BarcodeLabel";
-import { DataTableHeaderCell } from "components/platbricks/shared/dataTable/DataTable";
-import LookupAutocomplete from "components/platbricks/shared/LookupAutocomplete";
 import Page from "components/platbricks/shared/Page";
 import SelectAsync, {
   type SelectAsyncOption,
@@ -41,13 +45,13 @@ import {
   useProductByIdFetcher,
   useProductSelectOptionsFetcher,
 } from "hooks/queries/useProductQueries";
-import { useDatatableControls } from "hooks/useDatatableControls";
 import { useUserDateTime } from "hooks/useUserDateTime";
 import { PagedListDto } from "interfaces/general/pagedList/PagedListDto";
 import { InventoryAuditDto } from "interfaces/v12/inventory/inventoryAuditDto";
 import { UpdateInventoryBalanceDto } from "interfaces/v12/inventory/updateInventoryBalanceDto";
 import { LookupGroupKey } from "interfaces/v12/lookup/lookup";
 import { ProductDetailsDto } from "interfaces/v12/product/productDetails/productDetailsDto";
+import jwtDecode from "jwt-decode";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useReactToPrint } from "react-to-print";
@@ -114,18 +118,34 @@ const parseRemarkSelections = (value?: string | null) => {
   );
 };
 
+const COLUMN_VISIBILITY_STORAGE_KEY = "inventoryColumnVisibility";
+const COLUMN_ORDER_STORAGE_KEY = "inventoryColumnOrder";
+
 const InventoryPage = () => {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const inventoryService = useInventoryService();
   const productService = useProductService();
+  const apiRef = useGridApiRef();
   const fetchProductById = useProductByIdFetcher();
   const fetchProductOptions = useProductSelectOptionsFetcher();
   const fetchLookupById = useLookupByIdFetcher();
   const fetchLookupOptions = useLookupSelectOptionsFetcher();
   const { getLocalDateAndTime } = useUserDateTime();
+  const retailPriceLabel = useMemo(
+    () => t("retail-price", { defaultValue: "Retail Price" }),
+    [t]
+  );
+  const dealerPriceLabel = useMemo(
+    () => t("dealer-price", { defaultValue: "Dealer Price" }),
+    [t]
+  );
+  const agentPriceLabel = useMemo(
+    () => t("agent-price", { defaultValue: "Agent Price" }),
+    [t]
+  );
 
-  const [filters, setFilters] = useState<InventorySearchFilters>({
+  const [filters] = useState<InventorySearchFilters>({
     search: "",
     product: null,
     model: null,
@@ -162,6 +182,19 @@ const InventoryPage = () => {
     promise: Promise<PagedListDto<InventoryAuditDto>>;
   } | null>(null);
   const pendingLoadsRef = useRef(0);
+  const [gridRows, setGridRows] = useState<BalanceRow[]>([]);
+  const [columnVisibilityModel, setColumnVisibilityModel] =
+    useState<GridColumnVisibilityModel>(() => {
+      if (typeof window === "undefined") return {};
+      const stored = window.localStorage.getItem(COLUMN_VISIBILITY_STORAGE_KEY);
+      if (!stored) return {};
+      try {
+        return JSON.parse(stored) as GridColumnVisibilityModel;
+      } catch {
+        return {};
+      }
+    });
+  const columnOrderRef = useRef<string[] | null>(null);
 
   const startLoading = useCallback(() => {
     pendingLoadsRef.current += 1;
@@ -174,23 +207,73 @@ const InventoryPage = () => {
       setPageBlocker(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(
+        COLUMN_VISIBILITY_STORAGE_KEY,
+        JSON.stringify(columnVisibilityModel)
+      );
+    } catch (err) {
+      if (process.env.NODE_ENV !== "production") {
+        // eslint-disable-next-line no-console
+        console.error("Failed to persist column visibility", err);
+      }
+    }
+  }, [columnVisibilityModel]);
+  const handleColumnOrderChange = useCallback(() => {
+    if (typeof window === "undefined" || !apiRef.current) return;
+    try {
+      const order =
+        apiRef.current.exportState?.().columns?.orderedFields ??
+        apiRef.current.state.columns?.orderedFields ??
+        [];
+      columnOrderRef.current = order;
+      window.localStorage.setItem(
+        COLUMN_ORDER_STORAGE_KEY,
+        JSON.stringify(order)
+      );
+    } catch (err) {
+      if (process.env.NODE_ENV !== "production") {
+        // eslint-disable-next-line no-console
+        console.error("Failed to persist column order", err);
+      }
+    }
+  }, [apiRef]);
   const { data: historyLogs = [], isLoading: historyLoading } =
     useInventoryAuditLogQuery(historyProductId);
-
-  const updateFilter = useCallback(
-    <K extends keyof InventorySearchFilters>(
-      key: K,
-      value: InventorySearchFilters[K]
-    ) => {
-      setFilters((prev) => ({ ...prev, [key]: value }));
-    },
-    []
-  );
 
   const selectedRemarks = useMemo(
     () => parseRemarkSelections(formValues.remark),
     [formValues.remark]
   );
+
+  const isSalesTeamUser = useMemo(() => {
+    const token =
+      typeof window !== "undefined"
+        ? window.localStorage.getItem("accessToken")
+        : null;
+
+    if (!token) return false;
+
+    try {
+      const decoded: any = jwtDecode(token);
+      const roleClaim =
+        decoded?.Role ??
+        decoded?.role ??
+        decoded?.[
+          "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+        ] ??
+        "";
+
+      const normalized = String(roleClaim).replace(/\s+/g, "").toLowerCase();
+
+      return normalized === "salesteam";
+    } catch {
+      return false;
+    }
+  }, []);
 
   const remarkAsync = useCallback(
     async (input: string, page: number, pageSize: number, ids?: string[]) => {
@@ -328,134 +411,6 @@ const InventoryPage = () => {
       );
     },
     []
-  );
-
-  const selectPlaceholder = t("select", { defaultValue: "Select" });
-
-  const renderFilterField = useCallback(
-    (label: string, control: JSX.Element) => (
-      <Stack spacing={1}>
-        <Typography variant="body2" fontWeight={600}>
-          {label}
-        </Typography>
-        {control}
-      </Stack>
-    ),
-    []
-  );
-
-  const headerCells: DataTableHeaderCell<BalanceRow>[] = useMemo(
-    () => [
-      {
-        id: "productCode",
-        label: t("product-code"),
-        render: (row) => formatText(row.productCode),
-      },
-      {
-        id: "model",
-        label: t("model"),
-        render: (row) =>
-          formatText((row as any).modelName ?? (row as any).model),
-      },
-      {
-        id: "remark",
-        label: t("remark"),
-        render: (row) => formatText(productExtras[row.productId]?.remark),
-      },
-      {
-        id: "retailPrice",
-        label: t("retail-selling-price"),
-        align: "right",
-        render: (row) => {
-          const value = productExtras[row.productId]?.retailPrice;
-          return (
-            <Box display="flex" flexDirection="column" alignItems="flex-end">
-              <TextField
-                size="small"
-                type="number"
-                inputProps={{ min: 0, step: "0.01" }}
-                value={value ?? ""}
-                onChange={(e) =>
-                  handleInlineRetailPriceChange(
-                    row.productId as string,
-                    e.target.value
-                  )
-                }
-                sx={{ width: "80px", minWidth: "80px" }}
-              />
-            </Box>
-          );
-        },
-      },
-      {
-        id: "costPrice",
-        label: t("cost"),
-        align: "right",
-        render: (row) => formatNumber(productExtras[row.productId]?.costPrice),
-      },
-      {
-        id: "batteryHealth",
-        label: t("battery-health", { defaultValue: "Battery Health (%)" }),
-        align: "right",
-        render: (row) => {
-          const value = productExtras[row.productId]?.batteryHealth;
-          return value !== null && value !== undefined ? `${value}%` : "-";
-        },
-      },
-      {
-        id: "ageDays",
-        label: t("stock-age-days", { defaultValue: "Age (days)" }),
-        align: "right",
-        render: (row) => formatNumber(row.ageDays),
-      },
-      {
-        id: "actions",
-        label: "",
-        render: (row) => (
-          <Stack direction="row" spacing={1}>
-            <IconButton
-              size="small"
-              color="primary"
-              onClick={() => openHistory(row.productId as string)}
-              aria-label={t("history")}
-            >
-              <HistoryIcon fontSize="small" />
-            </IconButton>
-            <IconButton
-              size="small"
-              color="primary"
-              onClick={(event) => {
-                event.stopPropagation();
-                setActiveBalanceRow(row);
-              }}
-              aria-label={t("view", { defaultValue: "View" })}
-            >
-              <VisibilityIcon fontSize="small" />
-            </IconButton>
-            <IconButton
-              size="small"
-              color="primary"
-              onClick={(event) => {
-                event.stopPropagation();
-                openEdit(row.productId as string);
-              }}
-              aria-label={t("edit")}
-            >
-              <EditIcon fontSize="small" />
-            </IconButton>
-            <IconButton
-              size="small"
-              color="primary"
-              onClick={() => printLabel(row)}
-              aria-label={t("print")}
-            >
-              <PrintIcon fontSize="small" />
-            </IconButton>
-          </Stack>
-        ),
-      },
-    ],
-    [formatNumber, formatText, getLocationDisplay, productExtras, t]
   );
 
   const sortByName = useCallback(
@@ -630,68 +585,32 @@ const InventoryPage = () => {
     [buildPayload, inventoryService]
   );
 
-  const loadData = useCallback(
-    async (
-      _page: number,
-      _pageSize: number,
-      searchValue: string,
-      _orderBy: string,
-      _order: "asc" | "desc"
-    ) => {
-      startLoading();
-      try {
-        const res = await fetchAudit(0, 100, searchValue);
-        const items = res.data || [];
-        const sorted = [...items].sort(sortByName);
-        hydrateProductExtras(sorted.map((d) => d.productId as string));
-        return sorted.map((item, index) => ({
-          ...item,
-          rowId: index,
-        }));
-      } finally {
-        finishLoading();
-      }
-    },
-    [fetchAudit, finishLoading, hydrateProductExtras, sortByName, startLoading]
-  );
-
-  const loadDataCount = useCallback(
-    async (
-      _page: number,
-      _pageSize: number,
-      searchValue: string,
-      _orderBy: string,
-      _order: "asc" | "desc"
-    ) => {
-      startLoading();
-      try {
-        const res = await fetchAudit(0, 100, searchValue);
-        return res.totalCount ?? res.data?.length ?? 0;
-      } finally {
-        finishLoading();
-      }
-    },
-    [fetchAudit, finishLoading, startLoading]
-  );
-
-  const { tableProps, reloadData, updateDatatableControls } =
-    useDatatableControls<BalanceRow>({
-      initialData: [],
-      loadData,
-      loadDataCount,
-    });
+  const loadAllBalances = useCallback(async () => {
+    startLoading();
+    try {
+      const res = await fetchAudit(0, 100000, "");
+      const items = res.data || [];
+      const sorted = [...items].sort(sortByName);
+      const mapped = sorted.map((item, index) => ({
+        ...item,
+        rowId: index,
+      }));
+      setGridRows(mapped);
+      await hydrateProductExtras(mapped.map((d) => d.productId as string));
+    } finally {
+      finishLoading();
+    }
+  }, [
+    fetchAudit,
+    finishLoading,
+    hydrateProductExtras,
+    sortByName,
+    startLoading,
+  ]);
 
   useEffect(() => {
-    // Auto-load latest balances on first render
-    updateDatatableControls({ searchValue: filters.search, page: 0 });
-    reloadData(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const onSearch = () => {
-    updateDatatableControls({ searchValue: filters.search, page: 0 });
-    reloadData(true);
-  };
+    loadAllBalances();
+  }, [loadAllBalances]);
 
   const openEdit = async (productId: string) => {
     let extras = productExtras[productId];
@@ -773,6 +692,303 @@ const InventoryPage = () => {
     setPrintRequested(true);
   };
 
+  const columns: GridColDef<BalanceRow>[] = useMemo(() => {
+    const cols: GridColDef<BalanceRow>[] = [
+      {
+        field: "productCode",
+        headerName: t("product-code"),
+        flex: 1.1,
+        valueGetter: (_value, row: BalanceRow) =>
+          formatText(
+            productExtras[row.productId]?.productCode ?? row.productCode
+          ),
+      },
+      {
+        field: "model",
+        headerName: t("model"),
+        flex: 1.2,
+        valueGetter: (_value, row: BalanceRow) =>
+          formatText(
+            productExtras[row.productId]?.modelName ??
+              (row as any).modelName ??
+              (row as any).model
+          ),
+      },
+      {
+        field: "createdAt",
+        headerName: t("created-at", { defaultValue: "Created At" }),
+        flex: 1,
+        valueGetter: (_value, row: BalanceRow) => formatDateTime(row.createdAt),
+      },
+      {
+        field: "remark",
+        headerName: t("remark"),
+        flex: 1.1,
+        valueGetter: (_value, row: BalanceRow) =>
+          formatText(productExtras[row.productId]?.remark),
+      },
+      {
+        field: "internalRemark",
+        headerName: t("internal-remark"),
+        flex: 1.1,
+        valueGetter: (_value, row: BalanceRow) =>
+          formatText(productExtras[row.productId]?.internalRemark),
+      },
+      {
+        field: "warehouse",
+        headerName: t("warehouse"),
+        flex: 1,
+        valueGetter: (_value, row: BalanceRow) =>
+          formatText(row.warehouseLabel),
+      },
+      {
+        field: "location",
+        headerName: t("location"),
+        flex: 1,
+        valueGetter: (_value, row: BalanceRow) =>
+          formatText(getLocationDisplay(row)),
+      },
+      {
+        field: "retailPrice",
+        headerName: retailPriceLabel,
+        flex: 1,
+        type: "number",
+        renderCell: ({ row }) => {
+          const value = productExtras[row.productId]?.retailPrice;
+          return (
+            <TextField
+              size="small"
+              type="number"
+              inputProps={{ min: 0, step: "0.01" }}
+              value={value ?? ""}
+              onClick={(e) => e.stopPropagation()}
+              onChange={(e) =>
+                handleInlineRetailPriceChange(
+                  row.productId as string,
+                  e.target.value
+                )
+              }
+              sx={{
+                width: "100%",
+                "& .MuiInputBase-root": { height: 28 },
+                "& .MuiInputBase-input": { py: 0.5 },
+              }}
+            />
+          );
+        },
+        valueGetter: (_value, row: BalanceRow) =>
+          productExtras[row.productId]?.retailPrice ?? null,
+      },
+      {
+        field: "dealerPrice",
+        headerName: dealerPriceLabel,
+        flex: 1,
+        type: "number",
+        valueGetter: (_value, row: BalanceRow) =>
+          productExtras[row.productId]?.dealerPrice ?? null,
+      },
+      {
+        field: "agentPrice",
+        headerName: agentPriceLabel,
+        flex: 1,
+        type: "number",
+        valueGetter: (_value, row: BalanceRow) =>
+          productExtras[row.productId]?.agentPrice ?? null,
+      },
+    ];
+
+    if (!isSalesTeamUser) {
+      cols.push({
+        field: "costPrice",
+        headerName: t("cost"),
+        flex: 1,
+        type: "number",
+        valueGetter: (_value, row: BalanceRow) =>
+          productExtras[row.productId]?.costPrice ?? null,
+      });
+    }
+
+    cols.push(
+      {
+        field: "batteryHealth",
+        headerName: t("battery-health", { defaultValue: "Battery Health" }),
+        flex: 1,
+        type: "number",
+        valueGetter: (_value, row: BalanceRow) =>
+          productExtras[row.productId]?.batteryHealth ??
+          row.batteryHealth ??
+          null,
+        valueFormatter: (value) =>
+          value === null || value === undefined ? "-" : `${value}`,
+      },
+      {
+        field: "ageDays",
+        headerName: t("stock-age-days", { defaultValue: "Age (days)" }),
+        type: "number",
+        flex: 0.7,
+        valueGetter: (_value, row: BalanceRow) => row.ageDays ?? null,
+      },
+      {
+        field: "ram",
+        headerName: t("ram"),
+        flex: 0.8,
+        valueGetter: (_value, row: BalanceRow) =>
+          formatText(productExtras[row.productId]?.ram),
+      },
+      {
+        field: "storage",
+        headerName: t("storage"),
+        flex: 0.8,
+        valueGetter: (_value, row: BalanceRow) =>
+          formatText(productExtras[row.productId]?.storage),
+      },
+      {
+        field: "processor",
+        headerName: t("processor"),
+        flex: 0.8,
+        valueGetter: (_value, row: BalanceRow) =>
+          formatText(productExtras[row.productId]?.processor),
+      },
+      {
+        field: "screenSize",
+        headerName: t("screen-size"),
+        flex: 0.8,
+        valueGetter: (_value, row: BalanceRow) =>
+          formatText(productExtras[row.productId]?.screenSize),
+      },
+      {
+        field: "grade",
+        headerName: t("grade"),
+        flex: 0.7,
+        valueGetter: (_value, row: BalanceRow) =>
+          formatText(productExtras[row.productId]?.gradeName),
+      },
+      {
+        field: "brand",
+        headerName: t("brand"),
+        flex: 0.9,
+        valueGetter: (_value, row: BalanceRow) =>
+          formatText(productExtras[row.productId]?.brand),
+      },
+      {
+        field: "category",
+        headerName: t("category"),
+        flex: 0.9,
+        valueGetter: (_value, row: BalanceRow) =>
+          formatText(productExtras[row.productId]?.category),
+      },
+      {
+        field: "serialNumber",
+        headerName: t("serial-number", { defaultValue: "Serial Number" }),
+        flex: 1,
+        valueGetter: (_value, row: BalanceRow) =>
+          formatText(productExtras[row.productId]?.serialNumber),
+      },
+      {
+        field: "actions",
+        headerName: "",
+        sortable: false,
+        filterable: false,
+        width: 140,
+        renderCell: ({ row }) => (
+          <Stack direction="row" spacing={1}>
+            <IconButton
+              size="small"
+              color="primary"
+              onClick={(event) => {
+                event.stopPropagation();
+                openHistory(row.productId as string);
+              }}
+              aria-label={t("history")}
+            >
+              <HistoryIcon fontSize="small" />
+            </IconButton>
+            <IconButton
+              size="small"
+              color="primary"
+              onClick={(event) => {
+                event.stopPropagation();
+                setActiveBalanceRow(row);
+              }}
+              aria-label={t("view", { defaultValue: "View" })}
+            >
+              <VisibilityIcon fontSize="small" />
+            </IconButton>
+            <IconButton
+              size="small"
+              color="primary"
+              onClick={(event) => {
+                event.stopPropagation();
+                openEdit(row.productId as string);
+              }}
+              aria-label={t("edit")}
+            >
+              <EditIcon fontSize="small" />
+            </IconButton>
+            <IconButton
+              size="small"
+              color="primary"
+              onClick={(event) => {
+                event.stopPropagation();
+                printLabel(row);
+              }}
+              aria-label={t("print")}
+            >
+              <PrintIcon fontSize="small" />
+            </IconButton>
+          </Stack>
+        ),
+      }
+    );
+
+    return cols;
+  }, [
+    agentPriceLabel,
+    dealerPriceLabel,
+    formatText,
+    getLocationDisplay,
+    handleInlineRetailPriceChange,
+    isSalesTeamUser,
+    openEdit,
+    openHistory,
+    printLabel,
+    productExtras,
+    retailPriceLabel,
+    t,
+  ]);
+
+  useEffect(() => {
+    if (
+      typeof window === "undefined" ||
+      !apiRef.current ||
+      columns.length === 0
+    )
+      return;
+
+    // Load column order once on mount
+    if (columnOrderRef.current === null) {
+      const stored = window.localStorage.getItem(COLUMN_ORDER_STORAGE_KEY);
+      if (stored) {
+        try {
+          columnOrderRef.current = JSON.parse(stored) as string[];
+        } catch {
+          columnOrderRef.current = [];
+        }
+      } else {
+        columnOrderRef.current = [];
+      }
+    }
+
+    const order = columnOrderRef.current;
+    if (!order || order.length === 0) return;
+
+    apiRef.current.restoreState({
+      columns: {
+        orderedFields: order,
+      },
+    });
+  }, [apiRef, columns]);
+
   const onSave = async () => {
     if (!editingProductId) return;
     const payload: UpdateInventoryBalanceDto = {
@@ -781,7 +997,7 @@ const InventoryPage = () => {
       agentPrice: formValues.agentPrice ?? null,
       dealerPrice: formValues.dealerPrice ?? null,
       retailPrice: formValues.retailPrice ?? null,
-      costPrice: formValues.costPrice ?? null,
+      ...(isSalesTeamUser ? {} : { costPrice: formValues.costPrice ?? null }),
       locationId: formValues.locationId ?? null,
       batteryHealth: formValues.batteryHealth ?? null,
     };
@@ -804,20 +1020,12 @@ const InventoryPage = () => {
         await hydrateLocationLabels([freshExtras.locationId]);
       }
       closeDialog();
-      reloadData();
+      await loadAllBalances();
     } catch (err) {
       console.error("Failed to update inventory balance row", err);
       setSaving(false);
     }
   };
-
-  useEffect(() => {
-    if (tableProps.data?.length) {
-      hydrateProductExtras(
-        (tableProps.data as BalanceRow[]).map((row) => row.productId as string)
-      );
-    }
-  }, [tableProps.data, hydrateProductExtras]);
 
   const balanceDetailRows = useMemo(() => {
     if (!activeBalanceRow) {
@@ -838,6 +1046,10 @@ const InventoryPage = () => {
         ),
       },
       {
+        label: t("created-at", { defaultValue: "Created At" }),
+        value: formatDateTime(activeBalanceRow.createdAt),
+      },
+      {
         label: t("warehouse"),
         value: formatText(activeBalanceRow.warehouseLabel),
       },
@@ -848,24 +1060,31 @@ const InventoryPage = () => {
       { label: t("remark"), value: formatText(extras.remark) },
       { label: t("internal-remark"), value: formatText(extras.internalRemark) },
       {
-        label: t("retail-selling-price"),
+        label: retailPriceLabel,
         value: formatNumber(extras.retailPrice),
       },
       {
-        label: t("dealer-selling-price"),
+        label: dealerPriceLabel,
         value: formatNumber(extras.dealerPrice),
       },
       {
-        label: t("agent-selling-price"),
+        label: agentPriceLabel,
         value: formatNumber(extras.agentPrice),
       },
+      ...(!isSalesTeamUser
+        ? [
+            {
+              label: t("cost"),
+              value: formatNumber(extras.costPrice ?? 0),
+            },
+          ]
+        : []),
       {
-        label: t("cost"),
-        value: formatNumber(extras.costPrice ?? 0),
-      },
-      {
-        label: t("battery-health", { defaultValue: "Battery Health (%)" }),
-        value: extras.batteryHealth != null ? `${extras.batteryHealth}%` : "-",
+        label: t("Battery", { defaultValue: "Battery" }),
+        value:
+          extras.batteryHealth != null
+            ? formatNumber(extras.batteryHealth)
+            : "-",
       },
       { label: t("ram"), value: formatText(extras.ram) },
       { label: t("storage"), value: formatText(extras.storage) },
@@ -879,6 +1098,10 @@ const InventoryPage = () => {
     formatNumber,
     formatText,
     getLocationDisplay,
+    isSalesTeamUser,
+    agentPriceLabel,
+    dealerPriceLabel,
+    retailPriceLabel,
     productExtras,
     t,
   ]);
@@ -891,309 +1114,44 @@ const InventoryPage = () => {
           { label: t("common:dashboard"), to: "/" },
           { label: t("inventory") },
         ]}
-        showBackdrop={pageBlocker}
-        showSearch
-        renderSearch={() => (
-          <PbCard sx={{ mb: 2 }}>
-            <Typography variant="h6" sx={{ mb: 2 }}>
-              {t("search")}
-            </Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
-                {renderFilterField(
-                  t("keyword", { defaultValue: "Keyword" }),
-                  <TextField
-                    size="small"
-                    placeholder={t("keyword", { defaultValue: "Keyword" })}
-                    value={filters.search}
-                    onChange={(e) => updateFilter("search", e.target.value)}
-                    fullWidth
-                  />
-                )}
-              </Grid>
-              <Grid item xs={12} md={6}>
-                {renderFilterField(
-                  t("product"),
-                  <SelectAsync
-                    name="productId"
-                    placeholder={selectPlaceholder}
-                    suggestionsIfEmpty
-                    asyncFunc={(label, page, pageSize) =>
-                      fetchProductOptions(label, page, pageSize)
-                    }
-                    initValue={filters.product ?? undefined}
-                    onSelectionChange={(option) =>
-                      updateFilter("product", option ?? null)
-                    }
-                  />
-                )}
-              </Grid>
-              <Grid item xs={12} md={6}>
-                {renderFilterField(
-                  t("model"),
-                  <LookupAutocomplete
-                    name="modelId"
-                    groupKey={LookupGroupKey.Model}
-                    placeholder={selectPlaceholder}
-                    value={filters.model?.value ?? ""}
-                    onChange={(_, option) =>
-                      updateFilter(
-                        "model",
-                        option
-                          ? { label: option.label, value: option.value }
-                          : null
-                      )
-                    }
-                  />
-                )}
-              </Grid>
-              <Grid item xs={12} md={6}>
-                {renderFilterField(
-                  t("warehouse"),
-                  <LookupAutocomplete
-                    name="warehouseId"
-                    groupKey={LookupGroupKey.Warehouse}
-                    placeholder={selectPlaceholder}
-                    value={filters.warehouse?.value ?? ""}
-                    onChange={(_, option) =>
-                      updateFilter(
-                        "warehouse",
-                        option
-                          ? { label: option.label, value: option.value }
-                          : null
-                      )
-                    }
-                  />
-                )}
-              </Grid>
-              <Grid item xs={12} md={6}>
-                {renderFilterField(
-                  t("location"),
-                  <LookupAutocomplete
-                    name="locationId"
-                    groupKey={LookupGroupKey.Location}
-                    placeholder={selectPlaceholder}
-                    value={filters.location?.value ?? ""}
-                    onChange={(_, option) =>
-                      updateFilter(
-                        "location",
-                        option
-                          ? { label: option.label, value: option.value }
-                          : null
-                      )
-                    }
-                  />
-                )}
-              </Grid>
-              <Grid item xs={12} md={6}>
-                {renderFilterField(
-                  t("category"),
-                  <LookupAutocomplete
-                    name="categoryId"
-                    groupKey={LookupGroupKey.ProductCategory}
-                    placeholder={selectPlaceholder}
-                    value={filters.category?.value ?? ""}
-                    onChange={(_, option) =>
-                      updateFilter(
-                        "category",
-                        option
-                          ? { label: option.label, value: option.value }
-                          : null
-                      )
-                    }
-                  />
-                )}
-              </Grid>
-              <Grid item xs={12} md={6}>
-                {renderFilterField(
-                  t("brand"),
-                  <LookupAutocomplete
-                    name="brandId"
-                    groupKey={LookupGroupKey.Brand}
-                    placeholder={selectPlaceholder}
-                    value={filters.brand?.value ?? ""}
-                    onChange={(_, option) =>
-                      updateFilter(
-                        "brand",
-                        option
-                          ? { label: option.label, value: option.value }
-                          : null
-                      )
-                    }
-                  />
-                )}
-              </Grid>
-              <Grid item xs={12} md={6}>
-                {renderFilterField(
-                  t("colour"),
-                  <LookupAutocomplete
-                    name="colorId"
-                    groupKey={LookupGroupKey.Color}
-                    placeholder={selectPlaceholder}
-                    value={filters.color?.value ?? ""}
-                    onChange={(_, option) =>
-                      updateFilter(
-                        "color",
-                        option
-                          ? { label: option.label, value: option.value }
-                          : null
-                      )
-                    }
-                  />
-                )}
-              </Grid>
-              <Grid item xs={12} md={6}>
-                {renderFilterField(
-                  t("storage"),
-                  <LookupAutocomplete
-                    name="storageId"
-                    groupKey={LookupGroupKey.Storage}
-                    placeholder={selectPlaceholder}
-                    value={filters.storage?.value ?? ""}
-                    onChange={(_, option) =>
-                      updateFilter(
-                        "storage",
-                        option
-                          ? { label: option.label, value: option.value }
-                          : null
-                      )
-                    }
-                  />
-                )}
-              </Grid>
-              <Grid item xs={12} md={6}>
-                {renderFilterField(
-                  t("ram"),
-                  <LookupAutocomplete
-                    name="ramId"
-                    groupKey={LookupGroupKey.Ram}
-                    placeholder={selectPlaceholder}
-                    value={filters.ram?.value ?? ""}
-                    onChange={(_, option) =>
-                      updateFilter(
-                        "ram",
-                        option
-                          ? { label: option.label, value: option.value }
-                          : null
-                      )
-                    }
-                  />
-                )}
-              </Grid>
-              <Grid item xs={12} md={6}>
-                {renderFilterField(
-                  t("processor"),
-                  <LookupAutocomplete
-                    name="processorId"
-                    groupKey={LookupGroupKey.Processor}
-                    placeholder={selectPlaceholder}
-                    value={filters.processor?.value ?? ""}
-                    onChange={(_, option) =>
-                      updateFilter(
-                        "processor",
-                        option
-                          ? { label: option.label, value: option.value }
-                          : null
-                      )
-                    }
-                  />
-                )}
-              </Grid>
-              <Grid item xs={12} md={6}>
-                {renderFilterField(
-                  t("screen-size"),
-                  <LookupAutocomplete
-                    name="screenSizeId"
-                    groupKey={LookupGroupKey.ScreenSize}
-                    placeholder={selectPlaceholder}
-                    value={filters.screenSize?.value ?? ""}
-                    onChange={(_, option) =>
-                      updateFilter(
-                        "screenSize",
-                        option
-                          ? { label: option.label, value: option.value }
-                          : null
-                      )
-                    }
-                  />
-                )}
-              </Grid>
-              <Grid item xs={12} md={6}>
-                {renderFilterField(
-                  t("grade"),
-                  <LookupAutocomplete
-                    name="gradeId"
-                    groupKey={LookupGroupKey.Grade}
-                    placeholder={selectPlaceholder}
-                    value={filters.grade?.value ?? ""}
-                    onChange={(_, option) =>
-                      updateFilter(
-                        "grade",
-                        option
-                          ? { label: option.label, value: option.value }
-                          : null
-                      )
-                    }
-                  />
-                )}
-              </Grid>
-              <Grid item xs={12} md={6}>
-                {renderFilterField(
-                  t("region"),
-                  <LookupAutocomplete
-                    name="regionId"
-                    groupKey={LookupGroupKey.Region}
-                    placeholder={selectPlaceholder}
-                    value={filters.region?.value ?? ""}
-                    onChange={(_, option) =>
-                      updateFilter(
-                        "region",
-                        option
-                          ? { label: option.label, value: option.value }
-                          : null
-                      )
-                    }
-                  />
-                )}
-              </Grid>
-              <Grid item xs={12} md={6}>
-                {renderFilterField(
-                  t("new-or-used"),
-                  <LookupAutocomplete
-                    name="newOrUsedId"
-                    groupKey={LookupGroupKey.NewOrUsed}
-                    placeholder={selectPlaceholder}
-                    value={filters.newOrUsed?.value ?? ""}
-                    onChange={(_, option) =>
-                      updateFilter(
-                        "newOrUsed",
-                        option
-                          ? { label: option.label, value: option.value }
-                          : null
-                      )
-                    }
-                  />
-                )}
-              </Grid>
-              <Grid item xs={12}>
-                <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-                  <Button variant="contained" onClick={onSearch}>
-                    {t("search")}
-                  </Button>
-                </Box>
-              </Grid>
-            </Grid>
-          </PbCard>
-        )}
+        showSearch={false}
       >
-        <DataTable
-          title={t("inventory")}
-          tableKey="InventoryPage"
-          headerCells={headerCells}
-          data={tableProps}
-          dataKey="rowId"
-          hidePagination
-        />
+        <PbCard>
+          <Box sx={{ width: "100%", height: 700 }}>
+            <DataGrid
+              apiRef={apiRef}
+              rows={gridRows.map((r) => ({
+                ...r,
+                id: r.productId ?? r.rowId,
+              }))}
+              columns={columns}
+              getRowId={(row) =>
+                (row as BalanceRow).productId ?? (row as any).id
+              }
+              loading={pageBlocker}
+              disableRowSelectionOnClick
+              columnVisibilityModel={columnVisibilityModel}
+              onColumnVisibilityModelChange={setColumnVisibilityModel}
+              onColumnOrderChange={handleColumnOrderChange}
+              sortingMode="client"
+              filterMode="client"
+              disableColumnMenu={false}
+              initialState={{
+                sorting: { sortModel: [{ field: "productCode", sort: "asc" }] },
+              }}
+              density="compact"
+              rowHeight={48}
+              sx={{
+                fontSize: 12,
+                "& .MuiDataGrid-cell": {
+                  alignItems: "flex-start",
+                  py: 0.5,
+                },
+                "& .MuiDataGrid-columnHeaders": { lineHeight: "35px" },
+              }}
+            />
+          </Box>
+        </PbCard>
       </Page>
 
       <Dialog
@@ -1259,7 +1217,7 @@ const InventoryPage = () => {
             </Stack>
             <Stack direction="row" spacing={2}>
               <TextField
-                label={t("retail-selling-price")}
+                label={retailPriceLabel}
                 size="small"
                 type="number"
                 inputProps={{ min: 0, step: "0.01" }}
@@ -1273,7 +1231,7 @@ const InventoryPage = () => {
                 fullWidth
               />
               <TextField
-                label={t("dealer-selling-price")}
+                label={dealerPriceLabel}
                 size="small"
                 type="number"
                 inputProps={{ min: 0, step: "0.01" }}
@@ -1287,7 +1245,7 @@ const InventoryPage = () => {
                 fullWidth
               />
               <TextField
-                label={t("agent-selling-price")}
+                label={agentPriceLabel}
                 size="small"
                 type="number"
                 inputProps={{ min: 0, step: "0.01" }}
@@ -1300,20 +1258,22 @@ const InventoryPage = () => {
                 }
                 fullWidth
               />
-              <TextField
-                label={t("cost")}
-                size="small"
-                type="number"
-                inputProps={{ min: 0, step: "0.01" }}
-                value={formValues.costPrice ?? ""}
-                onChange={(e) =>
-                  updateField(
-                    "costPrice",
-                    e.target.value === "" ? null : Number(e.target.value)
-                  )
-                }
-                fullWidth
-              />
+              {!isSalesTeamUser && (
+                <TextField
+                  label={t("cost")}
+                  size="small"
+                  type="number"
+                  inputProps={{ min: 0, step: "0.01" }}
+                  value={formValues.costPrice ?? ""}
+                  onChange={(e) =>
+                    updateField(
+                      "costPrice",
+                      e.target.value === "" ? null : Number(e.target.value)
+                    )
+                  }
+                  fullWidth
+                />
+              )}
             </Stack>
             <SelectAsync
               name="locationId"
@@ -1400,55 +1360,75 @@ const InventoryPage = () => {
         <DialogTitle>{t("history")}</DialogTitle>
         <DialogContent dividers>
           {historyLoading && <LinearProgress />}
-          {!historyLoading && historyLogs.length === 0 && (
-            <Typography variant="body2" color="textSecondary">
-              {t("no-history", { defaultValue: "No history available." })}
-            </Typography>
-          )}
           {!historyLoading &&
-            historyLogs.map((log) => (
-              <Box
-                key={log.id}
-                sx={{
-                  borderBottom: "1px solid",
-                  borderColor: "divider",
-                  py: 1.5,
-                }}
-              >
-                <Stack
-                  direction="row"
-                  spacing={1}
-                  alignItems="center"
-                  justifyContent="space-between"
+            historyLogs.filter((log) => {
+              if (!isSalesTeamUser) return true;
+              const property = (log.propertyName ?? "")
+                .replace(/\s+/g, "")
+                .toLowerCase();
+              return property !== "cost" && property !== "costprice";
+            }).length === 0 && (
+              <Typography variant="body2" color="textSecondary">
+                {t("no-history", { defaultValue: "No history available." })}
+              </Typography>
+            )}
+          {!historyLoading &&
+            historyLogs
+              .filter((log) => {
+                if (!isSalesTeamUser) return true;
+                const property = (log.propertyName ?? "")
+                  .replace(/\s+/g, "")
+                  .toLowerCase();
+                return property !== "cost" && property !== "costprice";
+              })
+              .map((log) => (
+                <Box
+                  key={log.id}
+                  sx={{
+                    borderBottom: "1px solid",
+                    borderColor: "divider",
+                    py: 1.5,
+                  }}
                 >
-                  <Typography variant="subtitle2">
-                    {log.propertyName}
-                  </Typography>
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    alignItems="center"
+                    justifyContent="space-between"
+                  >
+                    <Typography variant="subtitle2">
+                      {log.propertyName}
+                    </Typography>
+                    <Typography variant="caption" color="textSecondary">
+                      {getLocalDateAndTime(log.changedAt)}
+                    </Typography>
+                  </Stack>
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    alignItems="center"
+                    mt={0.5}
+                  >
+                    <Chip
+                      size="small"
+                      label={log.oldValue ?? "-"}
+                      color="default"
+                      variant="outlined"
+                    />
+                    <Typography variant="body2">-&gt;</Typography>
+                    <Chip
+                      size="small"
+                      label={log.newValue ?? "-"}
+                      color="primary"
+                      variant="outlined"
+                    />
+                  </Stack>
                   <Typography variant="caption" color="textSecondary">
-                    {getLocalDateAndTime(log.changedAt)}
+                    {t("changed-by", { defaultValue: "Changed by" })}:{" "}
+                    <UserName userId={log.changedBy} placeholder="-" />
                   </Typography>
-                </Stack>
-                <Stack direction="row" spacing={1} alignItems="center" mt={0.5}>
-                  <Chip
-                    size="small"
-                    label={log.oldValue ?? "-"}
-                    color="default"
-                    variant="outlined"
-                  />
-                  <Typography variant="body2">-&gt;</Typography>
-                  <Chip
-                    size="small"
-                    label={log.newValue ?? "-"}
-                    color="primary"
-                    variant="outlined"
-                  />
-                </Stack>
-                <Typography variant="caption" color="textSecondary">
-                  {t("changed-by", { defaultValue: "Changed by" })}:{" "}
-                  <UserName userId={log.changedBy} placeholder="-" />
-                </Typography>
-              </Box>
-            ))}
+                </Box>
+              ))}
         </DialogContent>
         <DialogActions>
           <Button onClick={closeHistory}>{t("close")}</Button>

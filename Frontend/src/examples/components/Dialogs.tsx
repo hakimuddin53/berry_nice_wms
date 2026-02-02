@@ -1,18 +1,19 @@
-import React, { useState } from "react";
 import styled from "@emotion/styled";
-import { NavLink } from "react-router-dom";
+import React, { useState } from "react";
 import { Helmet } from "react-helmet-async";
+import { NavLink } from "react-router-dom";
 
+import { Add as AddIcon, Person as PersonIcon } from "@mui/icons-material";
 import {
   Avatar,
-  Button,
   Box,
+  Button,
   CardContent,
   Dialog,
-  DialogProps,
   DialogActions,
   DialogContent,
   DialogContentText,
+  DialogProps,
   DialogTitle,
   FormControl,
   FormControlLabel,
@@ -20,8 +21,8 @@ import {
   InputLabel,
   Link,
   List,
-  ListItem,
   ListItemAvatar,
+  ListItemButton,
   ListItemText,
   MenuItem,
   Breadcrumbs as MuiBreadcrumbs,
@@ -34,7 +35,6 @@ import {
   Typography,
 } from "@mui/material";
 import { SelectChangeEvent } from "@mui/material/Select";
-import { Add as AddIcon, Person as PersonIcon } from "@mui/icons-material";
 import { spacing } from "@mui/system";
 
 const Card = styled(MuiCard)(spacing);
@@ -73,8 +73,7 @@ function SimpleDialog(props: SimpleDialogProps) {
       <DialogTitle id="simple-dialog-title">Set backup account</DialogTitle>
       <List>
         {emails.map((email) => (
-          <ListItem
-            button
+          <ListItemButton
             onClick={() => handleListItemClick(email)}
             key={email}
           >
@@ -84,11 +83,10 @@ function SimpleDialog(props: SimpleDialogProps) {
               </Avatar>
             </ListItemAvatar>
             <ListItemText primary={email} />
-          </ListItem>
+          </ListItemButton>
         ))}
-        <ListItem
+        <ListItemButton
           autoFocus
-          button
           onClick={() => handleListItemClick("addAccount")}
         >
           <ListItemAvatar>
@@ -97,7 +95,7 @@ function SimpleDialog(props: SimpleDialogProps) {
             </Avatar>
           </ListItemAvatar>
           <ListItemText primary="Add account" />
-        </ListItem>
+        </ListItemButton>
       </List>
     </Dialog>
   );

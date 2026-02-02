@@ -6,6 +6,7 @@ export interface InventoryAuditDto {
   modelId?: guid | null;
   modelName?: string | null;
   model?: string | null;
+  createdAt: string;
   ageDays: number;
   warehouseId: guid;
   warehouseLabel?: string | null;

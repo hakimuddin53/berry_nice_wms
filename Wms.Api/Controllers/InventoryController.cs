@@ -172,6 +172,7 @@ namespace Wms.Api.Controllers
                     ModelId = x.product?.ModelId,
                     ModelName = x.ModelLabel,
                     Model = x.ModelLabel,
+                    CreatedAt = x.product?.CreatedDate ?? x.inv.CreatedAt,
                     AgeDays = x.product == null
                         ? 0
                         : Math.Max(

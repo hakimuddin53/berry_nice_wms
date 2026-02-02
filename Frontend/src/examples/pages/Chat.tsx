@@ -12,6 +12,7 @@ import {
   Typography,
   List,
   ListItem,
+  ListItemButton,
   ListItemIcon,
   ListItemText,
   Avatar,
@@ -149,7 +150,7 @@ function ChatWindow() {
         </Grid>
         <Divider />
         <List>
-          <ListItem button>
+          <ListItemButton>
             <ListItemIcon>
               <Online
                 overlap="circular"
@@ -166,8 +167,8 @@ function ChatWindow() {
               </Online>
             </ListItemIcon>
             <ListItemText primary="Lucy Lavender" secondary="Sent a photo" />
-          </ListItem>
-          <ListItem button>
+          </ListItemButton>
+          <ListItemButton>
             <ListItemIcon>
               <Online
                 overlap="circular"
@@ -184,8 +185,8 @@ function ChatWindow() {
               </Online>
             </ListItemIcon>
             <ListItemText primary="Remy Sharp" secondary="Coffee?" />
-          </ListItem>
-          <ListItem button>
+          </ListItemButton>
+          <ListItemButton>
             <ListItemIcon>
               <Avatar
                 alt="Cassandra Mixon"
@@ -193,7 +194,7 @@ function ChatWindow() {
               />
             </ListItemIcon>
             <ListItemText primary="Cassandra Mixon" secondary="Hello! 👋" />
-          </ListItem>
+          </ListItemButton>
         </List>
       </ChatSidebar>
       <ChatMain item xs={12} md={8} lg={9}>

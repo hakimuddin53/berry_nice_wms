@@ -82,7 +82,7 @@ export const SupplierServiceProvider: React.FC<SupplierServiceProviderProps> = (
     resultSize: number,
     ids?: string[]
   ) => {
-    return await axios
+    const options = await axios
       .get(`/supplier/select-options`, {
         params: {
           searchString: label,
@@ -91,7 +91,21 @@ export const SupplierServiceProvider: React.FC<SupplierServiceProviderProps> = (
           ids: ids ?? [],
         },
       })
-      .then((res) => res.data.data);
+      .then((res) => res.data.data as SelectAsyncOption[]);
+
+    // Backend returns label as "Name (Code)"; strip code for display,
+    // keep the supplier code as value so form continues to store the code.
+    return options.map((opt) => {
+      const originalLabel = opt.label ?? "";
+      const codeMatch = /\(([^)]+)\)\s*$/.exec(originalLabel);
+      const code = codeMatch?.[1]?.trim() ?? opt.value ?? originalLabel;
+      const nameOnly = originalLabel.replace(/\s*\([^)]*\)\s*$/, "").trim();
+      return {
+        ...opt,
+        label: nameOnly,
+        value: code,
+      };
+    });
   };
 
   const getSupplierById = (supplierId: guid) => {

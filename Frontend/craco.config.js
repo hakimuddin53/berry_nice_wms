@@ -37,26 +37,35 @@ module.exports = {
     ],
   },
   webpack: {
-    configure: {
+    configure: (webpackConfig) => {
       // Webpack ≥5 no longer ships with Node.js polyfills by default.
       // Reference: https://webpack.js.org/blog/2020-10-10-webpack-5-release/#automatic-nodejs-polyfills-removed
       // Solution: https://github.com/facebook/create-react-app/issues/11756#issuecomment-1001769356
-      resolve: {
-        fallback: {
-          buffer: require.resolve("buffer"),
-          crypto: require.resolve("crypto-browserify"),
-          process: require.resolve("process/browser"),
-          stream: require.resolve("stream-browserify"),
-          util: require.resolve("util"),
-          vm: require.resolve("vm-browserify"),
+      webpackConfig.resolve.fallback = {
+        buffer: require.resolve("buffer"),
+        crypto: require.resolve("crypto-browserify"),
+        process: require.resolve("process/browser"),
+        stream: require.resolve("stream-browserify"),
+        util: require.resolve("util"),
+        vm: require.resolve("vm-browserify"),
+      };
+
+      // Fix for MUI X v8 ESM module resolution
+      webpackConfig.module.rules.push({
+        test: /\.m?js$/,
+        resolve: {
+          fullySpecified: false,
         },
-      },
-      plugins: [
+      });
+
+      webpackConfig.plugins.push(
         new webpack.ProvidePlugin({
           Buffer: ["buffer", "Buffer"],
           process: require.resolve("process/browser"),
-        }),
-      ],
+        })
+      );
+
+      return webpackConfig;
     },
   },
 };

@@ -1,8 +1,13 @@
-import React from "react";
 import styled from "@emotion/styled";
-import { NavLink as RouterNavLink } from "react-router-dom";
+import React from "react";
 import { Helmet } from "react-helmet-async";
+import { NavLink as RouterNavLink } from "react-router-dom";
 
+import {
+  Drafts as DraftsIcon,
+  MoveToInbox as InboxIcon,
+  Send as SendIcon,
+} from "@mui/icons-material";
 import {
   Button,
   CardContent,
@@ -10,8 +15,9 @@ import {
   Grid,
   Link,
   List,
-  ListItem,
+  ListItemButton,
   ListItemIcon,
+  ListProps,
   Menu,
   MenuItem,
   Breadcrumbs as MuiBreadcrumbs,
@@ -20,13 +26,7 @@ import {
   ListItemText as MuiListItemText,
   Paper as MuiPaper,
   Typography,
-  ListProps,
 } from "@mui/material";
-import {
-  Drafts as DraftsIcon,
-  MoveToInbox as InboxIcon,
-  Send as SendIcon,
-} from "@mui/icons-material";
 import { spacing } from "@mui/system";
 
 const NavLink = React.forwardRef<ListProps, any>((props, ref) => (
@@ -236,8 +236,7 @@ function SelectedMenu() {
         </Typography>
         <Paper mt={3}>
           <List component="nav" aria-label="Device settings">
-            <ListItem
-              button
+            <ListItemButton
               aria-haspopup="true"
               aria-controls="lock-menu"
               aria-label="when device is locked"
@@ -247,7 +246,7 @@ function SelectedMenu() {
                 primary="When device is locked"
                 secondary={options[selectedIndex]}
               />
-            </ListItem>
+            </ListItemButton>
           </List>
           <Menu
             id="lock-menu"

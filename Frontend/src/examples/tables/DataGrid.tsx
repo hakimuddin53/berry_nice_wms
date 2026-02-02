@@ -1,7 +1,7 @@
-import React from "react";
 import styled from "@emotion/styled";
-import { NavLink } from "react-router-dom";
+import React from "react";
 import { Helmet } from "react-helmet-async";
+import { NavLink } from "react-router-dom";
 
 import {
   Link,
@@ -12,8 +12,8 @@ import {
   Paper as MuiPaper,
   Typography,
 } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { spacing } from "@mui/system";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
 
 const Card = styled(MuiCard)(spacing);
 
@@ -82,10 +82,12 @@ function DataGridDemo() {
       <Paper>
         <div style={{ height: 400, width: "100%" }}>
           <DataGrid
-            rowsPerPageOptions={[5, 10, 25]}
+            pageSizeOptions={[5, 10, 25]}
             rows={rows}
             columns={columns}
-            pageSize={5}
+            initialState={{
+              pagination: { paginationModel: { pageSize: 5 } },
+            }}
             checkboxSelection
           />
         </div>

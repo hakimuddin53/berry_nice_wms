@@ -63,7 +63,7 @@ const StockRecieveHeadCreateEdit = (props: {
       (option) =>
         ({
           label: option.label ?? "",
-          value: option.label ?? "",
+          value: option.value ?? option.label ?? "",
         } as SelectAsyncOption)
     );
   }, []);

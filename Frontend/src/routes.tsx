@@ -309,7 +309,7 @@ const routes = [
           {
             path: "purchase-quality",
             element: (
-              <ModuleGuard requiredModule={ModuleEnum.INVENTORY}>
+              <ModuleGuard requiredModule={ModuleEnum.PURCHASEQUALITY}>
                 <PurchaseQualityReportPage />
               </ModuleGuard>
             ),

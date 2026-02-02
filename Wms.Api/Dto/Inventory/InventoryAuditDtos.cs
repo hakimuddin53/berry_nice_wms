@@ -30,6 +30,7 @@ public class InventoryAuditDto
     public Guid? ModelId { get; set; }
     public string? ModelName { get; set; }
     public string? Model { get; set; }
+    public DateTime CreatedAt { get; set; }
     public int AgeDays { get; set; }
     public Guid WarehouseId { get; set; }
     public string WarehouseLabel { get; set; } = string.Empty;
