@@ -23,6 +23,7 @@ export enum LookupGroupKey {
   Model = "Model",
   Warehouse = "Warehouse",
   Remark = "Remark",
+  LogbookStatus = "LogbookStatus",
 }
 
 export interface LookupDetailsDto {

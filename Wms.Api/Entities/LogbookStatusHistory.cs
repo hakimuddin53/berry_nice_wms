@@ -12,7 +12,10 @@ namespace Wms.Api.Entities
         public Guid LogbookEntryId { get; set; }
 
         [Required]
-        public LogbookStatus Status { get; set; }
+        public Guid LogbookStatusId { get; set; }
+
+        [ForeignKey(nameof(LogbookStatusId))]
+        public Lookup LogbookStatus { get; set; } = default!;
 
         [MaxLength(512)]
         public string? Remark { get; set; }

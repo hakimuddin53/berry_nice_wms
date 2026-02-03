@@ -11,13 +11,13 @@ import {
   List,
   ListItem,
   ListItemText,
-  MenuItem,
   Stack,
   TextField,
   Typography,
 } from "@mui/material";
 import { DataTable } from "components/platbricks/shared";
 import { DataTableHeaderCell } from "components/platbricks/shared/dataTable/DataTable";
+import LookupAutocomplete from "components/platbricks/shared/LookupAutocomplete";
 import Page from "components/platbricks/shared/Page";
 import SelectAsync, {
   type SelectAsyncOption,
@@ -32,15 +32,21 @@ import {
   LogbookStatusHistoryDto,
   LogbookUpdateDto,
 } from "interfaces/v12/logbook/logbookDto";
+import { LookupGroupKey } from "interfaces/v12/lookup/lookup";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLogbookService } from "services/LogbookService";
 import { useUserService } from "services/UserService";
 
-const statusOptions = [
-  { value: "OUT", label: "Out" },
-  { value: "RETURNED", label: "Returned" },
-];
+type StatusOption = { value: string; label: string };
+
+const toStatusOption = (
+  value?: string | null,
+  label?: string | null
+): StatusOption | null => (value ? { value, label: label ?? value } : null);
+
+const getStatusLabel = (option: StatusOption | null, fallback = "") =>
+  option?.label?.trim() || option?.value?.trim() || fallback;
 
 const LogbookPage: React.FC = () => {
   const { t } = useTranslation();
@@ -50,8 +56,8 @@ const LogbookPage: React.FC = () => {
 
   const [filters, setFilters] = useState<{
     search: string;
-    status: string;
-  }>({ search: "", status: "" });
+    status: StatusOption | null;
+  }>({ search: "", status: null });
   const filtersRef = useRef(filters);
 
   const [historyDialog, setHistoryDialog] = useState<{
@@ -59,7 +65,7 @@ const LogbookPage: React.FC = () => {
     loading: boolean;
     entry: LogbookAvailabilityDto | null;
     history: LogbookStatusHistoryDto[];
-    status: string;
+    status: StatusOption | null;
     remark: string;
     user: SelectAsyncOption | null;
     userError?: boolean;
@@ -68,7 +74,7 @@ const LogbookPage: React.FC = () => {
     loading: false,
     entry: null,
     history: [],
-    status: "OUT",
+    status: null,
     remark: "",
     user: null,
     userError: false,
@@ -106,10 +112,15 @@ const LogbookPage: React.FC = () => {
         id: "status",
         label: t("status", { defaultValue: "Status" }),
         render: (row) =>
-          row.status ? (
+          row.logbookStatusId || row.statusLabel ? (
             <Chip
-              label={row.status}
-              color={row.status === "RETURNED" ? "success" : "warning"}
+              label={row.statusLabel ?? row.logbookStatusId ?? ""}
+              color={
+                (row.statusLabel ?? row.logbookStatusId ?? "").toUpperCase() ===
+                "RETURNED"
+                  ? "success"
+                  : "warning"
+              }
               size="small"
             />
           ) : (
@@ -117,7 +128,7 @@ const LogbookPage: React.FC = () => {
           ),
       },
     ],
-    [t]
+    [getLocalDateAndTime, t]
   );
 
   useEffect(() => {
@@ -129,7 +140,7 @@ const LogbookPage: React.FC = () => {
       const current = filtersRef.current;
       return {
         search: searchValue || current.search || undefined,
-        status: current.status ? current.status.toUpperCase() : undefined,
+        logbookStatusId: current.status?.value ?? undefined,
         page: page + 1,
         pageSize,
       };
@@ -185,7 +196,7 @@ const LogbookPage: React.FC = () => {
       loading: !!row.logbookEntryId,
       entry: row,
       history: [],
-      status: row.status ?? "OUT",
+      status: toStatusOption(row.logbookStatusId, row.statusLabel),
       remark: row.remark ?? "",
       user: row.userName ? { label: row.userName, value: row.userName } : null,
       userError: false,
@@ -210,8 +221,12 @@ const LogbookPage: React.FC = () => {
   const handleHistorySave = async () => {
     const entry = historyDialog.entry;
     const selectedUser = historyDialog.user;
+    const statusLabel = getStatusLabel(historyDialog.status, "");
     if (!selectedUser || !selectedUser.label?.trim()) {
       setHistoryDialog((prev) => ({ ...prev, userError: true }));
+      return;
+    }
+    if (!statusLabel || !historyDialog.status?.value) {
       return;
     }
     const trimmedUser = selectedUser.label.trim();
@@ -220,7 +235,7 @@ const LogbookPage: React.FC = () => {
       setHistoryDialog((prev) => ({ ...prev, loading: true }));
       if (entry?.logbookEntryId) {
         const dto: LogbookUpdateDto = {
-          status: historyDialog.status,
+          logbookStatusId: historyDialog.status.value,
           purpose: historyDialog.remark,
           userName: trimmedUser,
         };
@@ -234,18 +249,22 @@ const LogbookPage: React.FC = () => {
           history: refreshedHistory,
           entry: {
             ...entry,
-            status: dto.status ?? entry.status,
+            logbookStatusId: dto.logbookStatusId ?? entry.logbookStatusId,
             remark: dto.purpose ?? entry.remark,
             statusChangedAt: new Date().toISOString(),
             userName: trimmedUser,
           },
+          status: toStatusOption(
+            dto.logbookStatusId ?? historyDialog.status?.value,
+            statusLabel
+          ),
         }));
       } else if (entry?.productCode) {
         const createDto: LogbookCreateDto = {
           barcode: entry.productCode,
           productId: entry.productId,
           purpose: historyDialog.remark,
-          status: historyDialog.status,
+          logbookStatusId: historyDialog.status.value,
           dateUtc: new Date().toISOString(),
           userName: trimmedUser,
         };
@@ -258,12 +277,17 @@ const LogbookPage: React.FC = () => {
           entry: {
             ...entry,
             logbookEntryId: created.id,
-            status: created.status ?? historyDialog.status,
+            logbookStatusId:
+              created.logbookStatusId ?? historyDialog.status?.value ?? "",
             remark: historyDialog.remark,
             statusChangedAt:
               created.statusChangedAt ?? new Date().toISOString(),
             userName: created.userName ?? trimmedUser,
           },
+          status: toStatusOption(
+            created.logbookStatusId ?? historyDialog.status?.value ?? "",
+            statusLabel
+          ),
         }));
       } else {
         setHistoryDialog((prev) => ({ ...prev, loading: false }));
@@ -301,24 +325,25 @@ const LogbookPage: React.FC = () => {
                   }
                   placeholder={t("common:search", { defaultValue: "Search" })}
                 />
-                <TextField
-                  select
-                  fullWidth
+                <LookupAutocomplete
+                  groupKey={LookupGroupKey.LogbookStatus}
+                  name="statusFilter"
                   label={t("status", { defaultValue: "Status" })}
-                  value={filters.status}
-                  onChange={(e) =>
-                    setFilters((f) => ({ ...f, status: e.target.value }))
+                  placeholder={t("all", { defaultValue: "All" })}
+                  value={filters.status?.value ?? ""}
+                  allowCreate
+                  onChange={(value, option) =>
+                    setFilters((f) => ({
+                      ...f,
+                      status:
+                        option && option.value
+                          ? { value: option.value, label: option.label }
+                          : value
+                          ? { value, label: value }
+                          : null,
+                    }))
                   }
-                >
-                  <MenuItem value="">
-                    {t("all", { defaultValue: "All" })}
-                  </MenuItem>
-                  {statusOptions.map((opt) => (
-                    <MenuItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </MenuItem>
-                  ))}
-                </TextField>
+                />
               </Stack>
               <Stack direction="row" spacing={1} justifyContent="flex-end">
                 <Button
@@ -326,7 +351,7 @@ const LogbookPage: React.FC = () => {
                   onClick={() =>
                     setFilters({
                       search: "",
-                      status: "",
+                      status: null,
                     })
                   }
                 >
@@ -382,24 +407,26 @@ const LogbookPage: React.FC = () => {
         </DialogTitle>
         <DialogContent dividers>
           <Stack spacing={2}>
-            <TextField
-              select
-              fullWidth
+            <LookupAutocomplete
+              groupKey={LookupGroupKey.LogbookStatus}
+              name="status"
               label={t("status", { defaultValue: "Status" })}
-              value={historyDialog.status}
-              onChange={(e) =>
+              value={historyDialog.status?.value ?? ""}
+              placeholder={t("status", { defaultValue: "Status" })}
+              allowCreate
+              disableClearable
+              onChange={(value, option) =>
                 setHistoryDialog((prev) => ({
                   ...prev,
-                  status: e.target.value,
+                  status:
+                    option && option.value
+                      ? { value: option.value, label: option.label }
+                      : value
+                      ? { value, label: value }
+                      : null,
                 }))
               }
-            >
-              {statusOptions.map((opt) => (
-                <MenuItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </MenuItem>
-              ))}
-            </TextField>
+            />
             <SelectAsync
               name="user"
               label={t("user", { defaultValue: "User" })}
@@ -454,7 +481,7 @@ const LogbookPage: React.FC = () => {
                   <ListItem key={item.id} divider disableGutters>
                     <ListItemText
                       primary={`${getLocalDateAndTime(item.changedAt)} - ${
-                        item.status
+                        item.statusLabel ?? item.logbookStatusId ?? ""
                       }`}
                       secondary={
                         item.remark
@@ -475,7 +502,11 @@ const LogbookPage: React.FC = () => {
           <Button
             variant="contained"
             onClick={handleHistorySave}
-            disabled={!historyDialog.entry || !historyDialog.user}
+            disabled={
+              !historyDialog.entry ||
+              !historyDialog.user ||
+              !historyDialog.status
+            }
           >
             {t("common:save", { defaultValue: "Save" })}
           </Button>

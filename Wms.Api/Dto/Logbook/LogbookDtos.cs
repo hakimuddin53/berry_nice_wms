@@ -7,7 +7,7 @@ namespace Wms.Api.Dto.Logbook
     public class LogbookSearchDto : PagedRequestAbstractDto
     {
         public string? Search { get; set; }
-        public string? Status { get; set; }
+        public Guid? LogbookStatusId { get; set; }
         public DateTime? FromDateUtc { get; set; }
         public DateTime? ToDateUtc { get; set; }
     }
@@ -25,7 +25,7 @@ namespace Wms.Api.Dto.Logbook
 
         public string? Purpose { get; set; }
 
-        public string? Status { get; set; }
+        public Guid? LogbookStatusId { get; set; }
 
         public DateTime? DateUtc { get; set; }
     }
@@ -36,7 +36,7 @@ namespace Wms.Api.Dto.Logbook
         [MaxLength(128)]
         public string UserName { get; set; } = string.Empty;
         public string? Purpose { get; set; }
-        public string? Status { get; set; }
+        public Guid? LogbookStatusId { get; set; }
         public DateTime? DateUtc { get; set; }
     }
 
@@ -49,7 +49,8 @@ namespace Wms.Api.Dto.Logbook
         public string? ProductCode { get; set; }
         public string UserName { get; set; } = string.Empty;
         public string? Purpose { get; set; }
-        public string Status { get; set; } = LogbookStatus.OUT.ToString();
+        public Guid LogbookStatusId { get; set; }
+        public string? StatusLabel { get; set; }
         public DateTime StatusChangedAt { get; set; }
         public List<LogbookStatusHistoryDto> History { get; set; } = new();
     }
@@ -61,7 +62,8 @@ namespace Wms.Api.Dto.Logbook
         public string? ProductName { get; set; }
         public string? UserName { get; set; }
         public string? Remark { get; set; }
-        public string? Status { get; set; }
+        public Guid? LogbookStatusId { get; set; }
+        public string? StatusLabel { get; set; }
         public DateTime? StatusChangedAt { get; set; }
         public Guid? LogbookEntryId { get; set; }
     }
@@ -69,7 +71,8 @@ namespace Wms.Api.Dto.Logbook
     public class LogbookStatusHistoryDto
     {
         public Guid Id { get; set; }
-        public string Status { get; set; } = string.Empty;
+        public Guid LogbookStatusId { get; set; }
+        public string? StatusLabel { get; set; }
         public string? Remark { get; set; }
         public string UserName { get; set; } = string.Empty;
         public DateTime ChangedAt { get; set; }

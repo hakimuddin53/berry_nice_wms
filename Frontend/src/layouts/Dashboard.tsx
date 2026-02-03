@@ -324,6 +324,16 @@ const lookupChildren: SidebarItemsType[] = [
     children: [],
     requiredModule: ModuleEnum.LOOKUP,
   },
+  {
+    id: 220,
+    href: "/lookups/LogbookStatus",
+    itemType: "link",
+    title: "Logbook Status",
+    icon: <BookOpenText size={20} />,
+    type: "single",
+    children: [],
+    requiredModule: ModuleEnum.LOOKUP,
+  },
 ];
 
 // 2) Add a parent â€œLookupsâ€ item that uses those as children

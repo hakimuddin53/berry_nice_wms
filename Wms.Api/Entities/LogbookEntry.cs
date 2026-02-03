@@ -4,12 +4,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Wms.Api.Entities
 {
-    public enum LogbookStatus
-    {
-        OUT = 0,
-        RETURNED = 1
-    }
-
     public class LogbookEntry : CreatedChangedEntity
     {
         [Key]
@@ -32,7 +26,10 @@ namespace Wms.Api.Entities
         public string? Purpose { get; set; }
 
         [Required]
-        public LogbookStatus Status { get; set; } = LogbookStatus.OUT;
+        public Guid LogbookStatusId { get; set; }
+
+        [ForeignKey(nameof(LogbookStatusId))]
+        public Lookup LogbookStatus { get; set; } = default!;
 
         [Required]
         public DateTime StatusChangedAt { get; set; } = DateTime.UtcNow;

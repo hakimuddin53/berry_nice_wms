@@ -186,6 +186,13 @@ namespace Wms.Api.Data.Seeding
                 L(LookupGroupKey.Remark,"Power adapter issue",6),
             });
 
+            // --- Logbook Status (used by Logbook module)
+            list.AddRange(new[]
+            {
+                L(LookupGroupKey.LogbookStatus, "OUT", 1),
+                L(LookupGroupKey.LogbookStatus, "RETURNED", 2),
+            });
+
             return list;
         }
     }
