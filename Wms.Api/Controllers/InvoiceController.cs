@@ -359,6 +359,9 @@ namespace Wms.Api.Controllers
                     p.ProductCode,
                     p.Model,
                     p.BrandId,
+                    p.ColorId,
+                    p.StorageId,
+                    p.SerialNumber,
                     p.LocationId
                 })
                 .ToListAsync();
@@ -373,12 +376,22 @@ namespace Wms.Api.Controllers
                 .Select(p => p.BrandId!.Value)
                 .Distinct();
 
+            var colorIds = products
+                .Where(p => p.ColorId.HasValue)
+                .Select(p => p.ColorId!.Value)
+                .Distinct();
+
+            var storageIds = products
+                .Where(p => p.StorageId.HasValue)
+                .Select(p => p.StorageId!.Value)
+                .Distinct();
+
             var locationIds = products
                 .Where(p => p.LocationId != Guid.Empty)
                 .Select(p => p.LocationId)
                 .Distinct();
 
-            var lookupIds = brandIds.Concat(locationIds).Distinct().ToList();
+            var lookupIds = brandIds.Concat(colorIds).Concat(storageIds).Concat(locationIds).Distinct().ToList();
 
             var lookupLabels = lookupIds.Count == 0
                 ? new Dictionary<Guid, string>()
@@ -399,11 +412,24 @@ namespace Wms.Api.Controllers
                 item.ProductCode ??= product.ProductCode;
                 item.ProductName ??= product.ProductCode;
                 item.Model ??= product.Model?.Label;
+                item.SerialNumber ??= product.SerialNumber;
 
                 if (product.BrandId.HasValue &&
                     lookupLabels.TryGetValue(product.BrandId.Value, out var brand))
                 {
                     item.Brand ??= brand;
+                }
+
+                if (product.ColorId.HasValue &&
+                    lookupLabels.TryGetValue(product.ColorId.Value, out var color))
+                {
+                    item.Color ??= color;
+                }
+
+                if (product.StorageId.HasValue &&
+                    lookupLabels.TryGetValue(product.StorageId.Value, out var storage))
+                {
+                    item.Storage ??= storage;
                 }
 
                 if (product.LocationId != Guid.Empty)

@@ -35,7 +35,25 @@ namespace Wms.Api.Dto.Inventory
         public string WarehouseLabel { get; set; } = string.Empty;
         public Guid? LocationId { get; set; }
         public string? LocationLabel { get; set; }
+        public string? CategoryLabel { get; set; }
+        public string? BrandLabel { get; set; }
+        public string? ColorLabel { get; set; }
+        public string? StorageLabel { get; set; }
+        public string? RamLabel { get; set; }
+        public string? ProcessorLabel { get; set; }
+        public string? ScreenSizeLabel { get; set; }
+        public string? GradeLabel { get; set; }
+        public string? RegionLabel { get; set; }
+        public string? NewOrUsedLabel { get; set; }
+        public int? BatteryHealth { get; set; }
+        public string? Remark { get; set; }
+        public string? InternalRemark { get; set; }
+        public string? SerialNumber { get; set; }
         public int Quantity { get; set; }
+        public decimal? CostPrice { get; set; }
+        public decimal? RetailPrice { get; set; }
+        public decimal? AgentPrice { get; set; }
+        public decimal? DealerPrice { get; set; }
         public decimal UnitPrice { get; set; }
         public decimal TotalPrice { get; set; }
     }

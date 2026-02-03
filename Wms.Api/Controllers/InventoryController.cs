@@ -227,6 +227,26 @@ namespace Wms.Api.Controllers
                 from location in locationJoin.DefaultIfEmpty()
                 join model in context.Lookups on product.ModelId equals model.Id into modelJoin
                 from model in modelJoin.DefaultIfEmpty()
+                join category in context.Lookups on product.CategoryId equals category.Id into categoryJoin
+                from category in categoryJoin.DefaultIfEmpty()
+                join brand in context.Lookups on product.BrandId equals brand.Id into brandJoin
+                from brand in brandJoin.DefaultIfEmpty()
+                join color in context.Lookups on product.ColorId equals color.Id into colorJoin
+                from color in colorJoin.DefaultIfEmpty()
+                join storage in context.Lookups on product.StorageId equals storage.Id into storageJoin
+                from storage in storageJoin.DefaultIfEmpty()
+                join ram in context.Lookups on product.RamId equals ram.Id into ramJoin
+                from ram in ramJoin.DefaultIfEmpty()
+                join processor in context.Lookups on product.ProcessorId equals processor.Id into processorJoin
+                from processor in processorJoin.DefaultIfEmpty()
+                join screen in context.Lookups on product.ScreenSizeId equals screen.Id into screenJoin
+                from screen in screenJoin.DefaultIfEmpty()
+                join grade in context.Lookups on product.GradeId equals grade.Id into gradeJoin
+                from grade in gradeJoin.DefaultIfEmpty()
+                join region in context.Lookups on product.RegionId equals region.Id into regionJoin
+                from region in regionJoin.DefaultIfEmpty()
+                join newOrUsed in context.Lookups on product.NewOrUsedId equals newOrUsed.Id into newOrUsedJoin
+                from newOrUsed in newOrUsedJoin.DefaultIfEmpty()
                 select new
                 {
                     item,
@@ -234,7 +254,17 @@ namespace Wms.Api.Controllers
                     product,
                     WarehouseLabel = warehouse != null ? warehouse.Label : string.Empty,
                     LocationLabel = location != null ? location.Label : string.Empty,
-                    ModelLabel = model != null ? model.Label : string.Empty
+                    ModelLabel = model != null ? model.Label : string.Empty,
+                    CategoryLabel = category != null ? category.Label : string.Empty,
+                    BrandLabel = brand != null ? brand.Label : string.Empty,
+                    ColorLabel = color != null ? color.Label : string.Empty,
+                    StorageLabel = storage != null ? storage.Label : string.Empty,
+                    RamLabel = ram != null ? ram.Label : string.Empty,
+                    ProcessorLabel = processor != null ? processor.Label : string.Empty,
+                    ScreenSizeLabel = screen != null ? screen.Label : string.Empty,
+                    GradeLabel = grade != null ? grade.Label : string.Empty,
+                    RegionLabel = region != null ? region.Label : string.Empty,
+                    NewOrUsedLabel = newOrUsed != null ? newOrUsed.Label : string.Empty
                 };
 
             if (search.FromDate.HasValue)
@@ -350,7 +380,25 @@ namespace Wms.Api.Controllers
                 WarehouseLabel = x.WarehouseLabel,
                 LocationId = x.product?.LocationId,
                 LocationLabel = x.LocationLabel,
+                CategoryLabel = x.CategoryLabel,
+                BrandLabel = x.BrandLabel,
+                ColorLabel = x.ColorLabel,
+                StorageLabel = x.StorageLabel,
+                RamLabel = x.RamLabel,
+                ProcessorLabel = x.ProcessorLabel,
+                ScreenSizeLabel = x.ScreenSizeLabel,
+                GradeLabel = x.GradeLabel,
+                RegionLabel = x.RegionLabel,
+                NewOrUsedLabel = x.NewOrUsedLabel,
+                BatteryHealth = x.product?.BatteryHealth,
+                Remark = x.product?.Remark,
+                InternalRemark = x.product?.InternalRemark,
+                SerialNumber = x.product?.SerialNumber,
                 Quantity = x.item.Quantity,
+                CostPrice = x.product?.CostPrice,
+                RetailPrice = x.product?.RetailPrice,
+                AgentPrice = x.product?.AgentPrice,
+                DealerPrice = x.product?.DealerPrice,
                 UnitPrice = x.item.UnitPrice,
                 TotalPrice = x.item.TotalPrice > 0 ? x.item.TotalPrice : x.item.UnitPrice * x.item.Quantity
             }).ToList();

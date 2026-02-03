@@ -7,23 +7,27 @@ import {
 
 const COMPANY_INFO = {
   name: "BERRY NICE SDN. BHD. (1495999-A)",
+  postalAddressLabel: "POSTAL ADDRESS :",
   addressLines: [
     "Level 2-16, 17&18, Second Floor, Laman Seri Harmoni (LSH33),",
-    "No. 3, Jalan Batu Muda Tambahan 3, Sentul 51100, Kuala Lumpur.",
+    "No. 3, Jalan Batu Muda Tambahan 3, Sentul 51100,",
+    "Kuala Lumpur.",
   ],
   phone: "03-27386721",
-  bankLines: [
+  remarkLines: [
     "Berry Nice Sdn Bhd",
     "05101010255",
     "Hong Leong Bank (HLB)",
     "*Please click Instant Transfer/ Duit Now*",
     "*Once Transfer, Please do share the receipt*",
   ],
+  warrantySubtitle: "Warranty does not cover :",
   warrantyLines: [
     "Water damage (inclusive waterproof model)",
     "Drop damage",
     "Phone / Device cannot on",
     "Warranty sticker broken or removed",
+    "Software Update",
     "Screen cracked",
     "Touch problem",
     "Battery",
@@ -32,6 +36,8 @@ const COMPANY_INFO = {
     "LCD issues (drop damage, no display, have line, dead pixel, screen burn etc)",
     "Warranty for NEW items with the respective Brands/Models",
   ],
+  disclaimer:
+    "All warranty claims must be accompanied by the shop's official. Tax invoice/receipt/proof of purchase, it can be a photocopy of the original. The shop reserves the right to reject the warranty claim in the event of failure to produce any form of proof of purchase. Goods sold are non-refundable or exchangeable. Thank you. This is a computer generated receipt. No signature needed.",
 };
 
 const LOGO_BASE64 =
@@ -51,22 +57,28 @@ const formatMoney = (value: number) =>
     maximumFractionDigits: 2,
   }).format(value);
 
-const displayProduct = (item: any, productLabels: Record<string, string>) =>
-  item.productCode ||
-  item.productName ||
-  item.model ||
-  item.brand ||
-  (item.productId
-    ? productLabels[item.productId as unknown as string]
-    : undefined) ||
-  item.productId ||
-  "-";
+/**
+ * Build the item description in the format: Category-Model-Brand-Storage-Color
+ * Example: "Watch-Apple Watch Series 7-Apple-41mm-Blue"
+ */
+const buildItemDescription = (item: any) => {
+  const parts: string[] = [];
+  if (item.model) parts.push(item.model);
+  if (item.brand) parts.push(item.brand);
+  if (item.storage) parts.push(item.storage);
+  if (item.color) parts.push(item.color);
+
+  if (parts.length > 0) {
+    return parts.join("-");
+  }
+
+  return item.productName || item.productCode || "-";
+};
 
 export const buildInvoicePrintHtml = (
   invoice: InvoiceDetailsDto,
   options: InvoicePrintOptions = {}
 ) => {
-  const productLabels = options.productLabels ?? {};
   const customerText =
     options.customerName ??
     invoice.customerName ??
@@ -76,12 +88,11 @@ export const buildInvoicePrintHtml = (
   const customerAddress = options.customerAddress ?? "";
   const customerPhone = options.customerPhone ?? "";
   const salesRep = invoice.salesPersonName ?? invoice.salesPersonId ?? "-";
-  const paymentType = invoice.paymentTypeName ?? "-";
   const normalizedSaleDate = invoice.dateOfSale.endsWith("Z")
     ? invoice.dateOfSale
     : `${invoice.dateOfSale}Z`;
   const longSaleDate = new Date(normalizedSaleDate).toLocaleDateString(
-    undefined,
+    "en-GB",
     {
       weekday: "long",
       day: "numeric",
@@ -91,7 +102,11 @@ export const buildInvoicePrintHtml = (
   );
   const saleDateLabel = options.getLocalDate
     ? options.getLocalDate(invoice.dateOfSale)
-    : new Date(normalizedSaleDate).toLocaleDateString();
+    : new Date(normalizedSaleDate).toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
   const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(
     invoice.number
   )}`;
@@ -103,44 +118,46 @@ export const buildInvoicePrintHtml = (
           .map((item) => {
             const totalPrice =
               item.totalPrice || item.unitPrice * item.quantity;
-            const warrantyDuration = warrantyLabelFromMonths(
-              item.warrantyDurationMonths
-            );
             const expiryIso =
               item.warrantyExpiryDate ??
               calculateWarrantyExpiryDate(
                 invoice.dateOfSale,
                 item.warrantyDurationMonths
               );
-            const warrantyInfo =
-              warrantyDuration || expiryIso
-                ? `Warranty: ${warrantyDuration}${
-                    expiryIso
-                      ? ` (exp ${formatWarrantyExpiry(expiryIso) || ""})`
-                      : ""
-                  }`
-                : "";
-            const locationInfo =
-              item.locationLabel || item.locationName
-                ? `Location: ${item.locationLabel || item.locationName || "-"}`
-                : "";
-            const remarkInfo = item.remark ? `Remark: ${item.remark}` : "";
-            const detailParts = [warrantyInfo, locationInfo, remarkInfo].filter(
-              Boolean
-            );
+
+            // Build detail lines like in the image
+            const detailLines: string[] = [];
+
+            // IMEI / Serial Number line
+            if (item.serialNumber) {
+              detailLines.push(`IMEI:${item.serialNumber}`);
+            }
+
+            // Warranty line
+            if (expiryIso) {
+              const warrantyDate = formatWarrantyExpiry(expiryIso);
+              if (warrantyDate) {
+                detailLines.push(`Warranty: ${warrantyDate}`);
+              }
+            }
+
+            // Primary SN (Product Code)
+            if (item.productCode) {
+              detailLines.push(`Primary SN:${item.productCode}`);
+            }
+
             const detailHtml =
-              detailParts.length > 0
-                ? `<div class="muted">${detailParts.join(" | ")}</div>`
+              detailLines.length > 0
+                ? detailLines
+                    .map((line) => `<div class="detail-line">${line}</div>`)
+                    .join("")
                 : "";
 
             return `
               <tr>
-                <td>${item.productCode || "-"}</td>
+                <td class="itemcode">${item.productCode || "-"}</td>
                 <td>
-                  <div class="desc-main">${displayProduct(
-                    item,
-                    productLabels
-                  )}</div>
+                  <div class="desc-main">${buildItemDescription(item)}</div>
                   ${detailHtml}
                 </td>
                 <td class="num">${item.quantity}</td>
@@ -152,11 +169,21 @@ export const buildInvoicePrintHtml = (
           .join("")
       : `<tr><td colspan="5" class="muted empty">No items added</td></tr>`;
 
-  const bankDetailsHtml = COMPANY_INFO.bankLines
+  // Get the warranty title from items - use the first item's warranty or find the max
+  const warrantyDurations = invoice.invoiceItems
+    .map((item) => item.warrantyDurationMonths)
+    .filter((d) => d !== undefined && d !== null && d > 0);
+  const primaryWarrantyDuration =
+    warrantyDurations.length > 0 ? Math.max(...warrantyDurations) : null;
+  const warrantyTitle = primaryWarrantyDuration
+    ? `${warrantyLabelFromMonths(primaryWarrantyDuration)} Warranty`
+    : "Warranty";
+
+  const remarkHtml = COMPANY_INFO.remarkLines
     .map((line) => `<div>${line}</div>`)
     .join("");
   const warrantyTermsHtml = COMPANY_INFO.warrantyLines
-    .map((line) => `<li>${line}</li>`)
+    .map((line) => `<li>- ${line}</li>`)
     .join("");
 
   const html = `
@@ -165,40 +192,69 @@ export const buildInvoicePrintHtml = (
       <head>
         <meta charset="utf-8" />
         <style>
-          body { font-family: Arial, sans-serif; color: #111; margin: 0; padding: 24px; background: #f7f7f7; }
-          .invoice { max-width: 900px; margin: 0 auto; background: #fff; padding: 28px 32px; border: 1px solid #e0e0e0; box-shadow: 0 4px 18px rgba(0,0,0,0.06); }
-          .header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-          .invoice-title { font-size: 20px; font-weight: 700; letter-spacing: 1px; margin-bottom: 8px; }
-          .meta-grid { display: grid; grid-template-columns: 120px auto; column-gap: 12px; row-gap: 4px; font-size: 12px; }
-          .meta-label { font-weight: 700; text-transform: uppercase; }
-          .logo { width: 64px; height: 64px; border: 2px solid #888; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 700; color: #444; }
-          .header-right { display: flex; align-items: center; gap: 12px; }
-          .header-right img { display: block; border: 1px solid #ddd; border-radius: 6px; background: #fff; }
-          .qr img { width: 112px; height: 112px; object-fit: contain; }
-          .logo-img img { width: 72px; height: 72px; object-fit: contain; }
-          .parties { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-top: 16px; padding-top: 12px; border-top: 1px solid #e5e5e5; }
-          .section-title { font-size: 12px; font-weight: 700; letter-spacing: 0.02em; margin-bottom: 4px; }
-          .party-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
-          .text-sm { font-size: 12px; line-height: 1.5; }
-          table { width: 100%; border-collapse: collapse; margin-top: 18px; }
-          th, td { border: 1px solid #dcdcdc; padding: 8px 10px; font-size: 12px; }
-          th { background: #f1f1f1; text-align: left; }
+          * { box-sizing: border-box; }
+          body { font-family: Arial, sans-serif; color: #000; margin: 0; padding: 16px; background: #fff; font-size: 11px; }
+          .invoice { max-width: 800px; margin: 0 auto; background: #fff; padding: 20px; }
+          
+          /* Header section */
+          .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+          .header-left { flex: 1; }
+          .invoice-title { font-size: 16px; font-weight: 700; letter-spacing: 1px; margin-bottom: 6px; text-decoration: underline; }
+          .meta-grid { display: grid; grid-template-columns: 90px auto; column-gap: 8px; row-gap: 2px; font-size: 11px; }
+          .meta-label { font-weight: 700; }
+          .header-right { display: flex; align-items: flex-start; gap: 8px; }
+          .qr img { width: 80px; height: 80px; object-fit: contain; }
+          .logo-img img { width: 60px; height: 60px; object-fit: contain; border-radius: 50%; }
+          
+          /* Parties section */
+          .parties { display: flex; justify-content: space-between; margin-top: 12px; padding-top: 8px; border-top: 1px solid #000; }
+          .party-section { width: 48%; }
+          .section-title { font-size: 11px; font-weight: 700; margin-bottom: 2px; }
+          .address-label { font-size: 10px; font-weight: 700; margin-bottom: 2px; }
+          .party-name { font-size: 11px; font-weight: 700; margin-bottom: 2px; }
+          .text-sm { font-size: 10px; line-height: 1.4; }
+          
+          /* Table */
+          table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+          th, td { border: 1px solid #000; padding: 4px 6px; font-size: 10px; vertical-align: top; }
+          th { background: #f5f5f5; text-align: left; font-weight: 700; }
           .num { text-align: right; white-space: nowrap; }
-          .desc-main { font-weight: 600; margin-bottom: 2px; }
-          .muted { color: #666; font-size: 11px; }
-          .empty { text-align: center; padding: 16px 8px; }
-          .totals { display: flex; justify-content: flex-end; gap: 12px; margin-top: 12px; font-weight: 700; font-size: 14px; }
-          .bank { margin-top: 12px; line-height: 1.4; }
-          .terms { margin-top: 12px; }
-          .terms ul { margin: 6px 0 0 16px; padding: 0; }
-          .footer-date { margin-top: 24px; text-align: center; font-size: 12px; }
-          @media print { body { background: #fff; } .invoice { box-shadow: none; border: none; } }
+          .itemcode { width: 70px; }
+          .desc-main { font-weight: 400; margin-bottom: 4px; }
+          .detail-line { font-size: 9px; color: #333; padding-left: 16px; line-height: 1.4; }
+          .muted { color: #666; font-size: 9px; }
+          .empty { text-align: center; padding: 12px 6px; }
+          
+          /* Totals */
+          .totals-section { display: flex; justify-content: flex-end; margin-top: 8px; }
+          .totals-box { border: 1px solid #000; padding: 6px 12px; display: flex; gap: 24px; font-weight: 700; font-size: 12px; }
+          
+          /* Remark section */
+          .remark-section { margin-top: 12px; }
+          .remark-title { font-weight: 700; margin-bottom: 4px; }
+          .remark-content { font-size: 10px; line-height: 1.4; }
+          
+          /* Warranty section */
+          .warranty-section { margin-top: 12px; font-size: 9px; }
+          .warranty-title { font-weight: 700; }
+          .warranty-subtitle { margin-top: 2px; }
+          .warranty-list { list-style: none; margin: 4px 0 0 0; padding: 0; }
+          .warranty-list li { line-height: 1.3; }
+          .disclaimer { margin-top: 8px; font-size: 8px; line-height: 1.3; }
+          
+          /* Footer */
+          .footer-date { margin-top: 16px; text-align: center; font-size: 10px; font-style: italic; }
+          
+          @media print { 
+            body { background: #fff; padding: 0; } 
+            .invoice { box-shadow: none; border: none; padding: 10px; }
+          }
         </style>
       </head>
       <body>
         <div class="invoice">
           <div class="header">
-            <div>
+            <div class="header-left">
               <div class="invoice-title">INVOICE</div>
               <div class="meta-grid">
                 <div class="meta-label">NUMBER :</div><div>${
@@ -206,7 +262,6 @@ export const buildInvoicePrintHtml = (
                 }</div>
                 <div class="meta-label">DATE :</div><div>${saleDateLabel}</div>
                 <div class="meta-label">SALES REP :</div><div>${salesRep}</div>
-                <div class="meta-label">PAYMENT :</div><div>${paymentType}</div>
                 <div class="meta-label">PAGE :</div><div>1/1</div>
               </div>
             </div>
@@ -219,51 +274,68 @@ export const buildInvoicePrintHtml = (
               </div>
             </div>
           </div>
+          
           <div class="parties">
-            <div>
+            <div class="party-section">
               <div class="section-title">FROM</div>
               <div class="party-name">${COMPANY_INFO.name}</div>
+              <div class="address-label">${
+                COMPANY_INFO.postalAddressLabel
+              }</div>
               <div class="text-sm">${COMPANY_INFO.addressLines.join(
                 "<br />"
               )}</div>
-              <div class="text-sm">Tel: ${COMPANY_INFO.phone}</div>
+              <div class="text-sm" style="margin-top: 4px;">Tel: ${
+                COMPANY_INFO.phone
+              }</div>
             </div>
-            <div>
+            <div class="party-section">
               <div class="section-title">TO</div>
               <div class="party-name">${customerText}</div>
+              <div class="address-label">POSTAL ADDRESS :</div>
               <div class="text-sm">${customerAddress || "-"}</div>
               ${
                 customerPhone
-                  ? `<div class="text-sm">Tel: ${customerPhone}</div>`
+                  ? `<div class="text-sm" style="margin-top: 4px;">Tel : ${customerPhone}</div>`
                   : ""
               }
             </div>
           </div>
+          
           <table>
             <thead>
               <tr>
-                <th style="width: 120px;">Itemcode</th>
+                <th class="itemcode">Itemcode</th>
                 <th>Description</th>
-                <th style="width: 90px; text-align:right;">Quantity</th>
-                <th style="width: 110px; text-align:right;">Unit Price</th>
-                <th style="width: 110px; text-align:right;">Total Price</th>
+                <th style="width: 60px; text-align: right;">Quantity</th>
+                <th style="width: 80px; text-align: right;">Unit Price</th>
+                <th style="width: 80px; text-align: right;">Total Price</th>
               </tr>
             </thead>
             <tbody>${itemsHtml}</tbody>
           </table>
-          <div class="totals">
-            <div>Grand Total :</div>
-            <div>${formatMoney(invoice.grandTotal)}</div>
-          </div>
-          <div class="bank">${bankDetailsHtml}</div>
-          <div class="terms">
-            <div class="section-title">One Week Warranty</div>
-            <ul>${warrantyTermsHtml}</ul>
-            <div class="muted" style="margin-top:8px;">
-              All warranty claims must be accompanied by the shop's official tax invoice/receipt/proof of purchase.
-              Goods sold are non-refundable or exchangeable. This is a computer-generated receipt. No signature needed.
+          
+          <div class="totals-section">
+            <div class="totals-box">
+              <div>Grand Total :</div>
+              <div>RM${formatMoney(invoice.grandTotal)}</div>
             </div>
           </div>
+          
+          <div class="remark-section">
+            <div class="remark-title">Remark :</div>
+            <div class="remark-content">${remarkHtml}</div>
+          </div>
+          
+          <div class="warranty-section">
+            <div class="warranty-title">${warrantyTitle}</div>
+            <div class="warranty-subtitle">${
+              COMPANY_INFO.warrantySubtitle
+            }</div>
+            <ul class="warranty-list">${warrantyTermsHtml}</ul>
+            <div class="disclaimer">${COMPANY_INFO.disclaimer}</div>
+          </div>
+          
           <div class="footer-date">${longSaleDate}</div>
         </div>
         <script>

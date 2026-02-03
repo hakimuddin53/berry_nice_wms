@@ -17,6 +17,9 @@ export interface InvoiceItemDetailsDto {
   productName?: string | null;
   brand?: string | null;
   model?: string | null;
+  color?: string | null;
+  storage?: string | null;
+  serialNumber?: string | null;
   locationName?: string | null;
   locationLabel?: string | null;
 }

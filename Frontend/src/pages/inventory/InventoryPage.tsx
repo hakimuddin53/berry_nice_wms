@@ -1,4 +1,5 @@
 import EditIcon from "@mui/icons-material/Edit";
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import HistoryIcon from "@mui/icons-material/History";
 import PrintIcon from "@mui/icons-material/Print";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -58,6 +59,7 @@ import { useReactToPrint } from "react-to-print";
 import { useInventoryService } from "services/InventoryService";
 import { useProductService } from "services/ProductService";
 import { guid } from "types/guid";
+import * as XLSX from "xlsx";
 
 type BalanceRow = InventoryAuditDto & { rowId: number };
 
@@ -698,6 +700,7 @@ const InventoryPage = () => {
         field: "productCode",
         headerName: t("product-code"),
         flex: 1.1,
+        minWidth: 120,
         valueGetter: (_value, row: BalanceRow) =>
           formatText(
             productExtras[row.productId]?.productCode ?? row.productCode
@@ -707,6 +710,7 @@ const InventoryPage = () => {
         field: "model",
         headerName: t("model"),
         flex: 1.2,
+        minWidth: 150,
         valueGetter: (_value, row: BalanceRow) =>
           formatText(
             productExtras[row.productId]?.modelName ??
@@ -718,12 +722,14 @@ const InventoryPage = () => {
         field: "createdAt",
         headerName: t("created-at", { defaultValue: "Created At" }),
         flex: 1,
+        minWidth: 150,
         valueGetter: (_value, row: BalanceRow) => formatDateTime(row.createdAt),
       },
       {
         field: "remark",
         headerName: t("remark"),
         flex: 1.1,
+        minWidth: 120,
         valueGetter: (_value, row: BalanceRow) =>
           formatText(productExtras[row.productId]?.remark),
       },
@@ -731,6 +737,7 @@ const InventoryPage = () => {
         field: "internalRemark",
         headerName: t("internal-remark"),
         flex: 1.1,
+        minWidth: 120,
         valueGetter: (_value, row: BalanceRow) =>
           formatText(productExtras[row.productId]?.internalRemark),
       },
@@ -738,6 +745,7 @@ const InventoryPage = () => {
         field: "warehouse",
         headerName: t("warehouse"),
         flex: 1,
+        minWidth: 120,
         valueGetter: (_value, row: BalanceRow) =>
           formatText(row.warehouseLabel),
       },
@@ -745,13 +753,15 @@ const InventoryPage = () => {
         field: "location",
         headerName: t("location"),
         flex: 1,
+        minWidth: 120,
         valueGetter: (_value, row: BalanceRow) =>
           formatText(getLocationDisplay(row)),
       },
       {
         field: "retailPrice",
         headerName: retailPriceLabel,
-        flex: 1,
+        width: 100,
+        minWidth: 100,
         type: "number",
         renderCell: ({ row }) => {
           const value = productExtras[row.productId]?.retailPrice;
@@ -783,6 +793,7 @@ const InventoryPage = () => {
         field: "dealerPrice",
         headerName: dealerPriceLabel,
         flex: 1,
+        minWidth: 110,
         type: "number",
         valueGetter: (_value, row: BalanceRow) =>
           productExtras[row.productId]?.dealerPrice ?? null,
@@ -791,6 +802,7 @@ const InventoryPage = () => {
         field: "agentPrice",
         headerName: agentPriceLabel,
         flex: 1,
+        minWidth: 110,
         type: "number",
         valueGetter: (_value, row: BalanceRow) =>
           productExtras[row.productId]?.agentPrice ?? null,
@@ -802,6 +814,7 @@ const InventoryPage = () => {
         field: "costPrice",
         headerName: t("cost"),
         flex: 1,
+        minWidth: 110,
         type: "number",
         valueGetter: (_value, row: BalanceRow) =>
           productExtras[row.productId]?.costPrice ?? null,
@@ -813,6 +826,7 @@ const InventoryPage = () => {
         field: "batteryHealth",
         headerName: t("battery-health", { defaultValue: "Battery Health" }),
         flex: 1,
+        minWidth: 120,
         type: "number",
         valueGetter: (_value, row: BalanceRow) =>
           productExtras[row.productId]?.batteryHealth ??
@@ -826,12 +840,14 @@ const InventoryPage = () => {
         headerName: t("stock-age-days", { defaultValue: "Age (days)" }),
         type: "number",
         flex: 0.7,
+        minWidth: 90,
         valueGetter: (_value, row: BalanceRow) => row.ageDays ?? null,
       },
       {
         field: "ram",
         headerName: t("ram"),
         flex: 0.8,
+        minWidth: 80,
         valueGetter: (_value, row: BalanceRow) =>
           formatText(productExtras[row.productId]?.ram),
       },
@@ -839,6 +855,7 @@ const InventoryPage = () => {
         field: "storage",
         headerName: t("storage"),
         flex: 0.8,
+        minWidth: 80,
         valueGetter: (_value, row: BalanceRow) =>
           formatText(productExtras[row.productId]?.storage),
       },
@@ -846,6 +863,7 @@ const InventoryPage = () => {
         field: "processor",
         headerName: t("processor"),
         flex: 0.8,
+        minWidth: 100,
         valueGetter: (_value, row: BalanceRow) =>
           formatText(productExtras[row.productId]?.processor),
       },
@@ -853,6 +871,7 @@ const InventoryPage = () => {
         field: "screenSize",
         headerName: t("screen-size"),
         flex: 0.8,
+        minWidth: 100,
         valueGetter: (_value, row: BalanceRow) =>
           formatText(productExtras[row.productId]?.screenSize),
       },
@@ -860,6 +879,7 @@ const InventoryPage = () => {
         field: "grade",
         headerName: t("grade"),
         flex: 0.7,
+        minWidth: 80,
         valueGetter: (_value, row: BalanceRow) =>
           formatText(productExtras[row.productId]?.gradeName),
       },
@@ -867,6 +887,7 @@ const InventoryPage = () => {
         field: "brand",
         headerName: t("brand"),
         flex: 0.9,
+        minWidth: 100,
         valueGetter: (_value, row: BalanceRow) =>
           formatText(productExtras[row.productId]?.brand),
       },
@@ -874,6 +895,7 @@ const InventoryPage = () => {
         field: "category",
         headerName: t("category"),
         flex: 0.9,
+        minWidth: 100,
         valueGetter: (_value, row: BalanceRow) =>
           formatText(productExtras[row.productId]?.category),
       },
@@ -881,6 +903,7 @@ const InventoryPage = () => {
         field: "serialNumber",
         headerName: t("serial-number", { defaultValue: "Serial Number" }),
         flex: 1,
+        minWidth: 140,
         valueGetter: (_value, row: BalanceRow) =>
           formatText(productExtras[row.productId]?.serialNumber),
       },
@@ -956,6 +979,112 @@ const InventoryPage = () => {
     retailPriceLabel,
     t,
   ]);
+
+  // Export to Excel function
+  const handleExportToExcel = useCallback(() => {
+    // Build export data with headers (exclude actions column)
+    const exportColumns = columns.filter((col) => col.field !== "actions");
+    const headers = exportColumns.map((col) => col.headerName || col.field);
+
+    const data = gridRows.map((row) => {
+      const extras = productExtras[row.productId] || {};
+      const rowData: Record<string, any> = {};
+
+      exportColumns.forEach((col) => {
+        const field = col.field;
+        let value: any;
+
+        // Get values based on field - similar to valueGetter logic
+        switch (field) {
+          case "productCode":
+            value = extras.productCode ?? row.productCode;
+            break;
+          case "model":
+            value =
+              extras.modelName ?? (row as any).modelName ?? (row as any).model;
+            break;
+          case "createdAt":
+            value = row.createdAt ? new Date(row.createdAt) : "";
+            break;
+          case "remark":
+            value = extras.remark;
+            break;
+          case "internalRemark":
+            value = extras.internalRemark;
+            break;
+          case "warehouse":
+            value = row.warehouseLabel;
+            break;
+          case "location":
+            value =
+              extras.locationLabel ??
+              row.locationLabel ??
+              extras.locationId ??
+              row.locationId;
+            break;
+          case "retailPrice":
+            value = extras.retailPrice ?? null;
+            break;
+          case "dealerPrice":
+            value = extras.dealerPrice ?? null;
+            break;
+          case "agentPrice":
+            value = extras.agentPrice ?? null;
+            break;
+          case "costPrice":
+            value = extras.costPrice ?? null;
+            break;
+          case "batteryHealth":
+            value = extras.batteryHealth ?? row.batteryHealth ?? null;
+            break;
+          case "ageDays":
+            value = row.ageDays ?? null;
+            break;
+          case "ram":
+            value = extras.ram;
+            break;
+          case "storage":
+            value = extras.storage;
+            break;
+          case "processor":
+            value = extras.processor;
+            break;
+          case "screenSize":
+            value = extras.screenSize;
+            break;
+          case "grade":
+            value = extras.gradeName;
+            break;
+          case "brand":
+            value = extras.brand;
+            break;
+          case "category":
+            value = extras.category;
+            break;
+          case "serialNumber":
+            value = extras.serialNumber;
+            break;
+          default:
+            value = (row as any)[field];
+        }
+
+        rowData[col.headerName || field] = value ?? "";
+      });
+      return rowData;
+    });
+
+    // Create workbook and worksheet
+    const ws = XLSX.utils.json_to_sheet(data, { header: headers });
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Inventory");
+
+    // Generate filename with date
+    const dateStr = new Date().toISOString().split("T")[0];
+    const filename = `inventory_${dateStr}.xlsx`;
+
+    // Download
+    XLSX.writeFile(wb, filename);
+  }, [columns, gridRows, productExtras]);
 
   useEffect(() => {
     if (
@@ -1117,7 +1246,23 @@ const InventoryPage = () => {
         showSearch={false}
       >
         <PbCard>
-          <Box sx={{ width: "100%", height: 700 }}>
+          <Box sx={{ mb: 2, display: "flex", justifyContent: "flex-end" }}>
+            <Button
+              variant="outlined"
+              startIcon={<FileDownloadIcon />}
+              onClick={handleExportToExcel}
+              disabled={pageBlocker || gridRows.length === 0}
+            >
+              {t("export-to-excel", { defaultValue: "Export to Excel" })}
+            </Button>
+          </Box>
+          <Box
+            sx={{
+              width: "100%",
+              height: { xs: 500, sm: 600, md: 700 },
+              overflowX: "auto",
+            }}
+          >
             <DataGrid
               apiRef={apiRef}
               rows={gridRows.map((r) => ({
@@ -1141,6 +1286,7 @@ const InventoryPage = () => {
               }}
               density="compact"
               rowHeight={48}
+              disableAutosize
               sx={{
                 fontSize: 12,
                 "& .MuiDataGrid-cell": {

@@ -1,3 +1,4 @@
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import {
   Box,
@@ -8,31 +9,35 @@ import {
   DialogTitle,
   Grid,
   IconButton,
+  LinearProgress,
   Stack,
-  TextField,
   Typography,
 } from "@mui/material";
-import { DataTable, PbCard } from "components/platbricks/shared";
-import { DataTableHeaderCell } from "components/platbricks/shared/dataTable/DataTable";
-import LookupAutocomplete from "components/platbricks/shared/LookupAutocomplete";
+import {
+  DataGrid,
+  GridFooterContainer,
+  useGridApiRef,
+  type GridColDef,
+  type GridFilterModel,
+  type GridRenderCellParams,
+} from "@mui/x-data-grid";
 import Page from "components/platbricks/shared/Page";
-import SelectAsync, {
-  type SelectAsyncOption,
-} from "components/platbricks/shared/SelectAsync";
-import { useDatatableControls } from "hooks/useDatatableControls";
+import { type SelectAsyncOption } from "components/platbricks/shared/SelectAsync";
 import { useUserDateTime } from "hooks/useUserDateTime";
 import {
   InvoicedProductReportRowDto,
   InvoicedProductReportSearchDto,
 } from "interfaces/v12/inventory/invoicedProductReportDto";
-import { LookupGroupKey } from "interfaces/v12/lookup/lookup";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import jwtDecode from "jwt-decode";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useInventoryService } from "services/InventoryService";
 import { useProductService } from "services/ProductService";
 import { guid } from "types/guid";
+import * as XLSX from "xlsx";
 
 type ReportRow = InvoicedProductReportRowDto & { rowId: number };
+const MAX_PAGE_SIZE = 100000;
 
 type ReportFilters = {
   search: string;
@@ -60,6 +65,32 @@ const InvoicedProductsReportPage = () => {
   const productService = useProductService();
   const { getLocalDate } = useUserDateTime();
 
+  const isSalesTeamUser = useMemo(() => {
+    const token =
+      typeof window !== "undefined"
+        ? window.localStorage.getItem("accessToken")
+        : null;
+
+    if (!token) return false;
+
+    try {
+      const decoded: any = jwtDecode(token);
+      const roleClaim =
+        decoded?.Role ??
+        decoded?.role ??
+        decoded?.[
+          "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+        ] ??
+        "";
+
+      const normalized = String(roleClaim).replace(/\s+/g, "").toLowerCase();
+
+      return normalized === "salesteam";
+    } catch {
+      return false;
+    }
+  }, []);
+
   const [filters, setFilters] = useState<ReportFilters>({
     search: "",
     product: null,
@@ -82,20 +113,15 @@ const InvoicedProductsReportPage = () => {
   const [reportTotal, setReportTotal] = useState<number | null>(null);
   const [reportTotalLoading, setReportTotalLoading] = useState(false);
   const [activeRow, setActiveRow] = useState<ReportRow | null>(null);
-  const [pageBlocker, setPageBlocker] = useState(false);
-  const pendingLoadsRef = useRef(0);
 
-  const startLoading = useCallback(() => {
-    pendingLoadsRef.current += 1;
-    setPageBlocker(true);
-  }, []);
-
-  const finishLoading = useCallback(() => {
-    pendingLoadsRef.current = Math.max(0, pendingLoadsRef.current - 1);
-    if (pendingLoadsRef.current === 0) {
-      setPageBlocker(false);
-    }
-  }, []);
+  const [rows, setRows] = useState<ReportRow[]>([]);
+  const [rowCount, setRowCount] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [filterModel, setFilterModel] = useState<GridFilterModel>({
+    items: [],
+  });
+  const [filteredRowIds, setFilteredRowIds] = useState<Set<number>>(new Set());
+  const apiRef = useGridApiRef();
 
   const updateFilter = useCallback(
     <K extends keyof ReportFilters>(key: K, value: ReportFilters[K]) => {
@@ -138,52 +164,221 @@ const InvoicedProductsReportPage = () => {
     []
   );
 
-  const headerCells: DataTableHeaderCell<ReportRow>[] = useMemo(
+  const columns: GridColDef<ReportRow>[] = useMemo(
     () => [
-      { id: "productCode", label: t("product-code") },
-      { id: "model", label: t("model") },
       {
-        id: "locationLabel",
-        label: t("location"),
-        render: (row) => row.locationLabel || "-",
+        field: "productCode",
+        headerName: t("product-code"),
+        minWidth: 140,
+        valueFormatter: (value: string | null | undefined) => formatText(value),
       },
       {
-        id: "invoiceNumber",
-        label: t("invoice-number", { defaultValue: "Invoice Number" }),
+        field: "model",
+        headerName: t("model"),
+        minWidth: 140,
+        valueFormatter: (value: string | null | undefined) => formatText(value),
       },
       {
-        id: "dateOfSale",
-        label: t("date-of-sale"),
-        render: (row) => formatDate(row.dateOfSale),
+        field: "warehouseLabel",
+        headerName: t("warehouse"),
+        minWidth: 140,
+        valueFormatter: (value: string | null | undefined) => formatText(value),
       },
       {
-        id: "unitPrice",
-        label: t("unit-price", { defaultValue: "Unit Price" }),
+        field: "locationLabel",
+        headerName: t("location"),
+        minWidth: 140,
+        valueFormatter: (value: string | null | undefined) => formatText(value),
+      },
+      {
+        field: "invoiceNumber",
+        headerName: t("invoice-number", { defaultValue: "Invoice Number" }),
+        minWidth: 160,
+        valueFormatter: (value: string | null | undefined) => formatText(value),
+      },
+      {
+        field: "dateOfSale",
+        headerName: t("date-of-sale", { defaultValue: "Date of Sale" }),
+        minWidth: 140,
+        valueFormatter: (value: unknown) =>
+          formatDate((value as string | null | undefined) ?? null),
+        type: "dateTime",
+      },
+      ...(!isSalesTeamUser
+        ? [
+            {
+              field: "costPrice",
+              headerName: t("cost-price", { defaultValue: "Cost Price" }),
+              type: "number" as const,
+              minWidth: 120,
+              valueGetter: (_value: unknown, row: ReportRow) =>
+                row?.costPrice ?? null,
+              valueFormatter: (value: number | null | undefined) =>
+                value === null || value === undefined ? "-" : value.toFixed(2),
+              align: "right" as const,
+              headerAlign: "right" as const,
+            },
+          ]
+        : []),
+      {
+        field: "retailPrice",
+        headerName: t("retail-price", { defaultValue: "Retail Price" }),
+        type: "number",
+        minWidth: 120,
+        valueGetter: (_value: unknown, row: ReportRow) =>
+          row?.retailPrice ?? null,
+        valueFormatter: (value: number | null | undefined) =>
+          value === null || value === undefined ? "-" : value.toFixed(2),
         align: "right",
-        render: (row) => formatMoney(row.unitPrice),
+        headerAlign: "right",
       },
       {
-        id: "actions",
-        label: "",
-        render: (row) => (
-          <IconButton
-            size="small"
-            aria-label={t("view", { defaultValue: "View" })}
-            onClick={(e) => {
-              e.stopPropagation();
-              setActiveRow(row);
-            }}
-          >
-            <VisibilityIcon fontSize="small" />
-          </IconButton>
-        ),
+        field: "agentPrice",
+        headerName: t("agent-price", { defaultValue: "Agent Price" }),
+        type: "number",
+        minWidth: 120,
+        valueGetter: (_value: unknown, row: ReportRow) =>
+          row?.agentPrice ?? null,
+        valueFormatter: (value: number | null | undefined) =>
+          value === null || value === undefined ? "-" : value.toFixed(2),
+        align: "right",
+        headerAlign: "right",
+      },
+      {
+        field: "dealerPrice",
+        headerName: t("dealer-price", { defaultValue: "Dealer Price" }),
+        type: "number",
+        minWidth: 120,
+        valueGetter: (_value: unknown, row: ReportRow) =>
+          row?.dealerPrice ?? null,
+        valueFormatter: (value: number | null | undefined) =>
+          value === null || value === undefined ? "-" : value.toFixed(2),
+        align: "right",
+        headerAlign: "right",
+      },
+      {
+        field: "unitPrice",
+        headerName: t("unit-price-sold", { defaultValue: "Unit Price Sold" }),
+        type: "number",
+        minWidth: 150,
+        valueGetter: (_value: unknown, row: ReportRow) => row?.unitPrice ?? 0,
+        valueFormatter: (value: number | null | undefined) =>
+          formatMoney(value ?? 0),
+        align: "right",
+        headerAlign: "right",
+      },
+      {
+        field: "categoryLabel",
+        headerName: t("category"),
+        minWidth: 120,
+        valueFormatter: (value: string | null | undefined) => formatText(value),
+      },
+      {
+        field: "brandLabel",
+        headerName: t("brand"),
+        minWidth: 120,
+        valueFormatter: (value: string | null | undefined) => formatText(value),
+      },
+      {
+        field: "colorLabel",
+        headerName: t("colour", { defaultValue: "Color" }),
+        minWidth: 120,
+        valueFormatter: (value: string | null | undefined) => formatText(value),
+      },
+      {
+        field: "storageLabel",
+        headerName: t("storage"),
+        minWidth: 120,
+        valueFormatter: (value: string | null | undefined) => formatText(value),
+      },
+      {
+        field: "ramLabel",
+        headerName: t("ram"),
+        minWidth: 120,
+        valueFormatter: (value: string | null | undefined) => formatText(value),
+      },
+      {
+        field: "processorLabel",
+        headerName: t("processor"),
+        minWidth: 140,
+        valueFormatter: (value: string | null | undefined) => formatText(value),
+      },
+      {
+        field: "screenSizeLabel",
+        headerName: t("screen-size"),
+        minWidth: 120,
+        valueFormatter: (value: string | null | undefined) => formatText(value),
+      },
+      {
+        field: "gradeLabel",
+        headerName: t("grade"),
+        minWidth: 100,
+        valueFormatter: (value: string | null | undefined) => formatText(value),
+      },
+      {
+        field: "regionLabel",
+        headerName: t("region"),
+        minWidth: 120,
+        valueFormatter: (value: string | null | undefined) => formatText(value),
+      },
+      {
+        field: "newOrUsedLabel",
+        headerName: t("new-or-used"),
+        minWidth: 120,
+        valueFormatter: (value: string | null | undefined) => formatText(value),
+      },
+      {
+        field: "batteryHealth",
+        headerName: t("battery-health", { defaultValue: "Battery Health" }),
+        type: "number",
+        minWidth: 130,
+        valueFormatter: (value: number | null | undefined) =>
+          value === null || value === undefined ? "-" : `${value}`,
+      },
+      {
+        field: "remark",
+        headerName: t("remark"),
+        minWidth: 140,
+        valueFormatter: (value: string | null | undefined) => formatText(value),
+      },
+      {
+        field: "internalRemark",
+        headerName: t("internal-remark"),
+        minWidth: 160,
+        valueFormatter: (value: string | null | undefined) => formatText(value),
+      },
+      {
+        field: "serialNumber",
+        headerName: t("serial-number", { defaultValue: "Serial Number" }),
+        minWidth: 160,
+        valueFormatter: (value: string | null | undefined) => formatText(value),
+      },
+      {
+        field: "actions",
+        headerName: "",
+        sortable: false,
+        filterable: false,
+        width: 80,
+        renderCell: (params: GridRenderCellParams<ReportRow>) =>
+          params.row ? (
+            <IconButton
+              size="small"
+              aria-label={t("view", { defaultValue: "View" })}
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveRow(params.row);
+              }}
+            >
+              <VisibilityIcon fontSize="small" />
+            </IconButton>
+          ) : null,
       },
     ],
-    [formatMoney, t]
+    [formatDate, formatMoney, isSalesTeamUser, t]
   );
 
   const buildPayload = useCallback(
-    (page: number, pageSize: number, searchValue: string) => {
+    (_pageArg: number, _pageSizeArg: number, searchValue: string) => {
       const searchText = (searchValue ?? filters.search).trim();
       const modelText = filters.model.trim();
       const payload: InvoicedProductReportSearchDto = {
@@ -204,8 +399,8 @@ const InvoicedProductsReportPage = () => {
         newOrUsedId: toGuid(filters.newOrUsed?.value),
         fromDate: filters.fromDate || null,
         toDate: filters.toDate || null,
-        page: page + 1,
-        pageSize,
+        page: 1,
+        pageSize: MAX_PAGE_SIZE,
       };
 
       return payload;
@@ -213,61 +408,29 @@ const InvoicedProductsReportPage = () => {
     [filters, toGuid]
   );
 
-  const loadData = useCallback(
-    async (
-      page: number,
-      pageSize: number,
-      searchValue: string,
-      _orderBy: string,
-      _order: "asc" | "desc"
-    ) => {
-      startLoading();
+  const fetchData = useCallback(
+    async (_pageArg: number, _pageSizeArg: number, searchValue: string) => {
+      setLoading(true);
       try {
         const res = await inventoryService.searchInvoicedReport(
-          buildPayload(page, pageSize, searchValue)
+          buildPayload(0, MAX_PAGE_SIZE, searchValue)
         );
-        return (res.data || []).map((item, index) => ({
-          ...item,
-          rowId: page * pageSize + index,
-        }));
+        const mapped: ReportRow[] =
+          res?.data?.map((item, index) => ({
+            ...item,
+            rowId: index,
+          })) ?? [];
+        setRows(mapped);
+        setRowCount(res?.totalCount ?? mapped.length);
       } finally {
-        finishLoading();
+        setLoading(false);
       }
     },
-    [buildPayload, finishLoading, inventoryService, startLoading]
+    [buildPayload, inventoryService]
   );
 
-  const loadDataCount = useCallback(
-    async (
-      page: number,
-      pageSize: number,
-      searchValue: string,
-      _orderBy: string,
-      _order: "asc" | "desc"
-    ) => {
-      startLoading();
-      try {
-        const res = await inventoryService.searchInvoicedReport(
-          buildPayload(page, pageSize, searchValue)
-        );
-        return res.totalCount ?? res.data.length ?? 0;
-      } finally {
-        finishLoading();
-      }
-    },
-    [buildPayload, finishLoading, inventoryService, startLoading]
-  );
-
-  const { tableProps, reloadData, updateDatatableControls } =
-    useDatatableControls<ReportRow>({
-      initialData: [],
-      loadData,
-      loadDataCount,
-    });
-
-  const onSearch = () => {
-    updateDatatableControls({ searchValue: filters.search, page: 0 });
-    reloadData(true);
+  const onSearch = useCallback(() => {
+    fetchData(0, MAX_PAGE_SIZE, filters.search);
     setReportTotal(null);
     setReportTotalLoading(true);
     inventoryService
@@ -275,17 +438,205 @@ const InvoicedProductsReportPage = () => {
       .then((total) => setReportTotal(total))
       .catch(() => setReportTotal(null))
       .finally(() => setReportTotalLoading(false));
-  };
+  }, [buildPayload, fetchData, filters.search, inventoryService]);
 
   useEffect(() => {
-    // Auto-load latest invoiced report on first render
-    onSearch();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    fetchData(0, MAX_PAGE_SIZE, filters.search);
+  }, [fetchData, filters.search]);
 
-  const totalCount = tableProps.totalCount ?? 0;
   const showTotal =
-    totalCount > 0 && (reportTotalLoading || reportTotal !== null);
+    rowCount > 0 && (reportTotalLoading || reportTotal !== null);
+
+  // Check if any filter is active
+  const isFilterActive = filterModel.items.length > 0;
+
+  const priceTotals = useMemo(() => {
+    const totals = {
+      costPrice: 0,
+      retailPrice: 0,
+      agentPrice: 0,
+      dealerPrice: 0,
+      unitPrice: 0,
+      totalPrice: 0,
+    };
+    // If filter is active, use filtered rows; otherwise use all rows
+    const visibleRows =
+      isFilterActive && filteredRowIds.size > 0
+        ? rows.filter((row) => filteredRowIds.has(row.rowId))
+        : isFilterActive
+        ? [] // Filter active but no matching rows
+        : rows; // No filter, use all rows
+    visibleRows.forEach((row) => {
+      totals.costPrice += row.costPrice ?? 0;
+      totals.retailPrice += row.retailPrice ?? 0;
+      totals.agentPrice += row.agentPrice ?? 0;
+      totals.dealerPrice += row.dealerPrice ?? 0;
+      totals.unitPrice += row.unitPrice ?? 0;
+      totals.totalPrice += row.totalPrice ?? 0;
+    });
+    return totals;
+  }, [rows, filteredRowIds, isFilterActive]);
+
+  const handleFilterModelChange = useCallback(
+    (model: GridFilterModel) => {
+      setFilterModel(model);
+      // Update filtered row IDs after filter changes
+      setTimeout(() => {
+        if (apiRef.current) {
+          try {
+            // Get the filtered rows lookup from the grid state
+            const filteredRowsLookup =
+              apiRef.current.state?.filter?.filteredRowsLookup;
+            if (filteredRowsLookup) {
+              // filteredRowsLookup contains { [rowId]: true/false }
+              // true means the row passes the filter
+              const visibleIds = Object.entries(filteredRowsLookup)
+                .filter(([, isVisible]) => isVisible)
+                .map(([id]) => Number(id));
+              setFilteredRowIds(new Set(visibleIds));
+            } else {
+              // No filter applied, clear the set to show all rows
+              setFilteredRowIds(new Set());
+            }
+          } catch {
+            setFilteredRowIds(new Set());
+          }
+        }
+      }, 0);
+    },
+    [apiRef]
+  );
+
+  // Export to Excel function
+  const handleExportToExcel = useCallback(() => {
+    // Get visible rows based on filter
+    const visibleRows =
+      isFilterActive && filteredRowIds.size > 0
+        ? rows.filter((row) => filteredRowIds.has(row.rowId))
+        : isFilterActive
+        ? []
+        : rows;
+
+    // Build export data with headers (exclude actions column)
+    const exportColumns = columns.filter((col) => col.field !== "actions");
+    const headers = exportColumns.map((col) => col.headerName || col.field);
+
+    const data = visibleRows.map((row) => {
+      const rowData: Record<string, any> = {};
+      exportColumns.forEach((col) => {
+        const field = col.field;
+        let value = (row as any)[field];
+
+        // Format specific fields
+        if (field === "dateOfSale") {
+          value = formatDate(value);
+        } else if (
+          [
+            "costPrice",
+            "retailPrice",
+            "agentPrice",
+            "dealerPrice",
+            "unitPrice",
+            "totalPrice",
+          ].includes(field)
+        ) {
+          value = value ?? 0;
+        }
+
+        rowData[col.headerName || field] = value ?? "";
+      });
+      return rowData;
+    });
+
+    // Create workbook and worksheet
+    const ws = XLSX.utils.json_to_sheet(data, { header: headers });
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Invoiced Products Report");
+
+    // Generate filename with date
+    const dateStr = new Date().toISOString().split("T")[0];
+    const filename = `invoiced_products_report_${dateStr}.xlsx`;
+
+    // Download
+    XLSX.writeFile(wb, filename);
+  }, [columns, filteredRowIds, formatDate, isFilterActive, rows]);
+
+  // Custom footer component with totals
+  const TotalsFooter = useCallback(() => {
+    const formatTotalValue = (val: number) => val.toFixed(2);
+    return (
+      <GridFooterContainer
+        sx={{
+          bgcolor: "grey.200",
+          borderTop: "2px solid",
+          borderColor: "divider",
+          minHeight: 48,
+        }}
+      >
+        <Box
+          sx={{
+            display: "flex",
+            width: "100%",
+            alignItems: "center",
+            px: 1,
+            fontSize: 13,
+            fontWeight: 700,
+          }}
+        >
+          <Box sx={{ minWidth: 140, pr: 1 }}>
+            {t("totals", { defaultValue: "Totals" })}
+          </Box>
+          {/* Spacer for other columns - adjust based on column structure */}
+          <Box sx={{ flex: 1 }} />
+          {/* Price totals aligned to the right */}
+          <Stack direction="row" spacing={2} sx={{ alignItems: "center" }}>
+            {!isSalesTeamUser && (
+              <Box sx={{ minWidth: 100, textAlign: "right" }}>
+                <Typography variant="caption" color="text.secondary">
+                  {t("cost-price", { defaultValue: "Cost Price" })}
+                </Typography>
+                <Typography variant="body2" fontWeight={700}>
+                  {formatTotalValue(priceTotals.costPrice)}
+                </Typography>
+              </Box>
+            )}
+            <Box sx={{ minWidth: 100, textAlign: "right" }}>
+              <Typography variant="caption" color="text.secondary">
+                {t("retail-price", { defaultValue: "Retail Price" })}
+              </Typography>
+              <Typography variant="body2" fontWeight={700}>
+                {formatTotalValue(priceTotals.retailPrice)}
+              </Typography>
+            </Box>
+            <Box sx={{ minWidth: 100, textAlign: "right" }}>
+              <Typography variant="caption" color="text.secondary">
+                {t("agent-price", { defaultValue: "Agent Price" })}
+              </Typography>
+              <Typography variant="body2" fontWeight={700}>
+                {formatTotalValue(priceTotals.agentPrice)}
+              </Typography>
+            </Box>
+            <Box sx={{ minWidth: 100, textAlign: "right" }}>
+              <Typography variant="caption" color="text.secondary">
+                {t("dealer-price", { defaultValue: "Dealer Price" })}
+              </Typography>
+              <Typography variant="body2" fontWeight={700}>
+                {formatTotalValue(priceTotals.dealerPrice)}
+              </Typography>
+            </Box>
+            <Box sx={{ minWidth: 120, textAlign: "right" }}>
+              <Typography variant="caption" color="text.secondary">
+                {t("unit-price-sold", { defaultValue: "Unit Price Sold" })}
+              </Typography>
+              <Typography variant="body2" fontWeight={700}>
+                {formatTotalValue(priceTotals.unitPrice)}
+              </Typography>
+            </Box>
+          </Stack>
+        </Box>
+      </GridFooterContainer>
+    );
+  }, [isSalesTeamUser, priceTotals, t]);
 
   const renderDetailRows = useCallback(
     (rows: { label: string; value: string }[]) => {
@@ -333,6 +684,26 @@ const InvoicedProductsReportPage = () => {
       },
       { label: t("date-of-sale"), value: formatDate(activeRow.dateOfSale) },
       { label: t("quantity"), value: formatText(activeRow.quantity) },
+      ...(!isSalesTeamUser
+        ? [
+            {
+              label: t("cost-price", { defaultValue: "Cost Price" }),
+              value: formatMoney(activeRow.costPrice),
+            },
+          ]
+        : []),
+      {
+        label: t("retail-price", { defaultValue: "Retail Price" }),
+        value: formatMoney(activeRow.retailPrice),
+      },
+      {
+        label: t("agent-price", { defaultValue: "Agent Price" }),
+        value: formatMoney(activeRow.agentPrice),
+      },
+      {
+        label: t("dealer-price", { defaultValue: "Dealer Price" }),
+        value: formatMoney(activeRow.dealerPrice),
+      },
       {
         label: t("unit-price", { defaultValue: "Unit Price" }),
         value: formatMoney(activeRow.unitPrice),
@@ -342,7 +713,7 @@ const InvoicedProductsReportPage = () => {
         value: formatMoney(activeRow.totalPrice),
       },
     ];
-  }, [activeRow, formatDate, formatMoney, formatText, t]);
+  }, [activeRow, formatDate, formatMoney, formatText, isSalesTeamUser, t]);
 
   return (
     <>
@@ -350,7 +721,7 @@ const InvoicedProductsReportPage = () => {
         title={t("invoiced-products-report", {
           defaultValue: "Invoiced Products Report",
         })}
-        showBackdrop={pageBlocker}
+        showBackdrop={loading}
         breadcrumbs={[
           { label: t("common:dashboard"), to: "/" },
           { label: t("inventory") },
@@ -360,343 +731,58 @@ const InvoicedProductsReportPage = () => {
             }),
           },
         ]}
-        showSearch
-        renderSearch={() => (
-          <PbCard sx={{ mb: 2 }}>
-            <Typography variant="h6" sx={{ mb: 2 }}>
-              {t("search")}
-            </Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
-                {renderFilterField(
-                  t("keyword", { defaultValue: "Keyword" }),
-                  <TextField
-                    size="small"
-                    placeholder={t("keyword", { defaultValue: "Keyword" })}
-                    value={filters.search}
-                    onChange={(e) => updateFilter("search", e.target.value)}
-                    fullWidth
-                  />
-                )}
-              </Grid>
-              <Grid item xs={12} md={6}>
-                {renderFilterField(
-                  t("product"),
-                  <SelectAsync
-                    name="productId"
-                    placeholder={selectPlaceholder}
-                    suggestionsIfEmpty
-                    asyncFunc={(label, page, pageSize) =>
-                      productService.getSelectOptions(label, page, pageSize)
-                    }
-                    initValue={filters.product ?? undefined}
-                    onSelectionChange={(option) =>
-                      updateFilter("product", option ?? null)
-                    }
-                  />
-                )}
-              </Grid>
-              <Grid item xs={12} md={6}>
-                {renderFilterField(
-                  t("model"),
-                  <TextField
-                    size="small"
-                    placeholder={t("model")}
-                    value={filters.model}
-                    onChange={(e) => updateFilter("model", e.target.value)}
-                    fullWidth
-                  />
-                )}
-              </Grid>
-              <Grid item xs={12} md={6}>
-                {renderFilterField(
-                  t("warehouse"),
-                  <LookupAutocomplete
-                    name="warehouseId"
-                    groupKey={LookupGroupKey.Warehouse}
-                    placeholder={selectPlaceholder}
-                    value={filters.warehouse?.value ?? ""}
-                    onChange={(_, option) =>
-                      updateFilter(
-                        "warehouse",
-                        option
-                          ? { label: option.label, value: option.value }
-                          : null
-                      )
-                    }
-                  />
-                )}
-              </Grid>
-              <Grid item xs={12} md={6}>
-                {renderFilterField(
-                  t("location"),
-                  <LookupAutocomplete
-                    name="locationId"
-                    groupKey={LookupGroupKey.Location}
-                    placeholder={selectPlaceholder}
-                    value={filters.location?.value ?? ""}
-                    onChange={(_, option) =>
-                      updateFilter(
-                        "location",
-                        option
-                          ? { label: option.label, value: option.value }
-                          : null
-                      )
-                    }
-                  />
-                )}
-              </Grid>
-              <Grid item xs={12} md={6}>
-                {renderFilterField(
-                  t("category"),
-                  <LookupAutocomplete
-                    name="categoryId"
-                    groupKey={LookupGroupKey.ProductCategory}
-                    placeholder={selectPlaceholder}
-                    value={filters.category?.value ?? ""}
-                    onChange={(_, option) =>
-                      updateFilter(
-                        "category",
-                        option
-                          ? { label: option.label, value: option.value }
-                          : null
-                      )
-                    }
-                  />
-                )}
-              </Grid>
-              <Grid item xs={12} md={6}>
-                {renderFilterField(
-                  t("brand"),
-                  <LookupAutocomplete
-                    name="brandId"
-                    groupKey={LookupGroupKey.Brand}
-                    placeholder={selectPlaceholder}
-                    value={filters.brand?.value ?? ""}
-                    onChange={(_, option) =>
-                      updateFilter(
-                        "brand",
-                        option
-                          ? { label: option.label, value: option.value }
-                          : null
-                      )
-                    }
-                  />
-                )}
-              </Grid>
-              <Grid item xs={12} md={6}>
-                {renderFilterField(
-                  t("colour"),
-                  <LookupAutocomplete
-                    name="colorId"
-                    groupKey={LookupGroupKey.Color}
-                    placeholder={selectPlaceholder}
-                    value={filters.color?.value ?? ""}
-                    onChange={(_, option) =>
-                      updateFilter(
-                        "color",
-                        option
-                          ? { label: option.label, value: option.value }
-                          : null
-                      )
-                    }
-                  />
-                )}
-              </Grid>
-              <Grid item xs={12} md={6}>
-                {renderFilterField(
-                  t("storage"),
-                  <LookupAutocomplete
-                    name="storageId"
-                    groupKey={LookupGroupKey.Storage}
-                    placeholder={selectPlaceholder}
-                    value={filters.storage?.value ?? ""}
-                    onChange={(_, option) =>
-                      updateFilter(
-                        "storage",
-                        option
-                          ? { label: option.label, value: option.value }
-                          : null
-                      )
-                    }
-                  />
-                )}
-              </Grid>
-              <Grid item xs={12} md={6}>
-                {renderFilterField(
-                  t("ram"),
-                  <LookupAutocomplete
-                    name="ramId"
-                    groupKey={LookupGroupKey.Ram}
-                    placeholder={selectPlaceholder}
-                    value={filters.ram?.value ?? ""}
-                    onChange={(_, option) =>
-                      updateFilter(
-                        "ram",
-                        option
-                          ? { label: option.label, value: option.value }
-                          : null
-                      )
-                    }
-                  />
-                )}
-              </Grid>
-              <Grid item xs={12} md={6}>
-                {renderFilterField(
-                  t("processor"),
-                  <LookupAutocomplete
-                    name="processorId"
-                    groupKey={LookupGroupKey.Processor}
-                    placeholder={selectPlaceholder}
-                    value={filters.processor?.value ?? ""}
-                    onChange={(_, option) =>
-                      updateFilter(
-                        "processor",
-                        option
-                          ? { label: option.label, value: option.value }
-                          : null
-                      )
-                    }
-                  />
-                )}
-              </Grid>
-              <Grid item xs={12} md={6}>
-                {renderFilterField(
-                  t("screen-size"),
-                  <LookupAutocomplete
-                    name="screenSizeId"
-                    groupKey={LookupGroupKey.ScreenSize}
-                    placeholder={selectPlaceholder}
-                    value={filters.screenSize?.value ?? ""}
-                    onChange={(_, option) =>
-                      updateFilter(
-                        "screenSize",
-                        option
-                          ? { label: option.label, value: option.value }
-                          : null
-                      )
-                    }
-                  />
-                )}
-              </Grid>
-              <Grid item xs={12} md={6}>
-                {renderFilterField(
-                  t("grade"),
-                  <LookupAutocomplete
-                    name="gradeId"
-                    groupKey={LookupGroupKey.Grade}
-                    placeholder={selectPlaceholder}
-                    value={filters.grade?.value ?? ""}
-                    onChange={(_, option) =>
-                      updateFilter(
-                        "grade",
-                        option
-                          ? { label: option.label, value: option.value }
-                          : null
-                      )
-                    }
-                  />
-                )}
-              </Grid>
-              <Grid item xs={12} md={6}>
-                {renderFilterField(
-                  t("region"),
-                  <LookupAutocomplete
-                    name="regionId"
-                    groupKey={LookupGroupKey.Region}
-                    placeholder={selectPlaceholder}
-                    value={filters.region?.value ?? ""}
-                    onChange={(_, option) =>
-                      updateFilter(
-                        "region",
-                        option
-                          ? { label: option.label, value: option.value }
-                          : null
-                      )
-                    }
-                  />
-                )}
-              </Grid>
-              <Grid item xs={12} md={6}>
-                {renderFilterField(
-                  t("new-or-used"),
-                  <LookupAutocomplete
-                    name="newOrUsedId"
-                    groupKey={LookupGroupKey.NewOrUsed}
-                    placeholder={selectPlaceholder}
-                    value={filters.newOrUsed?.value ?? ""}
-                    onChange={(_, option) =>
-                      updateFilter(
-                        "newOrUsed",
-                        option
-                          ? { label: option.label, value: option.value }
-                          : null
-                      )
-                    }
-                  />
-                )}
-              </Grid>
-              <Grid item xs={12} md={6}>
-                {renderFilterField(
-                  t("from-date", { defaultValue: "From Date" }),
-                  <TextField
-                    size="small"
-                    type="date"
-                    value={filters.fromDate}
-                    onChange={(e) => updateFilter("fromDate", e.target.value)}
-                    InputLabelProps={{ shrink: true }}
-                    fullWidth
-                  />
-                )}
-              </Grid>
-              <Grid item xs={12} md={6}>
-                {renderFilterField(
-                  t("to-date", { defaultValue: "To Date" }),
-                  <TextField
-                    size="small"
-                    type="date"
-                    value={filters.toDate}
-                    onChange={(e) => updateFilter("toDate", e.target.value)}
-                    InputLabelProps={{ shrink: true }}
-                    fullWidth
-                  />
-                )}
-              </Grid>
-              <Grid item xs={12}>
-                <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-                  <Button variant="contained" onClick={onSearch}>
-                    {t("search")}
-                  </Button>
-                </Box>
-              </Grid>
-            </Grid>
-          </PbCard>
-        )}
       >
-        <DataTable
-          title={t("invoiced-products-report", {
-            defaultValue: "Invoiced Products Report",
-          })}
-          tableKey="InvoicedProductsReportPage"
-          headerCells={headerCells}
-          data={tableProps}
-          dataKey="rowId"
-          hidePagination
-        />
-        {showTotal && (
-          <Box sx={{ mt: 2, display: "flex", justifyContent: "flex-end" }}>
-            <Stack direction="row" spacing={2} alignItems="center">
-              <Typography variant="subtitle2">
-                {t("total-price", { defaultValue: "Total Price" })}
-              </Typography>
-              <Typography variant="h6">
-                {reportTotalLoading
-                  ? t("common:loading", { defaultValue: "Loading" })
-                  : formatMoney(reportTotal)}
-              </Typography>
-            </Stack>
-          </Box>
-        )}
+        <Box sx={{ mb: 2, display: "flex", justifyContent: "flex-end" }}>
+          <Button
+            variant="outlined"
+            startIcon={<FileDownloadIcon />}
+            onClick={handleExportToExcel}
+            disabled={loading || rows.length === 0}
+          >
+            {t("export-to-excel", { defaultValue: "Export to Excel" })}
+          </Button>
+        </Box>
+        <Box
+          sx={{
+            height: { xs: 500, sm: 600, md: 700 },
+            width: "100%",
+            overflowX: "auto",
+          }}
+        >
+          <DataGrid
+            apiRef={apiRef}
+            rows={rows}
+            columns={columns}
+            loading={loading}
+            rowCount={rowCount}
+            getRowId={(row) => row.rowId}
+            disableRowSelectionOnClick
+            density="compact"
+            rowHeight={48}
+            filterMode="client"
+            filterModel={filterModel}
+            onFilterModelChange={handleFilterModelChange}
+            sx={{
+              fontSize: 13,
+              "& .MuiDataGrid-cell, & .MuiDataGrid-columnHeaderTitle": {
+                whiteSpace: "normal",
+                lineHeight: 1.25,
+              },
+              "& .MuiDataGrid-cell": {
+                alignItems: "flex-start",
+                py: 0.5,
+              },
+            }}
+            slots={{
+              loadingOverlay: () => (
+                <Box sx={{ width: "100%", p: 2 }}>
+                  <LinearProgress />
+                </Box>
+              ),
+              footer: TotalsFooter,
+            }}
+          />
+        </Box>
       </Page>
 
       <Dialog

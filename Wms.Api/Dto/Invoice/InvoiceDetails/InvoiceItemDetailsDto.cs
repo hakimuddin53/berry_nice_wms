@@ -9,6 +9,9 @@ namespace Wms.Api.Dto.Invoice.InvoiceDetails
         public string? ProductName { get; set; }
         public string? Brand { get; set; }
         public string? Model { get; set; }
+        public string? Color { get; set; }
+        public string? Storage { get; set; }
+        public string? SerialNumber { get; set; }
         public Guid? LocationId { get; set; }
         public string? LocationName { get; set; }
         public string? LocationLabel { get; set; }
